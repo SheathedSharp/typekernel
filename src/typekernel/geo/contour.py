@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
 
 
@@ -80,3 +81,45 @@ class Contour:
                 "closed contour does not close: starts at "
                 f"{start.as_tuple()}, ends at {end.as_tuple()}"
             )
+
+
+def _on_curve_points(contour: Contour) -> tuple[Point, ...]:
+    """Return the contour's on-curve points, in order.
+
+    For a closed contour these are the segment start points, and the closing
+    edge back to the first point is implicit. For an open contour the final
+    endpoint is appended, so the sequence still describes a drawable polyline.
+    """
+    if not contour.segments:
+        return ()
+    points = [segment.points[0] for segment in contour.segments]
+    if not contour.closed:
+        points.append(contour.segments[-1].points[-1])
+    return tuple(points)
+
+
+def signed_area(contour: Contour) -> float:
+    """Signed area of the polygon through the contour's on-curve points.
+
+    Sign convention follows the standard mathematical orientation with ``y``
+    pointing up: **positive is counter-clockwise, negative is clockwise**. Zero
+    means degenerate (fewer than three distinct on-curve points).
+
+    This is an **orientation helper, not the contour's area.** It is the
+    shoelace formula over on-curve points only, so it ignores how far cubic
+    handles bow the edges outward: the magnitude is a lower bound on the true
+    enclosed area and must not be reported as one. The *sign*, which is what
+    callers need in order to tell an outer contour from a counter, matches the
+    real orientation for any non-degenerate contour.
+
+    If an exact signed area is ever needed, use
+    ``fontTools.pens.areaPen.AreaPen`` — it walks the actual curves. It is not
+    used here because orientation only needs the cheap polygon pass.
+    """
+    points = _on_curve_points(contour)
+    if len(points) < 3:
+        return 0.0
+    total = 0.0
+    for current, following in zip(points, (*points[1:], points[0]), strict=True):
+        total += current.x * following.y - following.x * current.y
+    return total / 2.0
