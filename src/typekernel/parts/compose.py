@@ -51,6 +51,7 @@ class GlyphAssembler:
     _do_union: bool = False
     _subtract_holes: bool = False
     _blend: tuple[float, object, float] | None = None
+    _ease: tuple[float, float] | None = None
 
     def add(self, outline: Outline) -> GlyphAssembler:
         """Add a solid (positive ink) part."""
@@ -100,6 +101,20 @@ class GlyphAssembler:
         self._blend = (radius, select, tension)
         return self
 
+    def ease_curvature(
+        self,
+        *,
+        angle_tol: float = 0.5,
+        min_handle: float = 1.0,
+    ) -> GlyphAssembler:
+        """Optional pass: G2-harmonize straight↔curve joins after blending.
+
+        See :func:`typekernel.geo.joins.ease_curvature`. Safe to chain after
+        :meth:`blend_joins`; no-ops where there is no straight/round join.
+        """
+        self._ease = (angle_tol, min_handle)
+        return self
+
     def build(self) -> ComposedGlyph:
         """Pack sidebearings and return an immutable :class:`ComposedGlyph`."""
         solids = list(self._solids)
@@ -124,6 +139,18 @@ class GlyphAssembler:
             solids = [
                 blend_corners(o, radius, select=sel, tension=tension)  # type: ignore[arg-type]
                 for o in solids
+            ]
+        if self._ease is not None:
+            from typekernel.geo.joins import ease_curvature as _ease_curvature
+
+            angle_tol, min_handle = self._ease
+            solids = [
+                _ease_curvature(o, angle_tol=angle_tol, min_handle=min_handle)
+                for o in solids
+            ]
+            holes = [
+                _ease_curvature(h, angle_tol=angle_tol, min_handle=min_handle)
+                for h in holes
             ]
         ink = solids + holes
         box = union_bounds(ink)

@@ -49,7 +49,7 @@ def letter_z(ctx: DesignContext) -> ComposedGlyph:
         (width - t * 0.15, t / 2.0),
     ]
     body = stroke_polyline(ctx, spine, join_radius=0.0)
-    return GlyphAssembler(ctx).add(body).blend_joins(ctx.join_radius * 0.9).build()
+    return GlyphAssembler(ctx).add(body).blend_joins(ctx.join_radius * 0.9).ease_curvature().build()
 
 
 def letter_a(ctx: DesignContext) -> ComposedGlyph:
@@ -73,6 +73,7 @@ def letter_a(ctx: DesignContext) -> ComposedGlyph:
             .add_hole(hole)
             .subtract_holes()
             .blend_joins(ctx.join_radius * 0.8)
+            .ease_curvature()
             .build()
         )
     return asm.add_hole(hole).build()
@@ -97,7 +98,7 @@ def letter_y(ctx: DesignContext) -> ComposedGlyph:
     )
     asm = GlyphAssembler(ctx).add(left).add(right)
     if _HAS_PATHOPS:
-        return asm.union_solids().blend_joins(ctx.join_radius * 0.6).build()
+        return asm.union_solids().blend_joins(ctx.join_radius * 0.6).ease_curvature().build()
     return asm.build()
 
 
@@ -107,7 +108,7 @@ def letter_j(ctx: DesignContext) -> ComposedGlyph:
     x_right = t * 1.80
     body = smooth_hook(ctx, x_right, ctx.x_height, ctx.descender)
     dot = tittle(ctx, x_right - t / 2.0, ctx.x_height + t * 0.60)
-    return GlyphAssembler(ctx).add(body).add(dot).build()
+    return GlyphAssembler(ctx).add(body).add(dot).ease_curvature().build()
 
 
 def letter_u(ctx: DesignContext) -> ComposedGlyph:
@@ -115,7 +116,7 @@ def letter_u(ctx: DesignContext) -> ComposedGlyph:
     counter_w = ctx.x_height * (0.48 + 0.08 * ctx.aperture)
     x_right = ctx.stem + counter_w + ctx.stem
     trough = u_bowl(ctx, 0.0, x_right, ctx.x_height, -ctx.overshoot)
-    return GlyphAssembler(ctx).add(trough).build()
+    return GlyphAssembler(ctx).add(trough).ease_curvature().build()
 
 
 def letter_n(ctx: DesignContext) -> ComposedGlyph:

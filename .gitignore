@@ -97,3 +97,8 @@ examples/optical_spacing/out/**
 examples/smooth_joins/out/**
 !examples/smooth_joins/out/.gitkeep
 !examples/smooth_joins/out/compare.png
+
+# ease_curvature example outputs
+examples/ease_curvature/out/**
+!examples/ease_curvature/out/.gitkeep
+!examples/ease_curvature/out/stadium-before-after.png

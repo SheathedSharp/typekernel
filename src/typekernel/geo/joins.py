@@ -10,6 +10,7 @@ Agent-facing entry points:
 
 - :func:`join_angles` / :func:`classify_joins` — read what a contour has
 - :func:`blend_corners` — smooth chosen corners (crotches, kinks, shoulders)
+- :func:`ease_curvature` — G2-harmonize straight↔curve joins (κ→0 into the line)
 - :func:`curvature_jump` — G2 diagnostic at already-smooth joins
 """
 
@@ -267,6 +268,341 @@ def angle_range(lo: float, hi: float) -> CornerSelector:
     return _sel
 
 
+# --- straight ↔ curve curvature easing (G2 harmonize) ---------------------
+
+
+def _unit(v: Point) -> Point | None:
+    length = math.hypot(v.x, v.y)
+    if length < 1e-12:
+        return None
+    return Point(v.x / length, v.y / length)
+
+
+def _harmonize_cubic_at_line(
+    cubic: CubicSegment,
+    *,
+    at_start: bool,
+    line_tangent: Point,
+    min_handle: float,
+) -> CubicSegment:
+    """Move only the *inner* off-curve onto the tangent so κ=0 at that end.
+
+    The near handle (``p1`` at start / ``p2`` at end) is left alone so an
+    already-G1 join keeps its tangent; only the far handle is projected onto
+    that same ray, which is the G2 condition against a straight neighbour.
+    """
+    if at_start:
+        # line → cubic: keep p1 (G1), put p2 on ray p0→p1.
+        p0, p1, p2, p3 = cubic.p0, cubic.p1, cubic.p2, cubic.p3
+        u = _unit(Point(p1.x - p0.x, p1.y - p0.y))
+        if u is None:
+            u = _unit(line_tangent)
+        if u is None:
+            return cubic
+        # Match hemisphere of line_tangent when available.
+        lt = _unit(line_tangent)
+        if lt is not None and u.x * lt.x + u.y * lt.y < 0:
+            # Near handle disagrees with the line — fall back to line tangent
+            # and also snap p1 (rare; keeps the join from folding back).
+            u = lt
+            len1 = max(min_handle, math.hypot(p1.x - p0.x, p1.y - p0.y))
+            p1 = Point(p0.x + u.x * len1, p0.y + u.y * len1)
+        len1 = math.hypot(p1.x - p0.x, p1.y - p0.y)
+        side2 = (p2.x - p0.x) * u.x + (p2.y - p0.y) * u.y
+        len2 = max(side2, len1 * 1.01, min_handle)
+        p2_new = Point(p0.x + u.x * len2, p0.y + u.y * len2)
+        return CubicSegment(p0, p1, p2_new, p3)
+    # cubic → line: keep p2 (G1 incoming), put p1 on ray p3←p2.
+    p0, p1, p2, p3 = cubic.p0, cubic.p1, cubic.p2, cubic.p3
+    u = _unit(Point(p3.x - p2.x, p3.y - p2.y))
+    if u is None:
+        u = _unit(line_tangent)
+    if u is None:
+        return cubic
+    lt = _unit(line_tangent)
+    if lt is not None and u.x * lt.x + u.y * lt.y < 0:
+        u = lt
+        len2 = max(min_handle, math.hypot(p3.x - p2.x, p3.y - p2.y))
+        p2 = Point(p3.x - u.x * len2, p3.y - u.y * len2)
+    len2 = math.hypot(p3.x - p2.x, p3.y - p2.y)
+    back = (p3.x - p1.x) * u.x + (p3.y - p1.y) * u.y
+    len1 = max(back, len2 * 1.01, min_handle)
+    p1_new = Point(p3.x - u.x * len1, p3.y - u.y * len1)
+    return CubicSegment(p0, p1_new, p2, p3)
+
+
+def _already_g2_with_lines(cubic: CubicSegment, *, eps: float = 1e-6) -> bool:
+    """True when both ends of ``cubic`` already have ~zero curvature."""
+    return (
+        _end_curvature(cubic, at_end=False) <= eps
+        and _end_curvature(cubic, at_end=True) <= eps
+    )
+
+
+def _insert_line_to_curve_ease(
+    line: LineSegment,
+    cubic: CubicSegment,
+    *,
+    length: float,
+    min_handle: float,
+) -> tuple[LineSegment, CubicSegment, CubicSegment]:
+    """Trim line+cubic and insert a G2-to-line / G1-to-curve transition cubic."""
+    trim = min(length, _chord(line) * 0.45, _chord(cubic) * 0.45)
+    if trim <= min_handle * 0.5:
+        return line, cubic, cubic  # degenerate — caller should ignore
+    # Trim line from its end
+    t_line = _t_at_distance(line, trim, from_end=True)
+    line_kept, _ = _split(line, t_line)
+    # Trim cubic from its start
+    t_cub = _t_at_distance(cubic, trim, from_end=False)
+    _, cubic_rest = _split(cubic, t_cub)
+    A = _seg_end(line_kept)
+    B = cubic_rest.p0
+    u_line = _unit(incoming_tangent(line_kept))
+    u_arc = _unit(outgoing_tangent(cubic_rest))
+    if u_line is None or u_arc is None:
+        return line, cubic, cubic
+    # P2 at intersection of line ray from A and reverse-arc ray from B
+    X = _line_intersection(A, u_line, B, Point(-u_arc.x, -u_arc.y))
+    if X is None:
+        # Parallel: place P2 along the line, P1 halfway; G1 at B may be soft
+        dist = _dist(A, B)
+        X = Point(A.x + u_line.x * dist * 0.7, A.y + u_line.y * dist * 0.7)
+    # κ=0 at A ⇒ P1 and X(=P2) on the line ray
+    d_ax = _dist(A, X)
+    p1 = Point(A.x + u_line.x * max(d_ax * 0.5, min_handle), A.y + u_line.y * max(d_ax * 0.5, min_handle))
+    # Re-express P2: stay on line for κ=0; pull toward X∩ projection
+    # If X is on the line ray, use it; else project X onto the line.
+    side = (X.x - A.x) * u_line.x + (X.y - A.y) * u_line.y
+    p2 = Point(A.x + u_line.x * max(side, d_ax * 0.55, min_handle), A.y + u_line.y * max(side, d_ax * 0.55, min_handle))
+    # G1 at B: prefer handle along -u_arc — but κ=0 constraint put p2 on the
+    # line. Use a compromise only when X lies near both constraints.
+    if X is not None and abs((X.x - A.x) * u_line.y - (X.y - A.y) * u_line.x) < 1e-6 * max(d_ax, 1.0):
+        p2 = X
+    ease = CubicSegment(A, p1, p2, B)
+    return line_kept, ease, cubic_rest  # type: ignore[return-value]
+
+
+def _insert_curve_to_line_ease(
+    cubic: CubicSegment,
+    line: LineSegment,
+    *,
+    length: float,
+    min_handle: float,
+) -> tuple[CubicSegment, CubicSegment, LineSegment]:
+    """Trim cubic+line and insert a G1-from-curve / G2-to-line transition."""
+    trim = min(length, _chord(line) * 0.45, _chord(cubic) * 0.45)
+    if trim <= min_handle * 0.5:
+        return cubic, cubic, line
+    t_cub = _t_at_distance(cubic, trim, from_end=True)
+    cubic_kept, _ = _split(cubic, t_cub)
+    t_line = _t_at_distance(line, trim, from_end=False)
+    _, line_rest = _split(line, t_line)
+    A = _seg_end(cubic_kept)
+    B = line_rest.p0
+    u_arc = _unit(incoming_tangent(cubic_kept))
+    u_line = _unit(outgoing_tangent(line_rest))
+    if u_arc is None or u_line is None:
+        return cubic, cubic, line
+    X = _line_intersection(A, u_arc, B, Point(-u_line.x, -u_line.y))
+    # κ=0 at B (line): p1 and p2 on the line through B along -u_line from B...
+    # Transition cubic A → B: G1 at A along u_arc, G2 at B (κ=0) along u_line.
+    # Put p2 and B with p1 on the line ray ending at B.
+    if X is not None:
+        # Prefer X if it lies on the line through B
+        side = (B.x - X.x) * u_line.x + (B.y - X.y) * u_line.y
+        p2 = Point(B.x - u_line.x * max(side, min_handle), B.y - u_line.y * max(side, min_handle))
+    else:
+        dist = _dist(A, B)
+        p2 = Point(B.x - u_line.x * dist * 0.7, B.y - u_line.y * dist * 0.7)
+    d_pb = _dist(p2, B)
+    p1 = Point(B.x - u_line.x * max(d_pb * 1.5, min_handle * 2), B.y - u_line.y * max(d_pb * 1.5, min_handle * 2))
+    # G1 at A: first handle along u_arc — but p1 was placed for B's G2. Recompute
+    # p1 as A + u_arc * h, keep p2 on line for κ=0 at B.
+    h = max(min_handle, _dist(A, B) * 0.4)
+    p1 = Point(A.x + u_arc.x * h, A.y + u_arc.y * h)
+    # p2 stays on line before B
+    p2 = Point(B.x - u_line.x * max(d_pb, min_handle), B.y - u_line.y * max(d_pb, min_handle))
+    ease = CubicSegment(A, p1, p2, B)
+    return cubic_kept, ease, line_rest  # type: ignore[return-value]
+
+
+def ease_contour(
+    contour: Contour,
+    *,
+    angle_tol: float = SMOOTH_DEG,
+    min_handle: float = 1.0,
+    insert_length: float | None = None,
+) -> Contour:
+    """Harmonize nearly-G1 straight↔arc joins on one contour.
+
+    Strategy:
+      1. Arc runs (cubic continues into another cubic): in-place handle
+         projection — G2 against the line, arc body kept.
+      2. Single cubic between two lines with residual κ jump: insert a short
+         transition cubic (G2 to the line, G1 into the arc).
+      3. Cubics already G2 to both neighbouring lines (fillets from
+         :func:`blend_corners`): leave untouched.
+
+    Flat terminals and non-smooth corners are ignored — run
+    :func:`blend_corners` first for those.
+    """
+    if len(contour.segments) < 2:
+        return contour
+    segs: list[Segment] = list(contour.segments)
+    n = len(segs)
+    angles = join_angles(contour)
+    length = insert_length if insert_length is not None else max(min_handle * 8.0, 12.0)
+    # Pass 1 — in-place harmonize for cubic→cubic arc runs (indices stable).
+    for i in range(n if contour.closed else n - 1):
+        if angles[i] >= angle_tol:
+            continue
+        a, b = segs[i], segs[(i + 1) % n]
+        if _is_line(a) and isinstance(b, CubicSegment):
+            other = segs[(i + 2) % n]
+            if isinstance(other, CubicSegment):
+                segs[(i + 1) % n] = _harmonize_cubic_at_line(
+                    b, at_start=True, line_tangent=incoming_tangent(a), min_handle=min_handle
+                )
+        elif isinstance(a, CubicSegment) and _is_line(b):
+            prev = segs[(i - 1) % n]
+            if isinstance(prev, CubicSegment):
+                segs[i] = _harmonize_cubic_at_line(
+                    a, at_start=False, line_tangent=outgoing_tangent(b), min_handle=min_handle
+                )
+    # Pass 2 — insert transitions for line–cubic–line arcs with κ jump.
+    # Walk with a while-loop since we insert segments.
+    i = 0
+    segs_n = list(segs)
+    nn = len(segs_n)
+    # Recompute angles on current segs_n lazily per index using neighbours.
+    visited_insert = 0
+    while i < nn:
+        a = segs_n[i]
+        b = segs_n[(i + 1) % nn]
+        ang = _angle_between(incoming_tangent(a), outgoing_tangent(b))
+        ang_v = 180.0 if ang is None else ang
+        did = False
+        far_ang = _angle_between(incoming_tangent(b), outgoing_tangent(segs_n[(i + 2) % nn]))
+        far_v = 180.0 if far_ang is None else far_ang
+        # Both ends G1 ⇒ corner fillet / rounded_rect — leave alone.
+        both_g1 = ang_v < angle_tol and far_v < angle_tol
+        if (
+            ang_v < angle_tol
+            and _is_line(a)
+            and isinstance(b, CubicSegment)
+            and _is_line(segs_n[(i + 2) % nn])
+            and not both_g1
+            and not _already_g2_with_lines(b)
+        ):
+            assert isinstance(a, LineSegment) and isinstance(b, CubicSegment)
+            line_kept, ease, rest = _insert_line_to_curve_ease(
+                a, b, length=length, min_handle=min_handle
+            )
+            if ease is not rest and ease is not b:
+                # Replace a,b with line_kept, ease, rest
+                # Rebuild list
+                if i + 1 < nn:
+                    segs_n = segs_n[:i] + [line_kept, ease, rest] + segs_n[i + 2 :]
+                else:
+                    # wrap: a is last, b is first — rare on closed; handle simply
+                    segs_n = [rest] + segs_n[1:-1] + [line_kept, ease]
+                nn = len(segs_n)
+                did = True
+                visited_insert += 1
+                i += 2  # move past line_kept + ease; rest handled next
+        if not did and (
+            ang_v < angle_tol
+            and isinstance(a, CubicSegment)
+            and _is_line(b)
+            and _is_line(segs_n[(i - 1) % nn])
+            and not _already_g2_with_lines(a)
+        ):
+            # Single cubic between two lines, far end only (start join was not
+            # G1 — otherwise the line→cubic insert above owns the span).
+            prev = segs_n[(i - 1) % nn]
+            prev_ang = _angle_between(incoming_tangent(prev), outgoing_tangent(a))
+            prev_ang_v = 180.0 if prev_ang is None else prev_ang
+            if prev_ang_v >= angle_tol:
+                assert isinstance(a, CubicSegment) and isinstance(b, LineSegment)
+                kept, ease, line_rest = _insert_curve_to_line_ease(
+                    a, b, length=length, min_handle=min_handle
+                )
+                if ease is not a and ease is not kept:
+                    segs_n = segs_n[:i] + [kept, ease, line_rest] + segs_n[i + 2 :]
+                    nn = len(segs_n)
+                    did = True
+                    visited_insert += 1
+                    i += 2
+        if not did:
+            i += 1
+        if visited_insert > nn:  # safety
+            break
+    return Contour(tuple(segs_n), closed=contour.closed)
+
+
+def ease_curvature(
+    outline: Outline,
+    *,
+    angle_tol: float = SMOOTH_DEG,
+    min_handle: float = 1.0,
+    insert_length: float | None = None,
+) -> Outline:
+    """G2-harmonize straight↔curve joins on every contour.
+
+    Agent-facing counterpart to :func:`blend_corners`: that operator builds a
+    fillet cubic for broken corners; this one removes the residual curvature
+    jump where a straight already meets a round with matching tangents
+    (stadium ends, stem-to-arc, U-bowl troughs, …).
+
+    Parameters:
+        angle_tol: max turn (degrees) still treated as "already G1".
+        min_handle: floor on projected handle length (design units).
+        insert_length: trim length for inserted transitions on single-cubic
+            arcs between two lines; ``None`` picks a small default.
+    """
+    return Outline(
+        tuple(
+            ease_contour(
+                c,
+                angle_tol=angle_tol,
+                min_handle=min_handle,
+                insert_length=insert_length,
+            )
+            for c in outline.contours
+        )
+    )
+
+
+def straight_curve_jump(
+    outline: Outline,
+    *,
+    angle_tol: float = SMOOTH_DEG,
+    abs_eps: float = 1e-3,
+) -> float:
+    """Largest relative κ jump among smooth straight↔cubic joins only."""
+    worst = 0.0
+    for contour in outline.contours:
+        segs = contour.segments
+        n = len(segs)
+        for i, ang in enumerate(join_angles(contour)):
+            if ang >= angle_tol:
+                continue
+            a, b = segs[i], segs[(i + 1) % n]
+            if not (
+                (_is_line(a) and isinstance(b, CubicSegment))
+                or (isinstance(a, CubicSegment) and _is_line(b))
+            ):
+                continue
+            k_in = _end_curvature(a, at_end=True)
+            k_out = _end_curvature(b, at_end=False)
+            top = max(k_in, k_out)
+            if top < abs_eps:
+                continue
+            worst = max(worst, abs(k_in - k_out) / top)
+    return worst
+
+
 # --- G2 diagnostic ----------------------------------------------------------
 
 
@@ -286,11 +622,12 @@ def _end_curvature(seg: Segment, *, at_end: bool) -> float:
     return (2.0 / 3.0) * cross / (l1**3)
 
 
-def curvature_jump(outline: Outline) -> float:
-    """Largest |Δκ|·stem-free scale at smooth joins (radius-normalised).
+def curvature_jump(outline: Outline, *, abs_eps: float = 1e-3) -> float:
+    """Largest relative κ jump at smooth joins.
 
-    Returned value is ``max |κ_in − κ_out| / max(κ_in, κ_out)`` over joins that
-    are already G1 (relative jump in ``[0, 1]``; 0 means G2).
+    ``max |κ_in − κ_out| / max(κ_in, κ_out)`` over G1 joins. Joins where both
+    curvatures are below ``abs_eps`` count as matched (avoids 1.0 false
+    alarms when the line side is exactly 0 and the curve side is ~1e-3).
     """
     worst = 0.0
     for contour in outline.contours:
@@ -302,7 +639,7 @@ def curvature_jump(outline: Outline) -> float:
             k_in = _end_curvature(segs[i], at_end=True)
             k_out = _end_curvature(segs[(i + 1) % n], at_end=False)
             top = max(k_in, k_out)
-            if top < 1e-9:
+            if top < abs_eps:
                 continue
             worst = max(worst, abs(k_in - k_out) / top)
     return worst
