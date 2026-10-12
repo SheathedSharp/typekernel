@@ -23,7 +23,12 @@ from typekernel.optics.space import (
     suggest_sidebearings_optical,
     with_sidebearings,
 )
-from typekernel.optics.stem import equalize_vertical_stems, measure_vertical_stem
+from typekernel.optics.stem import (
+    diagonal_compensation,
+    equalize_vertical_stems,
+    measure_oriented_stem,
+    measure_vertical_stem,
+)
 
 __all__ = [
     "ContrastParams",
@@ -32,8 +37,10 @@ __all__ = [
     "apply",
     "apply_overshoot",
     "cleanup_joins",
+    "diagonal_compensation",
     "equalize_vertical_stems",
     "fit_kern_pair",
+    "measure_oriented_stem",
     "measure_side_whitespace",
     "measure_vertical_stem",
     "pair_gap_bbox",

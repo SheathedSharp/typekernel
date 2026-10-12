@@ -37,7 +37,7 @@ pip install -e ".[boolean,specimen,compile,dev]"
 | `arch(ctx, x_left, x_right, y_bottom, y_top, *, thickness=None)` | n/h shoulder trough. |
 | `shoulder(...)` | Alias for `arch`. |
 | `u_bowl(ctx, x_left, x_right, y_top, y_bottom, *, thickness=None)` | U trough (two stems + round bottom). |
-| `diagonal_stem(ctx, x0, y0, x1, y1, *, width=None)` | Thickened diagonal parallelogram. |
+| `diagonal_stem(ctx, x0, y0, x1, y1, *, width=None, compensate=False)` | Thickened diagonal; `compensate=True` thins by angle vs vertical stem. |
 | `stroke_polyline(ctx, points, *, width=None, join_radius=None)` | Centered stroke of a polyline with optional rounded joins. |
 | `hook_terminal(ctx, x_center, y_top, y_bottom, *, hook_radius=None, width=None)` | Descender hook (j-like). |
 | `tittle(ctx, cx, y_bottom, *, size=None)` | Dot for i/j. |
@@ -46,7 +46,10 @@ pip install -e ".[boolean,specimen,compile,dev]"
 | `terminal_sheared(ctx, x0, y0, x1, y1, *, shear=0.35)` | Sheared cut-end parallelogram. |
 | `serif_bracket(ctx, x_stem, y, *, side="left", length=None, thickness=None)` | Simple bracket serif stub. |
 | `wedge(ctx, tip_x, tip_y, base_x0, base_y0, base_x1, base_y1)` | Triangle for traps / tapered cuts. |
-| `ink_trap(...)` | Reserved — raises `NotImplementedError`; use `wedge` + difference. |
+| `ink_trap(ctx, apex_x, apex_y, *, depth, opening_deg, bisector_deg, size)` | Wedge trap tip-at-apex; subtract to open crotches. |
+| `crotch_opener(ctx, apex, left_leg_deg, right_leg_deg, *, depth, size)` | Trap aimed from two leg bearings. |
+| `crotch_join(left, right, ctx, *, apex, depth, size)` | Union legs + open crotch. |
+| `apply_ink_trap(outline, trap)` | Boolean difference helper. |
 
 ## Transforms
 
@@ -116,7 +119,8 @@ xs = layout_glyphs(glyphs, list("zayju"), kerning=default_sans_kern())
 ## Honest gaps (so agents do not invent APIs)
 
 - No full serif family — only `serif_bracket` stub.
-- `ink_trap` is reserved (not implemented).
+- `ink_trap` / `crotch_opener` / `crotch_join` are real; `cleanup_joins(..., policy="ink_trap")` punches concave corners.
+- `optics.stem.diagonal_compensation` / `measure_oriented_stem`; `diagonal_stem(..., compensate=True)`.
 - No TrueType hinting, OpenType features, or mark positioning.
 - Optical overshoot / stem measurement live under `typekernel.optics`, separate from parts.
 - Path construction helpers (`arcTo`, `smoothCurveTo`, …) live on `typekernel.geo.PathBuilder`.

@@ -240,11 +240,28 @@ def diagonal_stem(
     y1: float,
     *,
     width: float | None = None,
+    compensate: bool = False,
 ) -> Outline:
-    """Thickened line segment (parallelogram) for diagonals in ``z`` / ``y``."""
-    w = ctx.stem if width is None else width
+    """Thickened line segment (parallelogram) for diagonals in ``z`` / ``y``.
+
+    When ``compensate`` is True and ``width`` is omitted, the perpendicular
+    thickness is taken from
+    :func:`~typekernel.optics.stem.diagonal_compensation` so the bar matches
+    the apparent weight of ``ctx.stem`` (vertical). Explicit ``width`` always
+    wins and is never auto-thinned.
+    """
     dx, dy = x1 - x0, y1 - y0
     length = math.hypot(dx, dy) or 1.0
+    if width is not None:
+        w = width
+    elif compensate:
+        from typekernel.optics.stem import diagonal_compensation
+
+        # Angle from vertical: vertical = (0,1) → atan2(dx, dy)
+        angle_from_vertical = math.degrees(math.atan2(abs(dx), abs(dy)))
+        w = diagonal_compensation(angle_from_vertical, ctx.stem, contrast=ctx.contrast)
+    else:
+        w = ctx.stem
     nx, ny = -dy / length, dx / length
     half = w / 2.0
     b = PathBuilder()
@@ -572,19 +589,147 @@ def serif_bracket(
 
 def ink_trap(
     ctx: DesignContext,
-    *_args: object,
-    **_kwargs: object,
+    apex_x: float,
+    apex_y: float,
+    *,
+    depth: float | None = None,
+    opening_deg: float = 30.0,
+    bisector_deg: float = 270.0,
+    size: float | None = None,
 ) -> Outline:
-    """Reserved ink-trap primitive — not implemented yet.
+    """Wedge-shaped ink-trap / crotch opener (tip at the sharp corner).
 
-    Agents should leave a wedge-shaped notch at acute joins and call this
-    once a trap policy lands. Until then, compose with :func:`wedge` and
-    boolean difference.
+    The tip sits on the outline apex. The base is ``depth`` units into the
+    black along ``bisector_deg`` (0° = +x, 90° = +y). ``opening_deg`` is the
+    full apex angle of the wedge; ``size`` optionally overrides the base
+    half-width (defaults to ``depth * tan(opening/2)``).
+
+    Subtract this outline from a solid (boolean difference) to open a crotch
+    or relieve a sharp internal angle. Parameters apply to any sharp join —
+    not letter-specific beauty hacks.
     """
-    del ctx, _args, _kwargs
-    raise NotImplementedError(
-        "ink_trap is reserved; use wedge() + boolean difference for now"
+    d = 12.0 if depth is None else depth
+    if d <= 0:
+        raise ValueError(f"depth must be positive, got {d!r}")
+    if opening_deg <= 0 or opening_deg >= 180:
+        raise ValueError(f"opening_deg must be in (0, 180), got {opening_deg!r}")
+    half_open = math.radians(opening_deg / 2.0)
+    base_half = (d * math.tan(half_open)) if size is None else float(size)
+    if base_half <= 0:
+        raise ValueError(f"size must be positive, got {base_half!r}")
+    rad = math.radians(bisector_deg)
+    bx, by = math.cos(rad), math.sin(rad)
+    # Perpendicular to bisector for the base span
+    px, py = -by, bx
+    base_cx = apex_x + bx * d
+    base_cy = apex_y + by * d
+    return wedge(
+        ctx,
+        apex_x,
+        apex_y,
+        base_cx - px * base_half,
+        base_cy - py * base_half,
+        base_cx + px * base_half,
+        base_cy + py * base_half,
     )
+
+
+def crotch_opener(
+    ctx: DesignContext,
+    apex_x: float,
+    apex_y: float,
+    left_leg_deg: float,
+    right_leg_deg: float,
+    *,
+    depth: float | None = None,
+    size: float | None = None,
+) -> Outline:
+    """Ink-trap wedge aimed into a crotch defined by two outgoing leg angles.
+
+    ``left_leg_deg`` / ``right_leg_deg`` are absolute bearings of the two edges
+    leaving the apex (into the black legs). The bisector points into the
+    crotch opening (white) flipped 180° so the wedge cuts into the join.
+    Opening angle is the smaller angle between the legs.
+    """
+    # Unit vectors along legs
+    la = math.radians(left_leg_deg)
+    ra = math.radians(right_leg_deg)
+    lx, ly = math.cos(la), math.sin(la)
+    rx, ry = math.cos(ra), math.sin(ra)
+    # Interior crotch direction = average of unit legs, then reverse into black
+    mx, my = lx + rx, ly + ry
+    mlen = math.hypot(mx, my)
+    if mlen < 1e-9:
+        # Opposite legs — bisector from cross product
+        mx, my = -(ly + ry), lx + rx  # fallback
+        mlen = math.hypot(mx, my) or 1.0
+    mx, my = mx / mlen, my / mlen
+    # Bisector into the *black* (opposite the crotch void)
+    bis = math.degrees(math.atan2(-my, -mx))
+    # Opening = angle between legs
+    dot = max(-1.0, min(1.0, lx * rx + ly * ry))
+    opening = math.degrees(math.acos(dot))
+    # Use a modest fraction of the crotch angle so the trap is a relief notch
+    trap_open = max(8.0, min(60.0, opening * 0.35))
+    d = (ctx.stem * 0.22) if depth is None else depth
+    return ink_trap(
+        ctx,
+        apex_x,
+        apex_y,
+        depth=d,
+        opening_deg=trap_open,
+        bisector_deg=bis,
+        size=size,
+    )
+
+
+def apply_ink_trap(
+    outline: Outline,
+    trap: Outline,
+) -> Outline:
+    """Boolean-difference ``trap`` from ``outline`` (requires pathops)."""
+    from typekernel.geo.boolean import boolean_op
+
+    return boolean_op(outline, trap, "difference")
+
+def crotch_join(
+    left_leg: Outline,
+    right_leg: Outline,
+    ctx: DesignContext,
+    *,
+    apex: tuple[float, float] | None = None,
+    depth: float | None = None,
+    size: float | None = None,
+) -> Outline:
+    """Union two legs and open the crotch with an ink trap at their join.
+
+    When ``apex`` is omitted, uses the midpoint of the two outlines' shared
+    topmost tightest corner heuristic (bbox intersection center of tops).
+    Prefer passing an explicit apex for synthetic fixtures.
+    """
+    from typekernel.geo.boolean import boolean_op
+    from typekernel.geo.outline import bounds
+
+    solid = boolean_op(left_leg, right_leg, "union")
+    if apex is None:
+        lb = bounds(left_leg)
+        rb = bounds(right_leg)
+        apex = ((lb[0] + lb[2] + rb[0] + rb[2]) / 4.0, max(lb[3], rb[3]))
+    # Estimate leg bearings from apex toward each leg centroid
+    def _centroid(o: Outline) -> tuple[float, float]:
+        b = bounds(o)
+        return ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
+
+    lc = _centroid(left_leg)
+    rc = _centroid(right_leg)
+    left_deg = math.degrees(math.atan2(lc[1] - apex[1], lc[0] - apex[0]))
+    right_deg = math.degrees(math.atan2(rc[1] - apex[1], rc[0] - apex[0]))
+    trap = crotch_opener(
+        ctx, apex[0], apex[1], left_deg, right_deg, depth=depth, size=size
+    )
+    return boolean_op(solid, trap, "difference")
+
+
 
 
 def shoulder(

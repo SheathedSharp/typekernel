@@ -74,10 +74,10 @@ def test_extra_primitives_build() -> None:
     assert wedge(ctx, 0.0, 0.0, -10.0, 20.0, 10.0, 20.0).contours
 
 
-def test_ink_trap_is_reserved() -> None:
+def test_ink_trap_builds_wedge() -> None:
     ctx = DesignContext.geometric_sans()
-    with pytest.raises(NotImplementedError):
-        ink_trap(ctx)
+    trap = ink_trap(ctx, 0.0, 0.0, depth=16.0, opening_deg=30.0, bisector_deg=270.0)
+    assert trap.contour_count == 1
 
 
 def test_kern_table_and_layout() -> None:
