@@ -56,8 +56,17 @@ Misuse — ``lineTo``, ``curveTo`` or ``closePath`` with no contour in progress
 
 from __future__ import annotations
 
+from typing import cast
+
 from typekernel.geo.contour import Contour
 from typekernel.geo.outline import Outline
+from typekernel.geo.path_helpers import (
+    arc_cubics,
+    ellipse_cubics,
+    quarter_circle_cubics,
+    rounded_corner_cubics,
+    smooth_cubic_controls,
+)
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
 
@@ -117,6 +126,129 @@ class PathBuilder:
         if self._segments:
             contours.append(Contour(tuple(self._segments), closed=False))
         return Outline(tuple(contours))
+
+
+    def arcTo(
+        self,
+        cx: float,
+        cy: float,
+        rx: float,
+        ry: float,
+        end_angle_deg: float,
+        *,
+        start_angle_deg: float | None = None,
+    ) -> None:
+        """Append an elliptical arc ending at ``end_angle_deg`` (CCW from +x).
+
+        If ``start_angle_deg`` is omitted, it is inferred from the current point
+        relative to ``(cx, cy)``. Uses :func:`arc_cubics` (cubic pieces ≤ 90°).
+        """
+        import math
+
+        _, current = self._require_contour("arcTo")
+        if start_angle_deg is None:
+            start_angle_deg = math.degrees(math.atan2(current.y - cy, current.x - cx))
+        cubics = arc_cubics(cx, cy, rx, ry, start_angle_deg, end_angle_deg)
+        for p0, p1, p2, p3 in cubics:
+            # Snap first p0 to current if close; otherwise lineTo p0.
+            if abs(p0.x - current.x) > 1e-6 or abs(p0.y - current.y) > 1e-6:
+                self.lineTo(p0.x, p0.y)
+                current = p0
+            self.curveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+            current = p3
+
+    def quarterCircleTo(
+        self,
+        cx: float,
+        cy: float,
+        rx: float,
+        ry: float,
+        quadrant: int,
+    ) -> None:
+        """Append one quarter-ellipse cubic (see :func:`quarter_circle_cubics`)."""
+        if quadrant not in (0, 1, 2, 3):
+            raise ValueError(f"quadrant must be 0..3, got {quadrant}")
+        _, current = self._require_contour("quarterCircleTo")
+        from typekernel.geo.path_helpers import Quadrant
+
+        p0, p1, p2, p3 = quarter_circle_cubics(
+            cx, cy, rx, ry, cast(Quadrant, quadrant)
+        )
+        if abs(p0.x - current.x) > 1e-6 or abs(p0.y - current.y) > 1e-6:
+            self.lineTo(p0.x, p0.y)
+        self.curveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+
+    def addEllipse(self, cx: float, cy: float, rx: float, ry: float) -> None:
+        """Append a closed elliptical contour centred at ``(cx, cy)``."""
+        cubics = ellipse_cubics(cx, cy, rx, ry)
+        p0 = cubics[0][0]
+        self.moveTo(p0.x, p0.y)
+        for _, p1, p2, p3 in cubics:
+            self.curveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+        self.closePath()
+
+    def roundedCornerTo(
+        self,
+        corner_x: float,
+        corner_y: float,
+        end_x: float,
+        end_y: float,
+        radius: float,
+        *,
+        continue_to_end: bool = True,
+    ) -> None:
+        """Line toward a corner, fillet with a cubic, then optionally to the end.
+
+        From the current point through ``(corner_x, corner_y)`` toward
+        ``(end_x, end_y)``, replacing the sharp corner with a kappa-scaled fillet.
+        When ``continue_to_end`` is False, the pen stops at the fillet exit on the
+        outgoing edge (useful when chaining multiple corners toward a shared vertex).
+        """
+        _, current = self._require_contour("roundedCornerTo")
+        start, c1, c2, end, _ = rounded_corner_cubics(
+            current, Point(corner_x, corner_y), Point(end_x, end_y), radius
+        )
+        if abs(start.x - current.x) > 1e-9 or abs(start.y - current.y) > 1e-9:
+            self.lineTo(start.x, start.y)
+        self.curveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
+        if continue_to_end and (
+            abs(end_x - end.x) > 1e-9 or abs(end_y - end.y) > 1e-9
+        ):
+            self.lineTo(end_x, end_y)
+
+    def smoothCurveTo(
+        self,
+        x3: float,
+        y3: float,
+        *,
+        tangent_out_x: float,
+        tangent_out_y: float,
+        handle_ratio: float = 1.0 / 3.0,
+        tangent_in_x: float | None = None,
+        tangent_in_y: float | None = None,
+    ) -> None:
+        """Append a cubic to ``(x3, y3)`` with G1-friendly handle placement.
+
+        Incoming tangent defaults to the previous segment's outgoing direction.
+        ``tangent_out_*`` is the desired direction at the endpoint.
+        """
+        _, current = self._require_contour("smoothCurveTo")
+        if tangent_in_x is None or tangent_in_y is None:
+            if not self._segments:
+                raise ValueError("smoothCurveTo needs a prior segment or tangent_in_*")
+            prev = self._segments[-1]
+            if isinstance(prev, LineSegment):
+                tin = Point(prev.p1.x - prev.p0.x, prev.p1.y - prev.p0.y)
+            else:
+                tin = Point(prev.p3.x - prev.p2.x, prev.p3.y - prev.p2.y)
+        else:
+            tin = Point(tangent_in_x, tangent_in_y)
+        p3 = Point(x3, y3)
+        p1, p2 = smooth_cubic_controls(
+            current, p3, tin, Point(tangent_out_x, tangent_out_y), handle_ratio=handle_ratio
+        )
+        self.curveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+
 
     def _require_contour(self, method: str) -> tuple[Point, Point]:
         """Return ``(start, current)``, or raise if no contour is in progress."""

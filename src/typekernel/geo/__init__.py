@@ -14,7 +14,7 @@ their own submodules — ``signed_area`` and ``Contour``'s neighbours in
 ``contour``, ``bounds`` in ``outline``, ``quantize``/``quantize_point`` in
 ``rounding``, ``QuadraticContour`` in ``convert_quadratic``,
 ``load_synthetic_outline`` in ``fixtures``, ``boolean_op`` in ``boolean`` — and
-must be imported from there.
+must be imported from there. Authoring helpers (`path_helpers`, `smoothness`, `layout`) are also submodule-only.
 """
 
 from __future__ import annotations
