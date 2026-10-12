@@ -56,3 +56,29 @@ class Outline:
         """Yield every segment of every contour, in contour order."""
         for contour in self.contours:
             yield from contour.segments
+
+
+def bounds(outline: Outline) -> tuple[float, float, float, float]:
+    """Return ``(min_x, min_y, max_x, max_y)`` over the outline's points.
+
+    v0 uses **every point, including off-curve control points**. That makes the
+    result an axis-aligned box around the control polygon: it always *contains*
+    the shape, but it is **not** the tight Bézier bounds, because a control
+    point may sit outside the curve it steers. Do not present it as tight.
+
+    Tight extrema — solving each cubic's derivative for its turning points, via
+    ``fontTools.misc.bezierTools.calcCubicBounds`` — is deliberately deferred.
+    Use ``fontTools.pens.boundsPen.BoundsPen`` if exact bounds are needed now.
+
+    Raises:
+        ValueError: if the outline has no points, and therefore no bounds.
+    """
+    xs: list[float] = []
+    ys: list[float] = []
+    for segment in outline.iter_segments():
+        for point in segment.points:
+            xs.append(point.x)
+            ys.append(point.y)
+    if not xs:
+        raise ValueError("an outline with no segments has no bounds")
+    return (min(xs), min(ys), max(xs), max(ys))
