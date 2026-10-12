@@ -61,13 +61,13 @@ class KernTable:
         re-space (bearings + kern) prefer
         :func:`typekernel.optics.space.space_word_optical`.
         """
-        from typekernel.optics.space import fit_kern_pair, pair_gap_bbox
+        from typekernel.optics.space import fit_kern_pair, pair_gap_optical
 
         if len(glyphs) != len(names):
             raise ValueError("names length must match glyphs")
         if target_gap is None:
             gaps = [
-                pair_gap_bbox(glyphs[i], glyphs[i + 1], kern=0.0)
+                pair_gap_optical(glyphs[i], glyphs[i + 1], kern=0.0, samples=samples)
                 for i in range(len(glyphs) - 1)
             ]
             gaps.sort()

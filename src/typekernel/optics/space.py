@@ -303,14 +303,16 @@ def space_word_optical(
         lsb, rsb = suggest_sidebearings_optical(g, ctx, samples=samples)
         packed.append(with_sidebearings(g, lsb, rsb))
 
-    # 2) choose target from median bbox gap if needed
+    # 2) choose target from median *optical* gap (kern=0) so overall air stays
+    # familiar while pair rhythm evens out. Bbox median tends to crush pairs
+    # that already carry large silhouette white (diagonals, hooks).
     if target_gap is None:
-        bbox_gaps = [
-            pair_gap_bbox(packed[i], packed[i + 1], kern=0.0)
+        opt_gaps = [
+            pair_gap_optical(packed[i], packed[i + 1], kern=0.0, samples=samples)
             for i in range(len(packed) - 1)
         ]
-        bbox_gaps.sort()
-        target = bbox_gaps[len(bbox_gaps) // 2] if bbox_gaps else 0.12 * ctx.x_height
+        opt_gaps.sort()
+        target = opt_gaps[len(opt_gaps) // 2] if opt_gaps else 0.16 * ctx.x_height
     else:
         target = target_gap
 
