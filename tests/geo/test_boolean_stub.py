@@ -1,15 +1,27 @@
-"""Unit tests for the optional boolean stub."""
+"""Unit tests for optional boolean operations (skia-pathops)."""
+
+from __future__ import annotations
 
 import ast
 import sys
-import types
 from pathlib import Path
 
 import pytest
 
 import typekernel.geo
-from typekernel.geo.boolean import BOOLEAN_OPS, boolean_op
-from typekernel.geo.outline import Outline
+from typekernel.geo.boolean import BOOLEAN_OPS, boolean_op, union_all
+from typekernel.geo.outline import Outline, bounds
+from typekernel.geo.path_builder import PathBuilder
+
+
+def _rect(x0: float, y0: float, x1: float, y1: float) -> Outline:
+    b = PathBuilder()
+    b.moveTo(x0, y0)
+    b.lineTo(x1, y0)
+    b.lineTo(x1, y1)
+    b.lineTo(x0, y1)
+    b.closePath()
+    return b.build()
 
 
 def test_signature_accepts_two_outlines_and_an_operation() -> None:
@@ -27,15 +39,35 @@ def test_missing_pathops_raises_runtime_error_with_install_hint(
 ) -> None:
     monkeypatch.setitem(sys.modules, "pathops", None)
     with pytest.raises(RuntimeError, match=r"typekernel\[boolean\]"):
-        boolean_op(Outline(()), Outline(()), "union")
+        boolean_op(_rect(0, 0, 10, 10), _rect(5, 5, 15, 15), "union")
 
 
-def test_with_pathops_available_the_round_trip_is_explicitly_unimplemented(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setitem(sys.modules, "pathops", types.ModuleType("pathops"))
-    with pytest.raises(NotImplementedError, match="round-trip"):
-        boolean_op(Outline(()), Outline(()), "difference")
+@pytest.mark.skipif(
+    __import__("importlib").util.find_spec("pathops") is None,
+    reason="skia-pathops not installed",
+)
+def test_union_merges_overlapping_rects() -> None:
+    a = _rect(0, 0, 100, 100)
+    b = _rect(50, 50, 150, 150)
+    merged = boolean_op(a, b, "union")
+    assert merged.contour_count >= 1
+    min_x, min_y, max_x, max_y = bounds(merged)
+    assert min_x == pytest.approx(0.0, abs=1e-3)
+    assert min_y == pytest.approx(0.0, abs=1e-3)
+    assert max_x == pytest.approx(150.0, abs=1e-3)
+    assert max_y == pytest.approx(150.0, abs=1e-3)
+
+
+@pytest.mark.skipif(
+    __import__("importlib").util.find_spec("pathops") is None,
+    reason="skia-pathops not installed",
+)
+def test_union_all_of_three() -> None:
+    parts = [_rect(0, 0, 40, 40), _rect(30, 0, 70, 40), _rect(60, 0, 100, 40)]
+    merged = union_all(parts)
+    min_x, _, max_x, _ = bounds(merged)
+    assert min_x == pytest.approx(0.0, abs=1e-3)
+    assert max_x == pytest.approx(100.0, abs=1e-3)
 
 
 def test_shapely_is_never_referenced() -> None:
