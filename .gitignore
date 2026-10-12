@@ -82,3 +82,8 @@ examples/anthropic_zayju/out/**
 !examples/anthropic_zayju/out/.gitkeep
 !examples/anthropic_zayju/out/compare.png
 !examples/anthropic_zayju/out/zayju_typekernel.png
+
+# paper_code_zayju example outputs (keep triad specimen)
+examples/paper_code_zayju/out/**
+!examples/paper_code_zayju/out/.gitkeep
+!examples/paper_code_zayju/out/triad.png

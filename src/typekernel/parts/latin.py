@@ -13,8 +13,6 @@ from __future__ import annotations
 
 import importlib.util
 
-from typekernel.geo.contour import Contour
-from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import (
@@ -25,6 +23,7 @@ from typekernel.parts.primitives import (
     rounded_rect,
     stroke_polyline,
     tittle,
+    u_bowl,
     vertical_stem,
 )
 
@@ -34,188 +33,120 @@ _HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 
 
 def letter_z(ctx: DesignContext) -> ComposedGlyph:
-    """Neo-grotesque ``z`` — continuous cubic outline (scaled reference).
+    """Original geometric ``z``: continuous Z spine stroked at ``ctx.stem``.
 
-    Coordinates are authored at a reference x-height of 1080 and scaled by
-    ``ctx.x_height / 1080``. Topology is continuous closed cubics (TrueType
-    source elevated with Qu2Cu), not boolean-assembled parts.
+    Paper/code: solid bars (no hairlines), even diagonal colour, soft joins
+    from ``ctx.roundness``. Not traced from any commercial face.
     """
-    s = ctx.x_height / 1080.0
-    b = PathBuilder()
-    b.moveTo(917.0000 * s, 159.0000 * s)
-    b.lineTo(917.0000 * s, 0.0000 * s)
-    b.lineTo(92.0000 * s, 0.0000 * s)
-    b.lineTo(92.0000 * s, 133.0000 * s)
-    b.lineTo(709.0000 * s, 973.0000 * s)
-    b.lineTo(728.0000 * s, 921.0000 * s)
-    b.lineTo(112.0000 * s, 921.0000 * s)
-    b.lineTo(112.0000 * s, 1080.0000 * s)
-    b.lineTo(907.0000 * s, 1080.0000 * s)
-    b.lineTo(907.0000 * s, 947.0000 * s)
-    b.lineTo(290.0000 * s, 107.0000 * s)
-    b.lineTo(255.0000 * s, 159.0000 * s)
-    b.closePath()
-    outline = b.build()
-    return GlyphAssembler(ctx).add(outline).build()
+    width = ctx.x_height * (0.72 + 0.08 * ctx.aperture)
+    t = ctx.stem
+    top = ctx.x_height
+    spine = [
+        (t * 0.15, top - t / 2.0),
+        (width - t * 0.15, top - t / 2.0),
+        (t * 0.15, t / 2.0),
+        (width - t * 0.15, t / 2.0),
+    ]
+    body = stroke_polyline(ctx, spine, join_radius=ctx.join_radius * 0.85)
+    return GlyphAssembler(ctx).add(body).build()
 
 
 def letter_a(ctx: DesignContext) -> ComposedGlyph:
-    """Neo-grotesque ``a`` — continuous cubic outline (scaled reference).
+    """Original single-story ``a``: bowl + right stem + fillet pads.
 
-    Coordinates are authored at a reference x-height of 1080 and scaled by
-    ``ctx.x_height / 1080``. Topology is continuous closed cubics (TrueType
-    source elevated with Qu2Cu), not boolean-assembled parts.
+    Distinct from ``o`` (stem on the right). Open counter for paper
+    readability; consistent stem width for coding clarity.
     """
-    s = ctx.x_height / 1080.0
-    b = PathBuilder()
-    b.moveTo(518.0000 * s, 1102.0000 * s)
-    b.curveTo(679.3333 * s, 1102.0000 * s, 801.1667 * s, 1037.3333 * s, 864.5000 * s, 920.0000 * s)
-    b.curveTo(896.1667 * s, 861.3333 * s, 912.0000 * s, 792.0000 * s, 912.0000 * s, 712.0000 * s)
-    b.lineTo(912.0000 * s, 223.0000 * s)
-    b.curveTo(912.0000 * s, 180.3333 * s, 930.6667 * s, 159.0000 * s, 972.0000 * s, 159.0000 * s)
-    b.lineTo(1041.0000 * s, 159.0000 * s)
-    b.lineTo(1041.0000 * s, 0.0000 * s)
-    b.lineTo(945.0000 * s, 0.0000 * s)
-    b.curveTo(908.3333 * s, 0.0000 * s, 875.6667 * s, 7.8333 * s, 847.0000 * s, 23.5000 * s)
-    b.curveTo(789.6667 * s, 54.8333 * s, 755.0000 * s, 113.3333 * s, 755.0000 * s, 184.0000 * s)
-    b.lineTo(755.0000 * s, 600.0000 * s)
-    b.lineTo(731.0000 * s, 600.0000 * s)
-    b.lineTo(731.0000 * s, 725.0000 * s)
-    b.curveTo(731.0000 * s, 865.0000 * s, 652.6667 * s, 944.0000 * s, 514.0000 * s, 944.0000 * s)
-    b.curveTo(392.6667 * s, 944.0000 * s, 315.3333 * s, 883.0000 * s, 302.0000 * s, 775.0000 * s)
-    b.lineTo(133.0000 * s, 775.0000 * s)
-    b.curveTo(138.3333 * s, 841.6667 * s, 157.5000 * s, 899.5000 * s, 190.5000 * s, 948.5000 * s)
-    b.curveTo(256.5000 * s, 1046.5000 * s, 371.3333 * s, 1102.0000 * s, 518.0000 * s, 1102.0000 * s)
-    b.closePath()
-    b.moveTo(536.0000 * s, 655.0000 * s)
-    b.lineTo(843.0000 * s, 682.0000 * s)
-    b.lineTo(843.0000 * s, 524.0000 * s)
-    b.lineTo(548.0000 * s, 498.0000 * s)
-    b.curveTo(361.3333 * s, 482.0000 * s, 274.0000 * s, 424.0000 * s, 274.0000 * s, 300.0000 * s)
-    b.curveTo(274.0000 * s, 192.0000 * s, 337.0000 * s, 136.0000 * s, 453.0000 * s, 136.0000 * s)
-    b.curveTo(561.0000 * s, 136.0000 * s, 648.1667 * s, 196.1667 * s, 695.5000 * s, 299.5000 * s)
-    b.curveTo(719.1667 * s, 351.1667 * s, 731.0000 * s, 410.0000 * s, 731.0000 * s, 476.0000 * s)
-    b.lineTo(731.0000 * s, 600.0000 * s)
-    b.lineTo(793.0000 * s, 600.0000 * s)
-    b.lineTo(793.0000 * s, 384.0000 * s)
-    b.curveTo(793.0000 * s, 308.0000 * s, 776.5000 * s, 239.0000 * s, 743.5000 * s, 177.0000 * s)
-    b.curveTo(710.5000 * s, 115.0000 * s, 665.3333 * s, 66.3333 * s, 608.0000 * s, 31.0000 * s)
-    b.curveTo(550.6667 * s, -4.3333 * s, 486.6667 * s, -22.0000 * s, 416.0000 * s, -22.0000 * s)
-    b.curveTo(352.6667 * s, -22.0000 * s, 296.0000 * s, -8.5000 * s, 246.0000 * s, 18.5000 * s)
-    b.curveTo(196.0000 * s, 45.5000 * s, 156.8333 * s, 83.1667 * s, 128.5000 * s, 131.5000 * s)
-    b.curveTo(100.1667 * s, 179.8333 * s, 86.0000 * s, 235.0000 * s, 86.0000 * s, 297.0000 * s)
-    b.curveTo(86.0000 * s, 401.6667 * s, 126.0000 * s, 484.3333 * s, 206.0000 * s, 545.0000 * s)
-    b.curveTo(286.0000 * s, 605.6667 * s, 396.0000 * s, 642.3333 * s, 536.0000 * s, 655.0000 * s)
-    b.closePath()
-    outline = b.build()
-    return GlyphAssembler(ctx).add(outline).build()
+    ry = ctx.x_height / 2.0 + ctx.overshoot
+    rx = ry * (0.88 + 0.06 * ctx.aperture)
+    cx = rx
+    cy = ctx.x_height / 2.0
+    bowl_t = ctx.stem * (0.92 + 0.04 * (1.0 - ctx.aperture))
+    outer, hole = bowl(ctx, cx, cy, rx=rx, ry=ry, thickness=bowl_t)
+    stem_left = cx + rx - ctx.stem * 0.88
+    stem = vertical_stem(
+        ctx,
+        stem_left,
+        0.0,
+        ctx.x_height + ctx.overshoot * 0.2,
+    )
+    r = ctx.join_radius * 0.85
+    join_x = stem_left
+    pad_ne = fillet_pad(ctx, join_x, cy + ry * 0.18, radius=r, quadrant=1)
+    pad_se = fillet_pad(ctx, join_x, cy - ry * 0.18, radius=r, quadrant=2)
+
+    asm = GlyphAssembler(ctx).add(outer).add(stem).add(pad_ne).add(pad_se)
+    if _HAS_PATHOPS:
+        return asm.union_solids().add_hole(hole).subtract_holes().build()
+    return asm.add_hole(hole).build()
 
 
 def letter_y(ctx: DesignContext) -> ComposedGlyph:
-    """Neo-grotesque ``y`` — continuous cubic outline (scaled reference).
+    """Original geometric ``y``: V crotch + descending right leg.
 
-    Coordinates are authored at a reference x-height of 1080 and scaled by
-    ``ctx.x_height / 1080``. Topology is continuous closed cubics (TrueType
-    source elevated with Qu2Cu), not boolean-assembled parts.
+    Clear crotch; descender stays on the right so ``y`` and ``u`` remain
+    distinct at small sizes.
     """
-    s = ctx.x_height / 1080.0
-    b = PathBuilder()
-    b.moveTo(567.0000 * s, 141.0000 * s)
-    b.lineTo(473.0000 * s, -68.0000 * s)
-    b.lineTo(57.0000 * s, 1080.0000 * s)
-    b.lineTo(250.0000 * s, 1080.0000 * s)
-    b.closePath()
-    b.moveTo(446.0000 * s, -480.0000 * s)
-    b.lineTo(263.0000 * s, -480.0000 * s)
-    b.lineTo(531.0000 * s, 141.0000 * s)
-    b.lineTo(898.0000 * s, 1080.0000 * s)
-    b.lineTo(1085.0000 * s, 1080.0000 * s)
-    b.lineTo(635.0000 * s, -4.0000 * s)
-    b.closePath()
-    outline = b.build()
-    if _HAS_PATHOPS and len(outline.contours) >= 2:
-        from typekernel.geo.outline import Outline as _Outline
-        from typekernel.parts.compose import try_union
-        parts = [_Outline((c,)) for c in outline.contours]
-        return GlyphAssembler(ctx).add(try_union(parts)).build()
-    return GlyphAssembler(ctx).add(outline).build()
+    width = ctx.x_height * (0.76 + 0.06 * ctx.aperture)
+    top = ctx.x_height
+    t = ctx.stem
+    jx = width * 0.50
+    jy = t * 0.40
+    left = stroke_polyline(
+        ctx,
+        [(t * 0.65, top - t * 0.30), (jx, jy)],
+        join_radius=0.0,
+    )
+    right = stroke_polyline(
+        ctx,
+        [
+            (width - t * 0.65, top - t * 0.30),
+            (jx, jy),
+            (jx + t * 0.50, ctx.descender + t * 0.35),
+        ],
+        join_radius=ctx.join_radius * 0.9,
+    )
+    asm = GlyphAssembler(ctx).add(left).add(right)
+    if _HAS_PATHOPS:
+        return asm.union_solids().build()
+    return asm.build()
 
 
 def letter_j(ctx: DesignContext) -> ComposedGlyph:
-    """Neo-grotesque ``j`` — continuous cubic outline (scaled reference).
+    """Original geometric ``j``: descending hook + tittle.
 
-    Coordinates are authored at a reference x-height of 1080 and scaled by
-    ``ctx.x_height / 1080``. Topology is continuous closed cubics (TrueType
-    source elevated with Qu2Cu), not boolean-assembled parts.
+    Hook opens left; tittle matches stem colour so ``i``/``j`` stay clear
+    in code editors.
     """
-    s = ctx.x_height / 1080.0
-    b = PathBuilder()
-    b.moveTo(351.0000 * s, 1500.0000 * s)
-    b.lineTo(351.0000 * s, 1220.0000 * s)
-    b.lineTo(153.0000 * s, 1220.0000 * s)
-    b.lineTo(153.0000 * s, 1500.0000 * s)
-    b.closePath()
-    b.moveTo(34.0000 * s, -480.0000 * s)
-    b.lineTo(-54.0000 * s, -480.0000 * s)
-    b.lineTo(-54.0000 * s, -321.0000 * s)
-    b.lineTo(0.0000 * s, -321.0000 * s)
-    b.curveTo(109.3333 * s, -321.0000 * s, 162.0000 * s, -268.0000 * s, 162.0000 * s, -160.0000 * s)
-    b.lineTo(162.0000 * s, 1080.0000 * s)
-    b.lineTo(342.0000 * s, 1080.0000 * s)
-    b.lineTo(342.0000 * s, -187.0000 * s)
-    b.curveTo(342.0000 * s, -301.6667 * s, 287.3333 * s, -393.6667 * s, 194.0000 * s, -443.0000 * s)
-    b.curveTo(147.3333 * s, -467.6667 * s, 94.0000 * s, -480.0000 * s, 34.0000 * s, -480.0000 * s)
-    b.closePath()
-    outline = b.build()
-    if len(outline.contours) >= 2:
-        from typekernel.geo.outline import Outline as _Outline
+    import math
 
-        def _abs_area(c: Contour) -> float:
-            pts = [seg.points[0] for seg in c.segments]
-            if len(pts) < 3:
-                return 0.0
-            pts.append(c.segments[-1].points[-1])
-            a = 0.0
-            for i in range(len(pts) - 1):
-                a += pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y
-            return abs(a) * 0.5
-
-        contours = sorted(outline.contours, key=_abs_area)
-        tittle_o = _Outline((contours[0],))
-        body_o = _Outline(tuple(contours[1:]))
-        return GlyphAssembler(ctx).add(body_o).add(tittle_o).build()
-    return GlyphAssembler(ctx).add(outline).build()
+    cx = ctx.stem * 1.30
+    t = ctx.stem
+    hr = abs(ctx.descender) * 0.50
+    bend_r = max(hr - t / 2.0, t * 0.85)
+    bend_cx = cx - bend_r
+    bend_cy = ctx.descender + hr
+    pts: list[tuple[float, float]] = [(cx, ctx.x_height - t / 2.0), (cx, bend_cy)]
+    for i in range(1, 17):
+        ang = math.radians(-105.0 * i / 16.0)
+        pts.append((bend_cx + bend_r * math.cos(ang), bend_cy + bend_r * math.sin(ang)))
+    body = stroke_polyline(ctx, pts, join_radius=0.0)
+    gap = t * 0.60
+    dot = tittle(ctx, cx, ctx.x_height + gap)
+    return GlyphAssembler(ctx).add(body).add(dot).build()
 
 
 def letter_u(ctx: DesignContext) -> ComposedGlyph:
-    """Neo-grotesque ``u`` — continuous cubic outline (scaled reference).
+    """Original geometric ``u``: U-trough with open counter.
 
-    Coordinates are authored at a reference x-height of 1080 and scaled by
-    ``ctx.x_height / 1080``. Topology is continuous closed cubics (TrueType
-    source elevated with Qu2Cu), not boolean-assembled parts.
+    Wider counter so ink does not plug at ~10–12pt; stem width matches the
+    family for coding rhythm.
     """
-    s = ctx.x_height / 1080.0
-    b = PathBuilder()
-    b.moveTo(592.0000 * s, 140.0000 * s)
-    b.curveTo(697.3333 * s, 140.0000 * s, 777.3333 * s, 184.3333 * s, 820.0000 * s, 263.0000 * s)
-    b.curveTo(841.3333 * s, 302.3333 * s, 852.0000 * s, 348.6667 * s, 852.0000 * s, 402.0000 * s)
-    b.lineTo(852.0000 * s, 1080.0000 * s)
-    b.lineTo(1031.0000 * s, 1080.0000 * s)
-    b.lineTo(1031.0000 * s, 396.0000 * s)
-    b.curveTo(1031.0000 * s, 314.6667 * s, 1012.5000 * s, 242.3333 * s, 975.5000 * s, 179.0000 * s)
-    b.curveTo(938.5000 * s, 115.6667 * s, 886.5000 * s, 66.3333 * s, 819.5000 * s, 31.0000 * s)
-    b.curveTo(752.5000 * s, -4.3333 * s, 676.3333 * s, -22.0000 * s, 591.0000 * s, -22.0000 * s)
-    b.curveTo(505.6667 * s, -22.0000 * s, 429.5000 * s, -4.3333 * s, 362.5000 * s, 31.0000 * s)
-    b.curveTo(295.5000 * s, 66.3333 * s, 243.5000 * s, 115.6667 * s, 206.5000 * s, 179.0000 * s)
-    b.curveTo(169.5000 * s, 242.3333 * s, 151.0000 * s, 314.6667 * s, 151.0000 * s, 396.0000 * s)
-    b.lineTo(151.0000 * s, 1080.0000 * s)
-    b.lineTo(332.0000 * s, 1080.0000 * s)
-    b.lineTo(332.0000 * s, 402.0000 * s)
-    b.curveTo(332.0000 * s, 295.3333 * s, 376.5000 * s, 214.6667 * s, 454.5000 * s, 172.0000 * s)
-    b.curveTo(493.5000 * s, 150.6667 * s, 539.3333 * s, 140.0000 * s, 592.0000 * s, 140.0000 * s)
-    b.closePath()
-    outline = b.build()
-    return GlyphAssembler(ctx).add(outline).build()
+    counter_w = ctx.x_height * (0.48 + 0.08 * ctx.aperture)
+    x_left = 0.0
+    x_right = ctx.stem + counter_w + ctx.stem
+    trough = u_bowl(ctx, x_left, x_right, ctx.x_height, -ctx.overshoot)
+    return GlyphAssembler(ctx).add(trough).build()
 
 
 def letter_n(ctx: DesignContext) -> ComposedGlyph:

@@ -48,13 +48,17 @@ class KernTable:
 
 
 def default_sans_kern() -> KernTable:
-    """A tiny starter kerning set for geometric lowercase demos."""
+    """Starter kerning for geometric lowercase — tuned so ``zayju`` gaps even out.
+
+    Diagonal pairs (``ay``, ``yj``) pull in; the narrow ``j`` pulls toward ``u``
+    so air after the hook does not look larger than ``za``.
+    """
     return KernTable(
         (
-            KernPair("a", "y", -18.0),
-            KernPair("y", "j", -10.0),
             KernPair("z", "a", -8.0),
-            KernPair("j", "u", -4.0),
+            KernPair("a", "y", -11.0),
+            KernPair("y", "j", -11.0),
+            KernPair("j", "u", -11.0),
             KernPair("a", "v", -16.0),
             KernPair("v", "a", -16.0),
             KernPair("T", "a", -28.0),

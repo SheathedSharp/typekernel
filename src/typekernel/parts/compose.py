@@ -105,11 +105,10 @@ class GlyphAssembler:
             0.025 * self.context.units_per_em,
             self.context.sidebearing_ratio * self.context.x_height,
         )
-        # Narrow glyphs get a little more air (same spirit as optics heuristic).
-        # Keep sidebearings nearly uniform so a word reads as one family,
-        # not wide glyphs cramped and narrow glyphs airy.
+        # Keep sidebearings nearly uniform so letter-to-letter gaps read even.
+        # Only a tiny width adjust — coding rhythm prefers tabular-ish air.
         scale = self.context.x_height / max(ink_w, 1.0)
-        scale = max(0.90, min(1.10, scale))
+        scale = max(0.97, min(1.03, scale))
         sb *= scale
         dx = sb - box[0]
         solids_t = tuple(translate_outline(o, dx) for o in solids)

@@ -241,73 +241,8 @@ def _text_panel(
 
 
 def bake_word_ttf(glyphs: list[ComposedGlyph], names: list[str], path: Path) -> Path:
-    """Bake a demo TTF whose outlines match neo-grotesque reference topology.
-
-    Glyph shapes are scaled from Anthropic Sans (the visual target for this
-    specimen). The ``letter_*`` recipes in ``typekernel.parts.latin`` encode the
-    same continuous outlines via Qu2Cu→PathBuilder for agent use; this baker
-    prefers the source glyf so FreeType preview has no elevation artifacts.
-    """
-    from fontTools.fontBuilder import FontBuilder
-    from fontTools.misc.transform import Scale
-    from fontTools.pens.transformPen import TransformPen
-    from fontTools.pens.ttGlyphPen import TTGlyphPen
-    from fontTools.ttLib import TTFont
-
-    ctx = glyphs[0].context
-    ref = Path("/tmp/anthro-fonts/AnthropicSans-Roman-Web.ttf")
-    if not ref.exists():
-        return _bake_from_composed(glyphs, names, path)
-
-    src = TTFont(str(ref))
-    gs = src.getGlyphSet()
-    cmap = src.getBestCmap()
-    hmtx = src["hmtx"].metrics
-    s = ctx.x_height / float(src["OS/2"].sxHeight)
-
-    fb_glyphs: dict = {}
-    advances: dict = {}
-    glyph_order = [".notdef"]
-    nd = TTGlyphPen(None)
-    fb_glyphs[".notdef"] = nd.glyph()
-    advances[".notdef"] = (int(ctx.units_per_em // 2), 0)
-
-    for ch in names:
-        glyph_order.append(ch)
-        gname = cmap[ord(ch)]
-        pen = TTGlyphPen(None)
-        gs[gname].draw(TransformPen(pen, Scale(s)))
-        fb_glyphs[ch] = pen.glyph()
-        # Scale reference advances so tracking matches the middle column.
-        aw = hmtx[gname][0] * s
-        advances[ch] = (max(1, round(aw)), 0)
-
-    fb = FontBuilder(int(ctx.units_per_em), isTTF=True)
-    fb.setupGlyphOrder(glyph_order)
-    fb.setupCharacterMap({ord(ch): ch for ch in names})
-    fb.setupGlyf(fb_glyphs)
-    fb.setupHorizontalMetrics(advances)
-    fb.setupHorizontalHeader(ascent=int(ctx.ascender), descent=int(ctx.descender))
-    fb.setupOS2(
-        sTypoAscender=int(ctx.ascender),
-        sTypoDescender=int(ctx.descender),
-        sxHeight=int(ctx.x_height),
-    )
-    fb.setupPost()
-    fb.setupNameTable(
-        {
-            "familyName": "TypekernelZayju",
-            "styleName": "Regular",
-            "uniqueFontIdentifier": "typekernel-zayju-demo",
-            "fullName": "Typekernel Zayju Demo",
-            "psName": "TypekernelZayju-Regular",
-            "version": "0.1",
-        }
-    )
-    out = path.with_suffix(".ttf")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fb.save(str(out))
-    return out
+    """Bake typekernel composed outlines (CFF/OTF). No commercial outline paste."""
+    return _bake_from_composed(glyphs, names, path)
 
 
 def _bake_from_composed(glyphs: list[ComposedGlyph], names: list[str], path: Path) -> Path:

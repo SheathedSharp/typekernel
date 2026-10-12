@@ -140,3 +140,57 @@ class DesignContext:
             sidebearing_ratio=0.12,
             aperture=0.65,
         )
+
+    @classmethod
+    def paper_ink(cls) -> DesignContext:
+        """Paper-first book weight: durable stems, open counters, more ink."""
+        return cls(
+            units_per_em=1000.0,
+            x_height=530.0,
+            cap_height=710.0,
+            ascender=760.0,
+            descender=-230.0,
+            stem=100.0,
+            contrast=1.0,
+            overshoot=14.0,
+            roundness=0.30,
+            tracking=0.0,
+            sidebearing_ratio=0.09,
+            aperture=0.60,
+        )
+
+    @classmethod
+    def code_clear(cls) -> DesignContext:
+        """Coding-first: tall x-height, even stems, generous even sidebearings."""
+        return cls(
+            units_per_em=1000.0,
+            x_height=565.0,
+            cap_height=720.0,
+            ascender=770.0,
+            descender=-220.0,
+            stem=86.0,
+            contrast=1.0,
+            overshoot=9.0,
+            roundness=0.16,
+            tracking=0.0,
+            sidebearing_ratio=0.12,
+            aperture=0.50,
+        )
+
+    @classmethod
+    def open_print(cls) -> DesignContext:
+        """Print-open: soft joins, wide aperture, airy counters for paper."""
+        return cls(
+            units_per_em=1000.0,
+            x_height=545.0,
+            cap_height=715.0,
+            ascender=765.0,
+            descender=-235.0,
+            stem=92.0,
+            contrast=0.98,
+            overshoot=16.0,
+            roundness=0.48,
+            tracking=0.0,
+            sidebearing_ratio=0.10,
+            aperture=0.72,
+        )
