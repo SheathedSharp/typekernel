@@ -44,6 +44,11 @@ dev = [
 boolean = [
   "skia-pathops>=0.8",
 ]
+compile = [
+  "ufoLib2>=0.16",
+  "fontmake>=3.9",
+  "ufo2ft>=2.33",
+]
 
 [project.urls]
 Homepage = "https://github.com/SheathedSharp/typekernel"
@@ -72,5 +77,11 @@ packages = ["typekernel"]
 module = [
   "fontTools.*",
   "pathops",
+  "ufoLib2",
+  "ufoLib2.*",
+  "fontmake",
+  "fontmake.*",
+  "ufo2ft",
+  "ufo2ft.*",
 ]
 ignore_missing_imports = true

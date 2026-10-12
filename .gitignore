@@ -11,8 +11,8 @@ venv/
 env/
 ENV/
 
-# Packaging / build
-build/
+# Packaging / build (repo root only)
+/build/
 dist/
 *.egg-info/
 *.egg
@@ -64,3 +64,8 @@ Thumbs.db
 
 # Local review dumps (process artifacts, not published)
 artifacts/specimens/
+
+# Local compile dogfood outputs (keep the folder via .gitkeep)
+artifacts/build/**
+!artifacts/build/.gitkeep
+
