@@ -1,0 +1,30 @@
+Synthetic O overshoot coordinate dump
+=====================================
+
+Command used to generate this file:
+  .venv/bin/python (inline script in agent session)
+  load_synthetic_outline('tests/fixtures/synthetic_O.json')
+  apply_overshoot(outline, OpticalContext.latin_defaults(), kind='round')
+
+OpticalContext.latin_defaults(): overshoot_round=12.0
+
+Control-point AABB bounds (min_x, min_y, max_x, max_y):
+  before:              (150, 0, 850, 700)
+  after apply_overshoot:(150, -12.0, 850, 712.0)
+  after pipeline apply: (150, -12.0, 850, 712.0)
+
+Y extrema:
+  before  ymin=0  ymax=700
+  after   ymin=-12.0  ymax=712.0
+  delta   ymin=-12.0  ymax=12.0
+
+On-curve extrema points (outer contour expected):
+  before top on-curve ~ (500, 700); bottom ~ (500, 0)
+  after  top should be ~ (500, 712.0); bottom ~ (500, -12.0)
+
+Notes for human review:
+- Bounds include control points; for this O, flat top/bottom handles
+  sit on the extrema y, so control AABB ymax/ymin move with on-curve.
+- Counter extrema also shift under the naive outline-wide strategy.
+- PNG specimen is not available yet (specimen layer later).
+- This dump does NOT constitute gate approval.
