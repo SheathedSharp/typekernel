@@ -148,3 +148,15 @@ Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`
 | `bowl(..., shape="superellipse", n=2.2, tension=1)` / `superellipse_ring(...)` | Parts wrappers. |
 
 `n>2` squarer; `n→1` diamond; `tension` scales handles without changing endpoints.
+
+### Stem equalization (`typekernel.optics.stem`)
+
+| API | Role |
+|-----|------|
+| `list_vertical_stems` / `list_horizontal_stems` | Even-odd probe spans. |
+| `equalize_vertical_stems(outline, target, ctx=None, *, y, side)` | Designed **x** remap per stem band → target width. |
+| `equalize_horizontal_stems(...)` | Designed **y** remap for bars. |
+| `horizontal_vs_vertical_report` | Medians + contrast ratio. |
+| `apply_designed_contrast(outline, ContrastParams)` | thick verticals + thin horizontals. |
+
+Not stroke expand. For connected H-bars, pass `y=` below the crossbar so stems resolve separately.

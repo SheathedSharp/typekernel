@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typekernel.geo.outline import Outline
+from typekernel.optics.context import OpticalContext
+
 
 @dataclass(frozen=True, slots=True)
 class ContrastParams:
@@ -36,3 +39,22 @@ def validate_contrast_params(params: ContrastParams) -> None:
             "contrast requires thick >= thin > 0; "
             f"got thick={params.thick!r}, thin={params.thin!r}"
         )
+
+
+def apply_designed_contrast(
+    outline: Outline,
+    params: ContrastParams,
+    ctx: OpticalContext | None = None,
+    *,
+    y: float | None = None,
+    x: float | None = None,
+) -> Outline:
+    """Hit ``params.thick`` on vertical stems and ``params.thin`` on horizontals.
+
+    Designed point deltas only (stem-band remaps). Never stroke expand / buffer.
+    """
+    from typekernel.optics.stem import equalize_horizontal_stems, equalize_vertical_stems
+
+    validate_contrast_params(params)
+    out = equalize_vertical_stems(outline, params.thick, ctx, y=y)
+    return equalize_horizontal_stems(out, params.thin, ctx, x=x)
