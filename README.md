@@ -31,7 +31,8 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 版本仍是 `0.0.0`。已落地：
 
-- **几何核**（`typekernel.geo`）— 三次曲线轮廓、路径构建、笔桥
+- **几何核**（`typekernel.geo`）— 三次曲线轮廓、路径构建、笔桥；可选 boolean 并集（`skia-pathops`）
+- **零件组装**（`typekernel.parts`）— 共享 `DesignContext` + Stem/Bowl/Arch 等零件，像搭积木组字
 - **光学原语**（`typekernel.optics`）— overshoot 等（合成 O 标本已过人审）
 - **字重 / 轴**（`typekernel.axes`）— `WeightDelta`、masters、`.designspace` 导出（点位移，不是涂粗）
 
@@ -52,6 +53,17 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 ```bash
 pip install -e ".[dev,specimen,compile]"
 python examples/zayju_letter/design_n.py
+```
+
+
+
+## 三栏对比：用零件组装「zayju」
+
+![苹果 / Anthropic / typekernel 零件组装](docs/images/zayju-apple-anthropic-typekernel.png)
+
+```bash
+pip install -e ".[dev,specimen,boolean]" && pip install brotli
+python examples/anthropic_zayju/design_zayju.py
 ```
 
 ## 安装（占位）

@@ -1,6 +1,8 @@
-# 示例：用 typekernel 二创「zayju」
+# 示例：用 typekernel 零件组装「zayju」
 
-不参考 zayJu，参考 Anthropic 一类**几何新无衬线**的气质，用手写 `PathBuilder` 轮廓拼出 `z a y j u`，再和两种现成字体并排对比。
+不参考 zayJu，参考 Anthropic 一类**几何新无衬线**的气质。五个字母共用一个
+`DesignContext`（字干、对比、overshoot、字距），用 Stem / Bowl / Bar / Hook 等
+零件组装 — 像 Three.js 用简单几何体搭复杂物体，而不是每个字母手写一整段贝塞尔。
 
 ## 三栏分别是什么
 
@@ -8,17 +10,19 @@
 | --- | --- |
 | 苹果系统默认 | macOS `SFNS.ttf`（SF Pro / System Font） |
 | Anthropic | 官网 CDN 上的 **Anthropic Sans**（专有字体，脚本临时下载到 `/tmp`，**不进仓库**） |
-| typekernel 二创 | 本目录 `design_zayju.py` 里用库画的几何无衬线 |
+| typekernel 零件组装 | `typekernel.parts` + `word_zayju()` 画出的几何无衬线 |
 
 ## 重新出图
 
 在仓库根目录：
 
 ```bash
-pip install -e ".[specimen]"
+pip install -e ".[specimen,boolean]"
 pip install brotli          # 仅中间栏：woff2 → 可渲染
 python examples/anthropic_zayju/design_zayju.py
 ```
+
+`boolean` extra（skia-pathops）用于把重叠的零件并成一条干净外轮廓，避免接缝缺口。
 
 产物：
 
@@ -26,12 +30,11 @@ python examples/anthropic_zayju/design_zayju.py
 - `docs/images/zayju-apple-anthropic-typekernel.png` — 同上（给文档用）
 - `out/zayju_typekernel.png` / `out/letter_*.png` — 二创单字与整词
 
-## 二创设计说明（白话）
+## 设计说明（白话）
 
-- **字干匀**：多数笔画像一根等宽管子（中线描边或显式外轮廓）
-- **a**：几何单层（圆碗 + 右干），不是双眼 a，也不是 zayJu 软底脚
-- **y / z**：斜笔终端偏平切
-- **j**：方点 + 左钩
-- **u**：双直干 + 底弯，带一点 overshoot
+- **一个上下文**：五个字母共享 stem / contrast / overshoot / tracking
+- **零件**：竖干、横杠、碗+字怀、斜干、钩、点；字母 = 零件组合 + 可选并集
+- **a**：单层几何（碗 + 右干），不是双眼 a
+- **仍是演示**：字怀完成度、字偶间距、与 Anthropic 的细部仍有差距
 
-这是演示「用代码写字」好不好用，不是生产字库。
+这是演示「用代码组字」好不好用，不是生产字库。
