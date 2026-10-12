@@ -77,18 +77,64 @@ def bowl(
     rx: float | None = None,
     ry: float | None = None,
     thickness: float | None = None,
+    shape: str = "ellipse",
+    n: float = 2.0,
+    tension: float = 1.0,
 ) -> tuple[Outline, Outline]:
-    """Elliptical bowl: returns ``(outer, counter)`` ring.
+    """Bowl ring: returns ``(outer, counter)``.
 
-    Outer radius defaults to half x-height plus overshoot on the vertical axis.
-    Counter inset uses ``thickness`` (default ``ctx.stem``).
+    ``shape`` is ``"ellipse"`` (default, κ-handles) or ``"superellipse"``
+    (Lamé exponent ``n``, handle tension). Outer radius defaults to half
+    x-height plus overshoot on the vertical axis. Counter inset uses
+    ``thickness`` (default ``ctx.stem``).
     """
     outer_ry = (ctx.x_height / 2.0 + ctx.overshoot) if ry is None else ry
     outer_rx = outer_ry if rx is None else rx
-    t = ctx.stem if thickness is None else thickness
-    inner_rx = max(outer_rx - t, 1.0)
-    inner_ry = max(outer_ry - t, 1.0)
-    return (_ellipse(cx, cy, outer_rx, outer_ry), _ellipse(cx, cy, inner_rx, inner_ry))
+    thick = ctx.stem if thickness is None else thickness
+    inner_rx = max(outer_rx - thick, 1.0)
+    inner_ry = max(outer_ry - thick, 1.0)
+    if shape == "ellipse":
+        if abs(n - 2.0) > 1e-12 or abs(tension - 1.0) > 1e-12:
+            # Explicit n/tension on ellipse shape → treat as superellipse
+            shape = "superellipse"
+        else:
+            return (
+                _ellipse(cx, cy, outer_rx, outer_ry),
+                _ellipse(cx, cy, inner_rx, inner_ry),
+            )
+    if shape == "superellipse":
+        from typekernel.geo.curves import superellipse_outline
+
+        return (
+            superellipse_outline(cx, cy, outer_rx, outer_ry, n, tension=tension),
+            superellipse_outline(cx, cy, inner_rx, inner_ry, n, tension=tension),
+        )
+    raise ValueError(f"unknown bowl shape: {shape!r} (use 'ellipse' or 'superellipse')")
+
+
+def superellipse_ring(
+    ctx: DesignContext,
+    cx: float,
+    cy: float,
+    *,
+    rx: float | None = None,
+    ry: float | None = None,
+    thickness: float | None = None,
+    n: float = 2.5,
+    tension: float = 1.0,
+) -> tuple[Outline, Outline]:
+    """Convenience: :func:`bowl` with ``shape="superellipse"``."""
+    return bowl(
+        ctx,
+        cx,
+        cy,
+        rx=rx,
+        ry=ry,
+        thickness=thickness,
+        shape="superellipse",
+        n=n,
+        tension=tension,
+    )
 
 
 def counter(

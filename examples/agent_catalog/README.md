@@ -136,3 +136,15 @@ xs = layout_glyphs(glyphs, list("zayju"), kerning=default_sans_kern())
 
 Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`. Do **not** use this as Bold/Light — that stays in `axes`.
 
+### Superellipse / tension (`typekernel.geo.curves`)
+
+| API | Role |
+|-----|------|
+| `superellipse_kappa(n)` | Handle ratio; `n=2` ≡ ellipse κ. |
+| `superellipse(cx,cy,rx,ry,n,*,tension=1)` | Closed cubic Contour (Lamé). |
+| `superellipse_outline(...)` | Same as Outline. |
+| `tune_handles(seg, tension=1, *, bias=0)` | Scale / skew cubic handles. |
+| `tensioned_cubic(p0,p3,tin,tout,*,tension,bias)` | Build cubic from tangents. |
+| `bowl(..., shape="superellipse", n=2.2, tension=1)` / `superellipse_ring(...)` | Parts wrappers. |
+
+`n>2` squarer; `n→1` diamond; `tension` scales handles without changing endpoints.
