@@ -9,7 +9,7 @@ import pytest
 
 from typekernel.geo.fixtures import load_synthetic_outline
 from typekernel.geo.joins import classify_joins
-from typekernel.geo.outline import Outline
+from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.optics.joins import cleanup_joins
 
@@ -22,23 +22,41 @@ def test_noop_is_identity() -> None:
     assert cleanup_joins(outline, policy="noop") is outline
 
 
-def test_tangent_fix_still_reserved() -> None:
-    outline = load_synthetic_outline(FIXTURE)
-    with pytest.raises(NotImplementedError):
-        cleanup_joins(outline, policy="tangent_fix")
+def test_tangent_fix_removes_kinks() -> None:
+    b = PathBuilder()
+    b.moveTo(0.0, 0.0)
+    b.lineTo(100.0, 0.0)
+    b.lineTo(102.0, 40.0)  # slight kink
+    b.lineTo(100.0, 100.0)
+    b.lineTo(0.0, 100.0)
+    b.closePath()
+    kinky = b.build()
+    assert classify_joins(kinky).kinks >= 1
+    fixed = cleanup_joins(kinky, policy="tangent_fix", radius=12.0)
+    assert classify_joins(fixed).kinks == 0
+    assert classify_joins(fixed).terminals == classify_joins(kinky).terminals
+
+
+def test_tangent_fix_noop_on_clean_rect() -> None:
+    b = PathBuilder()
+    b.moveTo(0.0, 0.0)
+    b.lineTo(80.0, 0.0)
+    b.lineTo(80.0, 60.0)
+    b.lineTo(0.0, 60.0)
+    b.closePath()
+    rect = b.build()
+    before = classify_joins(rect)
+    after = classify_joins(cleanup_joins(rect, policy="tangent_fix", radius=8.0))
+    assert after.terminals == before.terminals
+    assert after.kinks == 0
 
 
 def _sharp_crotch() -> Outline:
-    """Closed chevron: wide base, sharp top crotch (concave)."""
-    # CCW outer of a thick V / chevron ring would be complex; use a simple
-    # concave quad: square with a deep V notch on top (arrowhead hole side).
-    # Shape: pentagon with a downward V — points:
-    # (0,0)-(100,0)-(100,80)-(50,20)-(0,80)  → concave at (50,20)
     b = PathBuilder()
     b.moveTo(0.0, 0.0)
     b.lineTo(100.0, 0.0)
     b.lineTo(100.0, 80.0)
-    b.lineTo(50.0, 20.0)  # crotch apex
+    b.lineTo(50.0, 20.0)
     b.lineTo(0.0, 80.0)
     b.closePath()
     return b.build()
@@ -60,11 +78,6 @@ def test_ink_trap_policy_opens_crotch_without_new_kinks() -> None:
     assert opened is not outline
     assert opened.contour_count >= 1
     after = classify_joins(opened)
-    # Trap should not introduce unintended near-smooth kinks at the claim site;
-    # kinks count must not explode.
     assert after.kinks <= before.kinks + 2
-    # Outline still closed and finite
-    from typekernel.geo.outline import bounds
-
     bb = bounds(opened)
     assert bb[2] > bb[0] and bb[3] > bb[1]

@@ -31,6 +31,9 @@ def cleanup_joins(
     opening_deg: float = 28.0,
     min_turn_deg: float = 55.0,
     max_turn_deg: float = 170.0,
+    radius: float | None = None,
+    tension: float = 1.0,
+    kink_max_deg: float = 30.0,
 ) -> Outline:
     """Apply an explicit join-cleanup policy; return a (possibly new) outline.
 
@@ -38,7 +41,11 @@ def cleanup_joins(
 
     - ``noop`` (default): return the same outline object unchanged. No geometry
       is rewritten, so handles and extrema stay intact.
-    - ``tangent_fix``: reserved — raise ``NotImplementedError``.
+    - ``tangent_fix``: blend near-smooth kinks (and optional mild corners) with
+      tangent-meeting cubics via :func:`~typekernel.geo.joins.blend_corners`.
+      ``radius`` defaults to a fraction of the outline span; ``kink_max_deg``
+      caps which turns are fixed (default matches geo kink band). Does not
+      call ``simplify``.
     - ``ink_trap``: punch parameterized wedges at sharp internal corners /
       crotches (``depth``, ``opening_deg``, turn window). Uses boolean
       difference (requires pathops). Does not call ``simplify``.
@@ -49,8 +56,11 @@ def cleanup_joins(
     if policy == "noop":
         return outline
     if policy == "tangent_fix":
-        raise NotImplementedError(
-            "cleanup_joins policy 'tangent_fix' is reserved and not implemented"
+        return _tangent_fix(
+            outline,
+            radius=radius,
+            tension=tension,
+            kink_max_deg=kink_max_deg,
         )
     if policy == "ink_trap":
         return _apply_ink_traps(
@@ -61,6 +71,41 @@ def cleanup_joins(
             max_turn_deg=max_turn_deg,
         )
     raise ValueError(f"unknown join cleanup policy: {policy!r}")
+
+
+def _tangent_fix(
+    outline: Outline,
+    *,
+    radius: float | None,
+    tension: float,
+    kink_max_deg: float,
+) -> Outline:
+    """Blend kink joins so tangents meet; leave smooth joins and terminals."""
+    from typekernel.geo.joins import (
+        KINK_MAX_DEG,
+        SMOOTH_DEG,
+        blend_corners,
+    )
+    from typekernel.geo.outline import bounds
+
+    if kink_max_deg <= SMOOTH_DEG:
+        raise ValueError(f"kink_max_deg must be > {SMOOTH_DEG}, got {kink_max_deg!r}")
+    cap = min(kink_max_deg, KINK_MAX_DEG)
+
+    def select(angle: float, a: LineSegment | CubicSegment, b: LineSegment | CubicSegment) -> bool:
+        del a, b
+        return SMOOTH_DEG <= angle <= cap
+
+    if radius is None:
+        try:
+            min_x, min_y, max_x, max_y = bounds(outline)
+            span = max(max_x - min_x, max_y - min_y)
+            radius = max(4.0, 0.04 * span)
+        except ValueError:
+            radius = 8.0
+    if radius <= 0:
+        raise ValueError(f"radius must be positive, got {radius!r}")
+    return blend_corners(outline, radius, select=select, tension=tension)
 
 
 def _seg_end(seg: Segment) -> Point:

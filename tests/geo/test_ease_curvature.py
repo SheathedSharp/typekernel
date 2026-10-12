@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from typekernel.geo.joins import (
     classify_joins,
     curvature_jump,
@@ -150,3 +152,39 @@ def test_assembler_ease_after_bowl_difference() -> None:
     )
     assert g.advance > 0
     assert classify_joins(g.solids[0]).kinks == 0
+
+
+
+def _g1_g1_quarter():
+    """Horizontal line → kappa quarter → vertical line (both joins G1)."""
+    b = PathBuilder()
+    b.moveTo(0.0, 100.0)
+    b.lineTo(100.0, 100.0)
+    b.arcTo(100.0, 0.0, 100.0, 100.0, 0.0, start_angle_deg=90.0)
+    b.lineTo(200.0, -80.0)
+    b.lineTo(260.0, -80.0)
+    b.lineTo(260.0, 160.0)
+    b.lineTo(0.0, 160.0)
+    b.closePath()
+    return b.build()
+
+
+def test_both_end_clothoid_eases_g1_g1_quarter() -> None:
+    raw = _g1_g1_quarter()
+    before = straight_curve_jump(raw)
+    assert before > 0.5
+    assert len(raw.contours[0].segments) == 7
+    eased = ease_curvature(raw, insert_length=28.0, both_ends=True)
+    after = straight_curve_jump(eased)
+    assert after < 0.05
+    assert classify_joins(eased).kinks == 0
+    # Two transition cubics inserted → segment count grows
+    assert len(eased.contours[0].segments) > len(raw.contours[0].segments)
+
+
+def test_both_ends_false_leaves_g1_g1_quarter() -> None:
+    raw = _g1_g1_quarter()
+    before = straight_curve_jump(raw)
+    left = ease_curvature(raw, insert_length=28.0, both_ends=False)
+    assert straight_curve_jump(left) == pytest.approx(before)
+    assert len(left.contours[0].segments) == len(raw.contours[0].segments)

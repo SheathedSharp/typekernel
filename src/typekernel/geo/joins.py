@@ -10,7 +10,8 @@ Agent-facing entry points:
 
 - :func:`join_angles` / :func:`classify_joins` — read what a contour has
 - :func:`blend_corners` — smooth chosen corners (crotches, kinks, shoulders)
-- :func:`ease_curvature` — G2-harmonize straight↔curve joins (κ→0 into the line)
+- :func:`ease_curvature` — G2-harmonize straight↔curve joins (κ→0 into the line);
+  clothoid-style both-end easing for G1–G1 single-cubic quarters
 - :func:`curvature_jump` — G2 diagnostic at already-smooth joins
 """
 
@@ -427,12 +428,87 @@ def _insert_curve_to_line_ease(
     return cubic_kept, ease, line_rest  # type: ignore[return-value]
 
 
+
+
+def _scrub_degenerate_segments(segs: list[Segment], *, eps: float = 1e-6) -> list[Segment]:
+    """Drop near-zero lines and merge collinear consecutive lines."""
+    if not segs:
+        return segs
+    out: list[Segment] = []
+    for seg in segs:
+        if _is_line(seg) and _chord(seg) <= eps:
+            continue
+        if out and _is_line(out[-1]) and _is_line(seg):
+            prev = out[-1]
+            assert isinstance(prev, LineSegment) and isinstance(seg, LineSegment)
+            # Merge if collinear and contiguous (same direction).
+            ang = _angle_between(incoming_tangent(prev), outgoing_tangent(seg))
+            if ang is not None and ang < 0.5 and _dist(_seg_end(prev), seg.p0) <= eps:
+                out[-1] = LineSegment(prev.p0, seg.p1)
+                continue
+        out.append(seg)
+    # Closed-contour wrap: merge first/last if both lines and collinear.
+    if (
+        len(out) >= 2
+        and _is_line(out[0])
+        and _is_line(out[-1])
+    ):
+        first, last = out[0], out[-1]
+        assert isinstance(first, LineSegment) and isinstance(last, LineSegment)
+        ang = _angle_between(incoming_tangent(last), outgoing_tangent(first))
+        if ang is not None and ang < 0.5 and _dist(_seg_end(last), first.p0) <= eps:
+            out[0] = LineSegment(last.p0, first.p1)
+            out.pop()
+    return out
+
+
+def _insert_both_end_ease(
+    line_in: LineSegment,
+    cubic: CubicSegment,
+    line_out: LineSegment,
+    *,
+    length: float,
+    min_handle: float,
+) -> tuple[Segment, ...] | None:
+    """Clothoid-style ease at both ends of a G1–G1 single cubic between lines.
+
+    Returns ``(line_in_kept, ease_in, mid, ease_out, line_out_rest)`` or
+    ``None`` if the cubic / flanking lines are too short to trim twice.
+    Each flanking line must keep a usable remnant after one trim so adjacent
+    corners on a rounded rectangle do not collapse a shared side into a
+    zero-length L→L kink.
+    """
+    chord_in = _chord(line_in)
+    chord_out = _chord(line_out)
+    chord_c = _chord(cubic)
+    # Need enough straight run on both sides (and arc body) for two trims.
+    if chord_in < length * 2.0 or chord_out < length * 2.0 or chord_c < length * 2.5:
+        return None
+    trim = min(length, chord_in * 0.35, chord_out * 0.35, chord_c * 0.3)
+    if trim <= min_handle * 0.5 or chord_c < trim * 2.5:
+        return None
+    # Start: line → cubic
+    line_kept, ease_in, rest_after_in = _insert_line_to_curve_ease(
+        line_in, cubic, length=trim, min_handle=min_handle
+    )
+    if ease_in is rest_after_in or ease_in is cubic:
+        return None
+    # End: remaining cubic → outgoing line
+    mid, ease_out, line_rest = _insert_curve_to_line_ease(
+        rest_after_in, line_out, length=trim, min_handle=min_handle
+    )
+    if ease_out is rest_after_in or ease_out is mid:
+        return None
+    return (line_kept, ease_in, mid, ease_out, line_rest)
+
+
 def ease_contour(
     contour: Contour,
     *,
     angle_tol: float = SMOOTH_DEG,
     min_handle: float = 1.0,
     insert_length: float | None = None,
+    both_ends: bool = True,
 ) -> Contour:
     """Harmonize nearly-G1 straight↔arc joins on one contour.
 
@@ -440,7 +516,9 @@ def ease_contour(
       1. Arc runs (cubic continues into another cubic): in-place handle
          projection — G2 against the line, arc body kept.
       2. Single cubic between two lines with residual κ jump: insert a short
-         transition cubic (G2 to the line, G1 into the arc).
+         transition cubic (G2 to the line, G1 into the arc). When both ends
+         are already G1 (quarter between two lines) and ``both_ends`` is True,
+         insert clothoid-style transitions at **both** ends.
       3. Cubics already G2 to both neighbouring lines (fillets from
          :func:`blend_corners`): leave untouched.
 
@@ -475,42 +553,48 @@ def ease_contour(
     i = 0
     segs_n = list(segs)
     nn = len(segs_n)
-    # Recompute angles on current segs_n lazily per index using neighbours.
     visited_insert = 0
     while i < nn:
         a = segs_n[i]
         b = segs_n[(i + 1) % nn]
+        c = segs_n[(i + 2) % nn]
         ang = _angle_between(incoming_tangent(a), outgoing_tangent(b))
         ang_v = 180.0 if ang is None else ang
         did = False
-        far_ang = _angle_between(incoming_tangent(b), outgoing_tangent(segs_n[(i + 2) % nn]))
+        far_ang = _angle_between(incoming_tangent(b), outgoing_tangent(c))
         far_v = 180.0 if far_ang is None else far_ang
-        # Both ends G1 ⇒ corner fillet / rounded_rect — leave alone.
         both_g1 = ang_v < angle_tol and far_v < angle_tol
+        line_cubic_line = (
+            _is_line(a) and isinstance(b, CubicSegment) and _is_line(c)
+        )
         if (
-            ang_v < angle_tol
-            and _is_line(a)
-            and isinstance(b, CubicSegment)
-            and _is_line(segs_n[(i + 2) % nn])
-            and not both_g1
-            and not _already_g2_with_lines(b)
+            line_cubic_line
+            and ang_v < angle_tol
+            and not _already_g2_with_lines(b)  # type: ignore[arg-type]
         ):
             assert isinstance(a, LineSegment) and isinstance(b, CubicSegment)
-            line_kept, ease, rest = _insert_line_to_curve_ease(
-                a, b, length=length, min_handle=min_handle
-            )
-            if ease is not rest and ease is not b:
-                # Replace a,b with line_kept, ease, rest
-                # Rebuild list
-                if i + 1 < nn:
+            assert isinstance(c, LineSegment)
+            if both_g1 and both_ends:
+                # Clothoid both-end: ease at start and end of the quarter.
+                replaced = _insert_both_end_ease(
+                    a, b, c, length=length, min_handle=min_handle
+                )
+                if replaced is not None:
+                    segs_n = segs_n[:i] + list(replaced) + segs_n[i + 3 :]
+                    nn = len(segs_n)
+                    did = True
+                    visited_insert += 1
+                    i += len(replaced) - 1  # advance past new run
+            elif not both_g1:
+                line_kept, ease, rest = _insert_line_to_curve_ease(
+                    a, b, length=length, min_handle=min_handle
+                )
+                if ease is not rest and ease is not b:
                     segs_n = segs_n[:i] + [line_kept, ease, rest] + segs_n[i + 2 :]
-                else:
-                    # wrap: a is last, b is first — rare on closed; handle simply
-                    segs_n = [rest] + segs_n[1:-1] + [line_kept, ease]
-                nn = len(segs_n)
-                did = True
-                visited_insert += 1
-                i += 2  # move past line_kept + ease; rest handled next
+                    nn = len(segs_n)
+                    did = True
+                    visited_insert += 1
+                    i += 2
         if not did and (
             ang_v < angle_tol
             and isinstance(a, CubicSegment)
@@ -538,6 +622,7 @@ def ease_contour(
             i += 1
         if visited_insert > nn:  # safety
             break
+    segs_n = _scrub_degenerate_segments(segs_n)
     return Contour(tuple(segs_n), closed=contour.closed)
 
 
@@ -547,6 +632,7 @@ def ease_curvature(
     angle_tol: float = SMOOTH_DEG,
     min_handle: float = 1.0,
     insert_length: float | None = None,
+    both_ends: bool = True,
 ) -> Outline:
     """G2-harmonize straight↔curve joins on every contour.
 
@@ -555,11 +641,17 @@ def ease_curvature(
     jump where a straight already meets a round with matching tangents
     (stadium ends, stem-to-arc, U-bowl troughs, …).
 
+    When ``both_ends`` is True (default), G1–G1 single-cubic quarters between
+    two lines also get clothoid-style transition cubics at **both** ends
+    (κ→0 into each line). Cubics already G2 to both lines (``blend_corners``
+    fillets) stay untouched.
+
     Parameters:
         angle_tol: max turn (degrees) still treated as "already G1".
         min_handle: floor on projected handle length (design units).
         insert_length: trim length for inserted transitions on single-cubic
             arcs between two lines; ``None`` picks a small default.
+        both_ends: ease both ends of G1–G1 single-cubic quarters.
     """
     return Outline(
         tuple(
@@ -568,6 +660,7 @@ def ease_curvature(
                 angle_tol=angle_tol,
                 min_handle=min_handle,
                 insert_length=insert_length,
+                both_ends=both_ends,
             )
             for c in outline.contours
         )
