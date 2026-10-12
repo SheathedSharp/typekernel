@@ -1,40 +1,49 @@
-# P0 geo-kernel — public API review (GATE-P0-API)
+# Geo-kernel — public API review
 
-**Status: awaiting human approval.** No `src/` changes are made in this task. The
-recorded decision goes in `approvals/GATE-P0-API.json`; that file is deliberately
-**not** written yet, because only a human may approve a gate.
+**Status: approved.** Decision recorded in [`approvals/GATE-P0-API.json`](../../approvals/GATE-P0-API.json)
+(filename kept as a stable gate artifact; see [docs/dev-standards.md](../dev-standards.md)).
 
-Tests at review time: `pytest -q` → **120 passed**; `ruff check src tests` → clean.
+Tests at review / approval time: `pytest -q` → **120 passed**; `ruff check src tests` → clean.
+Hygiene follow-ups since approval add `py.typed`, mypy package check, and segment
+continuity validation (re-run the suite after those land).
 
-## Planned public API
+## Public API
 
-Nothing is exported from `typekernel.geo` yet — `geo/__init__.py` still holds a
-docstring only. Re-exporting is P0-026, which is blocked on this gate. The
-symbols below are the complete public surface of the submodules today.
+Stable symbols are re-exported from `typekernel.geo` (see `geo/__init__.py` and
+`__all__`). Helpers that stay submodule-only must be imported from their home
+module.
 
-| Module | Symbol | Signature |
+### Re-exported from `typekernel.geo`
+
+| Symbol | Home module | Signature / notes |
 | --- | --- | --- |
-| `point` | `Point` | `(x: float, y: float)`, frozen, slotted, hashable |
-| `segment` | `LineSegment` | `(p0, p1)` — both on-curve |
-| `segment` | `CubicSegment` | `(p0, p1, p2, p3)` — `p1`, `p2` off-curve |
-| `contour` | `Contour` | `(segments: tuple[LineSegment \| CubicSegment, ...], closed: bool = False)` |
+| `Point` | `point` | `(x: float, y: float)`, frozen, slotted, hashable |
+| `LineSegment` | `segment` | `(p0, p1)` — both on-curve |
+| `CubicSegment` | `segment` | `(p0, p1, p2, p3)` — `p1`, `p2` off-curve |
+| `Contour` | `contour` | `(segments: tuple[LineSegment \| CubicSegment, ...], closed: bool = False)` |
+| `Outline` | `outline` | `(contours: tuple[Contour, ...])` |
+| `PathBuilder` | `path_builder` | `moveTo` / `lineTo` / `curveTo` / `closePath` / `build` |
+| `draw_outline` | `pens` | `(outline, pen: AbstractPen) -> None` |
+| `ConversionReport` | `convert_quadratic` | `(max_error, segment_count_in, segment_count_out, budget)` |
+| `to_quadratic` | `convert_quadratic` | `(outline, budget: float = 1.0) -> (tuple[QuadraticContour, ...], ConversionReport)` |
+
+### Stable but submodule-only
+
+| Module | Symbol | Signature / notes |
+| --- | --- | --- |
 | `contour` | `signed_area` | `(contour) -> float` — orientation helper only |
-| `outline` | `Outline` | `(contours: tuple[Contour, ...])` |
+| `contour` | `Contour.assert_closed_consistent` | closed start/end exact match |
+| `contour` | `Contour.assert_segments_continuous` | adjacent end→start exact match |
 | `outline` | `bounds` | `(outline) -> tuple[minx, miny, maxx, maxy]` — control-point AABB |
-| `path_builder` | `PathBuilder` | `moveTo/lineTo/curveTo/closePath/build` |
-| `pens` | `draw_outline` | `(outline, pen: AbstractPen) -> None` |
 | `rounding` | `quantize` | `(value, ndigits: int = 3) -> float` |
 | `rounding` | `quantize_point` | `(point, ndigits: int = 3) -> Point` |
-| `convert_quadratic` | `ConversionReport` | `(max_error, segment_count_in, segment_count_out, budget)` |
 | `convert_quadratic` | `QuadraticContour` | `(splines, closed)` — compile-boundary artefact |
-| `convert_quadratic` | `to_quadratic` | `(outline, budget: float = 1.0) -> (tuple[QuadraticContour, ...], ConversionReport)` |
 | `fixtures` | `load_synthetic_outline` | `(path) -> Outline` |
-| `boolean` | `boolean_op` | `(a, b, op: Literal["union","intersection","difference"]) -> Outline` — stub |
+| `boolean` | `boolean_op` | `(a, b, op) -> Outline` — stub |
 
 Properties: `LineSegment.kind == "line"`, `CubicSegment.kind == "cubic"`,
 `*.points -> tuple[Point, ...]`, `Contour.is_empty`, `Outline.contour_count`,
-`Outline.iter_segments()`, `QuadraticContour.quadratic_count`,
-`Contour.assert_closed_consistent()`.
+`Outline.iter_segments()`, `QuadraticContour.quadratic_count`.
 
 ## The cubic-first story, as enforced in code
 
@@ -53,12 +62,11 @@ Properties: `LineSegment.kind == "line"`, `CubicSegment.kind == "cubic"`,
 4. **Math is delegated.** `fontTools.misc.bezierTools` / `cu2qu` / `AreaPen` /
    `BoundsPen` do the work; the kernel adds typed values, not new mathematics.
 
-## Decisions this gate should confirm
+## Decisions confirmed at the gate
 
 1. **No shared `Segment` protocol.** `Contour.segments` is typed
    `tuple[LineSegment | CubicSegment, ...]` with the union spelled out inline in
-   `contour.py`. The canonical alias arguably belongs in `segment.py`; the task
-   files for P0-009/P0-010 allowed only `contour.py`, so it was left inline.
+   `contour.py`.
 2. **`closePath()` appends an explicit closing line segment** when the current
    point differs from the contour start. Without it, every builder-made closed
    contour would fail `Contour.assert_closed_consistent()`. This makes
@@ -79,18 +87,16 @@ Properties: `LineSegment.kind == "line"`, `CubicSegment.kind == "cubic"`,
 9. **`boolean_op` is a stub** that raises `RuntimeError` (no pathops) or
    `NotImplementedError` (curve round-trip unresolved). Shapely is never used.
 
-## Known limitations / suggested follow-ups
+## Known limitations / follow-ups
 
 - `bounds`: tight Bézier extrema via `calcCubicBounds` not implemented.
 - `to_quadratic`: exact error bound not implemented; sampling only.
 - `boolean_op`: no working boolean; curve round-trip from pathops is open.
-- `mypy --strict` is configured in `pyproject.toml` but **cannot run**: the
-  package has no `py.typed` marker, so mypy reports it cannot type check
-  `typekernel`. Unresolved; not in any P0 task's allowed files.
-- The `.gitignore` modification adding `.agents/` is uncommitted (pre-existing,
-  not made by the agent run).
+- Typed package: `py.typed` + mypy package check are hygiene follow-ups (third-party
+  stubs for `fontTools.*` / `pathops` may still need `ignore_missing_imports`).
 
-## On approval
+## After approval
 
-Approval unblocks **P0-026** (re-export the stable symbols from
-`geo/__init__.py` with `__all__`), which closes the P0 exit criteria.
+The geo public API is exported from `typekernel.geo` with an explicit `__all__`.
+That closes the geo-kernel exit criteria for the public surface; optical /
+design-semantics work builds on top of it.

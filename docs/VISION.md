@@ -31,4 +31,5 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 ## 状态
 
-**Scaffolding.** 无设计 API、无几何实现。先立仓与许可证，再按计划落地 geo-kernel。
+**Geo-kernel public API available** under `typekernel.geo`. Optical /
+design-semantics primitives are the next layer. See [dev-standards.md](dev-standards.md).

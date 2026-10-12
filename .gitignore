@@ -58,3 +58,6 @@ Thumbs.db
 *.woff2
 !tests/fixtures/**/*.otf
 !tests/fixtures/**/*.ttf
+
+# Local agent plan (not part of the published repo)
+.agents/

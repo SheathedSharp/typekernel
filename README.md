@@ -23,9 +23,10 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 ## 状态
 
-**Scaffolding（脚手架）.** 包名与仓库骨架已立，尚无设计 API。版本 `0.0.0`。
+**Geo-kernel public API is in.** Cubic-first geometry lives under `typekernel.geo`
+(version still `0.0.0`). Optical / design-semantics primitives are next.
 
-完整产品 / 技术规划见独立文档（作者工作区）：`font-from-code-foundation-plan.md`（定稿后可迁入本仓 `docs/` 或外链）。愿景摘要：[docs/VISION.md](docs/VISION.md)。
+愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
 ## 安装（占位）
 
@@ -36,9 +37,20 @@ pip install -e ".[dev]"
 
 需要 Python ≥ 3.11；运行时依赖 `fonttools`。
 
+## 文档
+
+| Doc | 内容 |
+| --- | --- |
+| [docs/VISION.md](docs/VISION.md) | 产品愿景 |
+| [docs/dev-standards.md](docs/dev-standards.md) | 提交信息、typing、几何原则、公开 API 纪律 |
+| [docs/notes/p0-api-review.md](docs/notes/p0-api-review.md) | Geo public API 审查（已批准） |
+| [docs/notes/fonttools-reuse.md](docs/notes/fonttools-reuse.md) | fontTools / pathops 复用对照 |
+
 ## 贡献
 
-仓库刚起步。欢迎先读 [docs/VISION.md](docs/VISION.md) 对齐目标；实现与 PR 约定将在有第一块 geo-kernel 后补上。Issue / PR 模板与行为准则后续再加。
+先读 [docs/VISION.md](docs/VISION.md) 与 [docs/dev-standards.md](docs/dev-standards.md)。
+合并前跑通 `pytest -q`、`ruff check src tests`、`mypy -p typekernel`。
+Issue / PR 模板与行为准则后续再加。
 
 ## 许可
 
