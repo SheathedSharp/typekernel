@@ -160,3 +160,15 @@ Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`
 | `apply_designed_contrast(outline, ContrastParams)` | thick verticals + thin horizontals. |
 
 Not stroke expand. For connected H-bars, pass `y=` below the crossbar so stems resolve separately.
+
+### Terminals / aperture (`typekernel.parts.terminals` / `aperture`)
+
+| API | Role |
+|-----|------|
+| `shear_end(outline, at, angle_deg, *, band, along, inward)` | Designed-delta terminal shear. |
+| `flat_end(outline, at, *, angle_deg, length, kerf, keep)` | Knife cut (boolean). |
+| `ball_end` / `hook_end` | Union ball or hook at `at`. |
+| `open_counter(outline, side, amount, ctx)` | Bite aperture on a side. |
+| `open_bowl_ring(outer, hole, side, amount, ctx)` | Difference hole then open. |
+
+`amount` ≤ 1 is a fraction of half-extent; `> 1` is absolute units.

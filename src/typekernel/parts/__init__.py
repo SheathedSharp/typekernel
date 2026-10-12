@@ -14,6 +14,11 @@ public constructor in this package.
 
 from __future__ import annotations
 
+from typekernel.parts.aperture import (
+    aperture_bite,
+    open_bowl_ring,
+    open_counter,
+)
 from typekernel.parts.compose import (
     ComposedGlyph,
     GlyphAssembler,
@@ -85,6 +90,15 @@ from typekernel.parts.primitives import (
     vertical_stem,
     wedge,
 )
+from typekernel.parts.terminals import (
+    ball_end,
+    ball_terminal_piece,
+    flat_end,
+    flat_terminal_piece,
+    hook_end,
+    hook_terminal_piece,
+    shear_end,
+)
 from typekernel.parts.transforms import (
     mirror_x,
     mirror_y,
@@ -104,8 +118,11 @@ __all__ = [
     "KernPair",
     "KernTable",
     "Pen",
+    "aperture_bite",
     "apply_ink_trap",
     "arch",
+    "ball_end",
+    "ball_terminal_piece",
     "bowl",
     "build_letter",
     "build_word",
@@ -119,7 +136,11 @@ __all__ = [
     "expand",
     "expand_polyline",
     "fillet_pad",
+    "flat_end",
+    "flat_terminal_piece",
+    "hook_end",
     "hook_terminal",
+    "hook_terminal_piece",
     "horizontal_bar",
     "ink_trap",
     "layout_glyphs",
@@ -138,11 +159,14 @@ __all__ = [
     "letter_z",
     "mirror_x",
     "mirror_y",
+    "open_bowl_ring",
+    "open_counter",
     "pen_from_context",
     "rotate",
     "rounded_rect",
     "scale",
     "serif_bracket",
+    "shear_end",
     "shoulder",
     "sidebearing_for_width",
     "smooth_hook",
