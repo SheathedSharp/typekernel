@@ -3,8 +3,9 @@
 Columns: Apple system default | Anthropic Sans (site font) | typekernel recreation.
 
 The typekernel column is assembled like Three.js meshes: one shared
-``DesignContext`` (stem, contrast, overshoot, tracking) and reusable parts
-(stem, bowl, bar, hook, tittle) composed per letter — not one-off hard paths.
+``DesignContext``, reusable parts (stem, bowl, fillet pads, hook, …),
+boolean joins when pathops is available, and minimal kerning — not one-off
+hard paths. See ``examples/agent_catalog/`` for the full agent API index.
 
 Requires::
 
@@ -21,10 +22,16 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
-from typekernel.geo.layout import layout_x_positions, union_bounds
+from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
-from typekernel.parts import ComposedGlyph, DesignContext, word_zayju
+from typekernel.parts import (
+    ComposedGlyph,
+    DesignContext,
+    default_sans_kern,
+    layout_glyphs,
+    word_zayju,
+)
 
 OUT_DIR = Path(__file__).resolve().parent / "out"
 DOCS_IMG = Path(__file__).resolve().parents[2] / "docs" / "images"
@@ -130,11 +137,18 @@ def render_word_panel(
     panel_h: int,
     baseline_y: int,
     target_x_h: float = 92.0,
+    names: list[str] | None = None,
 ) -> Image.Image:
     scale = target_x_h / CTX.x_height
-    tracking = CTX.tracking * scale
+    # layout_glyphs works in design units; scale positions afterward.
+    xs_du = layout_glyphs(
+        glyphs,
+        names,
+        tracking=CTX.tracking,
+        kerning=default_sans_kern() if names else None,
+    )
     advances = [g.advance * scale for g in glyphs]
-    xs = layout_x_positions(advances, tracking=tracking)
+    xs = [x * scale for x in xs_du]
     content_w = xs[-1] + advances[-1] if glyphs else 0
     x0 = (panel_w - content_w) / 2.0
     panel = Image.new("RGBA", (panel_w, panel_h), BG)
@@ -201,7 +215,7 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
 
     apple = _text_panel("zayju", _font(APPLE_FONT, 172), panel_w, panel_h, baseline)
     anthro = _text_panel("zayju", _load_anthropic_font(162), panel_w, panel_h, baseline)
-    tk = render_word_panel(glyphs, panel_w, panel_h, baseline)
+    tk = render_word_panel(glyphs, panel_w, panel_h, baseline, names=list("zayju"))
 
     canvas = Image.new("RGBA", (total_w, total_h), BG)
     draw = ImageDraw.Draw(canvas)
@@ -210,7 +224,7 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
     labels = [
         ("苹果系统默认", "SF Pro · SFNS"),
         ("Anthropic", "Anthropic Sans（官网）"),
-        ("typekernel 零件组装", "共享 DesignContext · 抗锯齿"),
+        ("typekernel 零件组装", "DesignContext · fillet · kern · AA"),
     ]
     for i, (panel, (title, sub)) in enumerate(zip([apple, anthro, tk], labels)):
         x = margin + i * (panel_w + gap)
@@ -248,7 +262,9 @@ def main() -> int:
     for ch, g in zip("zayju", glyphs):
         print(ch, "advance=", round(g.advance, 1), "bounds=", glyph_bounds(g))
         render_glyph_png(g, OUT_DIR / f"letter_{ch}.png")
-    render_word_panel(glyphs, 1400, 720, 430, target_x_h=120).convert("RGB").save(
+    render_word_panel(
+        glyphs, 1400, 720, 430, target_x_h=120, names=list("zayju")
+    ).convert("RGB").save(
         OUT_DIR / "zayju_typekernel.png", optimize=True
     )
     print("wrote", OUT_DIR / "zayju_typekernel.png")
