@@ -98,3 +98,23 @@ def test_c_shallow_shear_not_deep() -> None:
 def test_unknown_letter_raises() -> None:
     with pytest.raises(KeyError, match="no skeleton recipe"):
         build_skel_letter("z", DesignContext.geometric_sans())
+
+
+
+
+def test_h_right_leg_meets_arch_join() -> None:
+    """Right leg must not stick up past the shoulder join (stub / weird h)."""
+    from typekernel.geo.outline import bounds
+    from typekernel.parts.primitives import vertical_stem
+    from typekernel.parts.skeleton_recipes import _counter_width
+
+    ctx = DesignContext.code_clear()
+    y_join = ctx.x_height * 0.52
+    x_right = ctx.stem + _counter_width(ctx)
+    # Intended leg height after fix (join + small boolean overlap).
+    right = vertical_stem(ctx, x_right, 0.0, y_join + ctx.stem * 0.12)
+    top = bounds(right)[3]
+    assert top < ctx.x_height * 0.58 - 10  # old buggy height
+    assert top <= y_join + ctx.stem * 0.12 + 0.5
+    # Built glyph still advances
+    assert build_skel_letter("h", ctx).advance > 0

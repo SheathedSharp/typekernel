@@ -262,39 +262,35 @@ def skel_i(ctx: DesignContext, **opts: object) -> ComposedGlyph:
 
 
 def skel_n(ctx: DesignContext, **opts: object) -> ComposedGlyph:
-    """Left stem + continuous cubic arch + right stem; shoulder blend."""
+    """Left stem + continuous cubic arch + right leg; shoulder blend.
+
+    Market-like topology: arch meets the **top** of the right leg. A taller
+    right stem (old ``0.58 * x_height``) left a stub above the join.
+    """
     blend = opts.get("blend", True)
     w = _counter_width(ctx)
     t = ctx.stem
-    # arch() expects inner faces of stems
     x_left, x_right = t, t + w
+    y_join = ctx.x_height * 0.52
+    y_top = ctx.x_height + ctx.overshoot
     left = vertical_stem(ctx, 0.0, 0.0, ctx.x_height)
-    right = vertical_stem(ctx, x_right, 0.0, ctx.x_height * 0.58)
-    shoulder = _continuous_arch(
-        ctx,
-        x_left,
-        x_right,
-        ctx.x_height * 0.48,
-        ctx.x_height + ctx.overshoot,
-    )
+    # Slight overlap into the arch trough so boolean union seals the crotch.
+    right = vertical_stem(ctx, x_right, 0.0, y_join + t * 0.12)
+    shoulder = _continuous_arch(ctx, x_left, x_right, y_join, y_top)
     return _assemble(ctx, left, right, shoulder, blend=blend)  # type: ignore[arg-type]
 
 
 def skel_h(ctx: DesignContext, **opts: object) -> ComposedGlyph:
-    """Ascender left stem + continuous arch + right stem; shoulder blend."""
+    """Ascender left stem + shoulder + right leg (leg top = arch join)."""
     blend = opts.get("blend", True)
     w = _counter_width(ctx)
     t = ctx.stem
     x_left, x_right = t, t + w
+    y_join = ctx.x_height * 0.52
+    y_top = ctx.x_height + ctx.overshoot
     left = vertical_stem(ctx, 0.0, 0.0, ctx.ascender)
-    right = vertical_stem(ctx, x_right, 0.0, ctx.x_height * 0.58)
-    shoulder = _continuous_arch(
-        ctx,
-        x_left,
-        x_right,
-        ctx.x_height * 0.48,
-        ctx.x_height + ctx.overshoot,
-    )
+    right = vertical_stem(ctx, x_right, 0.0, y_join + t * 0.12)
+    shoulder = _continuous_arch(ctx, x_left, x_right, y_join, y_top)
     return _assemble(ctx, left, right, shoulder, blend=blend)  # type: ignore[arg-type]
 
 
