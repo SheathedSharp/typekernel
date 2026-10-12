@@ -37,6 +37,10 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 **编译桥**（`typekernel.compile`）也在了：可把轮廓写成 UFO，再经 ufo2ft 产出 TTF，并记下 BuildManifest（工具版本）。人审「编译层是否够薄」还没做。
 
+**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助。合成 O 样品：
+
+![合成 O 样品](docs/images/synthetic-O.png)
+
 愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
 ## 安装（占位）
