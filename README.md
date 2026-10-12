@@ -35,7 +35,7 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 - **光学原语**（`typekernel.optics`）— overshoot 等（合成 O 标本已过人审）
 - **字重 / 轴**（`typekernel.axes`）— `WeightDelta`、masters、`.designspace` 导出（点位移，不是涂粗）
 
-下一步：**编译桥** — 把轮廓写成 UFO，再经 fontTools / fontmake 产出字体文件。
+**编译桥**（`typekernel.compile`）也在了：可把轮廓写成 UFO，再经 ufo2ft 产出 TTF，并记下 BuildManifest（工具版本）。人审「编译层是否够薄」还没做。
 
 愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
@@ -46,7 +46,7 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 pip install -e ".[dev]"
 ```
 
-需要 Python ≥ 3.11；运行时依赖 `fonttools`。
+需要 Python ≥ 3.11；运行时依赖 `fonttools`。写 UFO / 编 TTF 时再装可选 extra：`pip install -e ".[compile]"`。
 
 ## 文档
 
@@ -55,6 +55,7 @@ pip install -e ".[dev]"
 | [docs/VISION.md](docs/VISION.md) | 产品愿景 |
 | [docs/dev-standards.md](docs/dev-standards.md) | 提交信息、typing、几何原则、公开 API 纪律 |
 | [docs/notes/fonttools-reuse.md](docs/notes/fonttools-reuse.md) | fontTools / pathops 复用对照 |
+| [docs/compile/build-manifest.md](docs/compile/build-manifest.md) | 编译产物 BuildManifest 字段说明 |
 | [approvals/geo-public-api.json](approvals/geo-public-api.json) | Geo 公开 API 人审记录 |
 | [approvals/optical-overshoot.json](approvals/optical-overshoot.json) | Overshoot 人审记录 |
 
