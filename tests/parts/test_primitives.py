@@ -11,6 +11,7 @@ from typekernel.parts import (
     diagonal_stem,
     hook_terminal,
     horizontal_bar,
+    stroke_polyline,
     tittle,
     u_bowl,
     vertical_stem,
@@ -62,3 +63,10 @@ def test_u_bowl_closed() -> None:
     ctx = DesignContext.geometric_sans()
     u = u_bowl(ctx, 0.0, 300.0, ctx.x_height, -ctx.overshoot)
     assert u.contours[0].closed
+
+
+def test_stroke_polyline_closed() -> None:
+    ctx = DesignContext.geometric_sans()
+    stroke = stroke_polyline(ctx, [(0.0, 100.0), (80.0, 50.0), (0.0, 0.0)])
+    assert stroke.contours[0].closed
+

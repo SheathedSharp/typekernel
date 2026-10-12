@@ -88,3 +88,20 @@ def test_smooth_curve_to_on_builder() -> None:
     outline = b.build()
     assert len(outline.contours[0].segments) == 2
     assert isinstance(outline.contours[0].segments[1], CubicSegment)
+
+
+def test_quarter_circle_stays_near_unit_circle() -> None:
+    """Kappa handles must approximate a unit circle (regression for flipped p2)."""
+    import math
+
+    from typekernel.geo.path_helpers import quarter_circle_cubics
+    from typekernel.qa.specimen_png import _eval_cubic
+
+    max_err = 0.0
+    for q in range(4):
+        p0, p1, p2, p3 = quarter_circle_cubics(0.0, 0.0, 1.0, 1.0, q)  # type: ignore[arg-type]
+        for i in range(21):
+            pt = _eval_cubic(p0, p1, p2, p3, i / 20.0)
+            max_err = max(max_err, abs(math.hypot(pt.x, pt.y) - 1.0))
+    assert max_err < 0.001
+

@@ -44,11 +44,17 @@ def quarter_circle_cubics(
     x0, y0, x3, y3 = ends[quadrant]
     # Handle offsets: kappa along the tangent direction at each end.
     # At +x end tangent is +y; at +y end tangent is -x; etc.
+    # p1 = start + (dx1, dy1); p2 = end + (dx2, dy2).
+    # Classic kappa handles for CCW quarters (circle exact, ellipse approx):
+    #   Q0 (E→N): p1=(cx+rx, cy+k*ry), p2=(cx+k*rx, cy+ry)
+    #   Q1 (N→W): p1=(cx-k*rx, cy+ry), p2=(cx-rx, cy+k*ry)
+    #   Q2 (W→S): p1=(cx-rx, cy-k*ry), p2=(cx-k*rx, cy-ry)
+    #   Q3 (S→E): p1=(cx+k*rx, cy-ry), p2=(cx+rx, cy-k*ry)
     handle = (
-        (0.0, KAPPA * ry, -KAPPA * rx, 0.0),
-        (-KAPPA * rx, 0.0, 0.0, -KAPPA * ry),
-        (0.0, -KAPPA * ry, KAPPA * rx, 0.0),
-        (KAPPA * rx, 0.0, 0.0, KAPPA * ry),
+        (0.0, KAPPA * ry, KAPPA * rx, 0.0),
+        (-KAPPA * rx, 0.0, 0.0, KAPPA * ry),
+        (0.0, -KAPPA * ry, -KAPPA * rx, 0.0),
+        (KAPPA * rx, 0.0, 0.0, -KAPPA * ry),
     )
     dx1, dy1, dx2, dy2 = handle[quadrant]
     return (

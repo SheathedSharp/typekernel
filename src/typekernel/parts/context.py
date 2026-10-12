@@ -62,10 +62,10 @@ class DesignContext:
             x_height=520.0,
             cap_height=700.0,
             descender=-210.0,
-            stem=74.0,
-            contrast=0.96,
+            stem=72.0,
+            contrast=0.98,
             overshoot=12.0,
-            roundness=0.40,
+            roundness=0.48,
             tracking=10.0,
             sidebearing_ratio=0.11,
         )

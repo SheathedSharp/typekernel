@@ -265,33 +265,39 @@ def hook_terminal(
     hook_radius: float | None = None,
     width: float | None = None,
 ) -> Outline:
-    """Descending stem with a leftward curved hook (lowercase ``j``)."""
+    """Descending stem with a leftward curved hook (lowercase ``j``).
+
+    Outer arc centre sits so the stem's right edge is the arc's east point;
+    the hook sweeps through south to the west (open to the left).
+    """
     t = ctx.stem if width is None else width
-    hr = (abs(y_bottom) * 0.45) if hook_radius is None else hook_radius
+    hr = (abs(y_bottom) * 0.50) if hook_radius is None else hook_radius
+    hr = max(hr, t * 1.2)
     left = x_center - t / 2.0
     right = x_center + t / 2.0
-    hook_left = left - (hr - t)
-    center_x = hook_left + hr
-    center_y = y_bottom + hr
+    # East point of outer arc == (right, y_bottom + hr)
+    outer_cx = right - hr
+    outer_cy = y_bottom + hr
+    ir = hr - t
+    inner_cx = outer_cx
+    inner_cy = outer_cy
 
     b = PathBuilder()
     b.moveTo(left, y_top)
     b.lineTo(right, y_top)
     b.lineTo(right, y_bottom + hr)
-    b.arcTo(center_x, center_y, hr, hr, -90, start_angle_deg=0)
-    b.lineTo(hook_left, y_bottom)
-    b.lineTo(hook_left, y_bottom + t)
-    ir = hr - t
-    b.curveTo(
-        hook_left + ir * KAPPA,
-        y_bottom + t,
-        left,
-        y_bottom + t + ir * KAPPA,
-        left,
-        y_bottom + hr,
-    )
+    # Outer: 0° (east) → -180° (west), CCW negative = clockwise sweep southward
+    b.arcTo(outer_cx, outer_cy, hr, hr, -180, start_angle_deg=0)
+    # Now at west outer: (outer_cx - hr, outer_cy)
+    # Cap the hook terminal with the stem thickness
+    b.lineTo(outer_cx - ir, outer_cy)
+    # Inner arc back: 180° → 0° (west to east on inner circle)
+    b.arcTo(inner_cx, inner_cy, ir, ir, 0, start_angle_deg=180)
+    # Now at (outer_cx + ir, outer_cy) which should be near (left, y_bottom+hr)
+    b.lineTo(left, y_bottom + hr)
     b.closePath()
     return b.build()
+
 
 
 def tittle(
@@ -321,3 +327,78 @@ def _ellipse(cx: float, cy: float, rx: float, ry: float) -> Outline:
     b = PathBuilder()
     b.addEllipse(cx, cy, rx, ry)
     return b.build()
+
+
+def stroke_polyline(
+    ctx: DesignContext,
+    points: list[tuple[float, float]],
+    *,
+    width: float | None = None,
+    join_radius: float | None = None,
+) -> Outline:
+    """Centered stroke of a polyline; optional rounded joins from ``ctx.roundness``."""
+    import math
+
+    thickness = ctx.stem if width is None else width
+    radius = ctx.join_radius if join_radius is None else join_radius
+    half = thickness / 2.0
+    n = len(points)
+    if n < 2:
+        raise ValueError("stroke_polyline needs at least two points")
+
+    def seg_n(i: int) -> tuple[float, float]:
+        dx = points[i + 1][0] - points[i][0]
+        dy = points[i + 1][1] - points[i][1]
+        ln = math.hypot(dx, dy) or 1.0
+        return (-dy / ln, dx / ln)
+
+    normals = [seg_n(i) for i in range(n - 1)]
+    left: list[tuple[float, float]] = []
+    right: list[tuple[float, float]] = []
+    for i in range(n):
+        if i == 0:
+            nx, ny = normals[0]
+        elif i == n - 1:
+            nx, ny = normals[-1]
+        else:
+            ax, ay = normals[i - 1]
+            bx, by = normals[i]
+            sx, sy = ax + bx, ay + by
+            sl = math.hypot(sx, sy)
+            if sl < 1e-6:
+                nx, ny = ax, ay
+            else:
+                nx, ny = sx / sl, sy / sl
+                dot = max(-1.0, min(1.0, ax * nx + ay * ny))
+                m = min(1.0 / max(dot, 0.45), 2.2)
+                nx, ny = nx * m, ny * m
+        left.append((points[i][0] + nx * half, points[i][1] + ny * half))
+        right.append((points[i][0] - nx * half, points[i][1] - ny * half))
+
+    b = PathBuilder()
+    if radius <= 0 or n < 3:
+        b.moveTo(*left[0])
+        for pt in left[1:]:
+            b.lineTo(*pt)
+        b.lineTo(*right[-1])
+        for pt in reversed(right[:-1]):
+            b.lineTo(*pt)
+        b.closePath()
+        return b.build()
+
+    b.moveTo(*left[0])
+    for i in range(1, len(left) - 1):
+        b.roundedCornerTo(
+            left[i][0], left[i][1], left[i + 1][0], left[i + 1][1], radius, continue_to_end=False
+        )
+    b.lineTo(*left[-1])
+    b.lineTo(*right[-1])
+    for i in range(len(right) - 2, 0, -1):
+        nxt = right[i - 1]
+        b.roundedCornerTo(
+            right[i][0], right[i][1], nxt[0], nxt[1], radius, continue_to_end=False
+        )
+    b.lineTo(*right[0])
+    b.closePath()
+    return b.build()
+

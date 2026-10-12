@@ -45,7 +45,6 @@ def test_assembler_union_merges_solids() -> None:
     assert len(g.solids) == 1
 
 
-@pytest.mark.skipif(not HAS_PATHOPS, reason="skia-pathops not installed")
 def test_word_zayju_shares_one_context() -> None:
     ctx = DesignContext.geometric_sans()
     glyphs = word_zayju(ctx)
@@ -54,16 +53,14 @@ def test_word_zayju_shares_one_context() -> None:
     assert all(g.advance > 0 for g in glyphs)
 
 
-@pytest.mark.skipif(not HAS_PATHOPS, reason="skia-pathops not installed")
-def test_letter_a_has_a_counter() -> None:
+def test_letter_a_has_bowl_stem_and_counter() -> None:
     ctx = DesignContext.geometric_sans()
     a = letter_a(ctx)
     assert len(a.holes) == 1
-    assert len(a.solids) >= 1
+    assert len(a.solids) == 2
 
 
-@pytest.mark.skipif(not HAS_PATHOPS, reason="skia-pathops not installed")
-def test_letter_z_is_unioned() -> None:
+def test_letter_z_is_one_solid() -> None:
     ctx = DesignContext.geometric_sans()
     z = letter_z(ctx)
     assert len(z.solids) == 1
