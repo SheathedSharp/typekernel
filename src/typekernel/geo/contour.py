@@ -148,3 +148,14 @@ def signed_area(contour: Contour) -> float:
     for current, following in zip(points, (*points[1:], points[0]), strict=True):
         total += current.x * following.y - following.x * current.y
     return total / 2.0
+
+def reverse_contour(contour: Contour) -> Contour:
+    """Return ``contour`` with segment order and handles reversed (flip winding)."""
+    segs: list[LineSegment | CubicSegment] = []
+    for seg in reversed(contour.segments):
+        if isinstance(seg, LineSegment):
+            segs.append(LineSegment(seg.p1, seg.p0))
+        else:
+            segs.append(CubicSegment(seg.p3, seg.p2, seg.p1, seg.p0))
+    return Contour(tuple(segs), closed=contour.closed)
+

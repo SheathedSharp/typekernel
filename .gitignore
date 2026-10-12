@@ -102,3 +102,4 @@ examples/smooth_joins/out/**
 examples/ease_curvature/out/**
 !examples/ease_curvature/out/.gitkeep
 !examples/ease_curvature/out/stadium-before-after.png
+examples/skeleton_specimen/out/

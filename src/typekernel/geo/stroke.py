@@ -463,7 +463,14 @@ def _expand_open(
     _trace_tokens(b, rev, left_side=False, skip_first=True)
     _emit_cap(b, pts[0], tangents[0], pen, cap=cap, at_start=True)
     b.closePath()
-    return b.build()
+    outline = b.build()
+    # Font / pathops convention: solid outer contours are CCW (positive area).
+    from typekernel.geo.contour import reverse_contour, signed_area
+
+    contours = []
+    for c in outline.contours:
+        contours.append(c if signed_area(c) >= 0 else reverse_contour(c))
+    return Outline(tuple(contours))
 
 
 def _expand_closed(

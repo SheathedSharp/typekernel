@@ -255,6 +255,20 @@ def _apply_terminal(
     raise ValueError(f"unknown terminal kind: {treatment.kind!r}")
 
 
+
+def _ensure_ccw_solid(outline: Outline) -> Outline:
+    """Flip solid contours to CCW so pathops unions succeed with closed ribbons."""
+    from typekernel.geo.contour import reverse_contour, signed_area
+
+    contours = []
+    for c in outline.contours:
+        if signed_area(c) < 0:
+            contours.append(reverse_contour(c))
+        else:
+            contours.append(c)
+    return Outline(tuple(contours)) if contours != list(outline.contours) else outline
+
+
 def _split_closed_ribbon(outline: Outline) -> tuple[list[Outline], list[Outline]]:
     """Split an annular expand into solid outers and hole inners by signed area."""
     solids: list[Outline] = []
@@ -342,7 +356,7 @@ def trace_letter(
             miter_limit=miter_limit,
         )
         for solid in solids:
-            asm.add(solid)
+            asm.add(_ensure_ccw_solid(solid))
         for hole in holes:
             asm.add_hole(hole)
             any_holes = True
@@ -356,4 +370,34 @@ def trace_letter(
             asm.blend_joins(radius)
     if ease:
         asm.ease_curvature()
-    return asm.build()
+    try:
+        return asm.build()
+    except Exception as exc:
+        # Disjoint round-cap strokes can make pathops union fail; fall back to
+        # separate solids so skeleton recipes stay usable.
+        name = type(exc).__name__
+        if not union or "PathOps" not in name:
+            raise
+        asm_fb = GlyphAssembler(ctx)
+        for stroke in skel.strokes:
+            solids, holes = _expand_stroke(
+                stroke,
+                ctx,
+                default_join=join,
+                default_cap=cap,
+                miter_limit=miter_limit,
+            )
+            for solid in solids:
+                asm_fb.add(_ensure_ccw_solid(solid))
+            for hole in holes:
+                asm_fb.add_hole(hole)
+        if subtract_holes and any_holes:
+            # holes without union: keep as separate hole contours
+            pass
+        if blend is not False:
+            radius = float(ctx.join_radius if blend is True else blend)
+            if radius > 0:
+                asm_fb.blend_joins(radius)
+        if ease:
+            asm_fb.ease_curvature()
+        return asm_fb.build()
