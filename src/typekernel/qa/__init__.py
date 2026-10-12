@@ -1,4 +1,4 @@
-"""QA helpers for typekernel: outline hashes, PNG specimens, human-gate records.
+"""QA helpers for typekernel: outline hashes, PNG specimens, scores, gates.
 
 This package supports regression checks and human visual review. A PNG specimen
 is a **preview only** — cubic outlines remain the design truth. Approval helpers
@@ -9,12 +9,28 @@ from __future__ import annotations
 
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
+from typekernel.qa.score import (
+    Score,
+    WordReport,
+    join_smoothness,
+    stem_uniformity,
+    word_gap_spread,
+    word_report,
+    zayju_report,
+)
 
 __all__ = [
+    "Score",
+    "WordReport",
+    "join_smoothness",
     "load_approval",
     "outline_hash",
     "require_approval",
+    "stem_uniformity",
+    "word_gap_spread",
+    "word_report",
     "write_approval",
+    "zayju_report",
 ]
 
 # ``render_outline_png`` lives in ``specimen_png`` and needs the optional

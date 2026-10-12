@@ -46,6 +46,44 @@ class KernTable:
         kept.append(KernPair(left, right, value))
         return KernTable(tuple(kept))
 
+    @classmethod
+    def from_optical(
+        cls,
+        glyphs: list[ComposedGlyph],
+        names: list[str],
+        *,
+        target_gap: float | None = None,
+        samples: int = 17,
+    ) -> KernTable:
+        """Fit pair kerns so optical silhouette gaps match ``target_gap``.
+
+        Sidebearings are left as-is; only kern values are solved. For a full
+        re-space (bearings + kern) prefer
+        :func:`typekernel.optics.space.space_word_optical`.
+        """
+        from typekernel.optics.space import fit_kern_pair, pair_gap_bbox
+
+        if len(glyphs) != len(names):
+            raise ValueError("names length must match glyphs")
+        if target_gap is None:
+            gaps = [
+                pair_gap_bbox(glyphs[i], glyphs[i + 1], kern=0.0)
+                for i in range(len(glyphs) - 1)
+            ]
+            gaps.sort()
+            target = gaps[len(gaps) // 2] if gaps else 0.0
+        else:
+            target = target_gap
+        pairs = [
+            KernPair(
+                names[i],
+                names[i + 1],
+                fit_kern_pair(glyphs[i], glyphs[i + 1], target, samples=samples),
+            )
+            for i in range(len(glyphs) - 1)
+        ]
+        return cls(tuple(pairs))
+
 
 def default_sans_kern() -> KernTable:
     """Starter kerning for geometric lowercase — tuned so ``zayju`` gaps even out.

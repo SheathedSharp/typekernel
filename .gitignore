@@ -87,3 +87,8 @@ examples/anthropic_zayju/out/**
 examples/paper_code_zayju/out/**
 !examples/paper_code_zayju/out/.gitkeep
 !examples/paper_code_zayju/out/triad.png
+
+# optical_spacing example outputs
+examples/optical_spacing/out/**
+!examples/optical_spacing/out/.gitkeep
+!examples/optical_spacing/out/compare.png

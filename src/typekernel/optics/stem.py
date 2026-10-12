@@ -78,6 +78,10 @@ def _intersection_xs(
     segment: LineSegment | CubicSegment,
     ray: list[tuple[float, float]],
 ) -> list[float]:
+    # Keep only intersections whose parameters lie on both segments.
+    # Unfiltered cubic-line hits can lie far outside the glyph and break
+    # even-odd stem pairing (and optical silhouettes).
+    _eps = 1e-6
     if isinstance(segment, LineSegment):
         hits = lineLineIntersections(
             segment.p0.as_tuple(),
@@ -85,8 +89,11 @@ def _intersection_xs(
             ray[0],
             ray[1],
         )
-        return [float(hit.pt[0]) for hit in hits]
-
-    curve = [p.as_tuple() for p in segment.points]
-    hits = curveLineIntersections(curve, ray)
-    return [float(hit.pt[0]) for hit in hits]
+    else:
+        curve = [p.as_tuple() for p in segment.points]
+        hits = curveLineIntersections(curve, ray)
+    out: list[float] = []
+    for hit in hits:
+        if -_eps <= float(hit.t1) <= 1.0 + _eps and -_eps <= float(hit.t2) <= 1.0 + _eps:
+            out.append(float(hit.pt[0]))
+    return out
