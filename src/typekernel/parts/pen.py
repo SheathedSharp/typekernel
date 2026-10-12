@@ -1,8 +1,8 @@
 """DesignContext helpers for midline pen expand.
 
 Thin wrappers around :mod:`typekernel.geo.stroke`. Construction only — not a
-weight axis. Glyph-skeleton recipes (``trace_letter``) are intentionally absent
-until the general expand layer is locked by synthetic fixtures.
+weight axis. Skeleton-to-outline letter recipes live in
+:mod:`typekernel.parts.skeleton` (:func:`~typekernel.parts.skeleton.trace_letter`).
 """
 
 from __future__ import annotations
@@ -16,11 +16,15 @@ from typekernel.parts.context import DesignContext
 __all__ = [
     "CapStyle",
     "Centerline",
+    "EndTreatment",
     "JoinStyle",
     "Pen",
+    "Skeleton",
+    "Stroke",
     "expand",
     "expand_polyline",
     "pen_from_context",
+    "trace_letter",
 ]
 
 
@@ -60,3 +64,12 @@ def expand_polyline(
     else:
         cl = Centerline.from_points(points, closed=closed)
     return expand(cl, pen, join=join, cap=cap, miter_limit=miter_limit)
+
+# Skeleton recipe API (re-exported; implementation in parts.skeleton).
+# Imported after helpers above so parts.skeleton can use pen_from_context.
+from typekernel.parts.skeleton import (
+    EndTreatment,
+    Skeleton,
+    Stroke,
+    trace_letter,
+)

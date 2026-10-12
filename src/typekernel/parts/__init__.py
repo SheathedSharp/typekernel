@@ -97,6 +97,12 @@ from typekernel.parts.primitives import (
     vertical_stem,
     wedge,
 )
+from typekernel.parts.skeleton import (
+    EndTreatment,
+    Skeleton,
+    Stroke,
+    trace_letter,
+)
 from typekernel.parts.terminals import (
     ball_end,
     ball_terminal_piece,
@@ -122,6 +128,7 @@ __all__ = [
     "ClassKernTable",
     "ComposedGlyph",
     "DesignContext",
+    "EndTreatment",
     "GlyphAssembler",
     "JoinStyle",
     "KernClass",
@@ -129,6 +136,8 @@ __all__ = [
     "KernTable",
     "Pen",
     "RhythmSpec",
+    "Skeleton",
+    "Stroke",
     "aperture_bite",
     "apply_ink_trap",
     "arch",
@@ -189,6 +198,7 @@ __all__ = [
     "terminal_ball",
     "terminal_sheared",
     "tittle",
+    "trace_letter",
     "translate",
     "translate_outline",
     "try_difference",

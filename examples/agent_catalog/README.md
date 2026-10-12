@@ -133,6 +133,7 @@ xs = layout_glyphs(glyphs, list("zayju"), kerning=default_sans_kern())
 | `Centerline.from_points(pts, *, closed=False)` | Polyline skeleton. |
 | `expand(centerline, pen, *, join, cap, miter_limit)` | Offset → closed outline. Joins: miter/round/bevel; caps: butt/round/square. |
 | `pen_from_context(ctx)` / `expand_polyline(pts, ctx, …)` | DesignContext wrappers. |
+| `Stroke` / `Skeleton` / `trace_letter(skel, ctx, …)` | Skeleton→outline letter recipe (named strokes). |
 
 Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`. Do **not** use this as Bold/Light — that stays in `axes`.
 
