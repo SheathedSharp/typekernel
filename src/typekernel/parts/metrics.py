@@ -51,11 +51,12 @@ def default_sans_kern() -> KernTable:
     """A tiny starter kerning set for geometric lowercase demos."""
     return KernTable(
         (
-            KernPair("a", "y", -12.0),
-            KernPair("y", "j", -6.0),
-            KernPair("z", "a", -4.0),
-            KernPair("a", "v", -14.0),
-            KernPair("v", "a", -14.0),
+            KernPair("a", "y", -18.0),
+            KernPair("y", "j", -10.0),
+            KernPair("z", "a", -8.0),
+            KernPair("j", "u", -4.0),
+            KernPair("a", "v", -16.0),
+            KernPair("v", "a", -16.0),
             KernPair("T", "a", -28.0),
             KernPair("L", "T", -20.0),
         )
@@ -69,7 +70,7 @@ def sidebearing_for_width(ctx: DesignContext, ink_width: float) -> float:
         ctx.sidebearing_ratio * ctx.x_height,
     )
     scale = ctx.x_height / max(ink_width, 1.0)
-    scale = max(0.55, min(1.45, scale))
+    scale = max(0.90, min(1.10, scale))
     return sb * scale
 
 

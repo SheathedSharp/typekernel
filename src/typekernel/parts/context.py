@@ -67,20 +67,24 @@ class DesignContext:
 
     @classmethod
     def geometric_sans(cls) -> DesignContext:
-        """Neo-grotesque defaults: even colour, soft joins, high x-height."""
+        """Neo-grotesque defaults: even colour, soft joins, high x-height.
+
+        Rhythm roughly mirrors a modern geometric sans (stem ≈ 0.09 em,
+        x-height ≈ 0.54 em, modest overshoot, tight tracking).
+        """
         return cls(
             units_per_em=1000.0,
-            x_height=520.0,
-            cap_height=700.0,
-            ascender=740.0,
-            descender=-210.0,
-            stem=72.0,
-            contrast=0.98,
-            overshoot=12.0,
-            roundness=0.48,
-            tracking=10.0,
-            sidebearing_ratio=0.11,
-            aperture=0.58,
+            x_height=540.0,
+            cap_height=720.0,
+            ascender=750.0,
+            descender=-240.0,
+            stem=90.0,
+            contrast=1.0,
+            overshoot=11.0,
+            roundness=0.28,
+            tracking=0.0,
+            sidebearing_ratio=0.08,
+            aperture=0.55,
         )
 
     @classmethod

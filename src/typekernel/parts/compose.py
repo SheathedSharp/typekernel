@@ -102,12 +102,14 @@ class GlyphAssembler:
         box = union_bounds(ink)
         ink_w = box[2] - box[0]
         sb = max(
-            0.04 * self.context.units_per_em,
+            0.025 * self.context.units_per_em,
             self.context.sidebearing_ratio * self.context.x_height,
         )
         # Narrow glyphs get a little more air (same spirit as optics heuristic).
+        # Keep sidebearings nearly uniform so a word reads as one family,
+        # not wide glyphs cramped and narrow glyphs airy.
         scale = self.context.x_height / max(ink_w, 1.0)
-        scale = max(0.55, min(1.45, scale))
+        scale = max(0.90, min(1.10, scale))
         sb *= scale
         dx = sb - box[0]
         solids_t = tuple(translate_outline(o, dx) for o in solids)

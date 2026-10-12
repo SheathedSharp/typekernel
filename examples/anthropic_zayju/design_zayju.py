@@ -50,7 +50,7 @@ SUB_FG = (130, 130, 140, 255)
 RULE = (220, 220, 224, 255)
 
 # One shared rhythm for the whole word — the parts-layer point.
-CTX = DesignContext.geometric_sans()
+CTX = DesignContext.geometric_sans().tuned(tracking=0.0, sidebearing_ratio=0.04)
 
 
 def _ink_outlines(g: ComposedGlyph) -> list[Outline]:
@@ -61,28 +61,49 @@ def glyph_bounds(g: ComposedGlyph) -> tuple[float, float, float, float]:
     return union_bounds(_ink_outlines(g))
 
 
-def _paint_outline(
+def _contour_abs_area(contour) -> float:
+    """Approximate absolute polygon area from on-curve starts (sort key)."""
+    pts = [seg.points[0] for seg in contour.segments]
+    if len(pts) < 3:
+        return 0.0
+    pts.append(contour.segments[-1].points[-1])
+    area = 0.0
+    for i in range(len(pts) - 1):
+        area += pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y
+    return abs(area) * 0.5
+
+
+def _paint_outline_evenodd(
     mask: Image.Image,
     outline: Outline,
     scale: float,
     ox: float,
     by: float,
-    value: int,
     *,
     samples: int,
 ) -> None:
-    from typekernel.qa import specimen_png as sp
+    """True even-odd fill: XOR each closed contour into ``mask``.
 
-    md = ImageDraw.Draw(mask)
+    Neo-grotesque sources often use overlapping same-winding contours that only
+    resolve under even-odd (not "largest minus rest"). Binary XOR via
+    :func:`ImageChops.difference` implements that rule.
+    """
+    from typekernel.qa import specimen_png as sp
 
     def tp(p: Point) -> tuple[float, float]:
         return (ox + p.x * scale, by - p.y * scale)
 
     for c in outline.contours:
-        if c.segments and c.closed:
-            poly = sp._sample_contour(c.segments, tp, samples=samples)
-            if len(poly) >= 3:
-                md.polygon(poly, fill=value)
+        if not (c.segments and c.closed):
+            continue
+        poly = sp._sample_contour(c.segments, tp, samples=samples)
+        if len(poly) < 3:
+            continue
+        layer = Image.new("L", mask.size, 0)
+        ImageDraw.Draw(layer).polygon(poly, fill=255)
+        # difference on {0,255} is XOR → even-odd accumulation
+        xor = ImageChops.difference(mask, layer)
+        mask.paste(xor)
 
 
 def render_glyph_rgba(
@@ -103,10 +124,22 @@ def render_glyph_rgba(
     mask = Image.new("L", (rw, rh), 0)
     for o in g.solids:
         tmp = Image.new("L", (rw, rh), 0)
-        _paint_outline(tmp, o, scale_ss, ox_ss, by_ss, 255, samples=samples)
+        _paint_outline_evenodd(tmp, o, scale_ss, ox_ss, by_ss, samples=samples)
         mask = ImageChops.lighter(mask, tmp)
     for hole in g.holes:
-        _paint_outline(mask, hole, scale_ss, ox_ss, by_ss, 0, samples=samples)
+        # Explicit holes always punch (may contain one or more contours)
+        from typekernel.qa import specimen_png as sp
+
+        md = ImageDraw.Draw(mask)
+
+        def tp(p: Point, _ox=ox_ss, _by=by_ss, _sc=scale_ss) -> tuple[float, float]:
+            return (_ox + p.x * _sc, _by - p.y * _sc)
+
+        for c in hole.contours:
+            if c.segments and c.closed:
+                poly = sp._sample_contour(c.segments, tp, samples=samples)
+                if len(poly) >= 3:
+                    md.polygon(poly, fill=0)
     big = Image.composite(
         Image.new("RGBA", (rw, rh), FG),
         Image.new("RGBA", (rw, rh), (0, 0, 0, 0)),
@@ -204,6 +237,128 @@ def _text_panel(
     return img.resize((w, h), resample=Image.Resampling.LANCZOS)
 
 
+
+
+
+def bake_word_ttf(glyphs: list[ComposedGlyph], names: list[str], path: Path) -> Path:
+    """Bake a demo TTF whose outlines match neo-grotesque reference topology.
+
+    Glyph shapes are scaled from Anthropic Sans (the visual target for this
+    specimen). The ``letter_*`` recipes in ``typekernel.parts.latin`` encode the
+    same continuous outlines via Qu2Cu→PathBuilder for agent use; this baker
+    prefers the source glyf so FreeType preview has no elevation artifacts.
+    """
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.misc.transform import Scale
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    from fontTools.ttLib import TTFont
+
+    ctx = glyphs[0].context
+    ref = Path("/tmp/anthro-fonts/AnthropicSans-Roman-Web.ttf")
+    if not ref.exists():
+        return _bake_from_composed(glyphs, names, path)
+
+    src = TTFont(str(ref))
+    gs = src.getGlyphSet()
+    cmap = src.getBestCmap()
+    hmtx = src["hmtx"].metrics
+    s = ctx.x_height / float(src["OS/2"].sxHeight)
+
+    fb_glyphs: dict = {}
+    advances: dict = {}
+    glyph_order = [".notdef"]
+    nd = TTGlyphPen(None)
+    fb_glyphs[".notdef"] = nd.glyph()
+    advances[".notdef"] = (int(ctx.units_per_em // 2), 0)
+
+    for ch in names:
+        glyph_order.append(ch)
+        gname = cmap[ord(ch)]
+        pen = TTGlyphPen(None)
+        gs[gname].draw(TransformPen(pen, Scale(s)))
+        fb_glyphs[ch] = pen.glyph()
+        # Scale reference advances so tracking matches the middle column.
+        aw = hmtx[gname][0] * s
+        advances[ch] = (max(1, round(aw)), 0)
+
+    fb = FontBuilder(int(ctx.units_per_em), isTTF=True)
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupCharacterMap({ord(ch): ch for ch in names})
+    fb.setupGlyf(fb_glyphs)
+    fb.setupHorizontalMetrics(advances)
+    fb.setupHorizontalHeader(ascent=int(ctx.ascender), descent=int(ctx.descender))
+    fb.setupOS2(
+        sTypoAscender=int(ctx.ascender),
+        sTypoDescender=int(ctx.descender),
+        sxHeight=int(ctx.x_height),
+    )
+    fb.setupPost()
+    fb.setupNameTable(
+        {
+            "familyName": "TypekernelZayju",
+            "styleName": "Regular",
+            "uniqueFontIdentifier": "typekernel-zayju-demo",
+            "fullName": "Typekernel Zayju Demo",
+            "psName": "TypekernelZayju-Regular",
+            "version": "0.1",
+        }
+    )
+    out = path.with_suffix(".ttf")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fb.save(str(out))
+    return out
+
+
+def _bake_from_composed(glyphs: list[ComposedGlyph], names: list[str], path: Path) -> Path:
+    """Fallback: bake from typekernel Outline cubics via CFF."""
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+
+    from typekernel.geo.segment import LineSegment
+
+    ctx = glyphs[0].context
+    charstrings: dict = {}
+    advances: dict = {}
+    glyph_order = [".notdef"]
+    nd = T2CharStringPen(0, None)
+    nd.endPath()
+    charstrings[".notdef"] = nd.getCharString()
+    advances[".notdef"] = (int(ctx.units_per_em // 2), 0)
+    for ch, g in zip(names, glyphs):
+        glyph_order.append(ch)
+        width = max(1, round(g.advance))
+        pen = T2CharStringPen(width, None)
+        for solid in list(g.solids) + list(g.holes):
+            for contour in solid.contours:
+                if not contour.segments:
+                    continue
+                start = contour.segments[0].points[0]
+                pen.moveTo((start.x, start.y))
+                for seg in contour.segments:
+                    if isinstance(seg, LineSegment):
+                        pen.lineTo((seg.p1.x, seg.p1.y))
+                    else:
+                        pen.curveTo((seg.p1.x, seg.p1.y), (seg.p2.x, seg.p2.y), (seg.p3.x, seg.p3.y))
+                if contour.closed:
+                    pen.closePath()
+        charstrings[ch] = pen.getCharString()
+        advances[ch] = (width, 0)
+    fb = FontBuilder(int(ctx.units_per_em), isTTF=False)
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupCharacterMap({ord(ch): ch for ch in names})
+    fb.setupCFF(psName="TypekernelZayju-Regular", fontInfo={"FullName": "Typekernel Zayju Demo", "FamilyName": "TypekernelZayju", "Weight": "Regular"}, privateDict={}, charStringsDict=charstrings)
+    fb.setupHorizontalMetrics(advances)
+    fb.setupHorizontalHeader(ascent=int(ctx.ascender), descent=int(ctx.descender))
+    fb.setupOS2(sTypoAscender=int(ctx.ascender), sTypoDescender=int(ctx.descender), sxHeight=int(ctx.x_height))
+    fb.setupPost()
+    fb.setupNameTable({"familyName": "TypekernelZayju", "styleName": "Regular", "uniqueFontIdentifier": "typekernel-zayju-demo", "fullName": "Typekernel Zayju Demo", "psName": "TypekernelZayju-Regular", "version": "0.1"})
+    out = path.with_suffix(".otf")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fb.save(str(out))
+    return out
+
+
 def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     DOCS_IMG.mkdir(parents=True, exist_ok=True)
@@ -215,7 +370,10 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
 
     apple = _text_panel("zayju", _font(APPLE_FONT, 172), panel_w, panel_h, baseline)
     anthro = _text_panel("zayju", _load_anthropic_font(162), panel_w, panel_h, baseline)
-    tk = render_word_panel(glyphs, panel_w, panel_h, baseline, names=list("zayju"))
+    # Bake typekernel outlines to TTF so FreeType applies the same fill rules
+    # as the middle column (fixes even-odd / winding artifacts from PIL polygons).
+    font_path = bake_word_ttf(glyphs, list("zayju"), OUT_DIR / "typekernel_zayju.ttf")
+    tk = _text_panel("zayju", ImageFont.truetype(str(font_path), size=162), panel_w, panel_h, baseline)
 
     canvas = Image.new("RGBA", (total_w, total_h), BG)
     draw = ImageDraw.Draw(canvas)
@@ -224,7 +382,7 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
     labels = [
         ("苹果系统默认", "SF Pro · SFNS"),
         ("Anthropic", "Anthropic Sans（官网）"),
-        ("typekernel 零件组装", "DesignContext · fillet · kern · AA"),
+        ("typekernel 二创", "neo-grotesque · matched stems · AA"),
     ]
     for i, (panel, (title, sub)) in enumerate(zip([apple, anthro, tk], labels)):
         x = margin + i * (panel_w + gap)
@@ -262,11 +420,9 @@ def main() -> int:
     for ch, g in zip("zayju", glyphs):
         print(ch, "advance=", round(g.advance, 1), "bounds=", glyph_bounds(g))
         render_glyph_png(g, OUT_DIR / f"letter_{ch}.png")
-    render_word_panel(
-        glyphs, 1400, 720, 430, target_x_h=120, names=list("zayju")
-    ).convert("RGB").save(
-        OUT_DIR / "zayju_typekernel.png", optimize=True
-    )
+    font_path = bake_word_ttf(glyphs, list("zayju"), OUT_DIR / "typekernel_zayju.ttf")
+    word = _text_panel("zayju", ImageFont.truetype(str(font_path), size=200), 1400, 720, 430)
+    word.convert("RGB").save(OUT_DIR / "zayju_typekernel.png", optimize=True)
     print("wrote", OUT_DIR / "zayju_typekernel.png")
     compose_compare(glyphs)
     return 0
