@@ -1,10 +1,8 @@
-"""Multi-panel specimen: GENERAL skeleton recipes × optical infra.
+"""Multi-panel specimen: control glyphs → related forms → optical infra.
 
-Recipes are parameterised from DesignContext (paper / coding / print presets
-and stem variants) — not face-specific beauty hacks. Construction path:
-
-  Skeleton (named strokes) → trace_letter (pen expand, terminals, union,
-  blend, ease) → space_word_optical / auto_class_kern → FreeType raster.
+Designer workflow: DesignContext proportions → build_n / build_o → h_from_n
+→ space_word_optical / auto_class_kern → FreeType raster. Paper + coding
+contexts; no face-specific hacks.
 """
 
 from __future__ import annotations
@@ -20,7 +18,10 @@ from typekernel.parts import (
     DesignContext,
     KernClass,
     auto_class_kern,
-    build_skel_word,
+    build_control_word,
+    build_n,
+    build_o,
+    h_from_n,
     layout_glyphs,
     rhythm_from_control_glyphs,
 )
@@ -158,7 +159,7 @@ def render_word(
 
 
 def build_optical_word(ctx: DesignContext) -> tuple[list[ComposedGlyph], object, object]:
-    glyphs = build_skel_word(WORD, ctx)
+    glyphs = build_control_word(WORD, ctx)
     names = list(WORD)
     spaced = space_word_optical(glyphs, names)
     report = word_report(list(spaced.glyphs), names, kerning=spaced.kerning)
@@ -182,13 +183,15 @@ def build_weight_row() -> list[tuple[str, list[ComposedGlyph], object, object]]:
 
 def build_class_kern_demo(ctx: DesignContext) -> tuple[str, float, float]:
     """Straight/round class kern on skeleton n/o (GENERAL, not face-specific)."""
-    from typekernel.parts import build_skel_letter
 
+    from typekernel.parts import skel_c
+
+    n = build_n(ctx)
     glyphs = {
-        "n": build_skel_letter("n", ctx),
-        "h": build_skel_letter("h", ctx),
-        "o": build_skel_letter("o", ctx),
-        "c": build_skel_letter("c", ctx),
+        "n": n,
+        "h": h_from_n(n),
+        "o": build_o(ctx),
+        "c": skel_c(ctx),
     }
     classes = (
         KernClass("straight", ("n", "h")),
@@ -224,13 +227,13 @@ def main() -> Path:
 
     draw.text(
         (pad, 18),
-        "GENERAL skeleton recipes × optical infra",
+        "Control glyphs → related forms → optical infra",
         font=title,
         fill=FG,
     )
     draw.text(
         (pad, 46),
-        "continuous arch/bowl cubics · blend joins · shallow terminals · optical spacing · class kern   ·   word “ohio”",
+        "build_n / build_o → h_from_n · optical spacing · class kern   ·   word “ohio”",
         font=sub,
         fill=SUB,
     )
@@ -291,13 +294,15 @@ def main() -> Path:
     )
     draw.text(
         (pad, y3 + 56),
-        "Infra: arch/bowl/u_bowl cubics + GlyphAssembler.blend_joins → optics.space_word_optical → auto_class_kern.",
+        "Infra: control outlines → optics.space_word_optical → auto_class_kern (designer workflow).",
         font=tiny,
         fill=SUB,
     )
 
     out = DOCS_IMG / NAME
     canvas.save(out, "PNG")
+    alt = DOCS_IMG / "control-workflow-specimen.png"
+    canvas.save(alt, "PNG")
     (OUT_DIR / NAME).write_bytes(out.read_bytes())
     print(f"wrote {out}")
     for label, report in reports:

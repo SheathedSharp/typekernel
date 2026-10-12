@@ -134,7 +134,8 @@ xs = layout_glyphs(glyphs, list("zayju"), kerning=default_sans_kern())
 | `expand(centerline, pen, *, join, cap, miter_limit)` | Offset → closed outline. Joins: miter/round/bevel; caps: butt/round/square. |
 | `pen_from_context(ctx)` / `expand_polyline(pts, ctx, …)` | DesignContext wrappers. |
 | `Stroke` / `Skeleton` / `trace_letter(skel, ctx, …)` | Skeleton→outline letter recipe (named strokes). |
-| `build_skel_letter` / `build_skel_word` / `skel_*` | Context-parameterised skeleton letters (i/l/n/h/o/c/u). |
+| `build_n` / `build_o` / `h_from_n` / `build_control_word` | Control glyphs + related forms (designer workflow). |
+| `build_skel_letter` / `skel_*` | Compat shims → control layer. |
 
 Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`. Do **not** use this as Bold/Light — that stays in `axes`.
 

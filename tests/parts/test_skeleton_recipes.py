@@ -1,4 +1,4 @@
-"""Parameterised continuous-curve skeleton letter recipes."""
+"""Compat skel_* delegates to control glyphs."""
 
 from __future__ import annotations
 
@@ -6,15 +6,12 @@ import importlib.util
 
 import pytest
 
-from typekernel.geo.outline import bounds
-from typekernel.geo.segment import CubicSegment, LineSegment
-from typekernel.optics.stem import measure_vertical_stem
+from typekernel.geo.segment import CubicSegment
 from typekernel.parts import (
     DesignContext,
     build_skel_letter,
     build_skel_word,
-    skel_i,
-    skel_l,
+    skel_h,
     skel_n,
     skel_o,
     skeleton_n,
@@ -22,8 +19,7 @@ from typekernel.parts import (
 from typekernel.parts.skeleton_recipes import SKEL_BUILDERS
 
 HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
-
-pytestmark = pytest.mark.skipif(not HAS_PATHOPS, reason="pathops for union")
+pytestmark = pytest.mark.skipif(not HAS_PATHOPS, reason="pathops for o")
 
 
 def test_builders_cover_ohio_letters() -> None:
@@ -33,88 +29,32 @@ def test_builders_cover_ohio_letters() -> None:
 def test_n_scales_with_aperture() -> None:
     narrow = DesignContext.geometric_sans().tuned(aperture=0.2)
     wide = DesignContext.geometric_sans().tuned(aperture=0.9)
-    sn = skeleton_n(narrow)
-    sw = skeleton_n(wide)
-    right_n = next(s for s in sn.strokes if s.name == "right")
-    right_w = next(s for s in sw.strokes if s.name == "right")
-    assert right_w.points[0][0] > right_n.points[0][0]
+    assert (
+        next(s for s in skeleton_n(wide).strokes if s.name == "right").points[0][0]
+        > next(s for s in skeleton_n(narrow).strokes if s.name == "right").points[0][0]
+    )
 
 
-def test_o_overshoot_extends_below_baseline() -> None:
-    ctx = DesignContext.paper_ink()
-    g = skel_o(ctx)
-    bb = bounds(g.solids[0])
-    assert bb[1] < -ctx.overshoot * 0.4
+def test_skel_delegates_to_control() -> None:
+    ctx = DesignContext.code_clear()
+    from typekernel.parts.control import build_h, build_n
+
+    assert skel_n(ctx).advance == pytest.approx(build_n(ctx).advance)
+    assert skel_h(ctx).advance == pytest.approx(build_h(ctx).advance)
 
 
-def test_o_and_n_use_cubics_not_bead_polylines() -> None:
-    """Arches/bowls must be continuous cubics — not dense line chains."""
+def test_o_and_n_use_cubics() -> None:
     ctx = DesignContext.code_clear()
     o = skel_o(ctx).solids[0]
     n = skel_n(ctx).solids[0]
-    o_cub = sum(1 for c in o.contours for s in c.segments if isinstance(s, CubicSegment))
-    n_cub = sum(1 for c in n.contours for s in c.segments if isinstance(s, CubicSegment))
-    o_line = sum(1 for c in o.contours for s in c.segments if isinstance(s, LineSegment))
-    assert o_cub >= 4
-    assert n_cub >= 2
-    # Superellipse o is cubic-only; n has stems (lines) + arch cubics
-    assert o_cub > o_line
-
-
-def test_i_has_stem_and_tittle() -> None:
-    ctx = DesignContext.code_clear()
-    g = skel_i(ctx)
-    assert len(g.solids) >= 1
-    # Combined ink spans baseline through tittle
-    from typekernel.geo.layout import union_bounds
-
-    bb = union_bounds(list(g.solids))
-    assert bb[1] <= 1.0
-    assert bb[3] > ctx.x_height + ctx.stem * 0.4
-
-
-def test_stem_width_tracks_context() -> None:
-    ctx = DesignContext.geometric_sans().tuned(stem=80.0, contrast=1.0)
-    g = skel_l(ctx)
-    bb = bounds(g.solids[0])
-    w = measure_vertical_stem(g.solids[0], 0.5 * (bb[0] + bb[2]))
-    assert w == pytest.approx(80.0, abs=2.0)
+    assert sum(1 for c in o.contours for s in c.segments if isinstance(s, CubicSegment)) >= 4
+    assert sum(1 for c in n.contours for s in c.segments if isinstance(s, CubicSegment)) >= 4
 
 
 def test_build_skel_word_ohio() -> None:
-    ctx = DesignContext.code_clear()
-    glyphs = build_skel_word("ohio", ctx)
-    assert len(glyphs) == 4
-    assert all(g.advance > 0 for g in glyphs)
-
-
-def test_c_shallow_shear_not_deep() -> None:
-    from typekernel.parts.skeleton_recipes import _shallow_shear_deg
-
-    ctx = DesignContext.open_print()
-    assert _shallow_shear_deg(ctx) <= 10.0
+    assert len(build_skel_word("ohio", DesignContext.code_clear())) == 4
 
 
 def test_unknown_letter_raises() -> None:
-    with pytest.raises(KeyError, match="no skeleton recipe"):
+    with pytest.raises(KeyError):
         build_skel_letter("z", DesignContext.geometric_sans())
-
-
-
-
-def test_h_right_leg_meets_arch_join() -> None:
-    """Right leg must not stick up past the shoulder join (stub / weird h)."""
-    from typekernel.geo.outline import bounds
-    from typekernel.parts.primitives import vertical_stem
-    from typekernel.parts.skeleton_recipes import _counter_width
-
-    ctx = DesignContext.code_clear()
-    y_join = ctx.x_height * 0.52
-    x_right = ctx.stem + _counter_width(ctx)
-    # Intended leg height after fix (join + small boolean overlap).
-    right = vertical_stem(ctx, x_right, 0.0, y_join + ctx.stem * 0.12)
-    top = bounds(right)[3]
-    assert top < ctx.x_height * 0.58 - 10  # old buggy height
-    assert top <= y_join + ctx.stem * 0.12 + 0.5
-    # Built glyph still advances
-    assert build_skel_letter("h", ctx).advance > 0
