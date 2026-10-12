@@ -1,23 +1,11 @@
 # Development standards
 
-Human-facing conventions for typekernel. Internal planner folders and task IDs
-(`.agents/`, codes like `P0-026`) are **not** the voice of the product — they
-stay local and must not leak into commit subjects or user-facing prose.
-
-## What belongs in git vs local only
-
-| In the repo | Local only (gitignored) |
-| --- | --- |
-| `src/`, `tests/`, `docs/`, `approvals/`, `pyproject.toml`, … | `.agents/` — agent micro-tasks, phase checklists, session prompts |
-| Gate decision JSON under `approvals/` (stable artifacts) | Scratch notes, private plans, unshared foundation docs |
-
-`.agents/` is ignored so weak-model task packs never land on GitHub. If you need
-a principle documented for humans, put it here under `docs/`, not only in a
-planner task file.
+Conventions for contributing to typekernel. Internal task packs and planner
+folders stay on the author's machine and are not part of this repository.
 
 ## Commit messages
 
-Use conventional-ish subjects:
+Prefer conventional subjects:
 
 ```
 feat(geo): add immutable Point value type
@@ -28,23 +16,9 @@ chore: add py.typed and mypy package check
 
 Rules:
 
-- Prefer `type(scope): summary` with scopes like `geo`, `docs`, or omit scope.
-- **Never** put internal planner IDs in subjects or bodies: no `P0-026`,
-  `P1-003`, `GATE-P0-API` as slang in every commit.
-- Gates and approvals may be **named in docs and `approvals/` files**. The
-  approval artifact `approvals/GATE-P0-API.json` keeps that filename for
-  stability; in prose prefer “geo public API gate” and link the file once.
-- Subjects describe the human change (“export frozen public API”), not the
-  ticket number that scheduled it.
-
-## Phase names in human docs
-
-| Prefer in docs / README | Optional internal planner folders |
-| --- | --- |
-| geo kernel / geo-kernel | `.agents/phases/P0-geo-kernel/` |
-| optical primitives | `.agents/phases/P1-optical-primitives/` |
-| masters / designspace | `.agents/phases/P2-masters-designspace/` |
-| compile bridge | `.agents/phases/P3-compile-bridge/` |
+- Prefer `type(scope): summary` with scopes like `geo`, `optics`, `docs`, or omit scope.
+- Subjects describe the human change (“export frozen public API”), not an internal ticket code.
+- Keep bodies short and free of private planner jargon.
 
 ## Typing
 
@@ -92,7 +66,6 @@ All three should be green on the commits you intend to publish.
 
 ## Approvals / gates
 
-Human visual or API gates leave a JSON record under `approvals/`. Those files
-are the durable decision; planner task codes that scheduled the gate are not
-required in every commit message. Explain the filename once when introducing a
-new gate artifact; thereafter link it.
+Human visual or API gates leave a JSON record under `approvals/` (for example
+`approvals/geo-public-api.json`). Those files are the durable decision record:
+what was approved, by whom, and with what test evidence.

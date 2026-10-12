@@ -1,16 +1,14 @@
 {
-  "gate": "GATE-P1-OVERSHOOT",
+  "gate": "optical-overshoot",
   "approved": true,
   "approver": "zayju",
   "date": "2026-10-12",
   "scope": "typekernel.optics.overshoot.apply_overshoot v0 for round glyphs (synthetic O)",
-  "review_document": "docs/notes/p1-overshoot-review.md",
   "notes": "Human approved the optical overshoot gate. Synthetic O (UPM 1000, OpticalContext.latin_defaults, overshoot_round=12): control-point AABB ymin 0→−12 and ymax 700→712. Accepted that v0 is outline-wide / naive handle policy (inner contour / counter also moves) and is not stroke expand or buffer weight.",
   "test_evidence": {
     "pytest": "157 passed",
     "ruff": "clean",
     "mypy": "typekernel package clean",
     "command": "pytest -q && ruff check src tests && mypy -p typekernel"
-  },
-  "unblocks": ["P1 stem / further optics"]
+  }
 }

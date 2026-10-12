@@ -23,8 +23,9 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 ## 状态
 
-**Geo-kernel public API is in.** Cubic-first geometry lives under `typekernel.geo`
-(version still `0.0.0`). Optical / design-semantics primitives are next.
+**Geo-kernel public API is in** under `typekernel.geo` (version still `0.0.0`).
+**Optical overshoot v0** is in under `typekernel.optics` (human-approved on a
+synthetic O specimen). Masters / designspace and the compile bridge are next.
 
 愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
@@ -43,8 +44,9 @@ pip install -e ".[dev]"
 | --- | --- |
 | [docs/VISION.md](docs/VISION.md) | 产品愿景 |
 | [docs/dev-standards.md](docs/dev-standards.md) | 提交信息、typing、几何原则、公开 API 纪律 |
-| [docs/notes/p0-api-review.md](docs/notes/p0-api-review.md) | Geo public API 审查（已批准） |
 | [docs/notes/fonttools-reuse.md](docs/notes/fonttools-reuse.md) | fontTools / pathops 复用对照 |
+| [approvals/geo-public-api.json](approvals/geo-public-api.json) | Geo 公开 API 人审记录 |
+| [approvals/optical-overshoot.json](approvals/optical-overshoot.json) | Overshoot 人审记录 |
 
 ## 贡献
 

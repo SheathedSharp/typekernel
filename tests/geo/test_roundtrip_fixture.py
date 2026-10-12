@@ -1,8 +1,8 @@
 """Round-trip tests: fixture cubics ↔ Outline ↔ PathBuilder.
 
-The serialiser lives here rather than in ``fixtures`` on purpose: the kernel's
-public-API rule is that a new public symbol needs its own API-sketch task first,
-and P0-030 only asks for a round-trip guarantee.
+The serialiser lives here rather than in ``fixtures`` on purpose: keep the
+loader API small; round-trip coverage belongs in tests, not as a new public
+export.
 """
 
 import json

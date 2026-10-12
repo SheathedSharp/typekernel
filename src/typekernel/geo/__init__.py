@@ -8,7 +8,7 @@ Bézier mathematics is not reimplemented here. It defers to
 ``fontTools.misc.bezierTools``, ``fontTools.cu2qu`` and the fontTools pens.
 
 This module re-exports the geo-kernel public API frozen by the geo public API gate
-(recorded in ``approvals/GATE-P0-API.json``). The list is
+(recorded in ``approvals/geo-public-api.json``). The list is
 deliberately short rather than "everything public": other stable helpers stay in
 their own submodules — ``signed_area`` and ``Contour``'s neighbours in
 ``contour``, ``bounds`` in ``outline``, ``quantize``/``quantize_point`` in

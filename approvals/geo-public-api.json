@@ -1,0 +1,13 @@
+{
+  "gate": "geo-public-api",
+  "approved": true,
+  "approver": "zayju",
+  "date": "2026-10-12",
+  "scope": "typekernel.geo public API surface (explicit __all__ re-exports)",
+  "notes": "Human approved the geo public API and the cubic-first story. Confirmed decisions: (1) no shared Segment protocol; Contour.segments is typed tuple[LineSegment | CubicSegment, ...] inline. (2) closePath() appends an explicit closing line segment, so a builder triangle is 3 segments. (3) unfinished contours are kept as open contours; segment-less contours are dropped. (4) build() is non-destructive. (5) signed_area is an orientation helper only - sign reliable, magnitude is NOT the enclosed area. (6) bounds is the control-point AABB, not tight Bezier bounds. (7) degenerate segments tolerated. (8) to_quadratic reports a sampled estimate for max_error because fontTools.cu2qu accepts the budget as input and never reports achieved error; the budget remains the hard guarantee. (9) boolean_op stays a stub; Shapely is never used. Acknowledged known limitations: tight Bezier bounds not implemented, exact conversion error bound not implemented, boolean curve round-trip open.",
+  "test_evidence": {
+    "pytest": "120 passed",
+    "ruff": "clean",
+    "command": "pytest -q && ruff check src tests"
+  }
+}

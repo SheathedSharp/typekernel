@@ -61,3 +61,6 @@ Thumbs.db
 
 # Local agent plan (not part of the published repo)
 .agents/
+
+# Local review dumps (process artifacts, not published)
+artifacts/specimens/

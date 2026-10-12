@@ -1,4 +1,4 @@
-"""Unit tests for the geo public API frozen by GATE-P0-API."""
+"""Unit tests for the geo public API frozen by approvals/geo-public-api.json."""
 
 import importlib
 

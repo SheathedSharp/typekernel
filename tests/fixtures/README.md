@@ -47,4 +47,4 @@ rounded to three decimals.
 `role` and `note` are descriptive extras; only `glyph`, `unitsPerEm` and
 `contours[].{closed,cubics}` are contractual.
 
-Loaded by `typekernel.geo.fixtures.load_synthetic_outline` (P0-020).
+Loaded by `typekernel.geo.fixtures.load_synthetic_outline`.

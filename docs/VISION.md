@@ -31,5 +31,6 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 ## 状态
 
-**Geo-kernel public API available** under `typekernel.geo`. Optical /
-design-semantics primitives are the next layer. See [dev-standards.md](dev-standards.md).
+**Geo-kernel public API** and **optical overshoot v0** are available under
+`typekernel.geo` / `typekernel.optics`. Masters / designspace and the compile
+bridge are next. See [dev-standards.md](dev-standards.md).
