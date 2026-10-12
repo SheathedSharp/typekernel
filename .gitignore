@@ -70,3 +70,9 @@ artifacts/specimens/**
 artifacts/build/**
 !artifacts/build/.gitkeep
 
+
+# Example compile dumps (keep showcase PNGs)
+examples/zayju_letter/out/**
+!examples/zayju_letter/out/.gitkeep
+!examples/zayju_letter/out/n_designed.png
+!examples/zayju_letter/out/n_overshoot_pair.png

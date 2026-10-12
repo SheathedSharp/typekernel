@@ -43,7 +43,19 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
+## 动手试一颗字
+
+[`examples/zayju_letter/`](examples/zayju_letter/) 用公开 API 画了一颗受 zayJu 启发的小写 **n**（三次曲线手搭，不是描边膨胀）：
+
+![zayJu-inspired n](docs/images/zayju-inspired-n.png)
+
+```bash
+pip install -e ".[dev,specimen,compile]"
+python examples/zayju_letter/design_n.py
+```
+
 ## 安装（占位）
+
 
 ```bash
 # 尚未发布到 PyPI；本地可编辑安装：
