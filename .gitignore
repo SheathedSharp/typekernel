@@ -62,8 +62,9 @@ Thumbs.db
 # Local agent plan (not part of the published repo)
 .agents/
 
-# Local review dumps (process artifacts, not published)
-artifacts/specimens/
+# Local specimen dumps (keep the folder via .gitkeep; PNGs stay local)
+artifacts/specimens/**
+!artifacts/specimens/.gitkeep
 
 # Local compile dogfood outputs (keep the folder via .gitkeep)
 artifacts/build/**

@@ -49,6 +49,9 @@ compile = [
   "fontmake>=3.9",
   "ufo2ft>=2.33",
 ]
+specimen = [
+  "pillow>=10",
+]
 
 [project.urls]
 Homepage = "https://github.com/SheathedSharp/typekernel"
