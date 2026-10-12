@@ -39,6 +39,7 @@ def render_outline_png(
     margin_fraction: float = _DEFAULT_MARGIN,
     background: tuple[int, int, int, int] = _BG,
     foreground: tuple[int, int, int, int] = _FG,
+    supersample: int = 4,
 ) -> Path:
     """Draw ``outline`` into a square PNG at ``path``.
 
@@ -47,9 +48,13 @@ def render_outline_png(
     as the outer shape and later closed contours punch holes (so a ring ``O``
     shows its counter). Open contours are stroked.
 
+    Anti-aliasing: the shape is rasterized at ``size * supersample`` then
+    downsampled with Lanczos. Cubics remain the design truth — sampling is
+    preview-only. Set ``supersample=1`` for the old nearest-edge look.
+
     Raises:
         ImportError: if Pillow is not installed.
-        ValueError: if ``size`` is not positive, or the outline has no bounds.
+        ValueError: if ``size`` / ``supersample`` is not positive.
     """
     try:
         from PIL import Image, ImageDraw
@@ -60,6 +65,8 @@ def render_outline_png(
 
     if size <= 0:
         raise ValueError(f"size must be positive, got {size}")
+    if supersample <= 0:
+        raise ValueError(f"supersample must be positive, got {supersample}")
 
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -68,36 +75,36 @@ def render_outline_png(
     width = max_x - min_x
     height = max_y - min_y
     if width <= 0 or height <= 0:
-        # Degenerate bounds: still emit a blank canvas so callers get a file.
         image = Image.new("RGBA", (size, size), background)
         image.save(destination, format="PNG")
         return destination
 
-    margin = margin_fraction * size
-    drawable = size - 2 * margin
+    render_size = size * supersample
+    margin = margin_fraction * render_size
+    drawable = render_size - 2 * margin
     scale = drawable / max(width, height)
-    # Centre the shape in the canvas.
     offset_x = margin + (drawable - width * scale) / 2.0
     offset_y = margin + (drawable - height * scale) / 2.0
 
     def to_pixel(point: Point) -> tuple[float, float]:
         px = offset_x + (point.x - min_x) * scale
-        # Flip Y: font up → image down.
         py = offset_y + (max_y - point.y) * scale
         return (px, py)
 
-    image = Image.new("RGBA", (size, size), background)
-    # Build an alpha mask so outer fill + inner punch works without a fill rule API.
-    mask = Image.new("L", (size, size), 0)
+    image = Image.new("RGBA", (render_size, render_size), background)
+    mask = Image.new("L", (render_size, render_size), 0)
     mask_draw = ImageDraw.Draw(mask)
 
     closed_polys: list[list[tuple[float, float]]] = []
     open_polylines: list[list[tuple[float, float]]] = []
 
+    # More cubic samples when supersampling so curves stay smooth after downsample.
+    samples = _CUBIC_SAMPLES * max(1, supersample // 2)
+
     for contour in outline.contours:
         if not contour.segments:
             continue
-        poly = _sample_contour(contour.segments, to_pixel)
+        poly = _sample_contour(contour.segments, to_pixel, samples=samples)
         if len(poly) < 2:
             continue
         if contour.closed:
@@ -106,18 +113,19 @@ def render_outline_png(
             open_polylines.append(poly)
 
     for index, poly in enumerate(closed_polys):
-        # First closed contour fills; later ones punch holes (counter / inner).
         fill_value = 255 if index == 0 else 0
         mask_draw.polygon(poly, fill=fill_value)
 
-    # Composite foreground through the mask onto the background.
-    ink = Image.new("RGBA", (size, size), foreground)
+    ink = Image.new("RGBA", (render_size, render_size), foreground)
     image = Image.composite(ink, image, mask)
 
     draw = ImageDraw.Draw(image)
     for poly in open_polylines:
         if len(poly) >= 2:
-            draw.line(poly, fill=foreground, width=max(1, size // 256))
+            draw.line(poly, fill=foreground, width=max(1, render_size // 256))
+
+    if supersample > 1:
+        image = image.resize((size, size), resample=Image.Resampling.LANCZOS)
 
     image.save(destination, format="PNG")
     return destination
@@ -126,20 +134,22 @@ def render_outline_png(
 def _sample_contour(
     segments: tuple[LineSegment | CubicSegment, ...],
     to_pixel: PixelTransform,
+    *,
+    samples: int = _CUBIC_SAMPLES,
 ) -> list[tuple[float, float]]:
     """Sample contour segments into a pixel-space polyline (preview only)."""
     points: list[tuple[float, float]] = []
     if not segments:
         return points
+    n = max(1, samples)
     first = segments[0].points[0]
     points.append(to_pixel(first))
     for segment in segments:
         if isinstance(segment, LineSegment):
             points.append(to_pixel(segment.p1))
         else:
-            # Skip t=0 (already present as previous end); include t=1.
-            for sample_index in range(1, _CUBIC_SAMPLES + 1):
-                t = sample_index / _CUBIC_SAMPLES
+            for sample_index in range(1, n + 1):
+                t = sample_index / n
                 point = _eval_cubic(segment.p0, segment.p1, segment.p2, segment.p3, t)
                 points.append(to_pixel(point))
     return points
