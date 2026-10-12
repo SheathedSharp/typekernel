@@ -16,7 +16,7 @@ Two rules define it:
    handles would be gone and every downstream layer would be reasoning about
    the wrong object. Sampling may be *derived* on demand; it may not be stored.
 
-API frozen by P0-009, implemented by P0-010:
+Public contour API:
 
 ``Contour(segments: tuple[LineSegment | CubicSegment, ...], closed: bool)``
     Immutable value type. ``segments`` is a tuple rather than a list, so a
@@ -30,9 +30,11 @@ API frozen by P0-009, implemented by P0-010:
     first begins. v0 compares endpoints by exact equality; a tolerance-based
     closure check is deliberately deferred.
 
-Note for GATE-P0-API: the canonical ``Segment`` alias belongs in ``segment``,
-not here, but P0-009/P0-010 may only touch ``contour.py``, so the union is
-spelled out inline until a task is allowed to move it.
+``Contour.assert_segments_continuous() -> None``
+    Raise if consecutive segments do not meet end-to-start (exact equality).
+
+The canonical ``Segment`` alias arguably belongs in ``segment``; the union
+is spelled out inline here until a follow-up consolidates it.
 """
 
 from __future__ import annotations
@@ -81,6 +83,29 @@ class Contour:
                 "closed contour does not close: starts at "
                 f"{start.as_tuple()}, ends at {end.as_tuple()}"
             )
+
+    def assert_segments_continuous(self) -> None:
+        """Check that consecutive segments meet end-to-start.
+
+        Each segment's end point must equal the next segment's start point
+        (exact equality, same rule as :meth:`assert_closed_consistent`).
+        Contours with fewer than two segments have nothing to join and pass.
+
+        Raises:
+            ValueError: if any adjacent pair of segments has a gap.
+        """
+        if len(self.segments) < 2:
+            return
+        for index in range(len(self.segments) - 1):
+            previous = self.segments[index]
+            following = self.segments[index + 1]
+            end = previous.points[-1]
+            start = following.points[0]
+            if end != start:
+                raise ValueError(
+                    f"contour has a gap between segments {index} and {index + 1}: "
+                    f"ends at {end.as_tuple()}, next starts at {start.as_tuple()}"
+                )
 
 
 def _on_curve_points(contour: Contour) -> tuple[Point, ...]:

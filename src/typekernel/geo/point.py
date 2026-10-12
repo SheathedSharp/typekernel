@@ -14,7 +14,7 @@ Interop: ``fontTools.misc.bezierTools`` and every pen in ``fontTools.pens``
 consume plain ``tuple[float, float]`` pairs. :meth:`Point.as_tuple` is the
 bridge to them; the Bézier math itself is not reimplemented here.
 
-API frozen by P0-003, implemented by P0-004:
+Public point API:
 
 ``Point(x: float, y: float)``
     Immutable value type (``frozen=True, slots=True``). Hashable, so points can

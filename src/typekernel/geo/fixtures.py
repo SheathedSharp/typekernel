@@ -33,7 +33,8 @@ def load_synthetic_outline(path: str | Path) -> Outline:
 
     Raises:
         ValueError: if a cubic does not hold exactly eight numbers, or if a
-            contour marked ``closed`` does not actually close.
+            contour marked ``closed`` does not actually close, or if
+            consecutive cubics do not meet end-to-start.
     """
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     contours: list[Contour] = []
@@ -55,5 +56,6 @@ def load_synthetic_outline(path: str | Path) -> Outline:
             )
         contour = Contour(tuple(segments), closed=bool(raw_contour.get("closed", False)))
         contour.assert_closed_consistent()
+        contour.assert_segments_continuous()
         contours.append(contour)
     return Outline(tuple(contours))

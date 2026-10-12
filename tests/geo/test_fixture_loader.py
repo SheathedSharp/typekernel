@@ -21,6 +21,7 @@ def test_loaded_contours_are_closed_and_consistent() -> None:
     for contour in load_synthetic_outline(FIXTURE).contours:
         assert contour.closed is True
         contour.assert_closed_consistent()
+        contour.assert_segments_continuous()
 
 
 def test_every_segment_is_cubic() -> None:
@@ -65,3 +66,27 @@ def test_rejects_a_closed_contour_that_does_not_close(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="does not close"):
         load_synthetic_outline(bad)
+
+
+def test_rejects_cubics_that_do_not_meet_end_to_start(tmp_path: Path) -> None:
+    """Adjacent cubics with a gap must fail the continuity check."""
+    bad = tmp_path / "discontinuous.json"
+    bad.write_text(
+        json.dumps(
+            {
+                "contours": [
+                    {
+                        "closed": False,
+                        "cubics": [
+                            [0, 0, 0, 1, 1, 1, 1, 0],
+                            [2, 0, 2, 1, 3, 1, 3, 0],  # starts at (2,0), not (1,0)
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="gap between segments"):
+        load_synthetic_outline(bad)
+

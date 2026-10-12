@@ -12,7 +12,7 @@ endpoint, matching ``CubicSegment(p0, p1, p2, p3)``. There is no quadratic
 ``curveTo``, and there is no flattening or sampling entry point: curves stay
 curves, and polylines are never a design-time output.
 
-API frozen by P0-015, implemented by P0-016:
+Public PathBuilder API:
 
 ``moveTo(x: float, y: float) -> None``
     Start a new contour at ``(x, y)``. A contour already in progress is
@@ -37,7 +37,7 @@ API frozen by P0-015, implemented by P0-016:
     Snapshot the builder as an ``Outline``. Non-destructive: it neither clears
     nor finalises state, so it is safe to call more than once.
 
-Two policies P0-016 had to choose, recorded here:
+Two policies chosen here and locked by tests:
 
 1. **Open paths are kept.** A contour still in progress when ``build()`` is
    called is included as an *open* ``Contour`` rather than raising. Silently

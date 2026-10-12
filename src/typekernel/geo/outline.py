@@ -15,7 +15,7 @@ What it deliberately is *not*:
 - **Not polyline-backed.** Contours hold cubic and line segments; see
   ``contour``.
 
-API frozen by P0-012, implemented by P0-013:
+Public outline API:
 
 ``Outline(contours: tuple[Contour, ...])``
     Immutable value type.

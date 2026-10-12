@@ -73,3 +73,21 @@ def test_closed_consistent_ignores_open_contours() -> None:
 def test_closed_consistent_accepts_an_empty_closed_contour() -> None:
     """No endpoints exist to disagree, so an empty closed contour is not an error."""
     Contour((), closed=True).assert_closed_consistent()
+
+
+def test_segments_continuous_accepts_a_joined_contour() -> None:
+    _triangle().assert_segments_continuous()
+
+
+def test_segments_continuous_rejects_a_gap() -> None:
+    gapped = Contour(
+        (LineSegment(A, B), LineSegment(C, A)),  # B != C
+        closed=False,
+    )
+    with pytest.raises(ValueError, match="gap between segments"):
+        gapped.assert_segments_continuous()
+
+
+def test_segments_continuous_accepts_single_segment() -> None:
+    Contour((LineSegment(A, B),), closed=False).assert_segments_continuous()
+

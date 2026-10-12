@@ -26,7 +26,7 @@ already offers ``calcCubicBounds(pt1, pt2, pt3, pt4)``, ``splitCubicAtT`` and
 segment's job is to hold typed :class:`~typekernel.geo.point.Point` values and
 hand tuples to those functions.
 
-API frozen by P0-006, implemented by P0-007:
+Public segment API:
 
 ``LineSegment.points -> tuple[Point, Point]``
 ``CubicSegment.points -> tuple[Point, Point, Point, Point]``
@@ -39,7 +39,7 @@ The plain-tuple form that fontTools helpers and pens consume is derived from
 ``points`` through :meth:`Point.as_tuple` at the pen and convert boundary, so
 no separate tuple accessor is kept on the segments themselves.
 
-Open questions for GATE-P0-API
+Open questions recorded at the geo public API gate
 ------------------------------
 1. A shared ``Segment`` protocol or alias, so ``Contour`` can hold a
    heterogeneous ``tuple[LineSegment | CubicSegment, ...]`` and still type
