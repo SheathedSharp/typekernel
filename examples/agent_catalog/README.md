@@ -124,3 +124,15 @@ xs = layout_glyphs(glyphs, list("zayju"), kerning=default_sans_kern())
 - No TrueType hinting, OpenType features, or mark positioning.
 - Optical overshoot / stem measurement live under `typekernel.optics`, separate from parts.
 - Path construction helpers (`arcTo`, `smoothCurveTo`, …) live on `typekernel.geo.PathBuilder`.
+
+### Midline pen expand (`typekernel.geo.stroke` / `parts.pen`)
+
+| API | Role |
+|-----|------|
+| `Pen(thickness, contrast=1, angle_deg=0)` | Circular or elliptical construction pen (not a weight axis). |
+| `Centerline.from_points(pts, *, closed=False)` | Polyline skeleton. |
+| `expand(centerline, pen, *, join, cap, miter_limit)` | Offset → closed outline. Joins: miter/round/bevel; caps: butt/round/square. |
+| `pen_from_context(ctx)` / `expand_polyline(pts, ctx, …)` | DesignContext wrappers. |
+
+Vertical strokes measure `thickness`; horizontals measure `thickness * contrast`. Do **not** use this as Bold/Light — that stays in `axes`.
+

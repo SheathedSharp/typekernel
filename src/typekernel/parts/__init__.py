@@ -49,6 +49,15 @@ from typekernel.parts.metrics import (
     layout_glyphs,
     sidebearing_for_width,
 )
+from typekernel.parts.pen import (
+    CapStyle,
+    Centerline,
+    JoinStyle,
+    Pen,
+    expand,
+    expand_polyline,
+    pen_from_context,
+)
 from typekernel.parts.primitives import (
     apply_ink_trap,
     arch,
@@ -85,11 +94,15 @@ from typekernel.parts.transforms import (
 
 __all__ = [
     "LETTER_BUILDERS",
+    "CapStyle",
+    "Centerline",
     "ComposedGlyph",
     "DesignContext",
     "GlyphAssembler",
+    "JoinStyle",
     "KernPair",
     "KernTable",
+    "Pen",
     "apply_ink_trap",
     "arch",
     "bowl",
@@ -102,6 +115,8 @@ __all__ = [
     "crotch_opener",
     "default_sans_kern",
     "diagonal_stem",
+    "expand",
+    "expand_polyline",
     "fillet_pad",
     "hook_terminal",
     "horizontal_bar",
@@ -122,6 +137,7 @@ __all__ = [
     "letter_z",
     "mirror_x",
     "mirror_y",
+    "pen_from_context",
     "rotate",
     "rounded_rect",
     "scale",
