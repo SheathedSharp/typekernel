@@ -230,7 +230,7 @@ def main() -> Path:
     )
     draw.text(
         (pad, 46),
-        "trace_letter · pen expand · blend/ease · terminals · space_word_optical · auto_class_kern   ·   word “ohio”",
+        "continuous arch/bowl cubics · blend joins · shallow terminals · optical spacing · class kern   ·   word “ohio”",
         font=sub,
         fill=SUB,
     )
@@ -291,7 +291,7 @@ def main() -> Path:
     )
     draw.text(
         (pad, y3 + 56),
-        "Infra: Stroke/Skeleton/trace_letter → optics.space_word_optical → parts.auto_class_kern / GlyphAssembler.blend_joins+ease_curvature.",
+        "Infra: arch/bowl/u_bowl cubics + GlyphAssembler.blend_joins → optics.space_word_optical → auto_class_kern.",
         font=tiny,
         fill=SUB,
     )
