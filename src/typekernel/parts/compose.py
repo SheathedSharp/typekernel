@@ -1,15 +1,16 @@
 """Compose glyph parts into a metrics-bearing glyph (scene graph → mesh).
 
 Analogous to grouping Three.js meshes: add solid parts and optional counters,
-optionally boolean-union the solids so overlaps do not leave notches, then
-pack sidebearings from the shared :class:`~typekernel.parts.context.DesignContext`.
+optionally boolean-union the solids so overlaps do not leave notches, subtract
+holes with pathops when available, then pack sidebearings from the shared
+:class:`~typekernel.parts.context.DesignContext`.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from typekernel.geo.boolean import union_all
+from typekernel.geo.boolean import boolean_op, union_all
 from typekernel.geo.contour import Contour
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
@@ -48,6 +49,7 @@ class GlyphAssembler:
     _solids: list[Outline] = field(default_factory=list)
     _holes: list[Outline] = field(default_factory=list)
     _do_union: bool = False
+    _subtract_holes: bool = False
 
     def add(self, outline: Outline) -> GlyphAssembler:
         """Add a solid (positive ink) part."""
@@ -55,7 +57,7 @@ class GlyphAssembler:
         return self
 
     def add_hole(self, outline: Outline) -> GlyphAssembler:
-        """Add a counter / hole to subtract at render time."""
+        """Add a counter / hole to subtract at render (or boolean) time."""
         self._holes.append(outline)
         return self
 
@@ -70,6 +72,16 @@ class GlyphAssembler:
         self._do_union = True
         return self
 
+    def subtract_holes(self) -> GlyphAssembler:
+        """Boolean-difference holes from the (possibly unioned) solid.
+
+        Produces a single outline with counters cut out when pathops is
+        available. Prefer this over keeping holes as separate contours when
+        exporting to UFO/TTF so winding stays unambiguous.
+        """
+        self._subtract_holes = True
+        return self
+
     def build(self) -> ComposedGlyph:
         """Pack sidebearings and return an immutable :class:`ComposedGlyph`."""
         solids = list(self._solids)
@@ -78,6 +90,14 @@ class GlyphAssembler:
         if self._do_union and solids:
             solids = [union_all(solids)]
         holes = list(self._holes)
+        if self._subtract_holes and holes:
+            if not solids:
+                raise ValueError("subtract_holes requires at least one solid")
+            body = solids[0] if len(solids) == 1 else union_all(solids)
+            for hole in holes:
+                body = boolean_op(body, hole, "difference")
+            solids = [body]
+            holes = []
         ink = solids + holes
         box = union_bounds(ink)
         ink_w = box[2] - box[0]
@@ -97,7 +117,11 @@ class GlyphAssembler:
 
 
 def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
-    """Return a copy of ``outline`` shifted by ``(dx, dy)``."""
+    """Return a copy of ``outline`` shifted by ``(dx, dy)``.
+
+    Prefer :func:`typekernel.parts.transforms.translate` for new agent code;
+    this alias stays for older recipes.
+    """
 
     def tp(p: Point) -> Point:
         return Point(p.x + dx, p.y + dy)
@@ -113,3 +137,24 @@ def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
                 segs.append(CubicSegment(*pts))
         contours.append(Contour(tuple(segs), closed=c.closed))
     return Outline(tuple(contours))
+
+
+def try_union(outlines: list[Outline]) -> Outline:
+    """Union outlines when pathops is installed; otherwise return the first.
+
+    Agents can call this without guarding imports. When boolean is unavailable,
+    overlapping contours remain separate — the first outline is returned only
+    if the list is length 1; otherwise a :class:`RuntimeError` explains the
+    missing extra (same as :func:`~typekernel.geo.boolean.union_all`).
+    """
+    return union_all(outlines)
+
+
+def try_difference(a: Outline, b: Outline) -> Outline:
+    """Difference ``a − b`` via pathops (raises if the boolean extra is missing)."""
+    return boolean_op(a, b, "difference")
+
+
+def try_intersection(a: Outline, b: Outline) -> Outline:
+    """Intersection via pathops (raises if the boolean extra is missing)."""
+    return boolean_op(a, b, "intersection")

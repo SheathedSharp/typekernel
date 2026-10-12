@@ -402,3 +402,199 @@ def stroke_polyline(
     b.closePath()
     return b.build()
 
+
+
+# ---------------------------------------------------------------------------
+# Extra primitives for agent composition (Three.js-style catalog depth)
+# ---------------------------------------------------------------------------
+
+
+def capsule(
+    ctx: DesignContext,
+    x0: float,
+    y0: float,
+    x1: float,
+    y1: float,
+    *,
+    radius: float | None = None,
+) -> Outline:
+    """Stadium / capsule: rectangle with semicircle caps on the short axis.
+
+    Useful for soft terminals and even-colour bars without sharp corners.
+    """
+    r = (min(abs(x1 - x0), abs(y1 - y0)) / 2.0) if radius is None else radius
+    # Orient: if wider than tall, caps on left/right; else top/bottom.
+    w, h = abs(x1 - x0), abs(y1 - y0)
+    b = PathBuilder()
+    if w >= h:
+        r = min(r, h / 2.0)
+        cy = (y0 + y1) / 2.0
+        left_cx, right_cx = x0 + r, x1 - r
+        b.moveTo(left_cx, y0)
+        b.lineTo(right_cx, y0)
+        b.arcTo(right_cx, cy, r, r, 270, start_angle_deg=-90)
+        b.lineTo(left_cx, y1)
+        b.arcTo(left_cx, cy, r, r, 90, start_angle_deg=90)
+        b.closePath()
+    else:
+        r = min(r, w / 2.0)
+        cx = (x0 + x1) / 2.0
+        bot_cy, top_cy = y0 + r, y1 - r
+        b.moveTo(x0, bot_cy)
+        b.arcTo(cx, bot_cy, r, r, 0, start_angle_deg=180)
+        b.lineTo(x1, top_cy)
+        b.arcTo(cx, top_cy, r, r, 180, start_angle_deg=0)
+        b.closePath()
+    return b.build()
+
+
+def crossbar(
+    ctx: DesignContext,
+    x_left: float,
+    x_right: float,
+    y_center: float,
+    *,
+    thickness: float | None = None,
+) -> Outline:
+    """Centered horizontal crossbar (``e``, ``A``, ``H``)."""
+    t = ctx.thin if thickness is None else thickness
+    return horizontal_bar(ctx, x_left, x_right, y_center - t / 2.0, thickness=t)
+
+
+def wedge(
+    ctx: DesignContext,
+    tip_x: float,
+    tip_y: float,
+    base_x0: float,
+    base_y0: float,
+    base_x1: float,
+    base_y1: float,
+) -> Outline:
+    """Triangle wedge — building block for ink traps and tapered joins."""
+    del ctx
+    b = PathBuilder()
+    b.moveTo(tip_x, tip_y)
+    b.lineTo(base_x0, base_y0)
+    b.lineTo(base_x1, base_y1)
+    b.closePath()
+    return b.build()
+
+
+def fillet_pad(
+    ctx: DesignContext,
+    x: float,
+    y: float,
+    *,
+    radius: float | None = None,
+    quadrant: int = 0,
+) -> Outline:
+    """Quarter-disk pad to soften a stem/bowl join before boolean union.
+
+    ``quadrant`` 0..3 matches quarter-circle cubics (0=NE, 1=NW, 2=SW, 3=SE).
+    Place the pad so its centre sits at the concave notch corner, then call
+    :meth:`~typekernel.parts.compose.GlyphAssembler.union_solids`.
+    """
+    from typekernel.geo.path_helpers import Quadrant, quarter_circle_cubics
+
+    r = ctx.join_radius if radius is None else radius
+    if r <= 0:
+        return _rect(x, y, x + 1e-3, y + 1e-3)
+    q = quadrant % 4
+    p0, p1, p2, p3 = quarter_circle_cubics(x, y, r, r, q)  # type: ignore[arg-type]
+    del Quadrant  # imported for agents reading the signature docs
+    b = PathBuilder()
+    b.moveTo(x, y)
+    b.lineTo(p0.x, p0.y)
+    b.curveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+    b.closePath()
+    return b.build()
+
+
+def terminal_ball(
+    ctx: DesignContext,
+    cx: float,
+    cy: float,
+    *,
+    radius: float | None = None,
+) -> Outline:
+    """Circular ball terminal (stroke end blob)."""
+    r = ctx.stem * 0.55 if radius is None else radius
+    return _ellipse(cx, cy, r, r)
+
+
+def terminal_sheared(
+    ctx: DesignContext,
+    x0: float,
+    y0: float,
+    x1: float,
+    y1: float,
+    *,
+    shear: float = 0.35,
+) -> Outline:
+    """Parallelogram terminal / cut end (sheared rectangle)."""
+    t = abs(y1 - y0) if abs(y1 - y0) > 1e-9 else ctx.stem
+    s = shear * t
+    b = PathBuilder()
+    b.moveTo(x0 + s, y0)
+    b.lineTo(x1 + s, y0)
+    b.lineTo(x1 - s, y1)
+    b.lineTo(x0 - s, y1)
+    b.closePath()
+    return b.build()
+
+
+def serif_bracket(
+    ctx: DesignContext,
+    x_stem: float,
+    y: float,
+    *,
+    side: str = "left",
+    length: float | None = None,
+    thickness: float | None = None,
+) -> Outline:
+    """Simple bracket serif stub (rectangular + slight bracket curve).
+
+    Enough for agents to attach serifs while iterating; not a full serif
+    family. ``side`` is ``\"left\"`` or ``\"right\"`` relative to the stem face.
+    """
+    length = ctx.stem * 1.1 if length is None else length
+    thickness = ctx.thin * 0.55 if thickness is None else thickness
+    if side == "left":
+        x0, x1 = x_stem - length, x_stem
+    elif side == "right":
+        x0, x1 = x_stem, x_stem + length
+    else:
+        raise ValueError("side must be 'left' or 'right'")
+    # Mild bracket: outer corner rounded toward the stem.
+    r = min(ctx.join_radius * 0.5, thickness * 0.8, length * 0.4)
+    return rounded_rect(ctx, x0, y, x1, y + thickness, radius=r)
+
+
+def ink_trap(
+    ctx: DesignContext,
+    *_args: object,
+    **_kwargs: object,
+) -> Outline:
+    """Reserved ink-trap primitive — not implemented yet.
+
+    Agents should leave a wedge-shaped notch at acute joins and call this
+    once a trap policy lands. Until then, compose with :func:`wedge` and
+    boolean difference.
+    """
+    del ctx, _args, _kwargs
+    raise NotImplementedError(
+        "ink_trap is reserved; use wedge() + boolean difference for now"
+    )
+
+
+def shoulder(
+    ctx: DesignContext,
+    x_left: float,
+    x_right: float,
+    y_bottom: float,
+    y_top: float,
+    *,
+    thickness: float | None = None,
+) -> Outline:
+    """Alias for :func:`arch` — n/h/m shoulder trough."""
+    return arch(ctx, x_left, x_right, y_bottom, y_top, thickness=thickness)
