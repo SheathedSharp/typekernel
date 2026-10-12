@@ -8,8 +8,11 @@ points. Geometry in, UFO or TTF/OTF out, via fontTools / ufoLib2 / fontmake
 
 from __future__ import annotations
 
+from typekernel.compile.build import BuildManifest, build_ttf_from_ufo
 from typekernel.compile.ufo_export import write_outline_to_ufo
 
 __all__ = [
+    "BuildManifest",
+    "build_ttf_from_ufo",
     "write_outline_to_ufo",
 ]
