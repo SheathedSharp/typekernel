@@ -21,6 +21,7 @@ from typekernel.parts.context import DesignContext
 from typekernel.parts.metrics import KernPair, KernTable
 
 _T_EPS = 1e-6
+DEFAULT_DEPTH = 0.12  # max counted white depth, fraction of x-height
 _X_MERGE = 0.05
 
 
@@ -114,8 +115,13 @@ def measure_side_whitespace(
     y0: float,
     y1: float,
     samples: int = 17,
+    depth: float | None = None,
 ) -> float:
     """Mean inset from the ink bbox edge to the silhouette along ``side``.
+
+    ``depth`` caps each scanline's inset (design units): deep openings such as
+    the inside of a ``y`` V do not count as more than ``depth`` of white, the
+    same depth limit used by classic auto-spacing tools.
 
     Large inset (diagonal flanks, open bowls) means more corner white — optical
     sidebearings should usually be smaller on that side.
@@ -130,10 +136,10 @@ def measure_side_whitespace(
         edge = silhouette_edge(outlines, y, side)
         if edge is None:
             continue
-        if side == "left":
-            insets.append(edge - min_x)
-        else:
-            insets.append(max_x - edge)
+        inset = (edge - min_x) if side == "left" else (max_x - edge)
+        if depth is not None:
+            inset = min(inset, depth)
+        insets.append(inset)
     if not insets:
         return 0.0
     return sum(insets) / len(insets)
@@ -173,11 +179,19 @@ def suggest_sidebearings_optical(
         if target_air is None
         else target_air
     )
-    left_inset = measure_side_whitespace(outlines, "left", y0=y0, y1=y1, samples=samples)
-    right_inset = measure_side_whitespace(outlines, "right", y0=y0, y1=y1, samples=samples)
-    floor = 0.02 * units
-    lsb = max(floor, air - left_inset)
-    rsb = max(floor, air - right_inset)
+    cap = DEFAULT_DEPTH * x_height
+    left_inset = measure_side_whitespace(
+        outlines, "left", y0=y0, y1=y1, samples=samples, depth=cap
+    )
+    right_inset = measure_side_whitespace(
+        outlines, "right", y0=y0, y1=y1, samples=samples, depth=cap
+    )
+    # Each side owns ``air`` plus half the depth budget; inset white is then
+    # subtracted so flat stems and open flanks carry the same optical white.
+    budget = air + cap * 0.5
+    floor = 0.0 * units
+    lsb = max(floor, budget - left_inset)
+    rsb = max(floor, budget - right_inset)
     return (lsb, rsb)
 
 
@@ -189,8 +203,9 @@ def pair_gap_optical(
     samples: int = 17,
     y0: float | None = None,
     y1: float | None = None,
+    depth: float | None = None,
 ) -> float:
-    """Mean silhouette gap between ``left`` and ``right`` (design units).
+    """Mean depth-limited silhouette gap between ``left`` and ``right``.
 
     Positive = separation; negative = silhouette overlap in the band. Uses the
     left glyph's advance + ``kern`` as the pen advance (tracking not included).
@@ -200,19 +215,18 @@ def pair_gap_optical(
     band1 = ctx.x_height if y1 is None else y1
     left_o = _ink_outlines(left)
     right_o = _ink_outlines(right)
+    cap = DEFAULT_DEPTH * ctx.x_height if depth is None else depth
+    lb = union_bounds(left_o)
+    rb = union_bounds(right_o)
     gaps: list[float] = []
     for y in _y_samples(band0, band1, samples):
         l_edge = silhouette_edge(left_o, y, "right")
         r_edge = silhouette_edge(right_o, y, "left")
-        if l_edge is None or r_edge is None:
-            continue
+        # A missed scanline counts as maximum depth (open side).
+        l_edge = lb[2] - cap if l_edge is None else max(l_edge, lb[2] - cap)
+        r_edge = rb[0] + cap if r_edge is None else min(r_edge, rb[0] + cap)
         # right glyph origin at left.advance + kern
         gaps.append((left.advance + kern + r_edge) - l_edge)
-    if not gaps:
-        # Fall back to bbox gap so callers always get a number.
-        lb = union_bounds(left_o)
-        rb = union_bounds(right_o)
-        return (left.advance - lb[2]) + rb[0] + kern
     return sum(gaps) / len(gaps)
 
 
@@ -241,7 +255,16 @@ def fit_kern_pair(
     """Binary-search kern so :func:`pair_gap_optical` ≈ ``target_gap``."""
     best = 0.0
     best_err = float("inf")
+    # Widen the bracket until it contains the target (shapes vary a lot).
     low, high = lo, hi
+    for _ in range(8):
+        if pair_gap_optical(left, right, kern=high, samples=samples) >= target_gap:
+            break
+        high += (hi - lo)
+    for _ in range(8):
+        if pair_gap_optical(left, right, kern=low, samples=samples) <= target_gap:
+            break
+        low -= (hi - lo)
     for _ in range(iterations):
         mid = (low + high) / 2.0
         gap = pair_gap_optical(left, right, kern=mid, samples=samples)

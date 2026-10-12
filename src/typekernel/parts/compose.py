@@ -50,6 +50,7 @@ class GlyphAssembler:
     _holes: list[Outline] = field(default_factory=list)
     _do_union: bool = False
     _subtract_holes: bool = False
+    _blend: tuple[float, object, float] | None = None
 
     def add(self, outline: Outline) -> GlyphAssembler:
         """Add a solid (positive ink) part."""
@@ -82,6 +83,23 @@ class GlyphAssembler:
         self._subtract_holes = True
         return self
 
+    def blend_joins(
+        self,
+        radius: float,
+        *,
+        select: object | None = None,
+        tension: float = 1.0,
+    ) -> GlyphAssembler:
+        """Blend corners after union/subtract with tangent-meeting cubics.
+
+        Replaces fillet-pad patching: crotches, kinks and shoulders become
+        one continuous curve (G2 against straight neighbours). Flat stroke
+        terminals are kept unless ``select`` says otherwise. See
+        :func:`typekernel.geo.joins.blend_corners`.
+        """
+        self._blend = (radius, select, tension)
+        return self
+
     def build(self) -> ComposedGlyph:
         """Pack sidebearings and return an immutable :class:`ComposedGlyph`."""
         solids = list(self._solids)
@@ -98,6 +116,15 @@ class GlyphAssembler:
                 body = boolean_op(body, hole, "difference")
             solids = [body]
             holes = []
+        if self._blend is not None:
+            from typekernel.geo.joins import blend_corners, default_selector
+
+            radius, select, tension = self._blend
+            sel = default_selector if select is None else select
+            solids = [
+                blend_corners(o, radius, select=sel, tension=tension)  # type: ignore[arg-type]
+                for o in solids
+            ]
         ink = solids + holes
         box = union_bounds(ink)
         ink_w = box[2] - box[0]

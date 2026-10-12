@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
+from typekernel.geo.joins import classify_joins, curvature_jump
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.smoothness import is_g1_join
@@ -54,6 +55,10 @@ class WordReport:
     stem_cv: float
     g1_join_error_count: int
     g1_join_total: int
+    kink_count: int = 0
+    corner_count: int = 0
+    terminal_count: int = 0
+    curvature_jump: float = 0.0
     target_gap: float | None = None
     notes: tuple[str, ...] = ()
 
@@ -240,10 +245,18 @@ def word_report(
     stems = stem_uniformity(glyphs)
     g1_bad = 0
     g1_total = 0
+    kinks = corners = terminals = 0
+    jump = 0.0
     for g in glyphs:
         s = join_smoothness_glyph(g)
         g1_bad += int(s.detail["error_count"])
         g1_total += int(s.detail["join_total"])
+        for o in list(g.solids) + list(g.holes):
+            jc = classify_joins(o)
+            kinks += jc.kinks
+            corners += jc.corners
+            terminals += jc.terminals
+            jump = max(jump, curvature_jump(o))
     return WordReport(
         text="".join(names),
         bbox_gaps=tuple(float(x) for x in bbox.detail["gaps"]),
@@ -256,6 +269,10 @@ def word_report(
         stem_cv=float(stems.value),
         g1_join_error_count=g1_bad,
         g1_join_total=g1_total,
+        kink_count=kinks,
+        corner_count=corners,
+        terminal_count=terminals,
+        curvature_jump=jump,
         target_gap=target_gap,
         notes=notes,
     )

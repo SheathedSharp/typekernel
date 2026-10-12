@@ -21,6 +21,7 @@ from typekernel.parts.primitives import (
     crossbar,
     fillet_pad,
     rounded_rect,
+    smooth_hook,
     stroke_polyline,
     tittle,
     u_bowl,
@@ -33,10 +34,10 @@ _HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 
 
 def letter_z(ctx: DesignContext) -> ComposedGlyph:
-    """Original geometric ``z``: continuous Z spine stroked at ``ctx.stem``.
+    """Geometric ``z``: sharp Z spine, then G2 corner blends at both bends.
 
-    Paper/code: solid bars (no hairlines), even diagonal colour, soft joins
-    from ``ctx.roundness``. Not traced from any commercial face.
+    Spine is stroked with mitred joins; :meth:`GlyphAssembler.blend_joins`
+    replaces the mitres with curvature-continuous turns. Bar ends stay flat.
     """
     width = ctx.x_height * (0.72 + 0.08 * ctx.aperture)
     t = ctx.stem
@@ -47,15 +48,15 @@ def letter_z(ctx: DesignContext) -> ComposedGlyph:
         (t * 0.15, t / 2.0),
         (width - t * 0.15, t / 2.0),
     ]
-    body = stroke_polyline(ctx, spine, join_radius=ctx.join_radius * 0.85)
-    return GlyphAssembler(ctx).add(body).build()
+    body = stroke_polyline(ctx, spine, join_radius=0.0)
+    return GlyphAssembler(ctx).add(body).blend_joins(ctx.join_radius * 0.9).build()
 
 
 def letter_a(ctx: DesignContext) -> ComposedGlyph:
-    """Original single-story ``a``: bowl + right stem + fillet pads.
+    """Single-story ``a``: bowl + right stem, crotches blended (no fillet pads).
 
-    Distinct from ``o`` (stem on the right). Open counter for paper
-    readability; consistent stem width for coding clarity.
+    Union and counter subtraction set the topology; ``blend_joins`` turns the
+    stem-to-bowl crotches into continuous curves.
     """
     ry = ctx.x_height / 2.0 + ctx.overshoot
     rx = ry * (0.88 + 0.06 * ctx.aperture)
@@ -64,39 +65,27 @@ def letter_a(ctx: DesignContext) -> ComposedGlyph:
     bowl_t = ctx.stem * (0.92 + 0.04 * (1.0 - ctx.aperture))
     outer, hole = bowl(ctx, cx, cy, rx=rx, ry=ry, thickness=bowl_t)
     stem_left = cx + rx - ctx.stem * 0.88
-    stem = vertical_stem(
-        ctx,
-        stem_left,
-        0.0,
-        ctx.x_height + ctx.overshoot * 0.2,
-    )
-    r = ctx.join_radius * 0.85
-    join_x = stem_left
-    pad_ne = fillet_pad(ctx, join_x, cy + ry * 0.18, radius=r, quadrant=1)
-    pad_se = fillet_pad(ctx, join_x, cy - ry * 0.18, radius=r, quadrant=2)
-
-    asm = GlyphAssembler(ctx).add(outer).add(stem).add(pad_ne).add(pad_se)
+    stem = vertical_stem(ctx, stem_left, 0.0, ctx.x_height + ctx.overshoot * 0.2)
+    asm = GlyphAssembler(ctx).add(outer).add(stem)
     if _HAS_PATHOPS:
-        return asm.union_solids().add_hole(hole).subtract_holes().build()
+        return (
+            asm.union_solids()
+            .add_hole(hole)
+            .subtract_holes()
+            .blend_joins(ctx.join_radius * 0.8)
+            .build()
+        )
     return asm.add_hole(hole).build()
 
 
 def letter_y(ctx: DesignContext) -> ComposedGlyph:
-    """Original geometric ``y``: V crotch + descending right leg.
-
-    Clear crotch; descender stays on the right so ``y`` and ``u`` remain
-    distinct at small sizes.
-    """
+    """Geometric ``y``: V + right-leg descender, crotch and bend blended."""
     width = ctx.x_height * (0.76 + 0.06 * ctx.aperture)
     top = ctx.x_height
     t = ctx.stem
     jx = width * 0.50
     jy = t * 0.40
-    left = stroke_polyline(
-        ctx,
-        [(t * 0.65, top - t * 0.30), (jx, jy)],
-        join_radius=0.0,
-    )
+    left = stroke_polyline(ctx, [(t * 0.65, top - t * 0.30), (jx, jy)], join_radius=0.0)
     right = stroke_polyline(
         ctx,
         [
@@ -104,48 +93,28 @@ def letter_y(ctx: DesignContext) -> ComposedGlyph:
             (jx, jy),
             (jx + t * 0.50, ctx.descender + t * 0.35),
         ],
-        join_radius=ctx.join_radius * 0.9,
+        join_radius=0.0,
     )
     asm = GlyphAssembler(ctx).add(left).add(right)
     if _HAS_PATHOPS:
-        return asm.union_solids().build()
+        return asm.union_solids().blend_joins(ctx.join_radius * 0.6).build()
     return asm.build()
 
 
 def letter_j(ctx: DesignContext) -> ComposedGlyph:
-    """Original geometric ``j``: descending hook + tittle.
-
-    Hook opens left; tittle matches stem colour so ``i``/``j`` stay clear
-    in code editors.
-    """
-    import math
-
-    cx = ctx.stem * 1.30
+    """Geometric ``j``: stem → one continuous arc → flat tail, plus tittle."""
     t = ctx.stem
-    hr = abs(ctx.descender) * 0.50
-    bend_r = max(hr - t / 2.0, t * 0.85)
-    bend_cx = cx - bend_r
-    bend_cy = ctx.descender + hr
-    pts: list[tuple[float, float]] = [(cx, ctx.x_height - t / 2.0), (cx, bend_cy)]
-    for i in range(1, 17):
-        ang = math.radians(-105.0 * i / 16.0)
-        pts.append((bend_cx + bend_r * math.cos(ang), bend_cy + bend_r * math.sin(ang)))
-    body = stroke_polyline(ctx, pts, join_radius=0.0)
-    gap = t * 0.60
-    dot = tittle(ctx, cx, ctx.x_height + gap)
+    x_right = t * 1.80
+    body = smooth_hook(ctx, x_right, ctx.x_height, ctx.descender)
+    dot = tittle(ctx, x_right - t / 2.0, ctx.x_height + t * 0.60)
     return GlyphAssembler(ctx).add(body).add(dot).build()
 
 
 def letter_u(ctx: DesignContext) -> ComposedGlyph:
-    """Original geometric ``u``: U-trough with open counter.
-
-    Wider counter so ink does not plug at ~10–12pt; stem width matches the
-    family for coding rhythm.
-    """
+    """Geometric ``u``: U-trough with open counter (already continuous)."""
     counter_w = ctx.x_height * (0.48 + 0.08 * ctx.aperture)
-    x_left = 0.0
     x_right = ctx.stem + counter_w + ctx.stem
-    trough = u_bowl(ctx, x_left, x_right, ctx.x_height, -ctx.overshoot)
+    trough = u_bowl(ctx, 0.0, x_right, ctx.x_height, -ctx.overshoot)
     return GlyphAssembler(ctx).add(trough).build()
 
 

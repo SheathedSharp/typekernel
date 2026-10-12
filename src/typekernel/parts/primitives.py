@@ -598,3 +598,39 @@ def shoulder(
 ) -> Outline:
     """Alias for :func:`arch` — n/h/m shoulder trough."""
     return arch(ctx, x_left, x_right, y_bottom, y_top, thickness=thickness)
+
+
+def smooth_hook(
+    ctx: DesignContext,
+    x_right: float,
+    y_top: float,
+    y_bottom: float,
+    *,
+    radius: float | None = None,
+    tail: float | None = None,
+    width: float | None = None,
+) -> Outline:
+    """Descending stem that turns left in one continuous quarter arc (``j``).
+
+    Stem → arc → horizontal tail with tangent-continuous joins (no polyline
+    facets). ``x_right`` is the stem's right edge, ``y_bottom`` the outer
+    bottom of the hook, ``tail`` how far the terminal reaches left of the
+    arc. Ends are flat terminals.
+    """
+    t = ctx.stem if width is None else width
+    r = max(t * 1.15, (y_top - y_bottom) * 0.30) if radius is None else radius
+    tail_len = r * 0.55 if tail is None else tail
+    left = x_right - t
+    cx, cy = x_right - r, y_bottom + r
+    b = PathBuilder()
+    b.moveTo(left, y_top)
+    b.lineTo(x_right, y_top)
+    b.lineTo(x_right, cy)
+    b.arcTo(cx, cy, r, r, -90.0, start_angle_deg=0.0)
+    b.lineTo(cx - tail_len, y_bottom)
+    b.lineTo(cx - tail_len, y_bottom + t)
+    b.lineTo(cx, y_bottom + t)
+    b.arcTo(cx, cy, r - t, r - t, 0.0, start_angle_deg=-90.0)
+    b.lineTo(left, y_top)
+    b.closePath()
+    return b.build()

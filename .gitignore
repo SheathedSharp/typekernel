@@ -92,3 +92,8 @@ examples/paper_code_zayju/out/**
 examples/optical_spacing/out/**
 !examples/optical_spacing/out/.gitkeep
 !examples/optical_spacing/out/compare.png
+
+# smooth_joins example outputs
+examples/smooth_joins/out/**
+!examples/smooth_joins/out/.gitkeep
+!examples/smooth_joins/out/compare.png

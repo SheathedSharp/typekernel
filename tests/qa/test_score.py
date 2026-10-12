@@ -31,3 +31,12 @@ def test_zayju_report_json_roundtrip(tmp_path) -> None:  # type: ignore[no-untyp
     text = path.read_text(encoding="utf-8")
     assert "optical_gap_ratio" in text
     assert "stem_cv" in text
+
+
+def test_optical_zayju_has_no_kinks_or_unblended_corners() -> None:
+    """Only flat stroke terminals may break G1 after join blending."""
+    report, _, _ = zayju_report(DesignContext.geometric_sans(), optical=True)
+    assert report.kink_count == 0
+    assert report.corner_count == 0
+    assert report.g1_join_error_count == report.terminal_count
+    assert report.g1_join_error_count <= 22
