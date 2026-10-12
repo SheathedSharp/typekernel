@@ -53,6 +53,9 @@ Issues = "https://github.com/SheathedSharp/typekernel/issues"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+typekernel = ["py.typed"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -64,3 +67,10 @@ testpaths = ["tests"]
 python_version = "3.11"
 strict = true
 packages = ["typekernel"]
+
+[[tool.mypy.overrides]]
+module = [
+  "fontTools.*",
+  "pathops",
+]
+ignore_missing_imports = true

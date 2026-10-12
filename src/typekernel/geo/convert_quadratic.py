@@ -176,7 +176,8 @@ def _spline_point_at(spline: SplinePoints, s: float) -> PointTuple:
         if index == count - 1
         else _midpoint(spline[index + 1], spline[index + 2])
     )
-    return quadraticPointAtT(start, spline[index + 1], end, local)
+    point = quadraticPointAtT(start, spline[index + 1], end, local)
+    return (float(point[0]), float(point[1]))
 
 
 def _measure_error(
