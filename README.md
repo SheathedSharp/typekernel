@@ -5,6 +5,12 @@ Depends on [fontTools](https://github.com/fonttools/fonttools); **does not** reb
 
 > 自建设计层，编译层坐在 fontTools 上。不是编辑器，不是又一个 fontmake 包装器。
 
+## 一眼看懂
+
+![typekernel 概览：几何、光学、字重](docs/images/what-typekernel-does.jpg)
+
+*几何 → 光学外扩 → 字重用点位移（不是涂粗）。*
+
 ## 是什么 / 不是什么
 
 | 是 | 不是 |
@@ -23,9 +29,13 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 ## 状态
 
-**Geo-kernel public API is in** under `typekernel.geo` (version still `0.0.0`).
-**Optical overshoot v0** is in under `typekernel.optics` (human-approved on a
-synthetic O specimen). Masters / designspace and the compile bridge are next.
+版本仍是 `0.0.0`。已落地：
+
+- **几何核**（`typekernel.geo`）— 三次曲线轮廓、路径构建、笔桥
+- **光学原语**（`typekernel.optics`）— overshoot 等（合成 O 标本已过人审）
+- **字重 / 轴**（`typekernel.axes`）— `WeightDelta`、masters、`.designspace` 导出（点位移，不是涂粗）
+
+下一步：**编译桥** — 把轮廓写成 UFO，再经 fontTools / fontmake 产出字体文件。
 
 愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
