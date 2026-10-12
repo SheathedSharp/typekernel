@@ -1,6 +1,6 @@
 # Optical overshoot review (synthetic O)
 
-**Status: awaiting human approval.** Do not treat this note as a passed gate.
+**Status: approved.** See [`approvals/GATE-P1-OVERSHOOT.json`](../../approvals/GATE-P1-OVERSHOOT.json).
 
 ## What to look at
 
@@ -38,13 +38,12 @@ PY
 
 ## Review checklist for the human
 
-- [ ] ymax increased by about `overshoot_round` (12)
-- [ ] ymin decreased by about `overshoot_round` (12)
-- [ ] Input outline is not mutated (tests cover this)
-- [ ] Accept that v0 is outline-wide / naive handles (counter also moves)
-- [ ] Confirm this is **not** stroke expand / buffer weight
+- [x] ymax increased by about `overshoot_round` (12)
+- [x] ymin decreased by about `overshoot_round` (12)
+- [x] Input outline is not mutated (tests cover this)
+- [x] Accept that v0 is outline-wide / naive handles (counter also moves)
+- [x] Confirm this is **not** stroke expand / buffer weight
 
 ## Approval artifact
 
-When satisfied, record approval in `approvals/GATE-P1-OVERSHOOT.json` with
-`"approved": true` (human only). This note intentionally leaves that file unset.
+Recorded in `approvals/GATE-P1-OVERSHOOT.json` with `"approved": true` on 2026-10-12 by zayju.
