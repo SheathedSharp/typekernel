@@ -172,3 +172,15 @@ Not stroke expand. For connected H-bars, pass `y=` below the crossbar so stems r
 | `open_bowl_ring(outer, hole, side, amount, ctx)` | Difference hole then open. |
 
 `amount` ≤ 1 is a fraction of half-extent; `> 1` is absolute units.
+
+### Class kerning (`typekernel.parts.metrics`)
+
+| API | Role |
+|-----|------|
+| `KernClass(name, members)` | Named glyph class. |
+| `ClassKernTable` / `ClassKernPair` | Class→class kern; `lookup`, `expand`, `to_fea`. |
+| `RhythmSpec` / `rhythm_from_control_glyphs(*controls)` | Optical gap target from `n`/`o` stand-ins. |
+| `auto_class_kern(glyphs, classes, *, target, representatives)` | Fit all class pairs via `fit_kern_pair`. |
+| `default_latin_kern_classes()` | Starter round/straight/diagonal/hook. |
+
+Use uniform sidebearings when demonstrating shape classes; optical packing can already even silhouette air.

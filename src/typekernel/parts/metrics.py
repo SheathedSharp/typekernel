@@ -7,6 +7,7 @@ hand-tuned pixel offsets.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from typekernel.geo.layout import layout_x_positions
@@ -104,6 +105,239 @@ def default_sans_kern() -> KernTable:
         )
     )
 
+
+
+
+@dataclass(frozen=True, slots=True)
+class KernClass:
+    """Named glyph class for class-based kerning.
+
+    ``members`` are glyph names (single letters or PostScript-style names).
+    Order does not matter for lookup; the first member is the default
+    representative used by :func:`auto_class_kern` unless overridden.
+    """
+
+    name: str
+    members: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("KernClass name must be non-empty")
+        if not self.members:
+            raise ValueError(f"KernClass {self.name!r} needs at least one member")
+        # freeze uniqueness check
+        if len(set(self.members)) != len(self.members):
+            raise ValueError(f"KernClass {self.name!r} has duplicate members")
+
+    def contains(self, glyph: str) -> bool:
+        return glyph in self.members
+
+    @property
+    def representative(self) -> str:
+        return self.members[0]
+
+
+@dataclass(frozen=True, slots=True)
+class ClassKernPair:
+    """Kern value between two :class:`KernClass` names."""
+
+    left_class: str
+    right_class: str
+    value: float
+
+
+@dataclass(frozen=True, slots=True)
+class RhythmSpec:
+    """Family spacing rhythm — optical gap target for kern fitting.
+
+    Typically derived from control glyphs (``n``/``o``) via
+    :func:`rhythm_from_control_glyphs`.
+    """
+
+    target_gap: float
+    source: str = "explicit"
+
+    def __post_init__(self) -> None:
+        if self.target_gap <= 0:
+            raise ValueError(f"target_gap must be positive, got {self.target_gap!r}")
+
+
+@dataclass(frozen=True, slots=True)
+class ClassKernTable:
+    """Class-to-class kerning table with optional flat expansion.
+
+    Lookup resolves glyph→class membership then returns the class-pair value
+    (0 if missing). Overlapping class membership prefers the first matching
+    class in ``classes`` order.
+    """
+
+    classes: tuple[KernClass, ...] = ()
+    pairs: tuple[ClassKernPair, ...] = ()
+
+    def class_of(self, glyph: str) -> str | None:
+        for kc in self.classes:
+            if kc.contains(glyph):
+                return kc.name
+        return None
+
+    def lookup_classes(self, left_class: str, right_class: str) -> float:
+        for p in self.pairs:
+            if p.left_class == left_class and p.right_class == right_class:
+                return p.value
+        return 0.0
+
+    def lookup(self, left: str, right: str) -> float:
+        """Glyph-level lookup via class membership."""
+        lc = self.class_of(left)
+        rc = self.class_of(right)
+        if lc is None or rc is None:
+            return 0.0
+        return self.lookup_classes(lc, rc)
+
+    def with_pair(self, left_class: str, right_class: str, value: float) -> ClassKernTable:
+        kept = [
+            p
+            for p in self.pairs
+            if not (p.left_class == left_class and p.right_class == right_class)
+        ]
+        kept.append(ClassKernPair(left_class, right_class, value))
+        return ClassKernTable(self.classes, tuple(kept))
+
+    def expand(self) -> KernTable:
+        """Explode class pairs into a flat :class:`KernTable` of glyph pairs."""
+        by_name = {kc.name: kc for kc in self.classes}
+        flat: list[KernPair] = []
+        for p in self.pairs:
+            left = by_name.get(p.left_class)
+            right = by_name.get(p.right_class)
+            if left is None or right is None:
+                continue
+            for a in left.members:
+                for b in right.members:
+                    flat.append(KernPair(a, b, p.value))
+        return KernTable(tuple(flat))
+
+    def to_fea(self, *, feature_name: str = "kern") -> str:
+        """Return a minimal Adobe FEA class-kern snippet (compile-layer ready)."""
+        fea_lines: list[str] = [f"feature {feature_name} {{"]
+        for kc in self.classes:
+            members = " ".join(kc.members)
+            fea_lines.append(f"  @{kc.name} = [{members}];")
+        for pair in self.pairs:
+            val = round(pair.value)
+            fea_lines.append(f"  pos @{pair.left_class} @{pair.right_class} {val};")
+        fea_lines.append(f"}} {feature_name};")
+        return "\n".join(fea_lines) + "\n"
+
+
+
+def rhythm_from_control_glyphs(
+    *controls: ComposedGlyph,
+    samples: int = 17,
+) -> RhythmSpec:
+    """Build a :class:`RhythmSpec` from one or more control glyphs.
+
+    Uses the median optical gap of each control glyph paired with itself
+    (kern=0). Pass ``n`` and/or ``o`` (or synthetic stand-ins) as the family
+    rhythm anchors.
+    """
+    from typekernel.optics.space import pair_gap_optical
+
+    if not controls:
+        raise ValueError("need at least one control glyph")
+    gaps = [
+        pair_gap_optical(g, g, kern=0.0, samples=samples) for g in controls
+    ]
+    gaps.sort()
+    mid = gaps[len(gaps) // 2]
+    if mid <= 0:
+        # Fall back to a fraction of x-height from the first glyph's context
+        mid = 0.16 * controls[0].context.x_height
+    return RhythmSpec(target_gap=mid, source="control_glyphs")
+
+
+def auto_class_kern(
+    glyphs: Mapping[str, ComposedGlyph],
+    classes: Sequence[KernClass],
+    *,
+    target: RhythmSpec | float | None = None,
+    samples: int = 17,
+    representatives: Mapping[str, str] | None = None,
+    skip_same_class: bool = False,
+) -> ClassKernTable:
+    """Fit class-pair kerns so representative optical gaps hit ``target``.
+
+    For every ordered pair of classes ``(A, B)``, picks a representative glyph
+    from each (``representatives[class]`` or the class's first member), looks
+    those glyphs up in ``glyphs``, and runs
+    :func:`~typekernel.optics.space.fit_kern_pair`. Missing representatives
+    skip that class pair.
+
+    ``target`` may be a :class:`RhythmSpec`, a raw gap float, or ``None``
+    (median self-gap of all available representatives).
+    """
+    from typekernel.optics.space import fit_kern_pair, pair_gap_optical
+
+    classes_t = tuple(classes)
+    if not classes_t:
+        return ClassKernTable()
+
+    reps: dict[str, str] = {}
+    for kc in classes_t:
+        if representatives and kc.name in representatives:
+            reps[kc.name] = representatives[kc.name]
+        else:
+            reps[kc.name] = kc.representative
+        if reps[kc.name] not in glyphs:
+            # try any member present
+            for m in kc.members:
+                if m in glyphs:
+                    reps[kc.name] = m
+                    break
+
+    available = {name: glyphs[name] for name in reps.values() if name in glyphs}
+    if target is None:
+        if not available:
+            return ClassKernTable(classes_t, ())
+        gaps = [
+            pair_gap_optical(g, g, kern=0.0, samples=samples)
+            for g in available.values()
+        ]
+        gaps.sort()
+        target_gap = gaps[len(gaps) // 2]
+        if target_gap <= 0:
+            target_gap = 0.16 * next(iter(available.values())).context.x_height
+    elif isinstance(target, RhythmSpec):
+        target_gap = target.target_gap
+    else:
+        target_gap = float(target)
+
+    pairs: list[ClassKernPair] = []
+    for left_c in classes_t:
+        for right_c in classes_t:
+            if skip_same_class and left_c.name == right_c.name:
+                continue
+            ln = reps.get(left_c.name)
+            rn = reps.get(right_c.name)
+            if ln is None or rn is None:
+                continue
+            left_g = glyphs.get(ln)
+            right_g = glyphs.get(rn)
+            if left_g is None or right_g is None:
+                continue
+            value = fit_kern_pair(left_g, right_g, target_gap, samples=samples)
+            pairs.append(ClassKernPair(left_c.name, right_c.name, value))
+    return ClassKernTable(classes_t, tuple(pairs))
+
+
+def default_latin_kern_classes() -> tuple[KernClass, ...]:
+    """Starter lowercase shape classes for geometric Latin experiments."""
+    return (
+        KernClass("round", ("o", "c", "e")),
+        KernClass("straight", ("n", "h", "i", "l", "u")),
+        KernClass("diagonal", ("v", "w", "y", "x", "z", "a")),  # a often behaves open/diagonal
+        KernClass("hook", ("j", "f", "t", "r")),
+    )
 
 def sidebearing_for_width(ctx: DesignContext, ink_width: float) -> float:
     """Heuristic sidebearing from context rhythm and glyph ink width."""
