@@ -53,3 +53,30 @@ def test_overshoot_module_has_no_buffer_or_shapely_imports() -> None:
             lower = stripped.lower()
             assert "shapely" not in lower
             assert "buffer" not in lower
+
+
+def test_zone_mode_skips_descender_only_ymin() -> None:
+    """Round extrema on the baseline must not drag a separate descender foot."""
+    from typekernel.geo.path_builder import PathBuilder
+
+    b = PathBuilder()
+    # Oval on baseline: y in [0, 160]
+    b.addEllipse(100, 80, 80, 80)
+    # Sharp descender rectangle far below
+    b.moveTo(40, -200)
+    b.lineTo(60, -200)
+    b.lineTo(60, -180)
+    b.lineTo(40, -180)
+    b.closePath()
+    outline = b.build()
+    ctx = OpticalContext(x_height=160.0, cap_height=700.0, overshoot_round=12.0)
+    after = apply_overshoot(outline, ctx, kind="round", align_to_zones=True)
+    assert outline_ymin(after) == -200.0
+    assert outline_ymax(after) == 172.0
+
+
+def test_legacy_global_mode_still_available() -> None:
+    outline = load_synthetic_outline(FIXTURE)
+    ctx = OpticalContext(overshoot_round=12.0)
+    after = apply_overshoot(outline, ctx, kind="round", align_to_zones=False)
+    assert outline_ymax(after) == outline_ymax(outline) + 12.0

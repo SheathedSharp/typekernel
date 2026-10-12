@@ -12,6 +12,7 @@ from typekernel.optics.contrast import ContrastParams, validate_contrast_params
 from typekernel.optics.joins import cleanup_joins
 from typekernel.optics.overshoot import apply_overshoot
 from typekernel.optics.pipeline import apply
+from typekernel.optics.sidebearing import suggest_sidebearings
 from typekernel.optics.stem import equalize_vertical_stems, measure_vertical_stem
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "cleanup_joins",
     "equalize_vertical_stems",
     "measure_vertical_stem",
+    "suggest_sidebearings",
     "validate_contrast_params",
 ]

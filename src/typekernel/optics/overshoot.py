@@ -3,6 +3,12 @@
 ``apply_overshoot`` shifts top and bottom extrema past alignment zones by the
 amounts in :class:`~typekernel.optics.context.OpticalContext`. This is an
 optical correction, not a stroke expand or pen-radius weight.
+
+By default (``align_to_zones=True``) only points near baseline / x-height /
+cap-height are candidates, so a descender foot far below the baseline is not
+dragged just because it is the outline-wide ``ymin``. For ``kind="round"``,
+only on-curve points with a horizontal cubic handle (classic round extremum)
+are shifted — flat feet made of line corners stay put.
 """
 
 from __future__ import annotations
@@ -22,37 +28,42 @@ def apply_overshoot(
     outline: Outline,
     ctx: OpticalContext,
     kind: OvershootKind = "round",
+    *,
+    align_to_zones: bool = True,
+    zone_band: float | None = None,
 ) -> Outline:
     """Return a new outline with vertical extrema shifted by overshoot.
 
     Round kinds use ``ctx.overshoot_round``; sharp kinds use
-    ``ctx.overshoot_sharp``. Top on-curve extrema move up by that amount;
-    bottom on-curve extrema move down.
+    ``ctx.overshoot_sharp``. Top candidates move up by that amount; bottom
+    candidates move down.
 
-    Minimal strategy (v0):
+    Args:
+        outline: Input geometry (never mutated).
+        ctx: Optical parameters (zones + amounts).
+        kind: ``"round"`` or ``"sharp"``.
+        align_to_zones: When True (default), only points near baseline ``0``,
+            ``ctx.x_height``, or ``ctx.cap_height`` are considered. When False,
+            uses the outline-wide on-curve ``ymin`` / ``ymax`` (legacy v0).
+        zone_band: Half-width of the alignment band. Defaults to
+            ``max(amount, 2.0)``.
 
-    1. Collect every on-curve point (line endpoints; cubic ``p0`` / ``p3``).
-    2. Take the outline-wide max and min ``y`` among those on-curve points.
-    3. Rebuild every segment: on-curve points that sit exactly at that max
-       (resp. min) ``y`` are offset by ``+amount`` (resp. ``-amount``).
-    4. **Naive control-handle handling:** off-curve controls that already share
-       the same extrema ``y`` are shifted by the same amount so flat top/bottom
-       handles on a round ``O`` stay horizontal. Controls at other ``y`` values
-       are left alone. This is deliberately naive — it does not re-fit
-       curvature or preserve handle ratios beyond that.
-
-    The input outline is never mutated.
+    Round mode additionally requires a horizontal cubic handle at the point so
+    flat polyline feet are not yanked past the baseline.
     """
     amount = ctx.overshoot_round if kind == "round" else ctx.overshoot_sharp
     if amount == 0.0:
         return outline
 
-    on_curve_ys = _on_curve_ys(outline)
-    if not on_curve_ys:
+    band = zone_band if zone_band is not None else max(abs(amount), 2.0)
+    top_ys, bottom_ys = _candidate_extrema_ys(
+        outline, ctx, kind=kind, align_to_zones=align_to_zones, band=band
+    )
+    if not top_ys and not bottom_ys:
         return outline
 
-    ymax = max(on_curve_ys)
-    ymin = min(on_curve_ys)
+    ymax = max(top_ys) if top_ys else None
+    ymin = min(bottom_ys) if bottom_ys else None
 
     new_contours: list[Contour] = []
     for contour in outline.contours:
@@ -63,30 +74,89 @@ def apply_overshoot(
     return Outline(tuple(new_contours))
 
 
-def _on_curve_ys(outline: Outline) -> list[float]:
-    ys: list[float] = []
+def _near(y: float, target: float, band: float) -> bool:
+    return abs(y - target) <= band
+
+
+def _on_curve_points(outline: Outline) -> list[Point]:
+    points: list[Point] = []
     for segment in outline.iter_segments():
         if isinstance(segment, LineSegment):
-            ys.append(segment.p0.y)
-            ys.append(segment.p1.y)
+            points.append(segment.p0)
+            points.append(segment.p1)
         else:
-            ys.append(segment.p0.y)
-            ys.append(segment.p3.y)
-    return ys
+            points.append(segment.p0)
+            points.append(segment.p3)
+    return points
 
 
-def _shift_point(point: Point, ymax: float, ymin: float, amount: float) -> Point:
-    if point.y == ymax:
+def _horizontal_handle_ys(outline: Outline) -> set[float]:
+    """Y values of on-curve cubic ends that share y with a neighbouring handle."""
+    marked: set[float] = set()
+    for segment in outline.iter_segments():
+        if not isinstance(segment, CubicSegment):
+            continue
+        if segment.p1.y == segment.p0.y:
+            marked.add(segment.p0.y)
+        if segment.p2.y == segment.p3.y:
+            marked.add(segment.p3.y)
+    return marked
+
+
+def _candidate_extrema_ys(
+    outline: Outline,
+    ctx: OpticalContext,
+    *,
+    kind: OvershootKind,
+    align_to_zones: bool,
+    band: float,
+) -> tuple[list[float], list[float]]:
+    on_curve = _on_curve_points(outline)
+    if not on_curve:
+        return [], []
+
+    if kind == "round":
+        round_ys = _horizontal_handle_ys(outline)
+        eligible = [p for p in on_curve if p.y in round_ys]
+        if not eligible:
+            # No round extrema detected — do not invent shifts.
+            return [], []
+    else:
+        eligible = on_curve
+
+    if not align_to_zones:
+        ys = [p.y for p in eligible]
+        return [max(ys)], [min(ys)]
+
+    top_targets = (ctx.x_height, ctx.cap_height)
+    baseline = 0.0
+    top: list[float] = []
+    bottom: list[float] = []
+    for p in eligible:
+        if any(_near(p.y, t, band) for t in top_targets):
+            top.append(p.y)
+        if _near(p.y, baseline, band):
+            bottom.append(p.y)
+    return top, bottom
+
+
+def _shift_point(
+    point: Point,
+    ymax: float | None,
+    ymin: float | None,
+    amount: float,
+) -> Point:
+    if ymax is not None and point.y == ymax:
         return Point(point.x, point.y + amount)
-    if point.y == ymin:
+    if ymin is not None and point.y == ymin:
         return Point(point.x, point.y - amount)
     return point
 
 
 def _shift_segment(
     segment: LineSegment | CubicSegment,
-    ymax: float,
-    ymin: float,
+    ymax: float | None,
+    ymin: float | None,
     amount: float,
 ) -> LineSegment | CubicSegment:
     if isinstance(segment, LineSegment):
@@ -94,8 +164,6 @@ def _shift_segment(
             _shift_point(segment.p0, ymax, ymin, amount),
             _shift_point(segment.p1, ymax, ymin, amount),
         )
-    # Cubic: shift on-curve ends always when they match extrema; also shift
-    # off-curve controls that already sit on the extrema y (naive handles).
     return CubicSegment(
         _shift_point(segment.p0, ymax, ymin, amount),
         _shift_point(segment.p1, ymax, ymin, amount),

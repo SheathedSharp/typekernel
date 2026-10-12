@@ -1,12 +1,13 @@
-"""Sidebearing / rhythm helpers (reserved).
+"""Sidebearing / rhythm helpers.
 
-Sidebearing suggestions should eventually follow counter space and gray value,
-not a single hard-coded constant such as ``sb=60``.
+Suggestions use the outline's width relative to ``x_height`` so wide and narrow
+glyphs get different starting values. This is a *starting heuristic*, not a
+substitute for spacing by eye or by gray-value models.
 """
 
 from __future__ import annotations
 
-from typekernel.geo.outline import Outline
+from typekernel.geo.outline import Outline, bounds
 from typekernel.optics.context import OpticalContext
 
 
@@ -16,12 +17,20 @@ def suggest_sidebearings(
 ) -> tuple[float, float]:
     """Suggest left and right sidebearings for ``outline``.
 
-    Reserved API. A future implementation may use counter/gray heuristics from
-    ``ctx`` and the outline. It must not reduce to a fixed magic constant as
-    the only public path.
+    Heuristic (Latin-leaning, documented — not universal):
+
+    - Base = ``0.10 * x_height``
+    - Scale by ``clamp(x_height / ink_width, 0.55, 1.45)`` so narrow glyphs get
+      slightly more air and wide glyphs slightly less
+    - Floor at ``0.04 * units_per_em``
+
+    Returns ``(left, right)`` with equal values in v0. Callers should still
+    refine by eye.
     """
-    del outline, ctx
-    raise NotImplementedError(
-        "suggest_sidebearings is reserved; sidebearings should follow "
-        "counter/gray value later, not a fixed constant"
-    )
+    min_x, _, max_x, _ = bounds(outline)
+    ink_width = max(max_x - min_x, 1.0)
+    base = 0.10 * ctx.x_height
+    scale = ctx.x_height / ink_width
+    scale = max(0.55, min(1.45, scale))
+    sb = max(0.04 * ctx.units_per_em, base * scale)
+    return (sb, sb)
