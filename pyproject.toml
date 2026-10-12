@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "typekernel"
+version = "0.0.0"
+description = "Optical / design-semantics kernel for fonts-as-code (depends on fontTools; does not rebuild OT tables)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+  { name = "zayju", email = "zayju@users.noreply.github.com" },
+]
+keywords = [
+  "fonts",
+  "typography",
+  "fonttools",
+  "type-design",
+  "optical",
+  "ufo",
+]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
+  "Topic :: Text Processing :: Fonts",
+]
+dependencies = [
+  "fonttools>=4.50",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+  "mypy>=1.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/SheathedSharp/typekernel"
+Repository = "https://github.com/SheathedSharp/typekernel"
+Issues = "https://github.com/SheathedSharp/typekernel/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["typekernel"]
