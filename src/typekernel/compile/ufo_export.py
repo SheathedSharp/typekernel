@@ -7,6 +7,7 @@ Uses ufoLib2 for the document and the existing geo pen bridge
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from typekernel.geo.outline import Outline
@@ -25,12 +26,17 @@ def write_outline_to_ufo(
     advance_width: int = DEFAULT_ADVANCE_WIDTH,
     family_name: str = "TypekernelExport",
     style_name: str = "Regular",
+    overwrite: bool = False,
 ) -> Path:
     """Write a minimal UFO3 containing a single glyph drawn from ``outline``.
 
     The outline is drawn through :func:`draw_outline` into the glyph's pen.
     No optical transforms, no overlap removal, no point rounding beyond what
     the caller already applied.
+
+    If ``path`` already exists, raises ``FileExistsError`` unless
+    ``overwrite=True``, in which case the existing UFO directory (or file) is
+    removed first.
 
     Requires the optional ``compile`` extra (``ufoLib2``).
 
@@ -61,5 +67,14 @@ def write_outline_to_ufo(
 
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        if not overwrite:
+            raise FileExistsError(
+                f"UFO path already exists: {out} (pass overwrite=True to replace)"
+            )
+        if out.is_dir():
+            shutil.rmtree(out)
+        else:
+            out.unlink()
     font.save(out)
     return out
