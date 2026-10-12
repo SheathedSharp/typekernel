@@ -76,3 +76,9 @@ examples/zayju_letter/out/**
 !examples/zayju_letter/out/.gitkeep
 !examples/zayju_letter/out/n_designed.png
 !examples/zayju_letter/out/n_overshoot_pair.png
+
+# anthropic_zayju example outputs (keep compare + key specimens)
+examples/anthropic_zayju/out/**
+!examples/anthropic_zayju/out/.gitkeep
+!examples/anthropic_zayju/out/compare.png
+!examples/anthropic_zayju/out/zayju_typekernel.png
