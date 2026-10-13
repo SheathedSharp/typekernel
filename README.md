@@ -48,6 +48,8 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 [`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样：
 
+**Coding agent 试几个字看效果**：[`examples/agent_glyph_preview/`](examples/agent_glyph_preview/)（需 `pip install -e ".[compile,specimen,boolean]"`）。
+
 ```python
 from typekernel.compile import build_font
 from typekernel.font import Font

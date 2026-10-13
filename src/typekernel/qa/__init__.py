@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
+from typekernel.qa.agent_preview import (
+    DEFAULT_FOCUS_GLYPHS,
+    build_glyph_preview,
+    charset_for_preview,
+)
 from typekernel.qa.sentence_gate import (
     AGENT_SENTENCE,
     SentenceGateLimits,
@@ -27,6 +32,9 @@ from typekernel.qa.score import (
 
 __all__ = [
     "AGENT_SENTENCE",
+    "DEFAULT_FOCUS_GLYPHS",
+    "build_glyph_preview",
+    "charset_for_preview",
     "SentenceGateLimits",
     "Score",
     "check_sentence_gate",

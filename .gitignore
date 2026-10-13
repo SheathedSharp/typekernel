@@ -119,5 +119,6 @@ examples/variable_family/out/**
 examples/italic_family/out/**
 examples/variable_width/out/**
 examples/correspondence_script/out/**
+examples/agent_glyph_preview/out/**
 
 uploads/

@@ -98,6 +98,26 @@ _failures = check_sentence_gate(controls)[1]  # regression on Controls pipeline
 
 Use the user’s sentence at **body** size (24–36 px), `features=["kern","liga"]` when enabled.
 
+## Quick preview (few glyphs for the user)
+
+After changing controls or specific letters:
+
+```bash
+pip install -e ".[compile,specimen,boolean]"
+python examples/agent_glyph_preview/build_preview.py --chars "a f t I g"
+```
+
+Or from Python:
+
+```python
+from typekernel.qa.agent_preview import build_glyph_preview
+
+paths = build_glyph_preview(focus="a f t I", sentence="Ideas ship farther.", out_dir="out/preview")
+# paths["grid"], paths["sentence"], paths["otf"]
+```
+
+Show the user **`grid.png`** (single glyphs) and **`sentence.png`** (body size). Requires **boolean** for best `f`/`t` crossbars.
+
 ## Weights & variable fonts
 
 - **Static family**: one `Controls` + one `build_font` per weight/style file.

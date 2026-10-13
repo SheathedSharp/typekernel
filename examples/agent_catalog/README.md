@@ -8,8 +8,10 @@ Legacy `parts.latin` / `parts.skeleton_recipes` remain for demos but are **not**
 re-exported from `typekernel.parts`.
 
 ```bash
-pip install -e ".[boolean,specimen,compile,dev]"
+pip install -e ".[dev,compile,specimen,boolean]"
 ```
+
+Preview a few glyphs: `python examples/agent_glyph_preview/build_preview.py`
 
 ## Controls (family control sheet)
 

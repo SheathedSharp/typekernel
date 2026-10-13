@@ -29,7 +29,17 @@
 1. **字族完整**：Regular + 至少 Light/Bold 或 VF 轴覆盖；italic 若承诺则 designed masters。
 2. **字符集声明与实现一致**：`build_all` 子集、`features`、UFO 里 glyph 名一致（无 `.tf` / `.case` 幽灵引用）。
 3. **可读 proof**：用户给定或 brief 中的 **整句** 在正文字号（约 24–36 px）下无明显断笔、撞字、字偶洞。
-4. **可复现**：`examples/<name>/build_*.py` 或等价脚本一键 build；依赖 `[compile,specimen]` 写进 README 片段。
+4. **可复现**：`examples/<name>/build_*.py` 或等价脚本一键 build；依赖 `[compile,specimen,boolean]` 写进 README 片段。
+5. **试字预览**：改完若干字符后跑 `examples/agent_glyph_preview/build_preview.py` 或 `qa.build_glyph_preview()`，交付 `grid.png` + `sentence.png` + OTF。
+
+## Agent 试字（交付给用户看效果）
+
+```bash
+pip install -e ".[compile,specimen,boolean]"
+python examples/agent_glyph_preview/build_preview.py --chars "a f t I n o"
+```
+
+打开 `examples/agent_glyph_preview/out/grid.png` 与 `sentence.png`。自定义单字时用 `Controls.with_glyph()`，再重新 build。
 
 ## 维护
 
