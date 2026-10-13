@@ -28,8 +28,13 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel Var"
-TEXT = "the quick brown fox jumps over the lazy dog"
-CLASSES = (KernClass("straight", ("n", "h", "m", "i", "l", "u")), KernClass("round", ("o",)))
+TEXT = "SPHINX OF BLACK QUARTZ judge my vow"
+CLASSES = (
+    KernClass("straight", ("n", "h", "m", "i", "l", "u")),
+    KernClass("round", ("o",)),
+    KernClass("straight_caps", ("H", "I", "M", "N", "U")),
+    KernClass("round_caps", ("O", "C", "G", "Q")),
+)
 
 
 def master_controls(base: DesignContext, stem: float) -> Controls:

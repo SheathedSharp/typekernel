@@ -52,7 +52,7 @@ from typekernel.parts import Controls, DesignContext
 ctx = DesignContext.code_clear()
 controls = Controls.from_context(ctx).tuned_n(counter=290)  # 控制表：改 n，h m r u 跟着变
 font = Font.from_context(ctx, "My Sans")          # 含 .notdef、space、度量、对齐区
-font.add_chars(controls.build_all())              # b d h i l m n o p q r u
+font.add_chars(controls.build_all())              # a–z from n / o, A–Z from H / O
 build_font(font, "out/")                          # MySans-Regular.ufo / .otf / .ttf
 ```
 

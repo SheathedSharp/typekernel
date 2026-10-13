@@ -2,7 +2,7 @@
 
 1. Brief / proportions   → DesignContext
 2. Control glyphs        → Controls (the n and o design records)
-3. Related forms         → Controls.build_all(): the lowercase a–z from n and o
+3. Related forms         → Controls.build_all(): a–z from n / o, A–Z from H / O
 4. Spacing               → optical sidebearings per glyph
 5. Kerning               → class kerning fitted to the n/o rhythm
 6. Font                  → Font (names, cmap, metrics, zones, anchors, kerning)
@@ -31,7 +31,7 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
-PROOF_TEXT = "the quick brown fox jumps over the lazy dog"
+PROOF_TEXT = "The Quick Brown Fox Jumps Over The Lazy Dog"
 
 
 def design(controls: Controls, family: str = FAMILY) -> Font:
@@ -42,7 +42,12 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
         for ch, g in drawn.items()
     }
 
-    classes = (KernClass("straight", ("n", "h", "m", "i", "l", "u")), KernClass("round", ("o",)))
+    classes = (
+        KernClass("straight", ("n", "h", "m", "i", "l", "u")),
+        KernClass("round", ("o",)),
+        KernClass("straight_caps", ("H", "I", "M", "N", "U")),
+        KernClass("round_caps", ("O", "C", "G", "Q")),
+    )
     rhythm = rhythm_from_control_glyphs(spaced["n"], spaced["o"])
     kerning = auto_class_kern(spaced, classes, target=rhythm)
 
