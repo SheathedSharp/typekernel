@@ -43,9 +43,10 @@ from typekernel.parts.control import (
     o_metrics,
     s_from_o,
 )
-from typekernel.parts.diagonals import _hwidth
+from typekernel.parts.diagonals import _hwidth, k_points, v_points, w_points, x_points, z_points
 
 __all__ = [
+    "A_from_H",
     "B_from_H",
     "C_from_O",
     "D_from_H",
@@ -55,13 +56,21 @@ __all__ = [
     "HMetrics",
     "I_from_H",
     "J_from_H",
+    "K_from_H",
     "L_from_H",
+    "M_from_H",
+    "N_from_H",
     "P_from_H",
     "Q_from_O",
     "R_from_H",
     "S_from_O",
     "T_from_H",
     "U_from_H",
+    "V_from_H",
+    "W_from_H",
+    "X_from_H",
+    "Y_from_H",
+    "Z_from_H",
     "build_H",
     "build_O",
     "cap_o_metrics",
@@ -552,8 +561,10 @@ def B_from_H(
     inside: list[Any] = []
     for hit in curveCurveIntersections(list(lq0), list(uq3)):
         # fontTools may report one crossing twice; merge near-identical hits
-        if 0.0 < hit.t1 < 1.0 and 0.0 < hit.t2 < 1.0 and all(
-            abs(hit.t1 - k.t1) > 1e-3 for k in inside
+        if (
+            0.0 < hit.t1 < 1.0
+            and 0.0 < hit.t2 < 1.0
+            and all(abs(hit.t1 - k.t1) > 1e-3 for k in inside)
         ):
             inside.append(hit)
     if len(inside) != 1:
@@ -658,6 +669,216 @@ def J_from_H(
     _curve(b, q3)
     b.closePath()
     return _pack(c, h, {"top": (w - t / 2.0, cap), "bottom": (cx, 0.0)}, _ccw(b.build()))
+
+
+def _diag_cap(
+    H: ComposedGlyph, ctx: DesignContext | None, width: float, pts: list[Pt]
+) -> ComposedGlyph:
+    c = ctx or H.context
+    h = _h_record(H)
+    return _pack(c, h, _cap_anchors(width, h), _polygon(pts))
+
+
+def V_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.98
+) -> ComposedGlyph:
+    """``V``: the ``v`` construction at cap height with the cap stem."""
+    h, c = _h_record(H), ctx or H.context
+    w = width * h.width
+    return _diag_cap(H, ctx, w, v_points(h.stem, h.cap_height, w, c.contrast))
+
+
+def W_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.4
+) -> ComposedGlyph:
+    """``W``: the ``w`` construction at cap height (four lighter diagonals)."""
+    h, c = _h_record(H), ctx or H.context
+    w = width * h.width
+    return _diag_cap(H, ctx, w, w_points(h.stem, h.cap_height, w, c.contrast))
+
+
+def X_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.92
+) -> ComposedGlyph:
+    """``X``: two compensated diagonals crossing at mid cap height."""
+    h, c = _h_record(H), ctx or H.context
+    w = width * h.width
+    return _diag_cap(H, ctx, w, x_points(h.stem, h.cap_height, w, c.contrast))
+
+
+def Z_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.88
+) -> ComposedGlyph:
+    """``Z``: ``H``-bar-thick top and foot joined by one compensated diagonal."""
+    h, c = _h_record(H), ctx or H.context
+    w = width * h.width
+    return _diag_cap(H, ctx, w, z_points(h.stem, h.bar, h.cap_height, w, c.contrast))
+
+
+def K_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.92
+) -> ComposedGlyph:
+    """``K``: the ``H`` stem with arm and leg meeting at the stem; the arm reaches cap height."""
+    h, c = _h_record(H), ctx or H.context
+    w = width * h.width
+    cap = h.cap_height
+    return _diag_cap(H, ctx, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=0.4))
+
+
+def A_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 1.02,
+    apex: float = 0.35,
+    bar: float = 0.28,
+) -> ComposedGlyph:
+    """``A``: the ``V`` turned over, with a crossbar at ``bar`` × cap height.
+
+    Outer contour plus the triangular counter above the bar.
+    """
+    c = ctx or H.context
+    h = _h_record(H)
+    # heavy A widens so the counter above the bar stays open
+    w, cap = max(width * h.width, 3.2 * h.stem), h.cap_height
+    f = apex * h.stem
+    a = (w - f) / 2.0
+    hw = _hwidth(h.stem, c.contrast, a, cap)
+    crotch = cap * (w - 2.0 * hw) / (2.0 * a)
+    y0 = bar * cap - h.bar / 2.0
+    y1 = min(y0 + h.bar, crotch - 0.5 * h.stem)
+    if not (hw > f / 2.0 and 0.0 < y0 < y1 < crotch < cap):
+        raise ValueError("A strokes do not fit this width; widen it or thin the stem")
+
+    def left(y: float) -> float:
+        return hw + a * y / cap
+
+    def right(y: float) -> float:
+        return w - hw - a * y / cap
+
+    b = PathBuilder()
+    for i, p in enumerate(
+        [
+            (0.0, 0.0),
+            (hw, 0.0),
+            (left(y0), y0),
+            (right(y0), y0),
+            (w - hw, 0.0),
+            (w, 0.0),
+            ((w + f) / 2.0, cap),
+            ((w - f) / 2.0, cap),
+        ]
+    ):
+        (b.moveTo if i == 0 else b.lineTo)(*p)
+    b.closePath()
+    b.moveTo(left(y1), y1)
+    b.lineTo(w / 2.0, crotch)
+    b.lineTo(right(y1), y1)
+    b.closePath()
+    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+
+
+def Y_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.98,
+    junction: float = 0.42,
+) -> ComposedGlyph:
+    """``Y``: two compensated arms meeting on the ``H`` stem at ``junction`` × cap."""
+    c = ctx or H.context
+    h = _h_record(H)
+    w, cap, t = width * h.width, h.cap_height, h.stem
+    yj = junction * cap
+    hw = _hwidth(t, c.contrast, w / 2.0 - t / 2.0, cap - yj)
+    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
+    # left arm outer edge: (0, cap) → (w/2 - hw/2, yj); inner edge shifted by hw
+    run = w / 2.0 - hw / 2.0
+    y_side = cap - s0 * (cap - yj) / run
+    y_crotch = cap - (w / 2.0 - hw) * (cap - yj) / run
+    if not (0.0 < y_side < cap and yj < y_crotch < cap):
+        raise ValueError("Y arms do not fit this width; widen it or thin the stem")
+    pts = [
+        (0.0, cap),
+        (s0, y_side),
+        (s0, 0.0),
+        (s1, 0.0),
+        (s1, y_side),
+        (w, cap),
+        (w - hw, cap),
+        (w / 2.0, y_crotch),
+        (hw, cap),
+    ]
+    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+
+
+def M_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 1.18,
+    apex: float = 0.35,
+) -> ComposedGlyph:
+    """``M``: two ``H`` stems; diagonals leave their inner top corners and meet on the baseline."""
+    c = ctx or H.context
+    h = _h_record(H)
+    w, cap, t = width * h.width, h.cap_height, h.stem
+    f = apex * t
+    bx = w / 2.0 - f / 2.0  # left end of the flat vertex on the baseline
+    hw = _hwidth(t, c.contrast, bx - t, cap)
+    for _ in range(8):
+        hw = _hwidth(t, c.contrast, bx - t + hw, cap)
+    slope = cap / (t - bx - hw)  # negative: rising to the left
+    y_low = slope * (t - bx)
+    y_v = slope * (f / 2.0 - hw)
+    if not (0.0 < y_low < cap and 0.0 < y_v < cap and hw > f / 2.0):
+        raise ValueError("M strokes do not fit this width; widen it or thin the stem")
+    pts = [
+        (0.0, 0.0),
+        (t, 0.0),
+        (t, y_low),
+        (bx, 0.0),
+        (w - bx, 0.0),
+        (w - t, y_low),
+        (w - t, 0.0),
+        (w, 0.0),
+        (w, cap),
+        (w - t, cap),
+        (w / 2.0, y_v),
+        (t, cap),
+        (0.0, cap),
+    ]
+    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+
+
+def N_from_H(
+    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.0
+) -> ComposedGlyph:
+    """``N``: two ``H`` stems joined by a diagonal from top left to bottom right."""
+    c = ctx or H.context
+    h = _h_record(H)
+    w, cap, t = width * h.width, h.cap_height, h.stem
+    hw = _hwidth(t, c.contrast, w - 2.0 * t, cap)
+    for _ in range(8):
+        hw = _hwidth(t, c.contrast, w - 2.0 * t + hw, cap)
+    slope = cap / (2.0 * t - hw - w)  # negative
+    y_left = slope * (2.0 * t - w)
+    y_right = -slope * hw
+    if not (0.0 < y_right < cap and 0.0 < y_left < cap):
+        raise ValueError("N diagonal does not fit this width; widen it or thin the stem")
+    pts = [
+        (0.0, 0.0),
+        (t, 0.0),
+        (t, y_left),
+        (w - t, 0.0),
+        (w, 0.0),
+        (w, cap),
+        (w - t, cap),
+        (w - t, y_right),
+        (t, cap),
+        (0.0, cap),
+    ]
+    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
 
 
 def T_from_H(

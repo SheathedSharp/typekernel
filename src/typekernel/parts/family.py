@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from typekernel.parts.caps import (
+    A_from_H,
     B_from_H,
     C_from_O,
     D_from_H,
@@ -21,13 +22,21 @@ from typekernel.parts.caps import (
     HMetrics,
     I_from_H,
     J_from_H,
+    K_from_H,
     L_from_H,
+    M_from_H,
+    N_from_H,
     P_from_H,
     Q_from_O,
     R_from_H,
     S_from_O,
     T_from_H,
     U_from_H,
+    V_from_H,
+    W_from_H,
+    X_from_H,
+    Y_from_H,
+    Z_from_H,
     build_H,
     build_O,
     cap_o_metrics,
@@ -115,6 +124,15 @@ CAP_FORMS: dict[str, Derivation] = {
     "P": lambda H, O, c: P_from_H(H, O, c),
     "R": lambda H, O, c: R_from_H(H, O, c),
     "B": lambda H, O, c: B_from_H(H, O, c),
+    "A": lambda H, O, c: A_from_H(H, c),
+    "V": lambda H, O, c: V_from_H(H, c),
+    "W": lambda H, O, c: W_from_H(H, c),
+    "X": lambda H, O, c: X_from_H(H, c),
+    "Y": lambda H, O, c: Y_from_H(H, c),
+    "Z": lambda H, O, c: Z_from_H(H, c),
+    "K": lambda H, O, c: K_from_H(H, c),
+    "M": lambda H, O, c: M_from_H(H, c),
+    "N": lambda H, O, c: N_from_H(H, c),
 }
 """Capital → how it derives from control ``H`` and ``O``."""
 
