@@ -59,15 +59,9 @@ def boolean_op(a: Outline, b: Outline, op: BooleanOp) -> Outline:
 
     path_a = _outline_to_path(a, Path)
     path_b = _outline_to_path(b, Path)
-    builder = pathops.OpBuilder(fix_winding=True)
-    if op == "union":
-        builder.add(path_a, PathOp.UNION)
-        builder.add(path_b, PathOp.UNION)
-    else:
-        # Subject first, then operand with the requested op.
-        builder.add(path_a, PathOp.UNION)
-        builder.add(path_b, getattr(PathOp, _OP_NAME[op]))
-    return _path_to_outline(builder.resolve())
+    # pathops.op, not OpBuilder: OpBuilder turns overlaps into holes when an
+    # operand already carries a counter (ring ∪ bar came out as XOR).
+    return _path_to_outline(pathops.op(path_a, path_b, getattr(PathOp, _OP_NAME[op])))
 
 
 def union_all(outlines: list[Outline]) -> Outline:
@@ -85,10 +79,11 @@ def union_all(outlines: list[Outline]) -> Outline:
     except ImportError as exc:
         raise RuntimeError(INSTALL_HINT) from exc
 
-    builder = pathops.OpBuilder(fix_winding=True)
-    for outline in outlines:
-        builder.add(_outline_to_path(outline, Path), PathOp.UNION)
-    return _path_to_outline(builder.resolve())
+    paths = [_outline_to_path(outline, Path) for outline in outlines]
+    result = paths[0]
+    for path in paths[1:]:
+        result = pathops.op(result, path, PathOp.UNION)
+    return _path_to_outline(result)
 
 
 def _outline_to_path(outline: Outline, path_cls: type) -> object:

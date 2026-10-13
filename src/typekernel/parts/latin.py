@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 
-from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
+from typekernel.parts.compose import ComposedGlyph, GlyphAssembler, try_difference, try_union
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import (
     arch,
@@ -156,24 +156,30 @@ def letter_o(ctx: DesignContext) -> ComposedGlyph:
 
 
 def letter_e(ctx: DesignContext) -> ComposedGlyph:
-    """Geometric ``e``: bowl + crossbar; aperture opens to the right."""
+    """Geometric ``e``: ring + full crossbar; aperture opens below the bar."""
     ry = ctx.x_height / 2.0 + ctx.overshoot
     rx = ry * 0.96
     cx, cy = rx, ctx.x_height / 2.0
-    outer, hole = bowl(ctx, cx, cy, rx=rx, ry=ry, thickness=ctx.stem * 0.95)
+    t = ctx.stem * 0.95
+    outer, hole = bowl(ctx, cx, cy, rx=rx, ry=ry, thickness=t)
     bar_y = cy + ctx.stem * 0.05
-    gap = ctx.aperture * rx * 0.55
-    bar = crossbar(
+    bar = crossbar(ctx, cx - rx + t * 0.5, cx + rx - t * 0.5, bar_y, thickness=ctx.thin)
+    if not _HAS_PATHOPS:
+        return GlyphAssembler(ctx).add(outer).add(bar).add_hole(hole).build()
+    # Cut the counter before adding the bar, or the counter swallows the bar.
+    ring = try_difference(outer, hole)
+    body = try_union([ring, bar])
+    bar_bottom = bar_y - ctx.thin / 2.0
+    gap_h = ctx.x_height * (0.10 + 0.16 * ctx.aperture)
+    bite = rounded_rect(
         ctx,
-        cx - (rx - ctx.stem) + ctx.stem * 0.1,
-        cx + (rx - ctx.stem) - gap,
-        bar_y,
-        thickness=ctx.thin,
+        cx + (rx - t) * 0.2,
+        bar_bottom - gap_h,
+        cx + rx + ctx.stem,
+        bar_bottom,
+        radius=0.0,
     )
-    asm = GlyphAssembler(ctx).add(outer).add(bar).add_hole(hole)
-    if _HAS_PATHOPS:
-        return asm.union_solids().subtract_holes().build()
-    return asm.build()
+    return GlyphAssembler(ctx).add(try_difference(body, bite)).build()
 
 
 def letter_s(ctx: DesignContext) -> ComposedGlyph:
