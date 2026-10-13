@@ -27,7 +27,7 @@ from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import bowl, tittle, vertical_stem
-from typekernel.parts.transforms import mirror_x, mirror_y
+from typekernel.parts.transforms import mirror_x, mirror_y, translate
 
 __all__ = [
     "NMetrics",
@@ -46,8 +46,10 @@ __all__ = [
     "c_from_o",
     "d_from_o",
     "e_from_o",
+    "f_from_n",
     "h_from_n",
     "i_from_n",
+    "j_from_n",
     "l_from_n",
     "m_from_n",
     "n_metrics",
@@ -55,6 +57,7 @@ __all__ = [
     "p_from_o",
     "q_from_o",
     "r_from_n",
+    "t_from_n",
     "u_from_n",
 ]
 
@@ -316,10 +319,26 @@ def r_from_n(
     right leg's inner face (``1``). Outer and inner shoulder curves are split
     at that x, so the arm is literally the ``n`` shoulder, truncated.
     """
-    if not 0.0 < arm < 1.0:
-        raise ValueError(f"arm must be in (0, 1), got {arm}")
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
+    outline, x_t = _r_outline(m, arm)
+    anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, outline)
+
+
+Bar = tuple[float, float, float, float]
+"""``(y0, y1, left, right)``: a crossbar from ``y0`` to ``y1`` reaching
+``left`` past the stem's left face and ``right`` past its right face."""
+
+
+def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline, float]:
+    """``r``-type outline (stem + truncated shoulder) and its terminal x.
+
+    ``bar`` adds a crossbar as straight detours on both stem faces, so the
+    contour keeps one fixed point count (no boolean union).
+    """
+    if not 0.0 < arm < 1.0:
+        raise ValueError(f"arm must be in (0, 1), got {arm}")
     s = _shoulder(m)
     mid = s.outer[0][3][0]
     x_t = mid + arm * (s.r0 - mid)
@@ -327,9 +346,15 @@ def r_from_n(
     inner = _split(s.inner[0], x_t, horizontal=False)
     if outer is None or inner is None:  # pragma: no cover - monotonic by construction
         raise ValueError("shoulder does not cross the terminal position")
+    if bar is not None and not 0.0 < bar[0] < bar[1] < m.join_y:
+        raise ValueError("crossbar must sit between the baseline and the shoulder crotch")
 
     b = PathBuilder()
     b.moveTo(s.l0, 0.0)
+    if bar is not None:
+        y0, y1, left, _ = bar
+        for p in ((s.l0, y0), (s.l0 - left, y0), (s.l0 - left, y1), (s.l0, y1)):
+            b.lineTo(*p)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
     _curve(b, s.outer[0])
@@ -337,10 +362,93 @@ def r_from_n(
     b.lineTo(*inner[1][0])
     _curve(b, inner[1])
     _curve(b, s.inner[1])
+    if bar is not None:
+        y0, y1, _, right = bar
+        for p in ((s.l1, y1), (s.l1 + right, y1), (s.l1 + right, y0), (s.l1, y0)):
+            b.lineTo(*p)
     b.lineTo(s.l1, 0.0)
     b.closePath()
-    anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
-    return _pack(c, m, anchors, _ccw(b.build()))
+    return _ccw(b.build()), x_t
+
+
+def _hook_record(m: NMetrics, top: float, depth: float = 0.5) -> NMetrics:
+    """The ``n`` record re-based so its shoulder caps a stem of height ``top``.
+
+    The shoulder keeps its shape and thickness; the crotch is ``depth`` × as
+    deep as the ``n``'s, since hooks (``f t j``) sit tighter than arches.
+    """
+    d = top - m.x_height
+    crown, inner_crown = m.crown_y + d, m.inner_crown + d
+    join = min(top - depth * (m.x_height - m.join_y), inner_crown - 0.35 * m.stem)
+    return m.tuned(
+        x_height=top, crown_y=crown, leg_top=m.leg_top + d, join_y=join, inner_crown=inner_crown
+    )
+
+
+def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) -> Bar:
+    """Bar at x-height (dropped just enough to clear a heavy hook's crotch)."""
+    tb = m.stem * c.contrast * 0.95
+    y1 = min(x_height, hook.join_y - 0.1 * m.stem)
+    return (y1 - tb, y1, 0.42 * m.counter, 0.5 * m.counter)
+
+
+def f_from_n(
+    n_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.75,
+) -> ComposedGlyph:
+    """Derive ``f``: the ``r`` arm capping an ascender stem, crossbar at x-height."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    hook = _hook_record(m, m.ascender)
+    outline, _ = _r_outline(hook, arm, _crossbar(c, m, hook, m.x_height))
+    anchors = {"bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, outline)
+
+
+def t_from_n(
+    n_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.6,
+    rise: float = 0.3,
+) -> ComposedGlyph:
+    """Derive ``t``: the ``f`` construction flipped, hook on the baseline.
+
+    The stem stands ``rise`` of the way from x-height to the ascender; the
+    hook dips below the baseline by the overshoot.
+    """
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    top = m.x_height + rise * (m.ascender - m.x_height)
+    hook = _hook_record(m, top)
+    # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
+    # sits at [top - xh, top - xh + tb] before the flip.
+    _, _, left, right = _crossbar(c, m, hook, m.x_height)
+    tb = m.stem * c.contrast * 0.95
+    bar = (top - m.x_height, top - m.x_height + tb, left, right)
+    outline, x_t = _r_outline(hook, arm, bar)
+    anchors = {"bottom": (x_t / 2.0, 0.0)}
+    return _pack(c, m, anchors, _ccw(mirror_y(outline, at_y=top / 2.0)))
+
+
+def j_from_n(
+    n_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.75,
+) -> ComposedGlyph:
+    """Derive ``j``: the ``r`` turned 180° into a descender hook, plus the ``i`` tittle."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    height = m.x_height - c.descender
+    hook = _hook_record(m, height)
+    outline, _ = _r_outline(hook, arm)
+    turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
+    body = translate(turned, 0.0, c.descender)
+    dot = tittle(c, m.stem / 2.0, m.x_height + m.stem * 0.55, size=m.stem * 0.95)
+    return _pack(c, m, {}, body, dot)
 
 
 def build_r(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:

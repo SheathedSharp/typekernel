@@ -23,8 +23,10 @@ from typekernel.parts.control import (
     c_from_o,
     d_from_o,
     e_from_o,
+    f_from_n,
     h_from_n,
     i_from_n,
+    j_from_n,
     l_from_n,
     m_from_n,
     n_metrics,
@@ -32,6 +34,7 @@ from typekernel.parts.control import (
     p_from_o,
     q_from_o,
     r_from_n,
+    t_from_n,
     u_from_n,
 )
 from typekernel.parts.diagonals import k_from_n, v_from_n, w_from_n, x_from_n, y_from_n, z_from_n
@@ -62,6 +65,9 @@ RELATED_FORMS: dict[str, Derivation] = {
     "x": lambda n, o, c: x_from_n(n, c),
     "z": lambda n, o, c: z_from_n(n, c),
     "k": lambda n, o, c: k_from_n(n, c),
+    "f": lambda n, o, c: f_from_n(n, c),
+    "t": lambda n, o, c: t_from_n(n, c),
+    "j": lambda n, o, c: j_from_n(n, c),
 }
 """Character → how it derives from control ``n`` and ``o``."""
 

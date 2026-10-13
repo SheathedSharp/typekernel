@@ -20,7 +20,7 @@ def _width(g) -> float:
 
 def test_build_all_covers_related_forms(ctx: DesignContext) -> None:
     glyphs = Controls.from_context(ctx).build_all()
-    assert set(glyphs) == set(RELATED_FORMS) == set("abcdehiklmnopqruvwxyz")
+    assert set(glyphs) == set(RELATED_FORMS) == set("abcdefhijklmnopqrtuvwxyz")
     assert all(g.advance > 0 for g in glyphs.values())
 
 
