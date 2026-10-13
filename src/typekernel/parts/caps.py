@@ -11,10 +11,16 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, replace
+from typing import Any
 
-from fontTools.misc.bezierTools import curveLineIntersections, splitCubicAtT
+from fontTools.misc.bezierTools import (
+    cubicPointAtT,
+    curveCurveIntersections,
+    curveLineIntersections,
+    splitCubicAtT,
+)
 
-from typekernel.geo.contour import reverse_contour
+from typekernel.geo.contour import reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts.compose import ComposedGlyph
@@ -40,6 +46,7 @@ from typekernel.parts.control import (
 from typekernel.parts.diagonals import _hwidth
 
 __all__ = [
+    "B_from_H",
     "C_from_O",
     "D_from_H",
     "E_from_H",
@@ -49,7 +56,9 @@ __all__ = [
     "I_from_H",
     "J_from_H",
     "L_from_H",
+    "P_from_H",
     "Q_from_O",
+    "R_from_H",
     "S_from_O",
     "T_from_H",
     "U_from_H",
@@ -364,8 +373,8 @@ def D_from_H(
     h = _h_record(H)
     e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
     t, cap, bt = h.stem, h.cap_height, h.bar
-    w = width * h.width
-    x0 = straight * w
+    w = max(width * h.width, _MIN_BOWL_STEMS * t + 0.3 * t)
+    x0 = _straight_run(straight, w, t)
     cy = cap / 2.0
     _, _, _, q3 = _quarters(x0, cy, w - x0, cy, e)
     q0 = _quarters(x0, cy, w - x0, cy, e)[0]
@@ -390,7 +399,180 @@ def D_from_H(
 
 
 _MIN_BOWL_STEMS = 2.3
-"""Heavy ``U`` / ``J`` widen so the bowl keeps a counter between its walls."""
+"""Heavy bowl capitals widen so each bowl keeps a counter between its walls."""
+
+
+def _straight_run(straight: float, width: float, stem: float) -> float:
+    """Where a stem + half bowl's flat top / foot turn round: past the stem."""
+    return max(straight * width, 1.2 * stem)
+
+
+def _half_bowl(
+    x0: float, y0: float, y1: float, right: float, stem: float, bar: float, e: float
+) -> tuple[Cubic, Cubic, Cubic, Cubic]:
+    """Right half of a flattened bowl spanning ``y0..y1`` from ``x0`` to ``right``.
+
+    Returns outer ``(q3, q0)`` and counter ``(i3, i0)`` quarters; the bowl's
+    top and bottom strokes are ``bar`` thick, its round side ``stem`` thick.
+    """
+    cy, ry = (y0 + y1) / 2.0, (y1 - y0) / 2.0
+    q0, _, _, q3 = _quarters(x0, cy, right - x0, ry, e)
+    i0, _, _, i3 = _quarters(x0, cy, right - x0 - stem, ry - bar, e)
+    return q3, q0, i3, i0
+
+
+def _counter(b: PathBuilder, t: float, x0: float, i3: Cubic, i0: Cubic) -> None:
+    """Counter of a stem + half bowl: stem face, flat top, round side, flat foot."""
+    b.moveTo(t, i3[0][1])
+    b.lineTo(t, i0[3][1])
+    b.lineTo(x0, i0[3][1])
+    _curve(b, _rev(i0))
+    _curve(b, _rev(i3))
+    b.closePath()
+
+
+def _with_counters(b: PathBuilder) -> Outline:
+    """Outer first (made CCW), every later contour turned clockwise."""
+    outer, *rest = b.build().contours
+    if signed_area(outer) < 0:
+        outer = reverse_contour(outer)
+    return Outline((outer, *(k if signed_area(k) < 0 else reverse_contour(k) for k in rest)))
+
+
+def _bowl_cap_setup(
+    H: ComposedGlyph, O: ComposedGlyph | None, ctx: DesignContext | None
+) -> tuple[DesignContext, HMetrics, float]:
+    c = ctx or H.context
+    h = _h_record(H)
+    e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
+    return c, h, e
+
+
+def P_from_H(
+    H: ComposedGlyph,
+    O: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.9,
+    straight: float = 0.45,
+    bowl: float = 0.47,
+) -> ComposedGlyph:
+    """``P``: the ``H`` stem with a half bowl from ``bowl`` × cap height up."""
+    c, h, e = _bowl_cap_setup(H, O, ctx)
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    x0, y_b = _straight_run(straight, w, t), bowl * cap - bt / 2.0
+    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, t, bt, e)
+    b = PathBuilder()
+    b.moveTo(0.0, 0.0)
+    for p in ((t, 0.0), (t, y_b), (x0, y_b)):
+        b.lineTo(*p)
+    _curve(b, q3)
+    _curve(b, q0)
+    b.lineTo(0.0, cap)
+    b.closePath()
+    _counter(b, t, x0, i3, i0)
+    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+
+
+def R_from_H(
+    H: ComposedGlyph,
+    O: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.94,
+    straight: float = 0.45,
+    bowl: float = 0.47,
+    leg_at: float = 0.3,
+) -> ComposedGlyph:
+    """``R``: the ``P`` with a compensated leg from the bowl to the baseline.
+
+    The leg's right edge runs from the foot corner to the point ``leg_at``
+    along the bowl's lower curve (an exact splice); its left edge, one
+    compensated stroke to the left, lands on the bowl's flat foot.
+    """
+    c, h, e = _bowl_cap_setup(H, O, ctx)
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    bowl_w = 0.96 * w
+    x0, y_b = _straight_run(straight, bowl_w, t), bowl * cap - bt / 2.0
+    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, bowl_w, t, bt, e)
+    foot_r = (w, 0.0)
+    lo, hi, t_c = 0.0, 1.0, leg_at
+    for _ in range(40):
+        pc = cubicPointAtT(*q3, t_c)
+        hw = _hwidth(h.stem * 0.95, c.contrast, w - pc[0], pc[1])
+        x_l = (w - hw) + (pc[0] - w) * (y_b / pc[1])
+        if x_l > x0:
+            hi, t_c = t_c, (lo + t_c) / 2.0
+        elif x_l < t:
+            lo, t_c = t_c, (t_c + hi) / 2.0
+        else:
+            break
+    else:
+        raise ValueError("R leg does not fit between stem and bowl; adjust width")
+    _, after = splitCubicAtT(*q3, t_c)
+
+    b = PathBuilder()
+    b.moveTo(0.0, 0.0)
+    for p in ((t, 0.0), (t, y_b), (x_l, y_b), (w - hw, 0.0), foot_r, after[0]):
+        b.lineTo(*p)
+    _curve(b, after)
+    _curve(b, q0)
+    b.lineTo(0.0, cap)
+    b.closePath()
+    _counter(b, t, x0, i3, i0)
+    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+
+
+def B_from_H(
+    H: ComposedGlyph,
+    O: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.92,
+    top_scale: float = 0.9,
+    straight: float = 0.45,
+    waist: float = 0.53,
+) -> ComposedGlyph:
+    """``B``: the ``H`` stem with two stacked half bowls, the upper narrower.
+
+    The bowls share the middle bar at ``waist`` × cap height; the outer
+    notch between them is the intersection of their curves.
+    """
+    c, h, e = _bowl_cap_setup(H, O, ctx)
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, _MIN_BOWL_STEMS * t / top_scale)
+    wu = top_scale * w
+    m1 = waist * cap + bt / 2.0
+    m0 = m1 - bt
+    xl, xu = _straight_run(straight, w, t), _straight_run(straight, wu, t)
+    lq3, lq0, li3, li0 = _half_bowl(xl, 0.0, m1, w, t, bt, e)
+    uq3, uq0, ui3, ui0 = _half_bowl(xu, m0, cap, wu, t, bt, e)
+    inside: list[Any] = []
+    for hit in curveCurveIntersections(list(lq0), list(uq3)):
+        # fontTools may report one crossing twice; merge near-identical hits
+        if 0.0 < hit.t1 < 1.0 and 0.0 < hit.t2 < 1.0 and all(
+            abs(hit.t1 - k.t1) > 1e-3 for k in inside
+        ):
+            inside.append(hit)
+    if len(inside) != 1:
+        raise ValueError("B bowls do not cross once; adjust top_scale or waist")
+    low_part, _ = splitCubicAtT(*lq0, inside[0].t1)
+    _, up_part = splitCubicAtT(*uq3, inside[0].t2)
+
+    b = PathBuilder()
+    b.moveTo(0.0, 0.0)
+    b.lineTo(xl, 0.0)
+    _curve(b, lq3)
+    _curve(b, low_part)
+    _curve(b, (low_part[3], up_part[1], up_part[2], up_part[3]))
+    _curve(b, uq0)
+    b.lineTo(0.0, cap)
+    b.closePath()
+    _counter(b, t, xl, li3, li0)
+    _counter(b, t, xu, ui3, ui0)
+    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
 
 
 def _u_parts(h: HMetrics, w: float, e: float, spring: float) -> tuple[Cubic, ...]:
