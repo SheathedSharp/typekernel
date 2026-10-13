@@ -29,7 +29,7 @@ def test_f_hook_at_ascender_and_bar_at_x_height(ctx: DesignContext) -> None:
     (bar,) = ink_intervals_at_y(list(f.solids), ctx.x_height - tb / 2.0)
     (stem,) = ink_intervals_at_y(list(f.solids), ctx.x_height / 2.0)
     assert stem[1] - stem[0] == pytest.approx(m.stem)
-    assert bar[1] - bar[0] == pytest.approx(m.stem + 0.92 * m.counter)
+    assert bar[1] - bar[0] == pytest.approx(m.stem + 0.94 * m.counter)
 
 
 def test_t_hook_on_baseline(ctx: DesignContext) -> None:

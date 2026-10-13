@@ -13,6 +13,7 @@ through to ``h``, ``u``, ``i``, ``l`` without touching the context.
 
 from __future__ import annotations
 
+import importlib.util
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
@@ -26,7 +27,7 @@ from typekernel.geo.path_helpers import KAPPA
 from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
-from typekernel.parts.primitives import bowl, tittle, vertical_stem
+from typekernel.parts.primitives import bowl, rounded_rect, tittle, vertical_stem
 from typekernel.parts.transforms import mirror_x, mirror_y, translate
 
 __all__ = [
@@ -440,7 +441,36 @@ def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) ->
     """Bar at x-height (dropped just enough to clear a heavy hook's crotch)."""
     tb = m.stem * c.contrast * 0.95
     y1 = min(x_height, hook.join_y - 0.1 * m.stem)
-    return (y1 - tb, y1, 0.42 * m.counter, 0.5 * m.counter)
+    return (y1 - tb, y1, 0.42 * m.counter, 0.52 * m.counter)
+
+
+def _t_crossbar_in_hook_space(c: DesignContext, m: NMetrics, hook: NMetrics, top: float) -> Bar:
+    """Crossbar in hook coordinates before ``t`` is flipped."""
+    tb = m.stem * c.contrast * 0.95
+    y0 = top - m.x_height
+    return (y0, y0 + tb, 0.42 * m.counter, 0.52 * m.counter)
+
+
+def _hook_with_crossbar_outline(
+    hook: NMetrics,
+    n_m: NMetrics,
+    ctx: DesignContext,
+    arm: float,
+    bar: Bar,
+) -> tuple[Outline, float]:
+    """Hook master + rounded crossbar (boolean union when pathops is available)."""
+    body, x_t = _r_outline(hook, arm, None)
+    y0, y1, left, right = bar
+    s = _shoulder(hook)
+    fillet = min(ctx.join_radius * 1.1, (y1 - y0) * 0.42, n_m.stem * 0.32)
+    cross = rounded_rect(ctx, s.l0 - left, y0, s.l1 + right, y1, radius=fillet)
+    if importlib.util.find_spec("pathops") is not None:
+        from typekernel.geo.boolean import boolean_op
+
+        outline = _ccw(boolean_op(body, cross, "union"))
+    else:
+        outline, x_t = _r_outline(hook, arm, bar)
+    return _finish_hook_letter(outline, ctx), x_t
 
 
 def f_from_n(
@@ -453,8 +483,8 @@ def f_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     hook = _hook_record(m, m.ascender, c)
-    outline, _ = _r_outline(hook, arm, _crossbar(c, m, hook, m.x_height))
-    outline = _finish_hook_letter(outline, c)
+    bar = _crossbar(c, m, hook, m.x_height)
+    outline, _ = _hook_with_crossbar_outline(hook, m, c, arm, bar)
     anchors = {"bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
 
@@ -477,11 +507,8 @@ def t_from_n(
     hook = _hook_record(m, top, c)
     # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
     # sits at [top - xh, top - xh + tb] before the flip.
-    _, _, left, right = _crossbar(c, m, hook, m.x_height)
-    tb = m.stem * c.contrast * 0.95
-    bar = (top - m.x_height, top - m.x_height + tb, left, right)
-    outline, x_t = _r_outline(hook, arm, bar)
-    outline = _finish_hook_letter(outline, c)
+    bar = _t_crossbar_in_hook_space(c, m, hook, top)
+    outline, x_t = _hook_with_crossbar_outline(hook, m, c, arm, bar)
     anchors = {"bottom": (x_t / 2.0, 0.0)}
     return _pack(c, m, anchors, _ccw(mirror_y(outline, at_y=top / 2.0)))
 

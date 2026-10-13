@@ -41,7 +41,7 @@ from typekernel.qa.proof import proof_context, proof_sheet, proof_labeled_waterf
 - Punctuation: `PUNCT_FORMS` (includes `$` `%` `@`).
 - Ligatures: `fi`, `fl` via `parts/ligatures.py` + `add_standard_ligatures`.
 
-Derived `f`, `t`, `r` share shoulder logic—sensitive to thin stem + high contrast. Sentence proof mandatory.
+Derived `f`, `t` use hook body + **rounded crossbar union** (needs `typekernel[boolean]` / pathops; else notch fallback). Sentence proof mandatory.
 
 ## Master compatibility (`check_masters`)
 
