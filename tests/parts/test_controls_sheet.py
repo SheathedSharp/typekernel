@@ -5,7 +5,14 @@ from __future__ import annotations
 import pytest
 
 from typekernel.geo.outline import bounds
-from typekernel.parts import RELATED_FORMS, Controls, DesignContext, n_metrics, o_metrics
+from typekernel.parts import (
+    CAP_FORMS,
+    RELATED_FORMS,
+    Controls,
+    DesignContext,
+    n_metrics,
+    o_metrics,
+)
 
 
 @pytest.fixture
@@ -20,7 +27,8 @@ def _width(g) -> float:
 
 def test_build_all_covers_related_forms(ctx: DesignContext) -> None:
     glyphs = Controls.from_context(ctx).build_all()
-    assert set(glyphs) == set(RELATED_FORMS) == set("abcdefghijklmnopqrstuvwxyz")
+    assert set(RELATED_FORMS) == set("abcdefghijklmnopqrstuvwxyz")
+    assert set(glyphs) == set(RELATED_FORMS) | set(CAP_FORMS)
     assert all(g.advance > 0 for g in glyphs.values())
 
 

@@ -11,6 +11,18 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
+from typekernel.parts.caps import (
+    E_from_H,
+    F_from_H,
+    HMetrics,
+    I_from_H,
+    L_from_H,
+    T_from_H,
+    build_H,
+    build_O,
+    cap_o_metrics,
+    h_cap_metrics,
+)
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
@@ -41,7 +53,7 @@ from typekernel.parts.control import (
 )
 from typekernel.parts.diagonals import k_from_n, v_from_n, w_from_n, x_from_n, y_from_n, z_from_n
 
-__all__ = ["RELATED_FORMS", "Controls", "Derivation"]
+__all__ = ["CAP_FORMS", "RELATED_FORMS", "Controls", "Derivation"]
 
 Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
 
@@ -75,25 +87,48 @@ RELATED_FORMS: dict[str, Derivation] = {
 }
 """Character → how it derives from control ``n`` and ``o``."""
 
+CAP_FORMS: dict[str, Derivation] = {
+    "H": lambda H, O, c: H,
+    "O": lambda H, O, c: O,
+    "I": lambda H, O, c: I_from_H(H, c),
+    "L": lambda H, O, c: L_from_H(H, c),
+    "E": lambda H, O, c: E_from_H(H, c),
+    "F": lambda H, O, c: F_from_H(H, c),
+    "T": lambda H, O, c: T_from_H(H, c),
+}
+"""Capital → how it derives from control ``H`` and ``O``."""
+
 
 @dataclass(frozen=True, slots=True)
 class Controls:
-    """The family's control sheet: proportions plus the ``n`` and ``o`` records.
+    """The family's control sheet: proportions plus the control-glyph records.
 
-    Every related form is derived from the two control glyphs this sheet
-    draws::
+    Lowercase derives from ``n`` / ``o``, capitals from ``H`` / ``O``::
 
         controls = Controls.from_context(ctx).tuned_n(counter=280)
-        glyphs = controls.build_all()          # {"n": ..., "h": ..., ...}
+        glyphs = controls.build_all()          # {"n": ..., "h": ..., "H": ...}
+
+    The cap records follow the current ``n`` stem unless set explicitly with
+    :meth:`tuned_cap_h` / :meth:`tuned_cap_o`.
     """
 
     context: DesignContext
     n: NMetrics
     o: OMetrics
+    cap_h: HMetrics | None = None
+    cap_o: OMetrics | None = None
 
     @classmethod
     def from_context(cls, ctx: DesignContext) -> Controls:
         return cls(ctx, n_metrics(ctx), o_metrics(ctx))
+
+    @property
+    def H(self) -> HMetrics:
+        return self.cap_h or h_cap_metrics(self.context, self.n)
+
+    @property
+    def O(self) -> OMetrics:
+        return self.cap_o or cap_o_metrics(self.context, self.n)
 
     def tuned_n(self, **kwargs: float) -> Controls:
         return replace(self, n=self.n.tuned(**kwargs))
@@ -101,22 +136,41 @@ class Controls:
     def tuned_o(self, **kwargs: float) -> Controls:
         return replace(self, o=self.o.tuned(**kwargs))
 
+    def tuned_cap_h(self, **kwargs: float) -> Controls:
+        return replace(self, cap_h=self.H.tuned(**kwargs))
+
+    def tuned_cap_o(self, **kwargs: float) -> Controls:
+        return replace(self, cap_o=self.O.tuned(**kwargs))
+
     @property
     def supported(self) -> str:
-        return "".join(sorted(RELATED_FORMS))
+        return "".join(sorted(RELATED_FORMS)) + "".join(sorted(CAP_FORMS))
 
     def control_glyphs(self) -> tuple[ComposedGlyph, ComposedGlyph]:
-        """The drawn ``n`` and ``o`` every related form derives from."""
+        """The drawn ``n`` and ``o`` every lowercase form derives from."""
         return build_n(self.context, self.n), build_o(self.context, self.o)
+
+    def cap_control_glyphs(self) -> tuple[ComposedGlyph, ComposedGlyph]:
+        """The drawn ``H`` and ``O`` every capital derives from."""
+        return build_H(self.context, self.H), build_O(self.context, self.O)
 
     def build(self, ch: str) -> ComposedGlyph:
         return self.build_all(ch)[ch]
 
     def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
-        """Draw ``n`` / ``o`` once and derive ``chars`` (default: all supported)."""
+        """Draw the controls once and derive ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
-        missing = [ch for ch in wanted if ch not in RELATED_FORMS]
+        missing = [ch for ch in wanted if ch not in RELATED_FORMS and ch not in CAP_FORMS]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
-        n, o = self.control_glyphs()
-        return {ch: RELATED_FORMS[ch](n, o, self.context) for ch in wanted}
+        out: dict[str, ComposedGlyph] = {}
+        for forms, draw in (
+            (RELATED_FORMS, self.control_glyphs),
+            (CAP_FORMS, self.cap_control_glyphs),
+        ):
+            chars_here = [ch for ch in wanted if ch in forms]
+            if chars_here:
+                a, b = draw()
+                for ch in chars_here:
+                    out[ch] = forms[ch](a, b, self.context)
+        return {ch: out[ch] for ch in wanted}

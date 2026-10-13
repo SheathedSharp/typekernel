@@ -19,6 +19,18 @@ from typekernel.parts.aperture import (
     open_bowl_ring,
     open_counter,
 )
+from typekernel.parts.caps import (
+    E_from_H,
+    F_from_H,
+    HMetrics,
+    I_from_H,
+    L_from_H,
+    T_from_H,
+    build_H,
+    build_O,
+    cap_o_metrics,
+    h_cap_metrics,
+)
 from typekernel.parts.compose import (
     Anchor,
     ComposedGlyph,
@@ -70,7 +82,7 @@ from typekernel.parts.diagonals import (
     y_from_n,
     z_from_n,
 )
-from typekernel.parts.family import RELATED_FORMS, Controls
+from typekernel.parts.family import CAP_FORMS, RELATED_FORMS, Controls
 from typekernel.parts.latin import (
     LETTER_BUILDERS,
     build_letter,
@@ -183,6 +195,7 @@ from typekernel.parts.transforms import (
 )
 
 __all__ = [
+    "CAP_FORMS",
     "LETTER_BUILDERS",
     "RELATED_FORMS",
     "SKEL_BUILDERS",
@@ -194,18 +207,24 @@ __all__ = [
     "ComposedGlyph",
     "Controls",
     "DesignContext",
+    "E_from_H",
     "EndTreatment",
+    "F_from_H",
     "GlyphAssembler",
+    "HMetrics",
+    "I_from_H",
     "JoinStyle",
     "KernClass",
     "KernPair",
     "KernTable",
+    "L_from_H",
     "NMetrics",
     "OMetrics",
     "Pen",
     "RhythmSpec",
     "Skeleton",
     "Stroke",
+    "T_from_H",
     "a_from_o",
     "aperture_bite",
     "apply_ink_trap",
@@ -215,6 +234,8 @@ __all__ = [
     "ball_end",
     "ball_terminal_piece",
     "bowl",
+    "build_H",
+    "build_O",
     "build_control_letter",
     "build_control_word",
     "build_h",
@@ -229,6 +250,7 @@ __all__ = [
     "build_u",
     "build_word",
     "c_from_o",
+    "cap_o_metrics",
     "capsule",
     "counter",
     "crossbar",
@@ -246,6 +268,7 @@ __all__ = [
     "flat_end",
     "flat_terminal_piece",
     "g_from_o",
+    "h_cap_metrics",
     "h_from_n",
     "hook_end",
     "hook_terminal",
