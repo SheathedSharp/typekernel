@@ -107,4 +107,8 @@ examples/skeleton_specimen/out/
 # first_font example outputs (keep the proof)
 examples/first_font/out/**
 !examples/first_font/out/proof.png
+
+# variable_family example outputs (keep the proof)
+examples/variable_family/out/**
+!examples/variable_family/out/proof.png
 uploads/

@@ -58,6 +58,10 @@ build_font(font, "out/")                          # MySans-Regular.ufo / .otf / 
 
 ![first font proof](docs/images/first-font-proof.png)
 
+多字重：每个字重从自己的控制表画出母版，`build_variable_font` 检查母版兼容后编成可变字体，见 [`examples/variable_family/`](examples/variable_family/)：
+
+![variable family proof](docs/images/variable-family-proof.png)
+
 **质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助。合成 O 样品：
 
 ![合成 O 样品](docs/images/synthetic-O.png)
