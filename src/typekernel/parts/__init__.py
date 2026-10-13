@@ -30,6 +30,8 @@ from typekernel.parts.compose import (
 )
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
+    RELATED_FORMS,
+    Controls,
     NMetrics,
     OMetrics,
     b_from_o,
@@ -167,6 +169,7 @@ from typekernel.parts.transforms import (
 
 __all__ = [
     "LETTER_BUILDERS",
+    "RELATED_FORMS",
     "SKEL_BUILDERS",
     "Anchor",
     "CapStyle",
@@ -174,6 +177,7 @@ __all__ = [
     "ClassKernPair",
     "ClassKernTable",
     "ComposedGlyph",
+    "Controls",
     "DesignContext",
     "EndTreatment",
     "GlyphAssembler",
