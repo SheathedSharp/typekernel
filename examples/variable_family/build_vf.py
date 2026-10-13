@@ -28,7 +28,7 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel Var"
-TEXT = "SPHINX OF BLACK QUARTZ judge my vow"
+TEXT = "SPHINX OF QUARTZ 2048 judge my vow"
 CLASSES = (
     KernClass("straight", ("n", "h", "m", "i", "l", "u")),
     KernClass("round", ("o",)),

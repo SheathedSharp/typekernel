@@ -1,6 +1,6 @@
 # 示例：从比例到一个能安装的字体文件
 
-按设计师的顺序走一遍：比例 → 控制字 `n` / `o` → 派生 `h m r u i l`（来自 `n`）和 `b d p q`（来自 `o` 的碗 + `n` 的竖干）→ 光学侧距 → 类字偶 → `Font` → OTF / TTF → 用编译出的字体文件排校样。
+按设计师的顺序走一遍：比例 → 控制字 `n` / `o`（小写）和 `H` / `O`（大写、数字）→ 派生出 a–z、A–Z、0–9 共 62 个字形 → 光学侧距（数字再统一成等宽）→ 类字偶 → `Font` → OTF / TTF → 用编译出的字体文件排校样。
 
 校样第二行只改了控制表里的一处：`tuned_n(counter=…)`。`n` 家族的字一起变宽，`o` 家族不动。
 
@@ -25,7 +25,8 @@ python examples/first_font/build_font.py
 
 ## 用了哪些 API
 
-- `typekernel.parts.Controls` — 控制表：`DesignContext` + `n` / `o` 的设计记录；`tuned_n` / `tuned_o` 改一处，`build_all()` 整族重新派生
+- `typekernel.parts.Controls` — 控制表：`DesignContext` + `n` / `o` / `H` / `O` 的设计记录；`tuned_n` / `tuned_o` / `tuned_cap_h` / `tuned_cap_o` 改一处，`build_all()` 整族重新派生
+- `typekernel.parts.tabular` — 数字统一字宽、墨迹居中（等宽数字）
 - `typekernel.font.Font.from_context` — 字族信息、竖直度量、对齐区（blue zones）、`.notdef`、`space` 都从 `DesignContext` 来
 - `Font.add_chars` — `{字符: ComposedGlyph}`，自动取 AGL 字形名、映射码位、统一轮廓绕向，并带上控制字的锚点
 - `Font.add_class_kern_table` — 类字偶 → UFO `public.kern1/kern2` 组 → GPOS `kern`

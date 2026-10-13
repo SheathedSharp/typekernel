@@ -2,8 +2,8 @@
 
 1. Brief / proportions   → DesignContext
 2. Control glyphs        → Controls (the n and o design records)
-3. Related forms         → Controls.build_all(): a–z from n / o, A–Z from H / O
-4. Spacing               → optical sidebearings per glyph
+3. Related forms         → Controls.build_all(): a–z from n / o; A–Z, 0–9 from H / O
+4. Spacing               → optical sidebearings per glyph; tabular figures
 5. Kerning               → class kerning fitted to the n/o rhythm
 6. Font                  → Font (names, cmap, metrics, zones, anchors, kerning)
 7. Build + proof         → OTF/TTF, then a proof rendered from the binary
@@ -24,6 +24,7 @@ from typekernel.parts import (
     KernClass,
     auto_class_kern,
     rhythm_from_control_glyphs,
+    tabular,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -31,7 +32,7 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
-PROOF_TEXT = "The Quick Brown Fox Jumps Over The Lazy Dog"
+PROOF_TEXT = "The Quick Brown Fox 0123456789 Jumps Over The Lazy Dog"
 
 
 def design(controls: Controls, family: str = FAMILY) -> Font:
@@ -41,6 +42,7 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
         ch: with_sidebearings(g, *suggest_sidebearings_optical(g, ctx))
         for ch, g in drawn.items()
     }
+    spaced.update(tabular({ch: g for ch, g in spaced.items() if ch.isdigit()}))
 
     classes = (
         KernClass("straight", ("n", "h", "m", "i", "l", "u")),
