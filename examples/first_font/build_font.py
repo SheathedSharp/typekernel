@@ -13,8 +13,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
-
 from typekernel.compile import build_font
 from typekernel.font import Font
 from typekernel.optics.space import space_font
@@ -26,6 +24,7 @@ from typekernel.parts import (
     rhythm_from_control_glyphs,
 )
 from typekernel.parts.diacritics import add_composite_latin
+from typekernel.qa.proof import proof_labeled_waterfall
 
 HERE = Path(__file__).resolve().parent
 OUT_DIR = HERE / "out"
@@ -53,30 +52,6 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
     return font
 
 
-def proof(rows: list[tuple[str, Path]], out: Path) -> Path:
-    width, margin, label_w = 1600, 48, 220
-    sizes = (20, 36, 72)
-    label_font = ImageFont.load_default(size=16)
-    row_h = sum(int(s * 1.5) + 16 for s in sizes) + 24
-    img = Image.new("RGB", (width, margin * 2 + row_h * len(rows)), (255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    y = margin
-    x = margin + label_w
-    for label, binary in rows:
-        draw.text((margin, y), label, font=label_font, fill=(120, 120, 130))
-        for size in sizes:
-            face = ImageFont.truetype(str(binary), size)
-            words = PROOF_TEXT.split()
-            while len(words) > 1 and draw.textlength(" ".join(words), font=face) > width - x - margin:
-                words.pop()
-            draw.text((x, y), " ".join(words), font=face, fill=(22, 22, 26), features=["kern"])
-            y += int(size * 1.5) + 16
-        y += 24
-    out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out)
-    return out
-
-
 def main() -> None:
     ctx = DesignContext.code_clear()
     controls = Controls.from_context(ctx)
@@ -88,11 +63,12 @@ def main() -> None:
     wide = controls.tuned_n(counter=controls.n.counter * 1.18)
     variant = build_font(design(wide, f"{FAMILY} Wide"), OUT_DIR / "variant", formats=("otf",))
 
-    png = proof(
+    png = proof_labeled_waterfall(
         [
             ("from_context", regular.binaries["otf"]),
             ("tuned_n(counter x 1.18)", variant.binaries["otf"]),
         ],
+        PROOF_TEXT,
         OUT_DIR / "proof.png",
     )
     DOCS_IMG.mkdir(parents=True, exist_ok=True)
