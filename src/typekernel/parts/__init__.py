@@ -8,8 +8,9 @@ Boolean union / difference of overlapping solids needs the optional extra::
 
     pip install "typekernel[boolean]"
 
-Coding agents: see ``examples/agent_catalog/`` for a one-liner index of every
-public constructor in this package.
+Coding agents: use :class:`~typekernel.parts.family.Controls` (see
+``.agents/skills/typekernel-font-design/SKILL.md``). Legacy ``parts.latin`` /
+``parts.skeleton_recipes`` are not re-exported here.
 """
 
 from __future__ import annotations
@@ -103,25 +104,6 @@ from typekernel.parts.diagonals import (
 )
 from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS, Controls
 from typekernel.parts.figures import tabular
-from typekernel.parts.latin import (
-    LETTER_BUILDERS,
-    build_letter,
-    build_word,
-    letter_a,
-    letter_c,
-    letter_e,
-    letter_h,
-    letter_i,
-    letter_j,
-    letter_l,
-    letter_n,
-    letter_o,
-    letter_s,
-    letter_u,
-    letter_y,
-    letter_z,
-    word_zayju,
-)
 from typekernel.parts.metrics import (
     ClassKernPair,
     ClassKernTable,
@@ -179,25 +161,6 @@ from typekernel.parts.skeleton import (
     Stroke,
     trace_letter,
 )
-from typekernel.parts.skeleton_recipes import (
-    SKEL_BUILDERS,
-    build_skel_letter,
-    build_skel_word,
-    skel_c,
-    skel_h,
-    skel_i,
-    skel_l,
-    skel_n,
-    skel_o,
-    skel_u,
-    skeleton_c,
-    skeleton_h,
-    skeleton_i,
-    skeleton_l,
-    skeleton_n,
-    skeleton_o,
-    skeleton_u,
-)
 from typekernel.parts.terminals import (
     ball_end,
     ball_terminal_piece,
@@ -218,10 +181,8 @@ from typekernel.parts.transforms import (
 __all__ = [
     "CAP_FORMS",
     "FIGURE_FORMS",
-    "LETTER_BUILDERS",
     "PUNCT_FORMS",
     "RELATED_FORMS",
-    "SKEL_BUILDERS",
     "A_from_H",
     "Anchor",
     "B_from_H",
@@ -283,15 +244,11 @@ __all__ = [
     "build_control_word",
     "build_h",
     "build_i",
-    "build_letter",
     "build_m",
     "build_n",
     "build_o",
     "build_r",
-    "build_skel_letter",
-    "build_skel_word",
     "build_u",
-    "build_word",
     "c_from_o",
     "cap_o_metrics",
     "capsule",
@@ -323,19 +280,6 @@ __all__ = [
     "k_from_n",
     "l_from_n",
     "layout_glyphs",
-    "letter_a",
-    "letter_c",
-    "letter_e",
-    "letter_h",
-    "letter_i",
-    "letter_j",
-    "letter_l",
-    "letter_n",
-    "letter_o",
-    "letter_s",
-    "letter_u",
-    "letter_y",
-    "letter_z",
     "m_from_n",
     "mirror_x",
     "mirror_y",
@@ -356,20 +300,6 @@ __all__ = [
     "shear_end",
     "shoulder",
     "sidebearing_for_width",
-    "skel_c",
-    "skel_h",
-    "skel_i",
-    "skel_l",
-    "skel_n",
-    "skel_o",
-    "skel_u",
-    "skeleton_c",
-    "skeleton_h",
-    "skeleton_i",
-    "skeleton_l",
-    "skeleton_n",
-    "skeleton_o",
-    "skeleton_u",
     "smooth_hook",
     "stroke_polyline",
     "superellipse_ring",
@@ -390,7 +320,6 @@ __all__ = [
     "vertical_stem",
     "w_from_n",
     "wedge",
-    "word_zayju",
     "x_from_n",
     "y_from_n",
     "z_from_n",

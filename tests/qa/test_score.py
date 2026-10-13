@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from typekernel.parts import DesignContext, default_sans_kern, word_zayju
+from typekernel.parts import Controls, DesignContext, default_sans_kern
 from typekernel.qa.score import word_report, zayju_report
+
+
+def _zayju(ctx: DesignContext):
+    drawn = Controls.from_context(ctx).build_all("zayju")
+    return [drawn[ch] for ch in "zayju"]
 
 
 def test_heuristic_zayju_optical_ratio_is_uneven() -> None:
     """Document the baseline problem: bbox even, optical not."""
     ctx = DesignContext.geometric_sans()
     report = word_report(
-        word_zayju(ctx), list("zayju"), kerning=default_sans_kern()
+        _zayju(ctx), list("zayju"), kerning=default_sans_kern()
     )
     assert report.bbox_gap_ratio <= 1.05
     assert report.optical_gap_ratio > 1.15

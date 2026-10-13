@@ -20,7 +20,7 @@ from typekernel.parts import (
     DesignContext,
     default_sans_kern,
     layout_glyphs,
-    word_zayju,
+    Controls,
 )
 
 OUT_DIR = Path(__file__).resolve().parent / "out"
@@ -202,7 +202,8 @@ def compose_triad() -> Path:
     sub_font = _font(FALLBACK_FONT, 15)
 
     for i, (title, sub, ctx) in enumerate(DIRECTIONS):
-        glyphs = word_zayju(ctx)
+        drawn = Controls.from_context(ctx).build_all("zayju")
+        glyphs = [drawn[ch] for ch in "zayju"]
         names = list("zayju")
         font_path = bake_otf(glyphs, names, OUT_DIR / f"zayju_{title.lower().replace(' ', '_')}")
         for ch, g in zip(names, glyphs):

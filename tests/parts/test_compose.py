@@ -6,15 +6,8 @@ import importlib.util
 
 import pytest
 
-from typekernel.parts import (
-    DesignContext,
-    GlyphAssembler,
-    horizontal_bar,
-    letter_a,
-    letter_z,
-    vertical_stem,
-    word_zayju,
-)
+from typekernel.parts import Controls, DesignContext, GlyphAssembler, horizontal_bar, vertical_stem
+from typekernel.parts.latin import letter_a, letter_z
 
 HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 
@@ -45,9 +38,10 @@ def test_assembler_union_merges_solids() -> None:
     assert len(g.solids) == 1
 
 
-def test_word_zayju_shares_one_context() -> None:
+def test_controls_zayju_shares_one_context() -> None:
     ctx = DesignContext.geometric_sans()
-    glyphs = word_zayju(ctx)
+    drawn = Controls.from_context(ctx).build_all("zayju")
+    glyphs = [drawn[ch] for ch in "zayju"]
     assert len(glyphs) == 5
     assert all(g.context is ctx for g in glyphs)
     assert all(g.advance > 0 for g in glyphs)

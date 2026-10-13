@@ -8,8 +8,8 @@ moves the whole ``n`` family and ``tuned_o(rx=...)`` the ``o`` family.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, replace
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, replace
 
 from typekernel.parts.caps import (
     A_from_H,
@@ -191,6 +191,7 @@ class Controls:
     o: OMetrics
     cap_h: HMetrics | None = None
     cap_o: OMetrics | None = None
+    glyph_overrides: Mapping[str, Derivation] = field(default_factory=dict)
 
     @classmethod
     def from_context(cls, ctx: DesignContext) -> Controls:
@@ -220,6 +221,18 @@ class Controls:
         """Widen ``n``/``o`` counters for heavy ``context.stem`` (black masters)."""
         n, o = relieve_n_o(self.n, self.o, self.context.stem)
         return replace(self, n=n, o=o)
+
+    def with_glyph(self, ch: str, builder: Derivation) -> Controls:
+        """Replace one codepoint's derivation (designer-style single-glyph master)."""
+        merged = dict(self.glyph_overrides)
+        merged[ch] = builder
+        return replace(self, glyph_overrides=merged)
+
+    def with_glyphs(self, builders: Mapping[str, Derivation]) -> Controls:
+        """Replace several derivations at once."""
+        merged = dict(self.glyph_overrides)
+        merged.update(builders)
+        return replace(self, glyph_overrides=merged)
 
     @property
     def supported(self) -> str:
@@ -257,12 +270,14 @@ class Controls:
         ]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
+        related = {**RELATED_FORMS, **self.glyph_overrides}
+        cap_forms_merged = {**cap_forms, **self.glyph_overrides}
         out: dict[str, ComposedGlyph] = {}
         for forms, draw in (
-            (RELATED_FORMS, self.control_glyphs),
+            (related, self.control_glyphs),
             (PUNCT_FORMS, self.control_glyphs),
             (extended, self.control_glyphs),
-            (cap_forms, self.cap_control_glyphs),
+            (cap_forms_merged, self.cap_control_glyphs),
         ):
             chars_here = [ch for ch in wanted if ch in forms]
             if chars_here:

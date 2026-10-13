@@ -27,10 +27,10 @@ from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
 from typekernel.parts import (
     ComposedGlyph,
+    Controls,
     DesignContext,
     default_sans_kern,
     layout_glyphs,
-    word_zayju,
 )
 
 OUT_DIR = Path(__file__).resolve().parent / "out"
@@ -351,7 +351,8 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    glyphs = word_zayju(CTX)
+    drawn = Controls.from_context(CTX).build_all("zayju")
+    glyphs = [drawn[ch] for ch in "zayju"]
     for ch, g in zip("zayju", glyphs):
         print(ch, "advance=", round(g.advance, 1), "bounds=", glyph_bounds(g))
         render_glyph_png(g, OUT_DIR / f"letter_{ch}.png")

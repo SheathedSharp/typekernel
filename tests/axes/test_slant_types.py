@@ -1,4 +1,4 @@
-"""Tests for ObliqueTransform vs ItalicDesign split."""
+"""Tests for ObliqueTransform (mechanical oblique, not italic masters)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,9 @@ import pytest
 
 from tests.axes._rect_helpers import closed_rect
 from typekernel.axes import slant
-from typekernel.axes.slant import ItalicDesign, ObliqueTransform
+from typekernel.axes.slant import ObliqueTransform
+from typekernel.parts.italic import italic_controls
+from typekernel.parts import Controls, DesignContext
 
 
 def test_oblique_transform_shears_x_with_y() -> None:
@@ -22,14 +24,15 @@ def test_oblique_transform_shears_x_with_y() -> None:
     assert xs_at_top[-1] == pytest.approx(100.0 + 200.0 * shear)
 
 
-def test_italic_design_raises() -> None:
-    outline = closed_rect(0, 0, 1, 1)
-    with pytest.raises(NotImplementedError, match="italic_controls"):
-        ItalicDesign().apply(outline)
+def test_designed_italic_is_separate_controls_sheet() -> None:
+    reg = Controls.from_context(DesignContext.code_clear())
+    ital = italic_controls(reg)
+    assert ital.n.counter > reg.n.counter
+    assert ital is not reg
 
 
 def test_no_public_italic_shear_symbol() -> None:
     public = {name for name in dir(slant) if not name.startswith("_")}
     assert "italic_shear" not in public
     assert "ObliqueTransform" in public
-    assert "ItalicDesign" in public
+    assert "ItalicDesign" not in public

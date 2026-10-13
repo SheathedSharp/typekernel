@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from typekernel.compile import build_variable_font
+from typekernel.compile import build_variable_font, reference_kern_classes
 from typekernel.font import Font, Master
 from typekernel.optics.space import space_font
 from typekernel.parts import (
@@ -35,14 +35,17 @@ def master_controls(base: DesignContext, stem: float) -> Controls:
     return Controls.from_context(base.tuned(stem=stem)).with_stem_relief()
 
 
-def master_font(controls: Controls, style: str, weight_class: int) -> Font:
+def master_font(
+    controls: Controls,
+    style: str,
+    weight_class: int,
+    kern_classes: tuple,
+) -> Font:
     ctx = controls.context
     drawn = controls.build_all()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
-    kerning = auto_class_kern(
-        spaced, auto_side_kern_classes(spaced, ctx), target=rhythm
-    )
+    kerning = auto_class_kern(spaced, kern_classes, target=rhythm)
     font = Font.from_context(
         ctx, FAMILY, style, weight_class=weight_class, space_width=spaced["n"].advance * 0.45
     )
@@ -53,10 +56,21 @@ def master_font(controls: Controls, style: str, weight_class: int) -> Font:
 
 def main() -> None:
     base = DesignContext.code_clear()
+    ref = Controls.from_context(base)
+    kern_classes = reference_kern_classes(ref)
     masters = [
-        Master({"wght": 400}, master_font(master_controls(base, base.stem), "Regular", 400)),
-        Master({"wght": 200}, master_font(master_controls(base, 48.0), "Light", 200)),
-        Master({"wght": 800}, master_font(master_controls(base, 142.0), "Bold", 800)),
+        Master(
+            {"wght": 400},
+            master_font(master_controls(base, base.stem), "Regular", 400, kern_classes),
+        ),
+        Master(
+            {"wght": 200},
+            master_font(master_controls(base, 48.0), "Light", 200, kern_classes),
+        ),
+        Master(
+            {"wght": 800},
+            master_font(master_controls(base, 142.0), "Bold", 800, kern_classes),
+        ),
     ]
     result = build_variable_font(masters, OUT_DIR, formats=("ttf", "otf"))
     for fmt, path in result.binaries.items():

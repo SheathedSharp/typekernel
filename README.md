@@ -70,7 +70,7 @@ build_font(font, "out/")                          # MySans-Regular.ufo / .otf / 
 
 ![合成 O 样品](docs/images/synthetic-O.png)
 
-愿景摘要：[docs/VISION.md](docs/VISION.md)。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
+愿景摘要：[docs/VISION.md](docs/VISION.md)。**Coding agent 字体创作目标**：[docs/AGENT_GOAL.md](docs/AGENT_GOAL.md)（工作流见 [.agents/skills/typekernel-font-design/](.agents/skills/typekernel-font-design/SKILL.md)）。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
 
 ## 动手试一颗字
 

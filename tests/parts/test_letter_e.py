@@ -9,7 +9,8 @@ pytest.importorskip("pathops")
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import DesignContext, bowl, crossbar, letter_e
+from typekernel.parts import DesignContext, bowl, crossbar
+from typekernel.parts.latin import letter_e
 from typekernel.parts.compose import try_difference, try_union
 
 

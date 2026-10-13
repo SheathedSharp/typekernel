@@ -59,8 +59,11 @@ Thumbs.db
 !tests/fixtures/**/*.otf
 !tests/fixtures/**/*.ttf
 
-# Local agent plan (not part of the published repo)
-.agents/
+# Local agent notes (skills are tracked)
+.agents/*
+!.agents/README.md
+!.agents/skills/
+!.agents/skills/**
 
 # Local specimen dumps (keep the folder via .gitkeep; PNGs stay local)
 artifacts/specimens/**
@@ -115,5 +118,6 @@ examples/variable_family/out/**
 # italic / width VF examples (build scripts only)
 examples/italic_family/out/**
 examples/variable_width/out/**
+examples/correspondence_script/out/**
 
 uploads/

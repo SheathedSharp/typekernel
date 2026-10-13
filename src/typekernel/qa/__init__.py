@@ -9,6 +9,12 @@ from __future__ import annotations
 
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
+from typekernel.qa.sentence_gate import (
+    AGENT_SENTENCE,
+    SentenceGateLimits,
+    check_sentence_gate,
+    controls_sentence_report,
+)
 from typekernel.qa.score import (
     Score,
     WordReport,
@@ -20,7 +26,11 @@ from typekernel.qa.score import (
 )
 
 __all__ = [
+    "AGENT_SENTENCE",
+    "SentenceGateLimits",
     "Score",
+    "check_sentence_gate",
+    "controls_sentence_report",
     "WordReport",
     "join_smoothness",
     "load_approval",

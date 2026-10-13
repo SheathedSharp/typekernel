@@ -26,6 +26,11 @@ from typekernel.compile.features import (
     add_tabular_alternates,
     standard_feature_text,
 )
+from typekernel.compile.family_build import (
+    FamilyBuildOptions,
+    compose_font_from_controls,
+    reference_kern_classes,
+)
 from typekernel.compile.oblique import oblique_font
 from typekernel.compile.ufo_export import font_to_ufo, write_font_to_ufo, write_outline_to_ufo
 from typekernel.compile.ufo_import import read_font_from_ufo
@@ -38,14 +43,17 @@ __all__ = [
     "add_case_punctuation",
     "add_standard_ligatures",
     "add_tabular_alternates",
+    "FamilyBuildOptions",
     "build_binary_from_ufo",
     "build_font",
+    "compose_font_from_controls",
     "build_ttf_from_ufo",
     "build_variable_font",
     "deep_check_masters",
     "font_to_ufo",
     "oblique_font",
     "read_font_from_ufo",
+    "reference_kern_classes",
     "standard_feature_text",
     "write_font_to_ufo",
     "write_masters_designspace",

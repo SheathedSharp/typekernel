@@ -46,18 +46,5 @@ class ObliqueTransform:
         return Outline(tuple(new_contours))
 
 
-@dataclass(frozen=True, slots=True)
-class ItalicDesign:
-    """Marker type: true italic is a designed master, not a shear.
-
-    Build italic masters with :func:`~typekernel.parts.italic.italic_controls`
-    and a separate :class:`~typekernel.font.Master` at ``{"ital": 1}``. Do not
-    use :class:`ObliqueTransform` under an italic name.
-    """
-
-    def apply(self, outline: Outline) -> Outline:
-        """Outline-level italic is not supported — redraw the master instead."""
-        raise NotImplementedError(
-            "ItalicDesign.apply is not implemented: use italic_controls() and "
-            "a designed Master, not ObliqueTransform shear"
-        )
+# True italic: redraw masters via ``typekernel.parts.italic.italic_controls`` and
+# ``Master({"ital": 1})``. Do not shear under an Italic style name.

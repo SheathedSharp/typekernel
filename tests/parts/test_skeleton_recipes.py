@@ -7,8 +7,9 @@ import importlib.util
 import pytest
 
 from typekernel.geo.segment import CubicSegment
-from typekernel.parts import (
-    DesignContext,
+from typekernel.parts import DesignContext
+from typekernel.parts.skeleton_recipes import (
+    SKEL_BUILDERS,
     build_skel_letter,
     build_skel_word,
     skel_h,
@@ -16,7 +17,6 @@ from typekernel.parts import (
     skel_o,
     skeleton_n,
 )
-from typekernel.parts.skeleton_recipes import SKEL_BUILDERS
 
 HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 pytestmark = pytest.mark.skipif(not HAS_PATHOPS, reason="pathops for o")
