@@ -1,18 +1,21 @@
-"""Build a TTF from a UFO and record tool versions in a BuildManifest.
+"""Build OTF / TTF from a UFO and record tool versions in a BuildManifest.
 
-Delegates compilation to ``ufo2ft.compileTTF`` (fontmake sits on the same
-stack). Does not invent hinting, custom OT writers, or contour filters —
+Delegates compilation to ``ufo2ft.compileOTF`` / ``compileTTF`` (fontmake sits
+on the same stack). Does not invent hinting, custom OT writers, or contour filters —
 ``filters`` stays empty unless a caller records choices later.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from typekernel.font.font import Font
 
 
 def _pkg_version(name: str) -> str | None:
@@ -62,6 +65,9 @@ class BuildManifest:
         return out
 
 
+OutputFormat = Literal["ttf", "otf"]
+
+
 def build_ttf_from_ufo(
     ufo_path: str | Path,
     out_path: str | Path,
@@ -81,6 +87,25 @@ def build_ttf_from_ufo(
         A :class:`BuildManifest` describing the tools used. When
         ``manifest_path`` is set, the same record is also written as JSON.
     """
+    return build_binary_from_ufo(ufo_path, out_path, "ttf", manifest_path=manifest_path)
+
+
+def build_binary_from_ufo(
+    ufo_path: str | Path,
+    out_path: str | Path,
+    output_format: OutputFormat,
+    *,
+    manifest_path: str | Path | None = None,
+) -> BuildManifest:
+    """Compile ``ufo_path`` to ``output_format`` (``"ttf"`` or ``"otf"``).
+
+    OTF keeps cubic outlines (CFF); TTF converts to quadratics at the compile
+    boundary. Both use ``removeOverlaps=False``. Kerning, groups, anchors and
+    ``features.fea`` in the UFO become GPOS/GSUB through ufo2ft's feature
+    writers.
+    """
+    if output_format not in ("ttf", "otf"):
+        raise ValueError(f"output_format must be 'ttf' or 'otf', got {output_format!r}")
     ufo = Path(ufo_path)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -103,7 +128,8 @@ def build_ttf_from_ufo(
 
     font = ufoLib2.Font.open(ufo)
     # Explicit thin defaults: no overlap removal, no extra filters.
-    tt_font = ufo2ft.compileTTF(font, removeOverlaps=False)
+    compiler = ufo2ft.compileTTF if output_format == "ttf" else ufo2ft.compileOTF
+    tt_font = compiler(font, removeOverlaps=False)
     tt_font.save(out)
 
     manifest = BuildManifest(
@@ -116,8 +142,50 @@ def build_ttf_from_ufo(
             "output": str(out),
         },
         filters=(),
-        output_format="ttf",
+        output_format=output_format,
     )
     if manifest_path is not None:
         manifest.write_json(manifest_path)
     return manifest
+
+
+@dataclass(frozen=True, slots=True)
+class FontBuild:
+    """Files produced by :func:`build_font`."""
+
+    ufo: Path
+    binaries: dict[str, Path]
+    manifests: dict[str, BuildManifest]
+
+
+def _file_stem(font: Font) -> str:
+    raw = f"{font.info.family_name}-{font.info.style_name}"
+    return "".join(ch for ch in raw if ch.isalnum() or ch in "-_")
+
+
+def build_font(
+    font: Font,
+    out_dir: str | Path,
+    *,
+    formats: Sequence[OutputFormat] = ("otf", "ttf"),
+    file_stem: str | None = None,
+) -> FontBuild:
+    """Validate, write ``<stem>.ufo``, then compile each format into ``out_dir``.
+
+    Rebuilding replaces previous outputs with the same stem. Each binary gets
+    a ``<stem>.<format>.manifest.json`` next to it.
+    """
+    from typekernel.compile.ufo_export import write_font_to_ufo
+
+    out = Path(out_dir)
+    stem = file_stem or _file_stem(font)
+    ufo_path = write_font_to_ufo(font, out / f"{stem}.ufo", overwrite=True)
+    binaries: dict[str, Path] = {}
+    manifests: dict[str, BuildManifest] = {}
+    for fmt in formats:
+        binary = out / f"{stem}.{fmt}"
+        manifests[fmt] = build_binary_from_ufo(
+            ufo_path, binary, fmt, manifest_path=out / f"{stem}.{fmt}.manifest.json"
+        )
+        binaries[fmt] = binary
+    return FontBuild(ufo=ufo_path, binaries=binaries, manifests=manifests)

@@ -36,7 +36,27 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 - **光学原语**（`typekernel.optics`）— overshoot 等（合成 O 标本已过人审）
 - **字重 / 轴**（`typekernel.axes`）— `WeightDelta`、masters、`.designspace` 导出（点位移，不是涂粗）
 
-**编译桥**（`typekernel.compile`）也在了：可把轮廓写成 UFO，再经 ufo2ft 产出 TTF，并记下 BuildManifest（工具版本）。人审「编译层是否够薄」还没做。
+- **字体模型**（`typekernel.font`）— `Font` / `Glyph` / `FontInfo`：字形名、码位、锚点、组件、字偶组、特性代码；竖直度量与对齐区从 `DesignContext` 推出
+
+**编译桥**（`typekernel.compile`）也在了：`build_font(font, "out/")` 一步校验 → UFO → OTF + TTF，并记下 BuildManifest（工具版本）。人审「编译层是否够薄」还没做。
+
+## 做一个能安装的字体
+
+[`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样：
+
+```python
+from typekernel.compile import build_font
+from typekernel.font import Font
+from typekernel.parts import DesignContext, build_n, build_o, h_from_n
+
+ctx = DesignContext.code_clear()
+n = build_n(ctx)
+font = Font.from_context(ctx, "My Sans")          # 含 .notdef、space、度量、对齐区
+font.add_chars({"n": n, "o": build_o(ctx), "h": h_from_n(n)})
+build_font(font, "out/")                          # MySans-Regular.ufo / .otf / .ttf
+```
+
+![first font proof](docs/images/first-font-proof.png)
 
 **质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助。合成 O 样品：
 

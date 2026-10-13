@@ -103,4 +103,8 @@ examples/ease_curvature/out/**
 !examples/ease_curvature/out/.gitkeep
 !examples/ease_curvature/out/stadium-before-after.png
 examples/skeleton_specimen/out/
+
+# first_font example outputs (keep the proof)
+examples/first_font/out/**
+!examples/first_font/out/proof.png
 uploads/
