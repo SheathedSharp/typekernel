@@ -4,6 +4,8 @@
 
 **typekernel 的定位应该是让 coding agent 通过使用这个基础库，像人类字体设计时一样去创建一种字体「包括各个字重，符号等等」。**
 
+脚手架 = **库 API + 设计师顺序 + 校样工具**；不是「执行仓库里现成脚本就得到成品字」。Agent 必须用代码表达 brief、比例与字形决策（`DesignContext` / `Controls` / `with_glyph` / 自建 `build_*.py`），再编译与 proof。
+
 ## 这意味着什么
 
 | 人类字体设计师 | Agent 通过 typekernel 应对齐的行为 |
@@ -14,7 +16,7 @@
 | 斜体是 **另一套母版** | `italic_controls()` + `Master({"ital":1})`；机械 oblique 仅作 `slnt`，不得冒充 italic 名 |
 | 符号、数字、变音属于同一族 | 标点 / figures / extended Latin / 特性 glyph 与 `features.fea` **同时存在** |
 | 侧距与字偶是设计的一部分 | `space_font` → class kern；VF 各母版 **同一 kern groups** |
-| 用句子 proof 验收 | 编译 OTF/TTF 后 `qa.proof`；`qa.sentence_gate.check_sentence_gate(controls)` 在 CI 回归 |
+| 用固定句子 proof 验收 | 编译后 `qa.proof`。过关句锁死 `AGENT_SENTENCE`；brief 句只作第二张 specimen。`design_review` 给出相对 preset 的 delta、弱字与最差 pair |
 | 特性与 glyph 一致 | 优先 `compose_font_from_controls` + `FamilyBuildOptions`，避免幽灵 `.tf`/`.case` |
 | 单字 master | `Controls.with_glyph(ch, builder)` 替换派生，而非只拧 context |
 
@@ -24,22 +26,75 @@
 - 不是 fontmake 替代品：OpenType 表与二进制编译 **依赖 fontTools / ufo2ft**。
 - 不是可跳过 proof 的导出脚本：能安装 ≠ 设计完成。
 
-## 成功标准（Agent 交付前自检）
+## 完成分级（交付前自检）
 
-1. **字族完整**：Regular + 至少 Light/Bold 或 VF 轴覆盖；italic 若承诺则 designed masters。
-2. **字符集声明与实现一致**：`build_all` 子集、`features`、UFO 里 glyph 名一致（无 `.tf` / `.case` 幽灵引用）。
-3. **可读 proof**：用户给定或 brief 中的 **整句** 在正文字号（约 24–36 px）下无明显断笔、撞字、字偶洞。
-4. **可复现**：`examples/<name>/build_*.py` 或等价脚本一键 build；依赖 `[compile,specimen,boolean]` 写进 README 片段。
-5. **试字预览**：改完若干字符后跑 `examples/agent_glyph_preview/build_preview.py` 或 `qa.build_glyph_preview()`，交付 `grid.png` + `sentence.png` + OTF。
+`check_sentence_gate` 是 **回归刹车**，不是设计奖。先选定级别。用户要的是字族时，停在更低一级算未完成。
 
-## Agent 试字（交付给用户看效果）
+| 级别 | 落在哪 | 完成条件 |
+| --- | --- | --- |
+| **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset。 |
+| **L1 单 style 可读** | 仍是一个字重 | L0，且固定 pair/word（`Ta` `To` `fi` `fl` `rn` `011`）**无撞字**（光学间距 ≤ 0 即失败）。pair 检查已经做进 `check_sentence_gate`。 |
+| **L2 字族** | `examples/agent_family/` 或自建 `examples/<family>/build_*.py` | Regular + Light/Bold（或 VF），每个字重独立 `Controls`。Bold 用 `with_stem_relief()`。`compose_font_from_controls` + 各母版共用 `reference_kern_classes`。 |
+
+字族级还要同时满足：
+
+1. **字符集声明与实现一致**：`build_all` 子集、`features`、UFO 里 glyph 名一致（无 `.tf` / `.case` 幽灵引用）。italic 若承诺，则是 `italic_controls` 母版，不是把 oblique 叫做 italic。
+2. **两张校样**：锁死句 `sentence.png`（参与 pass/fail）+ brief 句 `sentence_brief.png`（不参与）。正文字号约 24–36 px。
+3. **可复现**：上述脚本一键 build；依赖 `[compile,specimen,boolean]` 写进 README。
+
+### 反模式（出现即未完成）
+
+- 为了过关而换短句、或把 brief 句传进 `check_sentence_gate`。
+- 以 `sentence gate ok` 加一张 PNG 宣布字族完成。
+- 在同一套 n/o 拓扑上把 counter / rx 乘 `1.0x`，当作新造型。
+- 只改一个 `f`，没有第二轮：读 `design_review`（control PNG、弱字 G1、最差 pair、相对 preset 的 delta）再改。
+- 在 `agent_studio` 里交付 Light/Bold。完整字族必须落在 `agent_family` 或新的 `examples/<family>/`。
+- 用 shear、`lean`、tracking 冒充 italic 或 copperplate / 连笔 script。缺拓扑就说缺：扩 `parts`，或 UFO import 后让 typekernel 管间距与特性。
+
+## Agent 创作与验收
+
+**L0**：改 `examples/agent_studio/design.py`，再跑：
 
 ```bash
 pip install -e ".[compile,specimen,boolean]"
-python examples/agent_glyph_preview/build_preview.py --chars "a f t I n o"
+python examples/agent_studio/build.py
 ```
 
-打开 `examples/agent_glyph_preview/out/grid.png` 与 `sentence.png`。自定义单字时用 `Controls.with_glyph()`，再重新 build。
+看 `out/grid.png`、`out/sentence.png`、`out/sentence_brief.png` 和 `out/review/review.json`。说明 brief、相对哪个 preset 改了哪个字段、哪两个弱字是 `with_glyph`。gate 失败时进程非 0，不许改句重试。
+
+**L2**：从 `examples/agent_family/` 复制到 `examples/<family>/`，填 `design_light` / `design_bold`（或 VF 母版）和 `build_family.py`。Regular 才和未改 preset 比；Light/Bold 是另一套母版，不要拿 Bold 的 gap 去跟 Regular preset 比。
+
+库内等价调用：
+
+```python
+from typekernel.qa.design_review import design_review
+
+review = design_review(my_controls, baseline=Controls.from_context(DesignContext.humanist_sans()))
+# review.failures 为空只说明刹车没响，不说明字族完成。
+```
+
+校样导出（句子参数用锁死句；brief 另存一张，不传入 gate）：
+
+```python
+from typekernel.qa.agent_preview import build_glyph_preview
+from typekernel.qa.sentence_gate import AGENT_SENTENCE
+
+paths = build_glyph_preview(
+    my_controls, family="…", focus="n o a f", sentence=AGENT_SENTENCE, out_dir="out"
+)
+```
+
+## 库内仍未完成（脚手架替代不了）
+
+下面这些 **不是** 再写一份 prompt 就能出现的。agent 调 `DesignContext` 也补不上。
+
+- **间距 / 字偶**：`optical_gap_ratio` 目前只会被绝对上限和「不得差于所选 preset」夹住。pair gate 只抓撞字（光学间距 ≤ 0），不负责字偶好看。这是库内专项。
+- **弱字默认质量**：`f` / `t` / `j`、`s`、大写 `I` / `J` 仍常要 `with_glyph`。默认链里的 boolean 接合要继续降 G1、降 gap，而不是把负担全推给 agent。
+- **Designed deltas**：`with_stem_relief()`、`italic_controls`、VF 共用 kern class 已有 API。`examples/agent_family/` 是静态三母版模板；真斜体母版、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md)。
+- **视觉回归**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。试作被接受后才记 `approvals/`，防止「门槛过了但越改越丑」只靠 agent 自评。
+- **参考距离**：与 oh-my-font / zayJu 的对比是「离参考还有多远」，不是拷贝轮廓。手绘下沉见 `examples/zayju_letter/design_n.py`。
+
+配方与调参范围：[agent-recipes.md](agent-recipes.md)。
 
 ## 维护
 

@@ -11,7 +11,8 @@ re-exported from `typekernel.parts`.
 pip install -e ".[dev,compile,specimen,boolean]"
 ```
 
-Preview a few glyphs: `python examples/agent_glyph_preview/build_preview.py`
+L0 trial: `examples/agent_studio/design.py`, then `python examples/agent_studio/build.py`.
+L2 family template: `examples/agent_family/` (`build_family.py`).
 
 ## Controls (family control sheet)
 
@@ -38,7 +39,8 @@ Preview a few glyphs: `python examples/agent_glyph_preview/build_preview.py`
 
 | API | One-liner |
 | --- | --- |
-| `qa.sentence_gate.check_sentence_gate(controls)` | Agent sentence regression on **Controls** pipeline. |
+| `qa.sentence_gate.check_sentence_gate(controls, baseline=…)` | Locked `AGENT_SENTENCE`, pair collisions, optional preset baseline. |
+| `qa.design_review.design_review(controls, baseline=…)` | Deltas, weak-glyph scores, worst pairs, optional control PNGs. |
 | `qa.proof.proof_context(otf, text, out.png)` | Proof from compiled binary. |
 | `qa.score.zayju_report(ctx)` | Legacy **latin** zayju benchmark (optical spacing). |
 

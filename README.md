@@ -48,7 +48,7 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 [`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样：
 
-**Coding agent 试几个字看效果**：[`examples/agent_glyph_preview/`](examples/agent_glyph_preview/)（需 `pip install -e ".[compile,specimen,boolean]"`）。
+**Coding agent 用库做字**：L0 试字改 [`examples/agent_studio/design.py`](examples/agent_studio/design.py) 再跑 `build.py`（过关句锁死，brief 句只是第二张校样）。完整字族从 [`examples/agent_family/`](examples/agent_family/) 复制。需 `pip install -e ".[compile,specimen,boolean]"`。不是一键出字脚本。
 
 ```python
 from typekernel.compile import build_font

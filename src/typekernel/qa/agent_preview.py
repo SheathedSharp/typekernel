@@ -1,13 +1,16 @@
-"""Minimal font + PNG proofs for a handful of glyphs (coding agents)."""
+"""Proof export (OTF + PNG) from agent-authored :class:`~typekernel.parts.Controls`.
+
+This module does **not** choose proportions or draw letters. Pass ``Controls`` you
+built via ``DesignContext``, ``tuned_*``, ``with_glyph``, etc.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import Controls
 from typekernel.qa.proof import proof_charset_grid, proof_context
-from typekernel.qa.sentence_gate import AGENT_SENTENCE
 
 __all__ = [
     "DEFAULT_FOCUS_GLYPHS",
@@ -27,15 +30,15 @@ def charset_for_preview(focus: str, sentence: str) -> str:
 
 
 def build_glyph_preview(
+    controls: Controls,
     *,
+    family: str,
     focus: str = DEFAULT_FOCUS_GLYPHS,
-    sentence: str = AGENT_SENTENCE,
+    sentence: str,
     out_dir: str | Path = "out",
-    family: str = "Typekernel Agent Preview",
 ) -> dict[str, Path]:
-    """Build OTF + grid/sentence PNGs; return paths."""
+    """Compile *controls* and write grid + sentence PNGs; return paths."""
     out_dir = Path(out_dir)
-    controls = Controls.from_context(DesignContext.code_clear())
     charset = charset_for_preview(focus, sentence)
     liga = all(ch in charset for ch in "fil")
     opts = FamilyBuildOptions(chars=charset, liga=liga)

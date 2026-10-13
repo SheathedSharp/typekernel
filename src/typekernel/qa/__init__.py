@@ -7,19 +7,18 @@ never auto-approve a gate; a human must write the JSON record.
 
 from __future__ import annotations
 
-from typekernel.qa.gates import load_approval, require_approval, write_approval
-from typekernel.qa.outline_hash import outline_hash
 from typekernel.qa.agent_preview import (
     DEFAULT_FOCUS_GLYPHS,
     build_glyph_preview,
     charset_for_preview,
 )
-from typekernel.qa.sentence_gate import (
-    AGENT_SENTENCE,
-    SentenceGateLimits,
-    check_sentence_gate,
-    controls_sentence_report,
+from typekernel.qa.design_review import (
+    WEAK_GLYPHS,
+    DesignReview,
+    design_review,
 )
+from typekernel.qa.gates import load_approval, require_approval, write_approval
+from typekernel.qa.outline_hash import outline_hash
 from typekernel.qa.score import (
     Score,
     WordReport,
@@ -29,17 +28,30 @@ from typekernel.qa.score import (
     word_report,
     zayju_report,
 )
+from typekernel.qa.sentence_gate import (
+    AGENT_PAIRS,
+    AGENT_SENTENCE,
+    SentenceGateLimits,
+    check_sentence_gate,
+    controls_pair_gaps,
+    controls_sentence_report,
+)
 
 __all__ = [
+    "AGENT_PAIRS",
     "AGENT_SENTENCE",
     "DEFAULT_FOCUS_GLYPHS",
+    "WEAK_GLYPHS",
+    "DesignReview",
+    "Score",
+    "SentenceGateLimits",
+    "WordReport",
     "build_glyph_preview",
     "charset_for_preview",
-    "SentenceGateLimits",
-    "Score",
     "check_sentence_gate",
+    "controls_pair_gaps",
     "controls_sentence_report",
-    "WordReport",
+    "design_review",
     "join_smoothness",
     "load_approval",
     "outline_hash",
