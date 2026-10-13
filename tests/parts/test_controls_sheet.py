@@ -7,6 +7,7 @@ import pytest
 from typekernel.geo.outline import bounds
 from typekernel.parts import (
     CAP_FORMS,
+    FIGURE_FORMS,
     RELATED_FORMS,
     Controls,
     DesignContext,
@@ -28,7 +29,8 @@ def _width(g) -> float:
 def test_build_all_covers_related_forms(ctx: DesignContext) -> None:
     glyphs = Controls.from_context(ctx).build_all()
     assert set(RELATED_FORMS) == set("abcdefghijklmnopqrstuvwxyz")
-    assert set(glyphs) == set(RELATED_FORMS) | set(CAP_FORMS)
+    assert set(glyphs) == set(RELATED_FORMS) | set(CAP_FORMS) | set(FIGURE_FORMS)
+    assert len(glyphs) == 62
     assert all(g.advance > 0 for g in glyphs.values())
 
 

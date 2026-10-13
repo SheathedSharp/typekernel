@@ -71,8 +71,20 @@ from typekernel.parts.control import (
     u_from_n,
 )
 from typekernel.parts.diagonals import k_from_n, v_from_n, w_from_n, x_from_n, y_from_n, z_from_n
+from typekernel.parts.figures import (
+    eight_from_O,
+    five_from_O,
+    four_from_H,
+    nine_from_O,
+    one_from_H,
+    seven_from_H,
+    six_from_O,
+    three_from_O,
+    two_from_O,
+    zero_from_O,
+)
 
-__all__ = ["CAP_FORMS", "RELATED_FORMS", "Controls", "Derivation"]
+__all__ = ["CAP_FORMS", "FIGURE_FORMS", "RELATED_FORMS", "Controls", "Derivation"]
 
 Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
 
@@ -136,6 +148,20 @@ CAP_FORMS: dict[str, Derivation] = {
 }
 """Capital → how it derives from control ``H`` and ``O``."""
 
+FIGURE_FORMS: dict[str, Derivation] = {
+    "0": lambda H, O, c: zero_from_O(O, H, c),
+    "1": lambda H, O, c: one_from_H(H, c),
+    "2": lambda H, O, c: two_from_O(O, H, c),
+    "3": lambda H, O, c: three_from_O(O, H, c),
+    "4": lambda H, O, c: four_from_H(H, c),
+    "5": lambda H, O, c: five_from_O(O, H, c),
+    "6": lambda H, O, c: six_from_O(O, H, c),
+    "7": lambda H, O, c: seven_from_H(H, c),
+    "8": lambda H, O, c: eight_from_O(O, H, c),
+    "9": lambda H, O, c: nine_from_O(O, H, c),
+}
+"""Lining figure → how it derives from control ``H`` and ``O``."""
+
 
 @dataclass(frozen=True, slots=True)
 class Controls:
@@ -182,7 +208,9 @@ class Controls:
 
     @property
     def supported(self) -> str:
-        return "".join(sorted(RELATED_FORMS)) + "".join(sorted(CAP_FORMS))
+        return "".join(sorted(RELATED_FORMS)) + "".join(sorted(CAP_FORMS)) + "".join(
+            sorted(FIGURE_FORMS)
+        )
 
     def control_glyphs(self) -> tuple[ComposedGlyph, ComposedGlyph]:
         """The drawn ``n`` and ``o`` every lowercase form derives from."""
@@ -198,13 +226,14 @@ class Controls:
     def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
         """Draw the controls once and derive ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
-        missing = [ch for ch in wanted if ch not in RELATED_FORMS and ch not in CAP_FORMS]
+        cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
+        missing = [ch for ch in wanted if ch not in RELATED_FORMS and ch not in cap_forms]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
         out: dict[str, ComposedGlyph] = {}
         for forms, draw in (
             (RELATED_FORMS, self.control_glyphs),
-            (CAP_FORMS, self.cap_control_glyphs),
+            (cap_forms, self.cap_control_glyphs),
         ):
             chars_here = [ch for ch in wanted if ch in forms]
             if chars_here:
