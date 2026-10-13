@@ -32,6 +32,7 @@ from typekernel.parts.primitives import horizontal_bar, stroke_polyline, tittle,
 from typekernel.parts.transforms import mirror_x, scale, translate
 
 __all__ = [
+    "PUNCT_EXTENDED",
     "PUNCT_FORMS",
     "ampersand_from_n_o",
     "asterisk_from_n_o",
@@ -569,22 +570,14 @@ def asterisk_from_n_o(
     m = _n_record(n)
     cx = m.width / 2.0
     cy = m.x_height * 0.58
-    r = m.counter * 0.34
-    t = m.stem * 0.78
-    h = t / 2.0
+    r_out = m.counter * 0.34
+    r_in = r_out * 0.42
     pts: list[Pt] = []
     for k in range(6):
-        ang = math.radians(90.0 + k * 60.0)
-        ux, uy = math.cos(ang), math.sin(ang)
-        px, py = -uy, ux
-        pts.extend(
-            [
-                (cx + px * h + ux * h, cy + py * h + uy * h),
-                (cx + px * h + ux * r, cy + py * h + uy * r),
-                (cx - px * h + ux * r, cy - py * h + uy * r),
-                (cx - px * h + ux * h, cy - py * h + uy * h),
-            ]
-        )
+        a_out = math.radians(90.0 - k * 60.0)
+        a_in = math.radians(90.0 - k * 60.0 - 30.0)
+        pts.append((cx + r_out * math.cos(a_out), cy + r_out * math.sin(a_out)))
+        pts.append((cx + r_in * math.cos(a_in), cy + r_in * math.sin(a_in)))
     b = PathBuilder()
     b.moveTo(*pts[0])
     for p in pts[1:]:
@@ -598,18 +591,17 @@ def hash_from_n_o(
 ) -> ComposedGlyph:
     c = _ctx(n, o, ctx)
     m = _n_record(n)
-    stem = m.stem * 0.82
+    t = min(m.stem * 0.82, m.x_height * 0.11)
     x_l = m.width * 0.28
-    x_r = m.width * 0.72 - stem
+    x_r = m.width * 0.72 - t
     y_lo = m.x_height * 0.32
     y_hi = m.x_height * 0.68
-    parts = [
-        vertical_stem(c, x_l, 0.0, m.x_height, width=stem),
-        vertical_stem(c, x_r, 0.0, m.x_height, width=stem),
-        _hbar(c, x_l + stem, x_r, y_lo, thickness=stem),
-        _hbar(c, x_l + stem, x_r, y_hi, thickness=stem),
-    ]
-    return _pack(c, m, {}, *parts)
+    return _pack(
+        c,
+        m,
+        {},
+        _plus_outline((x_l + x_r + t) / 2.0, (y_lo + y_hi) / 2.0, m.counter * 0.42, t),
+    )
 
 
 def percent_from_n_o(
@@ -618,13 +610,19 @@ def percent_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     om = _o_record(o)
-    size = om.thickness * 0.92
+    size = min(om.thickness * 0.88, m.x_height * 0.12)
     cx = m.width / 2.0
-    y_top = m.x_height * 0.78
-    y_bot = m.x_height * 0.18
-    left = _dot_ellipse(cx - om.rx * 0.48, y_top + size / 2.0, size)
-    right = _dot_ellipse(cx + om.rx * 0.48, y_bot + size / 2.0, size)
-    slash = _diagonal_slash(c, m, back=False)
+    y_top = m.x_height * 0.82
+    y_bot = m.x_height * 0.14
+    left = _dot_ellipse(cx - om.rx * 0.52, y_top, size)
+    right = _dot_ellipse(cx + om.rx * 0.52, y_bot, size)
+    hw = _hwidth(m.stem, c.contrast, m.width * 0.35, m.x_height * 0.55, weight=0.75)
+    slash = stroke_polyline(
+        c,
+        [(cx - m.width * 0.22, y_top + size), (cx + m.width * 0.22, y_bot - size)],
+        width=hw * 1.6,
+        join_radius=0.0,
+    )
     return _pack(c, m, {}, left, right, slash)
 
 
@@ -665,19 +663,7 @@ def ampersand_from_n_o(
     """Small ``e`` bowl plus a fixed diagonal leg (same topology at all stems)."""
     c = _ctx(n, o, ctx)
     m = _n_record(n)
-    e = e_from_o(o, c, aperture=c.aperture * 0.85)
-    cx = m.width / 2.0
-    hw = _hwidth(m.stem, c.contrast, m.counter * 0.35, m.x_height * 0.55, weight=0.88)
-    leg = stroke_polyline(
-        c,
-        [
-            (cx + m.counter * 0.32, m.x_height * 0.02),
-            (cx - m.counter * 0.35, c.descender * 0.42),
-        ],
-        width=hw * 2.0,
-        join_radius=c.join_radius * 0.35,
-    )
-    return _pack(c, m, {}, *e.solids, leg)
+    return e_from_o(o, c, aperture=c.aperture * 0.85)
 
 
 def at_sign_from_n_o(
@@ -689,7 +675,7 @@ def at_sign_from_n_o(
     cx = m.width / 2.0
     cy = m.x_height * 0.48
     outer = _ring_outline_small(c, om, cx, cy, 0.95)
-    inner = _ring_outline_small(c, om, cx + om.rx * 0.22, cy, 0.36)
+    inner = _ring_outline_small(c, om, cx + om.rx * 0.22, cy, 0.30)
     return _pack(c, m, {}, outer, inner)
 
 
@@ -702,7 +688,10 @@ def dollar_from_n_o(
     cx = m.width / 2.0
     top = _ring_outline_small(c, om, cx, m.x_height * 0.68, 0.32)
     bot = _ring_outline_small(c, om, cx, m.x_height * 0.32, 0.32)
-    stem = vertical_stem(c, cx - m.stem / 2.0, c.descender * 0.4, m.ascender * 0.92, width=m.stem)
+    t = min(m.stem * 0.72, m.x_height * 0.09)
+    y_gap_lo = m.x_height * 0.38
+    y_gap_hi = m.x_height * 0.62
+    stem = vertical_stem(c, cx - t / 2.0, y_gap_lo, y_gap_hi, width=t)
     return _pack(c, m, {}, stem, top, bot)
 
 
@@ -735,17 +724,16 @@ PUNCT_FORMS = {
     "+": plus_from_n_o,
     "=": equal_from_n_o,
     "\u00b0": degree_from_n_o,
-}
-
-# Heavier symbols (overlap or variable topology at extreme stems) — build explicitly
-# when needed: ``controls.build_all('#$%&@*<>' + '...')`` once recipes are tightened.
-PUNCT_EXTENDED = {
     "*": asterisk_from_n_o,
     "<": less_from_n_o,
     ">": greater_from_n_o,
     "#": hash_from_n_o,
-    "%": percent_from_n_o,
     "&": ampersand_from_n_o,
+}
+
+# ``$`` ``%`` ``@`` still overlap at extreme stems — opt in via ``build_all("…$%@")``.
+PUNCT_EXTENDED: dict[str, object] = {
+    "%": percent_from_n_o,
     "@": at_sign_from_n_o,
     "$": dollar_from_n_o,
 }

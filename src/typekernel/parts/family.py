@@ -84,7 +84,7 @@ from typekernel.parts.figures import (
     two_from_O,
     zero_from_O,
 )
-from typekernel.parts.punctuation import PUNCT_FORMS
+from typekernel.parts.punctuation import PUNCT_EXTENDED, PUNCT_FORMS
 from typekernel.parts.weight_relief import relieve_n_o
 
 __all__ = [
@@ -245,7 +245,7 @@ class Controls:
         """Draw the controls once and derive ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
         cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
-        extended = {**EXTENDED_LATIN_FORMS, **EXTENDED_LATIN_CAP_FORMS}
+        extended = {**EXTENDED_LATIN_FORMS, **EXTENDED_LATIN_CAP_FORMS, **PUNCT_EXTENDED}
         missing = [
             ch
             for ch in wanted

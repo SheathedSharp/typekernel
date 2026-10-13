@@ -14,7 +14,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from typekernel.compile import build_font
-from typekernel.compile.features import add_tabular_alternates, standard_feature_text
+from typekernel.compile.features import (
+    add_case_punctuation,
+    add_standard_ligatures,
+    add_tabular_alternates,
+    standard_feature_text,
+)
 from typekernel.font import Font
 from typekernel.optics.space import space_font
 from typekernel.parts import (
@@ -50,7 +55,9 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
     font.add_chars(spaced)
     add_composite_latin(font, controls.control_glyphs())
     add_tabular_alternates(font, spaced)
-    font.features = standard_feature_text(liga=False)
+    add_standard_ligatures(font, controls.control_glyphs())
+    add_case_punctuation(font, spaced)
+    font.features = standard_feature_text(liga=True, case=True)
     font.add_class_kern_table(kerning)
     return font
 
