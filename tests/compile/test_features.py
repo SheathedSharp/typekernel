@@ -17,9 +17,9 @@ def test_liga_glyphs_and_fea(tmp_path) -> None:
     ctx = DesignContext.code_clear()
     controls = Controls.from_context(ctx)
     font = Font.from_context(ctx, "Feat")
-    font.add_chars(controls.build_all("fl"))
+    font.add_chars(controls.build_all("fli"))
     add_standard_ligatures(font, controls.control_glyphs())
-    font.features = standard_feature_text(case=False)
+    font.features = standard_feature_text(tnum=False, case=False)
     build_font(font, tmp_path, formats=("otf",))
     assert "fi" in font and "fl" in font
     assert "feature liga" in font.features
