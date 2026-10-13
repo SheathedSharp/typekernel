@@ -24,6 +24,7 @@ from typekernel.parts.control import (
     d_from_o,
     e_from_o,
     f_from_n,
+    g_from_o,
     h_from_n,
     i_from_n,
     j_from_n,
@@ -34,6 +35,7 @@ from typekernel.parts.control import (
     p_from_o,
     q_from_o,
     r_from_n,
+    s_from_o,
     t_from_n,
     u_from_n,
 )
@@ -68,6 +70,8 @@ RELATED_FORMS: dict[str, Derivation] = {
     "f": lambda n, o, c: f_from_n(n, c),
     "t": lambda n, o, c: t_from_n(n, c),
     "j": lambda n, o, c: j_from_n(n, c),
+    "g": lambda n, o, c: g_from_o(o, n, c),
+    "s": lambda n, o, c: s_from_o(o, c),
 }
 """Character → how it derives from control ``n`` and ``o``."""
 

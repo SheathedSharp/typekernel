@@ -1,4 +1,4 @@
-"""Every derived glyph keeps its topology across weights — masters interpolate."""
+"""Every derived glyph keeps its topology from hairline to black — masters interpolate."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ PRESETS = (
 def test_controls_family_interpolates_across_stems(preset: str) -> None:
     base = getattr(DesignContext, preset)()
     families = [
-        Controls.from_context(base.tuned(stem=s)).build_all() for s in (40.0, base.stem, 160.0)
+        Controls.from_context(base.tuned(stem=s)).build_all() for s in (30.0, base.stem, 220.0)
     ]
     problems: dict[str, list[str]] = {}
     for ch in families[0]:

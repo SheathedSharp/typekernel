@@ -131,18 +131,23 @@ def w_from_n(
     xh = m.x_height
     f, fm = apex * m.stem, peak * m.stem
     m_l = (ww - fm) / 2.0
-    # solve tan with hw depending on the angle (fixed point converges fast)
-    hw = m.stem
-    for _ in range(8):
-        tan = (m_l - f + hw) / (2.0 * xh)
-        hw = _hwidth(m.stem, c.contrast, tan * xh, xh, weight)
-    a1l = xh * tan
-    a1r = a1l + f
-    low_y = (ww / 2.0 - a1r) / tan
-    up_y = (2.0 * hw - f) / (2.0 * tan)
-    up_x = a1r - hw + up_y * tan
-    if not (0.0 < up_y < low_y < xh):
-        raise ValueError("w strokes do not fit this width; widen it or thin the stem")
+    # Very heavy weights thin the four strokes further until they fit.
+    while True:
+        # solve tan with hw depending on the angle (fixed point converges fast)
+        hw = m.stem
+        for _ in range(8):
+            tan = (m_l - f + hw) / (2.0 * xh)
+            hw = _hwidth(m.stem, c.contrast, tan * xh, xh, weight)
+        a1l = xh * tan
+        a1r = a1l + f
+        low_y = (ww / 2.0 - a1r) / tan
+        up_y = (2.0 * hw - f) / (2.0 * tan)
+        up_x = a1r - hw + up_y * tan
+        if 0.0 < up_y < low_y < xh:
+            break
+        if weight <= 0.4:
+            raise ValueError("w strokes do not fit this width; widen it or thin the stem")
+        weight = max(0.4, weight * 0.92)
     pts = [
         (0.0, xh),
         (a1l, 0.0),

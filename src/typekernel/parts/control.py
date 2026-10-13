@@ -47,6 +47,7 @@ __all__ = [
     "d_from_o",
     "e_from_o",
     "f_from_n",
+    "g_from_o",
     "h_from_n",
     "i_from_n",
     "j_from_n",
@@ -57,6 +58,7 @@ __all__ = [
     "p_from_o",
     "q_from_o",
     "r_from_n",
+    "s_from_o",
     "t_from_n",
     "u_from_n",
 ]
@@ -326,6 +328,25 @@ def r_from_n(
     return _pack(c, m, anchors, outline)
 
 
+def _r_pieces(m: NMetrics, arm: float) -> tuple[_Shoulder, Cubic, Cubic, float]:
+    """The ``n`` shoulder cut at the ``r`` terminal.
+
+    Returns ``(shoulder, outer_arm, inner_arm, x_t)``: ``outer_arm`` runs from
+    the crown to the terminal, ``inner_arm`` from the terminal to the inner
+    crown.
+    """
+    if not 0.0 < arm < 1.0:
+        raise ValueError(f"arm must be in (0, 1), got {arm}")
+    s = _shoulder(m)
+    mid = s.outer[0][3][0]
+    x_t = mid + arm * (s.r0 - mid)
+    outer = _split(s.outer[1], x_t, horizontal=False)
+    inner = _split(s.inner[0], x_t, horizontal=False)
+    if outer is None or inner is None:  # pragma: no cover - monotonic by construction
+        raise ValueError("shoulder does not cross the terminal position")
+    return s, outer[0], inner[1], x_t
+
+
 Bar = tuple[float, float, float, float]
 """``(y0, y1, left, right)``: a crossbar from ``y0`` to ``y1`` reaching
 ``left`` past the stem's left face and ``right`` past its right face."""
@@ -337,15 +358,7 @@ def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline
     ``bar`` adds a crossbar as straight detours on both stem faces, so the
     contour keeps one fixed point count (no boolean union).
     """
-    if not 0.0 < arm < 1.0:
-        raise ValueError(f"arm must be in (0, 1), got {arm}")
-    s = _shoulder(m)
-    mid = s.outer[0][3][0]
-    x_t = mid + arm * (s.r0 - mid)
-    outer = _split(s.outer[1], x_t, horizontal=False)
-    inner = _split(s.inner[0], x_t, horizontal=False)
-    if outer is None or inner is None:  # pragma: no cover - monotonic by construction
-        raise ValueError("shoulder does not cross the terminal position")
+    s, outer_arm, inner_arm, x_t = _r_pieces(m, arm)
     if bar is not None and not 0.0 < bar[0] < bar[1] < m.join_y:
         raise ValueError("crossbar must sit between the baseline and the shoulder crotch")
 
@@ -358,9 +371,9 @@ def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
     _curve(b, s.outer[0])
-    _curve(b, outer[0])
-    b.lineTo(*inner[1][0])
-    _curve(b, inner[1])
+    _curve(b, outer_arm)
+    b.lineTo(*inner_arm[0])
+    _curve(b, inner_arm)
     _curve(b, s.inner[1])
     if bar is not None:
         y0, y1, _, right = bar
@@ -600,6 +613,7 @@ def _bowl_stem_outline(
     stem_bottom: float,
     stem_top: float,
     join: float,
+    foot: Callable[[PathBuilder, float], None] | None = None,
 ) -> Outline:
     """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
 
@@ -607,6 +621,9 @@ def _bowl_stem_outline(
     stem's left face. The counter keeps the ``o`` counter's left half; its
     right half is stretched to the stem face so the counter has a straight
     inner stem, with the bowl ``join`` × its thickness where it meets it.
+
+    ``foot(builder, stem_left_x)`` replaces the stem's left face below the
+    bowl; it must end on ``(stem_left_x, stem_bottom)`` (``g`` draws its hook).
     """
     cx, cy = o.rx, o.x_height / 2.0
     s_r = cx + o.rx
@@ -644,7 +661,10 @@ def _bowl_stem_outline(
     _curve(b, q1)
     _curve(b, q2)
     _curve(b, bot_cut[0])
-    b.lineTo(s_l, stem_bottom)
+    if foot is None:
+        b.lineTo(s_l, stem_bottom)
+    else:
+        foot(b, s_l)
     b.closePath()
     b.moveTo(*i_bot[0][3])
     b.lineTo(*i_top[1][0])
@@ -859,6 +879,106 @@ def e_from_o(
     outer, eye = b.build().contours
     anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
     return _pack(c, o, anchors, Outline((outer, reverse_contour(eye))))
+
+
+def g_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.75,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive single-storey ``g``: the ``q`` bowl whose stem ends in the ``j`` hook.
+
+    The hook is the tall ``r`` shoulder turned 180°, spliced into the bowl's
+    outer contour below the bowl — one outer contour plus the counter.
+    """
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    stem, desc = nm.stem, c.descender
+    height = o.x_height - desc
+    s, outer_arm, inner_arm, _ = _r_pieces(_hook_record(nm, height), arm)
+
+    def foot(b: PathBuilder, s_l: float) -> None:
+        def turn(p: Pt) -> Pt:
+            return (s_l + stem - p[0], height - p[1] + desc)
+
+        def turned(cu: Cubic) -> Cubic:
+            r = _rev(cu)
+            return (turn(r[0]), turn(r[1]), turn(r[2]), turn(r[3]))
+
+        b.lineTo(*turn(s.inner[1][3]))
+        _curve(b, turned(s.inner[1]))
+        _curve(b, turned(inner_arm))
+        b.lineTo(*turn(outer_arm[3]))
+        _curve(b, turned(outer_arm))
+        _curve(b, turned(s.outer[0]))
+
+    outline = _bowl_stem_outline(
+        o, stem, stem_bottom=desc, stem_top=o.x_height, join=join, foot=foot
+    )
+    return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
+
+
+def s_from_o(
+    o_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    aperture: float | None = None,
+    width: float = 0.82,
+    top_scale: float = 0.92,
+    spine: float = 0.52,
+) -> ComposedGlyph:
+    """Derive ``s``: two stacked half-rings sharing the spine.
+
+    The upper ring keeps its left half and opens at the upper right; the
+    lower ring keeps its right half and opens at the lower left. The upper
+    ring's bottom stroke *is* the lower ring's top stroke, so the spine is
+    smooth at ``spine`` × x-height. The lower ring is ``width`` × the ``o``,
+    the upper ``top_scale`` × narrower. Strokes thin in heavy weights so the
+    counters stay open. One contour.
+    """
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    xh, os_, e = o.x_height, o.overshoot, o.exponent
+    ym = spine * xh
+    rx_l = width * o.rx
+    rx_u = rx_l * top_scale
+    tv = min(o.thickness * c.contrast, 0.3 * xh)
+    ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
+    ry_l = (ym + tv / 2.0 + os_) / 2.0
+    tv = min(tv, 0.6 * min(ry_u, ry_l))
+    ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
+    ry_l = (ym + tv / 2.0 + os_) / 2.0
+    th = min(o.thickness, 0.6 * rx_u)
+    cx = rx_l
+    cy_u, cy_l = xh + os_ - ry_u, ry_l - os_
+
+    u0, u1, u2, _ = _quarters(cx, cy_u, rx_u, ry_u, e)
+    ui0, ui1, ui2, _ = _quarters(cx, cy_u, rx_u - th, ry_u - tv, e)
+    l0, _, l2, l3 = _quarters(cx, cy_l, rx_l, ry_l, e)
+    li0, _, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
+
+    ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
+    x_tu = cx + (rx_u - th) * (0.95 - 0.5 * ap)
+    x_tl = cx - (rx_l - th) * (0.95 - 0.5 * ap)
+    u_top = _cut(u0, x_tu, horizontal=False)[1]
+    ui_top = _cut(ui0, x_tu, horizontal=False)[1]
+    l_bot = _cut(l2, x_tl, horizontal=False)[1]
+    li_bot = _cut(li2, x_tl, horizontal=False)[1]
+
+    b = PathBuilder()
+    b.moveTo(*u_top[0])
+    for cubic in (u_top, u1, u2, _rev(li0), _rev(li3), _rev(li_bot)):
+        _curve(b, cubic)
+    b.lineTo(*l_bot[0])
+    for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
+        _curve(b, cubic)
+    b.closePath()
+    anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
+    return _pack(c, o, anchors, _ccw(b.build()))
 
 
 def _from_controls(
