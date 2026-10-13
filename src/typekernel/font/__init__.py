@@ -29,14 +29,19 @@ from typekernel.font.glyph import (
     space_glyph,
 )
 from typekernel.font.info import FontInfo, alignment_zones
+from typekernel.font.masters import AXIS_NAMES, Master, axis_ranges, check_masters
 
 __all__ = [
+    "AXIS_NAMES",
     "Anchor",
     "Component",
     "Font",
     "FontInfo",
     "Glyph",
+    "Master",
     "alignment_zones",
+    "axis_ranges",
+    "check_masters",
     "glyph_name_for_char",
     "normalize_winding",
     "notdef_glyph",

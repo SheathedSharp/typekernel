@@ -11,19 +11,25 @@ from __future__ import annotations
 from typekernel.compile.build import (
     BuildManifest,
     FontBuild,
+    VariableFontBuild,
     build_binary_from_ufo,
     build_font,
     build_ttf_from_ufo,
+    build_variable_font,
+    write_masters_designspace,
 )
 from typekernel.compile.ufo_export import font_to_ufo, write_font_to_ufo, write_outline_to_ufo
 
 __all__ = [
     "BuildManifest",
     "FontBuild",
+    "VariableFontBuild",
     "build_binary_from_ufo",
     "build_font",
     "build_ttf_from_ufo",
+    "build_variable_font",
     "font_to_ufo",
     "write_font_to_ufo",
+    "write_masters_designspace",
     "write_outline_to_ufo",
 ]

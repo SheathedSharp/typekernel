@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from typekernel.font.font import Font
+from typekernel.font.masters import AXIS_NAMES, Master, axis_ranges, check_masters
 
 
 def _pkg_version(name: str) -> str | None:
@@ -189,3 +190,123 @@ def build_font(
         )
         binaries[fmt] = binary
     return FontBuild(ufo=ufo_path, binaries=binaries, manifests=manifests)
+
+
+@dataclass(frozen=True, slots=True)
+class VariableFontBuild:
+    """Files produced by :func:`build_variable_font`."""
+
+    designspace: Path
+    masters: tuple[Path, ...]
+    binaries: dict[str, Path]
+    manifests: dict[str, BuildManifest]
+
+
+def write_masters_designspace(
+    masters: Sequence[Master], out_dir: str | Path, *, file_stem: str | None = None
+) -> tuple[Path, tuple[Path, ...]]:
+    """Write each master as a UFO plus a ``.designspace`` tying them together.
+
+    Axes span the masters' locations with the first master as the default.
+    Every master also becomes a named instance (``fvar``). Raises
+    ``ValueError`` if :func:`~typekernel.font.check_masters` reports problems.
+    """
+    from fontTools.designspaceLib import (
+        AxisDescriptor,
+        DesignSpaceDocument,
+        InstanceDescriptor,
+        SourceDescriptor,
+    )
+
+    from typekernel.compile.ufo_export import write_font_to_ufo
+
+    problems = check_masters(masters)
+    if problems:
+        raise ValueError("masters are not compatible:\n  " + "\n  ".join(problems))
+
+    out = Path(out_dir)
+    family = masters[0].font
+    stem = file_stem or _file_stem(family).rsplit("-", 1)[0]
+    doc = DesignSpaceDocument()
+    names = {tag: AXIS_NAMES.get(tag, tag) for tag in masters[0].location}
+    for tag, (lo, default, hi) in axis_ranges(masters).items():
+        axis = AxisDescriptor()
+        axis.tag, axis.name = tag, names[tag]
+        axis.minimum, axis.default, axis.maximum = lo, default, hi
+        doc.addAxis(axis)
+
+    ufo_paths: list[Path] = []
+    for m in masters:
+        style = "".join(ch for ch in m.style_name if ch.isalnum() or ch in "-_")
+        ufo_path = write_font_to_ufo(m.font, out / "masters" / f"{stem}-{style}.ufo", overwrite=True)
+        ufo_paths.append(ufo_path)
+        source = SourceDescriptor()
+        source.filename = str(ufo_path.relative_to(out))
+        source.name = m.style_name
+        source.familyName = family.info.family_name
+        source.styleName = m.style_name
+        source.location = {names[tag]: v for tag, v in m.location.items()}
+        doc.addSource(source)
+
+    tags = list(masters[0].location)
+    for m in sorted(masters, key=lambda m: [m.location[t] for t in tags]):
+        instance = InstanceDescriptor()
+        instance.familyName = family.info.family_name
+        instance.styleName = m.style_name
+        instance.location = {names[tag]: v for tag, v in m.location.items()}
+        doc.addInstance(instance)
+
+    path = out / f"{stem}.designspace"
+    out.mkdir(parents=True, exist_ok=True)
+    doc.write(path)
+    return path, tuple(ufo_paths)
+
+
+def build_variable_font(
+    masters: Sequence[Master],
+    out_dir: str | Path,
+    *,
+    formats: Sequence[OutputFormat] = ("ttf",),
+    file_stem: str | None = None,
+) -> VariableFontBuild:
+    """Check, write UFO masters + designspace, then compile a variable font.
+
+    ``"ttf"`` builds TrueType outlines with ``gvar``; ``"otf"`` builds CFF2.
+    Outputs are ``<stem>-VF.<format>`` with a manifest next to each.
+    """
+    try:
+        import ufo2ft
+        import ufoLib2
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "build_variable_font requires the optional 'compile' extra "
+            "(pip install 'typekernel[compile]')"
+        ) from exc
+    from fontTools.designspaceLib import DesignSpaceDocument
+
+    out = Path(out_dir)
+    ds_path, ufo_paths = write_masters_designspace(masters, out, file_stem=file_stem)
+    stem = ds_path.stem
+    binaries: dict[str, Path] = {}
+    manifests: dict[str, BuildManifest] = {}
+    for fmt in formats:
+        if fmt not in ("ttf", "otf"):
+            raise ValueError(f"output_format must be 'ttf' or 'otf', got {fmt!r}")
+        doc = DesignSpaceDocument.fromfile(ds_path)
+        doc.loadSourceFonts(ufoLib2.Font.open)
+        compiler = ufo2ft.compileVariableTTF if fmt == "ttf" else ufo2ft.compileVariableCFF2
+        binary = out / f"{stem}-VF.{fmt}"
+        compiler(doc).save(binary)
+        manifest = BuildManifest(
+            fonttools_version=_pkg_version("fonttools"),
+            fontmake_version=_pkg_version("fontmake"),
+            ufo2ft_version=_pkg_version("ufo2ft"),
+            timestamp=datetime.now(UTC).isoformat(),
+            inputs={"designspace": str(ds_path), "output": str(binary)},
+            filters=(),
+            output_format=fmt,
+        )
+        manifest.write_json(out / f"{stem}-VF.{fmt}.manifest.json")
+        binaries[fmt] = binary
+        manifests[fmt] = manifest
+    return VariableFontBuild(ds_path, ufo_paths, binaries, manifests)
