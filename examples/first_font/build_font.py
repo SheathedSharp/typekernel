@@ -1,11 +1,11 @@
 """From proportions to an installable font file — the designer's order.
 
 1. Brief / proportions   → DesignContext
-2. Control glyphs        → build_n, build_o
-3. Related forms         → h_from_n, u_from_n, i
+2. Control glyphs        → Controls (the n and o design records)
+3. Related forms         → Controls.build_all(): h m r u i l from n, b d p q from o + n
 4. Spacing               → optical sidebearings per glyph
 5. Kerning               → class kerning fitted to the n/o rhythm
-6. Font                  → Font (names, cmap, metrics, zones, kerning)
+6. Font                  → Font (names, cmap, metrics, zones, anchors, kerning)
 7. Build + proof         → OTF/TTF, then a proof rendered from the binary
 """
 
@@ -19,16 +19,11 @@ from typekernel.compile import build_font
 from typekernel.font import Font
 from typekernel.optics.space import suggest_sidebearings_optical, with_sidebearings
 from typekernel.parts import (
-    ComposedGlyph,
+    Controls,
     DesignContext,
     KernClass,
     auto_class_kern,
-    build_i,
-    build_n,
-    build_o,
-    h_from_n,
     rhythm_from_control_glyphs,
-    u_from_n,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -36,51 +31,46 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
-PROOF_TEXT = "nohu noun union onion hoho ioni unhoh"
+PROOF_TEXT = "bold proud drum plumb indoor humid limbo hound pool blond"
 
 
-def design(ctx: DesignContext) -> Font:
-    n = build_n(ctx)
-    o = build_o(ctx)
-    drawn: dict[str, ComposedGlyph] = {
-        "n": n,
-        "o": o,
-        "h": h_from_n(n),
-        "u": u_from_n(n),
-        "i": build_i(ctx),
-    }
+def design(controls: Controls, family: str = FAMILY) -> Font:
+    ctx = controls.context
+    drawn = controls.build_all()
     spaced = {
         ch: with_sidebearings(g, *suggest_sidebearings_optical(g, ctx))
         for ch, g in drawn.items()
     }
 
-    classes = (KernClass("straight", ("n", "h", "i", "u")), KernClass("round", ("o",)))
+    classes = (KernClass("straight", ("n", "h", "m", "i", "l", "u")), KernClass("round", ("o",)))
     rhythm = rhythm_from_control_glyphs(spaced["n"], spaced["o"])
     kerning = auto_class_kern(spaced, classes, target=rhythm)
 
-    font = Font.from_context(ctx, FAMILY, space_width=spaced["n"].advance * 0.45)
+    font = Font.from_context(ctx, family, space_width=spaced["n"].advance * 0.45)
     font.add_chars(spaced)
     font.add_class_kern_table(kerning)
     return font
 
 
-def proof(otf: Path, out: Path) -> Path:
-    width, margin = 1600, 48
-    sizes = (18, 28, 44, 72, 120)
+def proof(rows: list[tuple[str, Path]], out: Path) -> Path:
+    width, margin, label_w = 1600, 48, 220
+    sizes = (20, 36, 72)
     label_font = ImageFont.load_default(size=16)
-    height = margin * 2 + sum(int(s * 1.5) + 24 for s in sizes)
-    img = Image.new("RGB", (width, height), (255, 255, 255))
+    row_h = sum(int(s * 1.5) + 16 for s in sizes) + 24
+    img = Image.new("RGB", (width, margin * 2 + row_h * len(rows)), (255, 255, 255))
     draw = ImageDraw.Draw(img)
     y = margin
-    x = margin + 70
-    for size in sizes:
-        face = ImageFont.truetype(str(otf), size)
-        words = PROOF_TEXT.split()
-        while len(words) > 1 and draw.textlength(" ".join(words), font=face) > width - x - margin:
-            words.pop()
-        draw.text((margin, y), f"{size}px", font=label_font, fill=(120, 120, 130))
-        draw.text((x, y), " ".join(words), font=face, fill=(22, 22, 26), features=["kern"])
-        y += int(size * 1.5) + 24
+    x = margin + label_w
+    for label, binary in rows:
+        draw.text((margin, y), label, font=label_font, fill=(120, 120, 130))
+        for size in sizes:
+            face = ImageFont.truetype(str(binary), size)
+            words = PROOF_TEXT.split()
+            while len(words) > 1 and draw.textlength(" ".join(words), font=face) > width - x - margin:
+                words.pop()
+            draw.text((x, y), " ".join(words), font=face, fill=(22, 22, 26), features=["kern"])
+            y += int(size * 1.5) + 16
+        y += 24
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out)
     return out
@@ -88,11 +78,22 @@ def proof(otf: Path, out: Path) -> Path:
 
 def main() -> None:
     ctx = DesignContext.code_clear()
-    font = design(ctx)
-    result = build_font(font, OUT_DIR)
-    for fmt, path in result.binaries.items():
+    controls = Controls.from_context(ctx)
+    regular = build_font(design(controls), OUT_DIR)
+    for fmt, path in regular.binaries.items():
         print(f"{fmt}: {path}")
-    png = proof(result.binaries["otf"], OUT_DIR / "proof.png")
+
+    # One change on the control sheet: a wider n counter, carried by h m r u.
+    wide = controls.tuned_n(counter=controls.n.counter * 1.18)
+    variant = build_font(design(wide, f"{FAMILY} Wide"), OUT_DIR / "variant", formats=("otf",))
+
+    png = proof(
+        [
+            ("from_context", regular.binaries["otf"]),
+            ("tuned_n(counter x 1.18)", variant.binaries["otf"]),
+        ],
+        OUT_DIR / "proof.png",
+    )
     DOCS_IMG.mkdir(parents=True, exist_ok=True)
     (DOCS_IMG / "first-font-proof.png").write_bytes(png.read_bytes())
     print(f"proof: {png}")

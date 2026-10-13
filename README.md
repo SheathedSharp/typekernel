@@ -47,12 +47,12 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 ```python
 from typekernel.compile import build_font
 from typekernel.font import Font
-from typekernel.parts import DesignContext, build_n, build_o, h_from_n
+from typekernel.parts import Controls, DesignContext
 
 ctx = DesignContext.code_clear()
-n = build_n(ctx)
+controls = Controls.from_context(ctx).tuned_n(counter=290)  # 控制表：改 n，h m r u 跟着变
 font = Font.from_context(ctx, "My Sans")          # 含 .notdef、space、度量、对齐区
-font.add_chars({"n": n, "o": build_o(ctx), "h": h_from_n(n)})
+font.add_chars(controls.build_all())              # b d h i l m n o p q r u
 build_font(font, "out/")                          # MySans-Regular.ufo / .otf / .ttf
 ```
 
