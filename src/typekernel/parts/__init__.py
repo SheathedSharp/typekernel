@@ -20,6 +20,7 @@ from typekernel.parts.aperture import (
     open_counter,
 )
 from typekernel.parts.compose import (
+    Anchor,
     ComposedGlyph,
     GlyphAssembler,
     translate_outline,
@@ -155,6 +156,7 @@ from typekernel.parts.transforms import (
 __all__ = [
     "LETTER_BUILDERS",
     "SKEL_BUILDERS",
+    "Anchor",
     "CapStyle",
     "Centerline",
     "ClassKernPair",

@@ -8,7 +8,7 @@ holes with pathops when available, then pack sidebearings from the shared
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from typekernel.geo.boolean import boolean_op, union_all
 from typekernel.geo.contour import Contour
@@ -20,13 +20,45 @@ from typekernel.parts.context import DesignContext
 
 
 @dataclass(frozen=True, slots=True)
+class Anchor:
+    """Named attachment point. ``top`` on a base pairs with ``_top`` on a mark."""
+
+    name: str
+    x: float
+    y: float
+
+
+@dataclass(frozen=True, slots=True)
 class ComposedGlyph:
-    """A glyph assembled from parts: ink outlines, holes, and advance width."""
+    """A glyph assembled from parts: ink outlines, holes, and advance width.
+
+    ``anchors`` live in the same coordinates as the ink and move with it.
+    ``design`` is the parameter record a builder drew from (for example
+    :class:`~typekernel.parts.control.NMetrics`), so related forms can derive
+    from the control glyph rather than from the bare context.
+    """
 
     solids: tuple[Outline, ...]
     holes: tuple[Outline, ...]
     advance: float
     context: DesignContext
+    anchors: tuple[Anchor, ...] = ()
+    design: object | None = None
+
+    def translated(self, dx: float, dy: float = 0.0) -> ComposedGlyph:
+        """Shift ink and anchors together; advance is unchanged."""
+        return replace(
+            self,
+            solids=tuple(translate_outline(o, dx, dy) for o in self.solids),
+            holes=tuple(translate_outline(h, dx, dy) for h in self.holes),
+            anchors=tuple(Anchor(a.name, a.x + dx, a.y + dy) for a in self.anchors),
+        )
+
+    def anchor(self, name: str) -> Anchor:
+        for a in self.anchors:
+            if a.name == name:
+                return a
+        raise KeyError(f"glyph has no anchor {name!r}")
 
 
 @dataclass
@@ -52,6 +84,19 @@ class GlyphAssembler:
     _subtract_holes: bool = False
     _blend: tuple[float, object, float] | None = None
     _ease: tuple[float, float, bool] | None = None
+    _anchors: list[Anchor] = field(default_factory=list)
+    _design: object | None = None
+
+    def anchor(self, name: str, x: float, y: float) -> GlyphAssembler:
+        """Place an anchor in part coordinates (shifted with the ink on build)."""
+        self._anchors = [a for a in self._anchors if a.name != name]
+        self._anchors.append(Anchor(name, x, y))
+        return self
+
+    def with_design(self, record: object) -> GlyphAssembler:
+        """Attach the parameter record this glyph was drawn from."""
+        self._design = record
+        return self
 
     def add(self, outline: Outline) -> GlyphAssembler:
         """Add a solid (positive ink) part."""
@@ -171,10 +216,16 @@ class GlyphAssembler:
         scale = max(0.97, min(1.03, scale))
         sb *= scale
         dx = sb - box[0]
-        solids_t = tuple(translate_outline(o, dx) for o in solids)
-        holes_t = tuple(translate_outline(h, dx) for h in holes)
         advance = sb + ink_w + sb
-        return ComposedGlyph(solids_t, holes_t, advance, self.context)
+        raw = ComposedGlyph(
+            tuple(solids),
+            tuple(holes),
+            advance,
+            self.context,
+            anchors=tuple(self._anchors),
+            design=self._design,
+        )
+        return raw.translated(dx)
 
 
 def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:

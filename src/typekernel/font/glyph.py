@@ -20,7 +20,7 @@ from typekernel.geo.contour import Contour, reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.pens import draw_outline
-from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.context import DesignContext
 
 __all__ = [
@@ -35,15 +35,6 @@ __all__ = [
 
 Transform = tuple[float, float, float, float, float, float]
 IDENTITY: Transform = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
-
-
-@dataclass(frozen=True, slots=True)
-class Anchor:
-    """Named attachment point. ``top`` on a base pairs with ``_top`` on a mark."""
-
-    name: str
-    x: float
-    y: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,18 +94,23 @@ class Glyph:
 
         Solids and un-subtracted holes are merged into one outline with font
         winding, so counters stay open after compilation (nonzero fill).
+        The glyph's own anchors are kept; ``anchors`` adds to them and wins
+        on a name clash.
         """
         contours: list[Contour] = []
         for solid in composed.solids:
             contours.extend(normalize_winding(solid).contours)
         for hole in composed.holes:
             contours.extend(normalize_winding(hole, invert=True).contours)
+        extra = tuple(anchors)
+        override = {a.name for a in extra}
+        merged = tuple(a for a in composed.anchors if a.name not in override) + extra
         return cls(
             name=name,
             outline=Outline(tuple(contours)),
             advance=composed.advance,
             unicodes=tuple(unicodes),
-            anchors=tuple(anchors),
+            anchors=merged,
             components=tuple(components),
         )
 

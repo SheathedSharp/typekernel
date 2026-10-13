@@ -8,7 +8,7 @@ uneven — that is exactly what this module measures.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from fontTools.misc.bezierTools import curveLineIntersections, lineLineIntersections
 
@@ -16,7 +16,7 @@ from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.optics.context import OpticalContext
-from typekernel.parts.compose import ComposedGlyph, translate_outline
+from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.metrics import KernPair, KernTable
 
@@ -285,10 +285,8 @@ def with_sidebearings(glyph: ComposedGlyph, lsb: float, rsb: float) -> ComposedG
     ink = _ink_outlines(glyph)
     box = union_bounds(ink)
     ink_w = box[2] - box[0]
-    dx = lsb - box[0]
-    solids = tuple(translate_outline(o, dx) for o in glyph.solids)
-    holes = tuple(translate_outline(h, dx) for h in glyph.holes)
-    return ComposedGlyph(solids, holes, lsb + ink_w + rsb, glyph.context)
+    shifted = glyph.translated(lsb - box[0])
+    return replace(shifted, advance=lsb + ink_w + rsb)
 
 
 @dataclass(frozen=True, slots=True)
