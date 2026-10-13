@@ -28,7 +28,7 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel Var"
-TEXT = "bold proud drum plumb indoor humid"
+TEXT = "the quick brown fox jumps over the lazy dog"
 CLASSES = (KernClass("straight", ("n", "h", "m", "i", "l", "u")), KernClass("round", ("o",)))
 
 
@@ -67,10 +67,14 @@ def proof(vf: Path, out: Path) -> Path:
     draw = ImageDraw.Draw(img)
     face = ImageFont.truetype(str(vf), size)
     y = margin
+    x = margin + label_w
     for w in weights:
         face.set_variation_by_axes([w])
+        words = TEXT.split()
+        while len(words) > 1 and draw.textlength(" ".join(words), font=face) > img.width - x - margin:
+            words.pop()
         draw.text((margin, y + size * 0.4), str(w), font=label_font, fill=(120, 120, 130))
-        draw.text((margin + label_w, y), TEXT, font=face, fill=(22, 22, 26), features=["kern"])
+        draw.text((x, y), " ".join(words), font=face, fill=(22, 22, 26), features=["kern"])
         y += int(size * 1.35)
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out)

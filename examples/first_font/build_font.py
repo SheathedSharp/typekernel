@@ -2,7 +2,7 @@
 
 1. Brief / proportions   → DesignContext
 2. Control glyphs        → Controls (the n and o design records)
-3. Related forms         → Controls.build_all(): h m r u i l from n, b d p q from o + n
+3. Related forms         → Controls.build_all(): the lowercase a–z from n and o
 4. Spacing               → optical sidebearings per glyph
 5. Kerning               → class kerning fitted to the n/o rhythm
 6. Font                  → Font (names, cmap, metrics, zones, anchors, kerning)
@@ -31,7 +31,7 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
-PROOF_TEXT = "bold proud drum plumb indoor humid limbo hound pool blond"
+PROOF_TEXT = "the quick brown fox jumps over the lazy dog"
 
 
 def design(controls: Controls, family: str = FAMILY) -> Font:
