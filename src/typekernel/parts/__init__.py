@@ -101,7 +101,7 @@ from typekernel.parts.diagonals import (
     y_from_n,
     z_from_n,
 )
-from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, RELATED_FORMS, Controls
+from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS, Controls
 from typekernel.parts.figures import tabular
 from typekernel.parts.latin import (
     LETTER_BUILDERS,
@@ -218,6 +218,7 @@ __all__ = [
     "CAP_FORMS",
     "FIGURE_FORMS",
     "LETTER_BUILDERS",
+    "PUNCT_FORMS",
     "RELATED_FORMS",
     "SKEL_BUILDERS",
     "A_from_H",

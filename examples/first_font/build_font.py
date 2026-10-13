@@ -32,7 +32,10 @@ OUT_DIR = HERE / "out"
 DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
-PROOF_TEXT = "The Quick Brown Fox 0123456789 Jumps Over The Lazy Dog"
+PROOF_TEXT = (
+    "The quick brown fox jumps over the lazy dog. "
+    "Wait — really? Yes: 0123456789; (quotes) \"hello\" and 'world'!"
+)
 
 
 def design(controls: Controls, family: str = FAMILY) -> Font:

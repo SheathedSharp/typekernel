@@ -8,6 +8,7 @@ from typekernel.geo.outline import bounds
 from typekernel.parts import (
     CAP_FORMS,
     FIGURE_FORMS,
+    PUNCT_FORMS,
     RELATED_FORMS,
     Controls,
     DesignContext,
@@ -29,8 +30,10 @@ def _width(g) -> float:
 def test_build_all_covers_related_forms(ctx: DesignContext) -> None:
     glyphs = Controls.from_context(ctx).build_all()
     assert set(RELATED_FORMS) == set("abcdefghijklmnopqrstuvwxyz")
-    assert set(glyphs) == set(RELATED_FORMS) | set(CAP_FORMS) | set(FIGURE_FORMS)
-    assert len(glyphs) == 62
+    assert set(glyphs) == (
+        set(RELATED_FORMS) | set(CAP_FORMS) | set(FIGURE_FORMS) | set(PUNCT_FORMS)
+    )
+    assert len(glyphs) == 62 + len(PUNCT_FORMS)
     assert all(g.advance > 0 for g in glyphs.values())
 
 
@@ -66,4 +69,4 @@ def test_build_subset_and_unknown(ctx: DesignContext) -> None:
     controls = Controls.from_context(ctx)
     assert list(controls.build_all("hoh")) == ["h", "o"]
     with pytest.raises(KeyError, match="no related form"):
-        controls.build_all("n?")
+        controls.build_all("n∑")

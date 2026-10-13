@@ -83,8 +83,16 @@ from typekernel.parts.figures import (
     two_from_O,
     zero_from_O,
 )
+from typekernel.parts.punctuation import PUNCT_FORMS
 
-__all__ = ["CAP_FORMS", "FIGURE_FORMS", "RELATED_FORMS", "Controls", "Derivation"]
+__all__ = [
+    "CAP_FORMS",
+    "FIGURE_FORMS",
+    "PUNCT_FORMS",
+    "RELATED_FORMS",
+    "Controls",
+    "Derivation",
+]
 
 Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
 
@@ -208,8 +216,11 @@ class Controls:
 
     @property
     def supported(self) -> str:
-        return "".join(sorted(RELATED_FORMS)) + "".join(sorted(CAP_FORMS)) + "".join(
-            sorted(FIGURE_FORMS)
+        return (
+            "".join(sorted(RELATED_FORMS))
+            + "".join(sorted(CAP_FORMS))
+            + "".join(sorted(FIGURE_FORMS))
+            + "".join(sorted(PUNCT_FORMS))
         )
 
     def control_glyphs(self) -> tuple[ComposedGlyph, ComposedGlyph]:
@@ -227,12 +238,17 @@ class Controls:
         """Draw the controls once and derive ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
         cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
-        missing = [ch for ch in wanted if ch not in RELATED_FORMS and ch not in cap_forms]
+        missing = [
+            ch
+            for ch in wanted
+            if ch not in RELATED_FORMS and ch not in PUNCT_FORMS and ch not in cap_forms
+        ]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
         out: dict[str, ComposedGlyph] = {}
         for forms, draw in (
             (RELATED_FORMS, self.control_glyphs),
+            (PUNCT_FORMS, self.control_glyphs),
             (cap_forms, self.cap_control_glyphs),
         ):
             chars_here = [ch for ch in wanted if ch in forms]
