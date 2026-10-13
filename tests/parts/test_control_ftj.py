@@ -8,6 +8,7 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import DesignContext, build_n, f_from_n, j_from_n, n_metrics, t_from_n
+from typekernel.parts.control import _hook_shoulder_rise
 
 
 @pytest.fixture
@@ -21,7 +22,9 @@ def test_f_hook_at_ascender_and_bar_at_x_height(ctx: DesignContext) -> None:
     (contour,) = f.solids[0].contours
     assert signed_area(contour) > 0
     _, y0, _, y1 = bounds(f.solids[0])
-    assert y0 == 0.0 and y1 == pytest.approx(ctx.ascender + ctx.overshoot)
+    rise = _hook_shoulder_rise(ctx, m)
+    assert y0 == 0.0 and y1 == pytest.approx(ctx.ascender + rise)
+    assert rise > ctx.overshoot
     tb = m.stem * ctx.contrast * 0.95
     (bar,) = ink_intervals_at_y(list(f.solids), ctx.x_height - tb / 2.0)
     (stem,) = ink_intervals_at_y(list(f.solids), ctx.x_height / 2.0)
@@ -34,8 +37,9 @@ def test_t_hook_on_baseline(ctx: DesignContext) -> None:
     t = t_from_n(build_n(ctx))
     (contour,) = t.solids[0].contours
     assert signed_area(contour) > 0
+    rise = _hook_shoulder_rise(ctx, m)
     _, y0, _, y1 = bounds(t.solids[0])
-    assert y0 == pytest.approx(-ctx.overshoot)
+    assert y0 == pytest.approx(-rise)
     assert y1 == pytest.approx(ctx.x_height + 0.3 * (ctx.ascender - ctx.x_height))
     # the stem bends right at the bottom: ink right of the stem near the baseline
     runs = ink_intervals_at_y(list(t.solids), 4.0)
@@ -47,13 +51,19 @@ def test_j_hook_in_descender_with_tittle(ctx: DesignContext) -> None:
     m = n_metrics(ctx)
     j = j_from_n(build_n(ctx))
     body, dot = j.solids
-    assert bounds(body)[1] == pytest.approx(ctx.descender - ctx.overshoot)
+    rise = _hook_shoulder_rise(ctx, m)
+    assert bounds(body)[1] == pytest.approx(ctx.descender - rise)
     assert bounds(body)[3] == pytest.approx(ctx.x_height)
     assert bounds(dot)[1] > ctx.x_height
     # hook curls left of the stem
     (stem,) = ink_intervals_at_y([body], ctx.x_height / 2.0)
     low = ink_intervals_at_y([body], ctx.descender + 4.0)
     assert min(r[0] for r in low) < stem[0] - m.stem
+
+
+def test_n_shoulder_unchanged_by_hook_tuning(ctx: DesignContext) -> None:
+    n = build_n(ctx)
+    assert bounds(n.solids[0])[3] == pytest.approx(ctx.x_height + ctx.overshoot)
 
 
 def test_heavy_f_drops_bar_below_crotch(ctx: DesignContext) -> None:

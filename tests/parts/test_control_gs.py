@@ -7,7 +7,16 @@ import pytest
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import DesignContext, build_n, build_o, g_from_o, o_metrics, s_from_o
+from typekernel.parts import (
+    DesignContext,
+    build_n,
+    build_o,
+    g_from_o,
+    n_metrics,
+    o_metrics,
+    s_from_o,
+)
+from typekernel.parts.control import _hook_shoulder_rise
 
 
 @pytest.fixture
@@ -20,7 +29,8 @@ def test_g_hook_in_descender_and_counter(ctx: DesignContext) -> None:
     outer, counter = g.solids[0].contours
     assert signed_area(outer) > 0 > signed_area(counter)
     _, y0, _, y1 = bounds(g.solids[0])
-    assert y0 == pytest.approx(ctx.descender - ctx.overshoot)
+    rise = _hook_shoulder_rise(ctx, n_metrics(ctx))
+    assert y0 == pytest.approx(ctx.descender - rise)
     assert y1 == pytest.approx(ctx.x_height + ctx.overshoot)
     # below the baseline the hook curls left of the stem
     (stem,) = ink_intervals_at_y(list(g.solids), ctx.descender / 3.0)

@@ -386,17 +386,45 @@ def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline
     return _ccw(b.build()), x_t
 
 
-def _hook_record(m: NMetrics, top: float, depth: float = 0.5) -> NMetrics:
+def _hook_shoulder_rise(ctx: DesignContext, m: NMetrics) -> float:
+    """How far the hook crown sits above the stem flat (more than ``overshoot``).
+
+    ``n``/``h`` keep ``crown_y = x_height + overshoot``; hooks need a taller
+    shoulder so ``f t j g r`` arcs do not read as an ``L`` at low roundness.
+    """
+    return max(ctx.overshoot * 1.35, m.stem * (0.26 + 0.20 * ctx.roundness))
+
+
+def _hook_shoulder_kappa(ctx: DesignContext, m: NMetrics) -> float:
+    """Slightly rounder shoulder handles on hooks than on the ``n`` control."""
+    return m.kappa * (1.05 + 0.32 * ctx.roundness)
+
+
+def _hook_record(
+    m: NMetrics,
+    top: float,
+    ctx: DesignContext,
+    depth: float = 0.5,
+) -> NMetrics:
     """The ``n`` record re-based so its shoulder caps a stem of height ``top``.
 
-    The shoulder keeps its shape and thickness; the crotch is ``depth`` × as
-    deep as the ``n``'s, since hooks (``f t j``) sit tighter than arches.
+    Crown uses :func:`_hook_shoulder_rise` instead of shifting the ``n`` crown
+    by ``top - x_height`` (which left only ``overshoot`` above ``f``/``t``).
+    The crotch is ``depth`` × as deep as the ``n``'s, since hooks sit tighter.
     """
-    d = top - m.x_height
-    crown, inner_crown = m.crown_y + d, m.inner_crown + d
+    rise = _hook_shoulder_rise(ctx, m)
+    crown = top + rise
+    shoulder_thickness = m.crown_y - m.inner_crown
+    inner_crown = max(crown - shoulder_thickness, top + m.stem * 0.22)
     join = min(top - depth * (m.x_height - m.join_y), inner_crown - 0.35 * m.stem)
+    leg_top = top - m.stem * 0.02
     return m.tuned(
-        x_height=top, crown_y=crown, leg_top=m.leg_top + d, join_y=join, inner_crown=inner_crown
+        x_height=top,
+        crown_y=crown,
+        leg_top=leg_top,
+        join_y=join,
+        inner_crown=inner_crown,
+        kappa=_hook_shoulder_kappa(ctx, m),
     )
 
 
@@ -416,7 +444,7 @@ def f_from_n(
     """Derive ``f``: the ``r`` arm capping an ascender stem, crossbar at x-height."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    hook = _hook_record(m, m.ascender)
+    hook = _hook_record(m, m.ascender, c)
     outline, _ = _r_outline(hook, arm, _crossbar(c, m, hook, m.x_height))
     anchors = {"bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
@@ -437,7 +465,7 @@ def t_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     top = m.x_height + rise * (m.ascender - m.x_height)
-    hook = _hook_record(m, top)
+    hook = _hook_record(m, top, c)
     # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
     # sits at [top - xh, top - xh + tb] before the flip.
     _, _, left, right = _crossbar(c, m, hook, m.x_height)
@@ -458,7 +486,7 @@ def j_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
-    hook = _hook_record(m, height)
+    hook = _hook_record(m, height, c)
     outline, _ = _r_outline(hook, arm)
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
@@ -575,7 +603,7 @@ def dotless_j_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
-    hook = _hook_record(m, height)
+    hook = _hook_record(m, height, c)
     outline, _ = _r_outline(hook, 0.75)
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
@@ -934,7 +962,7 @@ def g_from_o(
     nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
     stem, desc = nm.stem, c.descender
     height = o.x_height - desc
-    hook = _hook_record(nm, height)
+    hook = _hook_record(nm, height, c)
     # The hook's crotch must sit below where the bowl meets the stem; heavy
     # weights get a thinner hook rather than an outline that folds back.
     s_l = 2.0 * o.rx - stem
