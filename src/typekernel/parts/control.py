@@ -45,6 +45,8 @@ __all__ = [
     "build_u",
     "c_from_o",
     "d_from_o",
+    "dotless_i_from_n",
+    "dotless_j_from_n",
     "e_from_o",
     "f_from_n",
     "g_from_o",
@@ -460,8 +462,13 @@ def j_from_n(
     outline, _ = _r_outline(hook, arm)
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
-    dot = tittle(c, m.stem / 2.0, m.x_height + m.stem * 0.55, size=m.stem * 0.95)
-    return _pack(c, m, {}, body, dot)
+    dot_y = m.x_height + m.stem * 0.55
+    dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
+    anchors = {
+        "top": (m.stem / 2.0, dot_y + m.stem * 0.95),
+        "bottom": (m.stem / 2.0, c.descender),
+    }
+    return _pack(c, m, anchors, body, dot)
 
 
 def build_r(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
@@ -548,8 +555,36 @@ def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
-    dot = tittle(c, m.stem / 2.0, m.x_height + m.stem * 0.55, size=m.stem * 0.95)
-    return _pack(c, m, {"bottom": (m.stem / 2.0, 0.0)}, stem, dot)
+    dot_y = m.x_height + m.stem * 0.55
+    dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
+    anchors = {"top": (m.stem / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, stem, dot)
+
+
+def dotless_i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+    """Dotless ``ı`` (for ``i`` + accent composites)."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
+    anchors = {"top": (m.stem / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, stem)
+
+
+def dotless_j_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+    """Dotless ``ȷ`` (for ``j`` + accent composites)."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    height = m.x_height - c.descender
+    hook = _hook_record(m, height)
+    outline, _ = _r_outline(hook, 0.75)
+    turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
+    body = translate(turned, 0.0, c.descender)
+    dot_y = m.x_height + m.stem * 0.55
+    anchors = {
+        "top": (m.stem / 2.0, dot_y + m.stem * 0.95),
+        "bottom": (m.stem / 2.0, c.descender),
+    }
+    return _pack(c, m, anchors, body)
 
 
 def build_i(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:

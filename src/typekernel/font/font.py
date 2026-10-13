@@ -12,9 +12,10 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from typekernel.font.glyph import Glyph, notdef_glyph, space_glyph
+from typekernel.font.glyph import Component, Glyph, glyph_name_for_char, notdef_glyph, space_glyph
 from typekernel.font.info import FontInfo
-from typekernel.parts.compose import ComposedGlyph
+from typekernel.geo.outline import Outline
+from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.metrics import ClassKernTable, KernTable
 
@@ -75,6 +76,51 @@ class Font:
     ) -> list[Glyph]:
         """Add many ``{char: ComposedGlyph}`` entries at once."""
         return [self.add_char(ch, g, replace=replace) for ch, g in glyphs.items()]
+
+    def add_composite(
+        self,
+        char: str,
+        base: str,
+        marks: tuple[tuple[str, str, str], ...],
+        *,
+        replace: bool = False,
+    ) -> Glyph:
+        """Build ``char`` from ``base`` plus mark glyphs aligned on anchors.
+
+        Each mark entry is ``(mark_glyph_name, base_anchor, mark_anchor)``.
+        Advance and anchors are taken from the base glyph.
+        """
+        if len(char) != 1:
+            raise ValueError(f"expected one character, got {char!r}")
+        base_name = self.resolve(base)
+        if base_name is None:
+            raise KeyError(f"unknown base glyph {base!r}")
+        base_g = self._glyphs[base_name]
+
+        def _anchor(g: Glyph, name: str) -> Anchor:
+            for a in g.anchors:
+                if a.name == name:
+                    return a
+            raise KeyError(f"glyph {g.name!r} has no anchor {name!r}")
+
+        components: list[Component] = [Component(base_name)]
+        for mark_name, base_anchor, mark_anchor in marks:
+            if mark_name not in self._glyphs:
+                raise KeyError(f"unknown mark glyph {mark_name!r}")
+            mark_g = self._glyphs[mark_name]
+            ba = _anchor(base_g, base_anchor)
+            ma = _anchor(mark_g, mark_anchor)
+            components.append(Component.offset(mark_name, ba.x - ma.x, ba.y - ma.y))
+
+        glyph = Glyph(
+            glyph_name_for_char(char),
+            Outline(()),
+            base_g.advance,
+            unicodes=(ord(char),),
+            anchors=base_g.anchors,
+            components=tuple(components),
+        )
+        return self.add_glyph(glyph, replace=replace)
 
     def remove_glyph(self, name: str) -> None:
         del self._glyphs[name]

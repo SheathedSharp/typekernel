@@ -26,6 +26,7 @@ from typekernel.parts import (
     rhythm_from_control_glyphs,
     tabular,
 )
+from typekernel.parts.diacritics import add_composite_latin
 
 HERE = Path(__file__).resolve().parent
 OUT_DIR = HERE / "out"
@@ -33,8 +34,7 @@ DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
 PROOF_TEXT = (
-    "The quick brown fox jumps over the lazy dog. "
-    "Wait — really? Yes: 0123456789; (quotes) \"hello\" and 'world'!"
+    "Ça va? Déjà vu, naïve façade — the quick brown fox jumps over 0123456789."
 )
 
 
@@ -58,6 +58,7 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
 
     font = Font.from_context(ctx, family, space_width=spaced["n"].advance * 0.45)
     font.add_chars(spaced)
+    add_composite_latin(font, controls.control_glyphs())
     font.add_class_kern_table(kerning)
     return font
 
