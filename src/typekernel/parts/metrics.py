@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal
+
+Side = Literal["left", "right", "both"]
 
 from typekernel.geo.layout import layout_x_positions
 from typekernel.parts.compose import ComposedGlyph
@@ -115,10 +118,16 @@ class KernClass:
     ``members`` are glyph names (single letters or PostScript-style names).
     Order does not matter for lookup; the first member is the default
     representative used by :func:`auto_class_kern` unless overridden.
+
+    ``side`` controls UFO export: ``left`` → ``public.kern1.*`` only,
+    ``right`` → ``public.kern2.*`` only, ``both`` → both (legacy symmetric).
+    The same ``name`` may appear twice with different ``side`` values so
+    ``b`` can kern as straight on the left and round on the right.
     """
 
     name: str
     members: tuple[str, ...]
+    side: Side = "both"
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -128,6 +137,8 @@ class KernClass:
         # freeze uniqueness check
         if len(set(self.members)) != len(self.members):
             raise ValueError(f"KernClass {self.name!r} has duplicate members")
+        if self.side not in ("left", "right", "both"):
+            raise ValueError(f"KernClass side must be left, right, or both, got {self.side!r}")
 
     def contains(self, glyph: str) -> bool:
         return glyph in self.members
@@ -174,11 +185,28 @@ class ClassKernTable:
     classes: tuple[KernClass, ...] = ()
     pairs: tuple[ClassKernPair, ...] = ()
 
-    def class_of(self, glyph: str) -> str | None:
+    def class_of(self, glyph: str, *, side: Side | None = None) -> str | None:
+        """Class name for ``glyph`` on ``side`` (left/right pair lookup)."""
         for kc in self.classes:
-            if kc.contains(glyph):
+            if not kc.contains(glyph):
+                continue
+            if side is None:
+                return kc.name
+            if side == "left" and kc.side in ("left", "both"):
+                return kc.name
+            if side == "right" and kc.side in ("right", "both"):
                 return kc.name
         return None
+
+    def _members_for(self, class_name: str, side: Literal["left", "right"]) -> tuple[str, ...]:
+        for kc in self.classes:
+            if kc.name != class_name:
+                continue
+            if side == "left" and kc.side in ("left", "both"):
+                return kc.members
+            if side == "right" and kc.side in ("right", "both"):
+                return kc.members
+        return ()
 
     def lookup_classes(self, left_class: str, right_class: str) -> float:
         for p in self.pairs:
@@ -188,8 +216,8 @@ class ClassKernTable:
 
     def lookup(self, left: str, right: str) -> float:
         """Glyph-level lookup via class membership."""
-        lc = self.class_of(left)
-        rc = self.class_of(right)
+        lc = self.class_of(left, side="left")
+        rc = self.class_of(right, side="right")
         if lc is None or rc is None:
             return 0.0
         return self.lookup_classes(lc, rc)
@@ -205,27 +233,38 @@ class ClassKernTable:
 
     def expand(self) -> KernTable:
         """Explode class pairs into a flat :class:`KernTable` of glyph pairs."""
-        by_name = {kc.name: kc for kc in self.classes}
         flat: list[KernPair] = []
         for p in self.pairs:
-            left = by_name.get(p.left_class)
-            right = by_name.get(p.right_class)
-            if left is None or right is None:
+            left_m = self._members_for(p.left_class, "left")
+            right_m = self._members_for(p.right_class, "right")
+            if not left_m or not right_m:
                 continue
-            for a in left.members:
-                for b in right.members:
+            for a in left_m:
+                for b in right_m:
                     flat.append(KernPair(a, b, p.value))
         return KernTable(tuple(flat))
 
     def to_fea(self, *, feature_name: str = "kern") -> str:
         """Return a minimal Adobe FEA class-kern snippet (compile-layer ready)."""
         fea_lines: list[str] = [f"feature {feature_name} {{"]
+        seen_left: set[str] = set()
+        seen_right: set[str] = set()
         for kc in self.classes:
-            members = " ".join(kc.members)
-            fea_lines.append(f"  @{kc.name} = [{members}];")
+            if kc.side in ("left", "both") and kc.name not in seen_left:
+                members = " ".join(self._members_for(kc.name, "left"))
+                if members:
+                    fea_lines.append(f"  @{kc.name}_left = [{members}];")
+                    seen_left.add(kc.name)
+            if kc.side in ("right", "both") and kc.name not in seen_right:
+                members = " ".join(self._members_for(kc.name, "right"))
+                if members:
+                    fea_lines.append(f"  @{kc.name}_right = [{members}];")
+                    seen_right.add(kc.name)
         for pair in self.pairs:
             val = round(pair.value)
-            fea_lines.append(f"  pos @{pair.left_class} @{pair.right_class} {val};")
+            fea_lines.append(
+                f"  pos @{pair.left_class}_left @{pair.right_class}_right {val};"
+            )
         fea_lines.append(f"}} {feature_name};")
         return "\n".join(fea_lines) + "\n"
 
@@ -312,9 +351,11 @@ def auto_class_kern(
     else:
         target_gap = float(target)
 
+    left_cs = tuple(c for c in classes_t if c.side in ("left", "both"))
+    right_cs = tuple(c for c in classes_t if c.side in ("right", "both"))
     pairs: list[ClassKernPair] = []
-    for left_c in classes_t:
-        for right_c in classes_t:
+    for left_c in left_cs:
+        for right_c in right_cs:
             if skip_same_class and left_c.name == right_c.name:
                 continue
             ln = reps.get(left_c.name)
@@ -328,6 +369,80 @@ def auto_class_kern(
             value = fit_kern_pair(left_g, right_g, target_gap, samples=samples)
             pairs.append(ClassKernPair(left_c.name, right_c.name, value))
     return ClassKernTable(classes_t, tuple(pairs))
+
+
+def auto_side_kern_classes(
+    glyphs: Mapping[str, ComposedGlyph],
+    ctx: DesignContext,
+    *,
+    lowercase_ref: tuple[str, str] = ("n", "o"),
+    uppercase_ref: tuple[str, str] = ("H", "O"),
+    samples: int = 17,
+) -> tuple[KernClass, ...]:
+    """Group glyphs by optical left / right silhouette (split kern1 vs kern2).
+
+    Compares each glyph's mean side inset to straight/round control letters
+    (``n``/``o`` or ``H``/``O``) and assigns shape labels: ``straight``,
+    ``round``, ``diagonal``, ``hook``.
+    """
+    from typekernel.geo.outline import Outline
+    from typekernel.optics.space import measure_side_whitespace
+
+    def _outlines(g: ComposedGlyph) -> list[Outline]:
+        return list(g.solids) + list(g.holes)
+
+    def _inset(g: ComposedGlyph, side: str, y1: float) -> float:
+        return measure_side_whitespace(
+            _outlines(g), side, y0=0.0, y1=y1, samples=samples
+        )
+
+    def _refs(lo: str, hi: str, y1: float, side: str) -> tuple[float, float] | None:
+        if lo not in glyphs or hi not in glyphs:
+            return None
+        return (_inset(glyphs[lo], side, y1), _inset(glyphs[hi], side, y1))
+
+    def _label(inset: float, straight: float, round_: float) -> str:
+        span = max(round_ - straight, 1.0)
+        t = (inset - straight) / span
+        if t < 0.38:
+            return "straight"
+        if t > 0.62:
+            return "round"
+        if t > 0.48:
+            return "diagonal"
+        return "hook"
+
+    left_buckets: dict[str, list[str]] = {}
+    right_buckets: dict[str, list[str]] = {}
+
+    for ch, g in glyphs.items():
+        if len(ch) != 1:
+            continue
+        if ch.islower() and ch.isalpha():
+            lo, hi = lowercase_ref
+            y1 = ctx.x_height
+        elif ch.isupper() and ch.isalpha():
+            lo, hi = uppercase_ref
+            y1 = ctx.cap_height
+        else:
+            continue
+        left_refs = _refs(lo, hi, y1, "left")
+        right_refs = _refs(lo, hi, y1, "right")
+        if left_refs is None or right_refs is None:
+            continue
+        li = _inset(g, "left", y1)
+        ri = _inset(g, "right", y1)
+        left_buckets.setdefault(_label(li, *left_refs), []).append(ch)
+        right_buckets.setdefault(_label(ri, *right_refs), []).append(ch)
+
+    names = sorted(set(left_buckets) | set(right_buckets))
+    out: list[KernClass] = []
+    for name in names:
+        if name in left_buckets:
+            out.append(KernClass(name, tuple(sorted(left_buckets[name])), side="left"))
+        if name in right_buckets:
+            out.append(KernClass(name, tuple(sorted(right_buckets[name])), side="right"))
+    return tuple(out)
 
 
 def default_latin_kern_classes() -> tuple[KernClass, ...]:

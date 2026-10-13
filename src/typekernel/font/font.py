@@ -190,7 +190,8 @@ class Font:
         right kerning group — overlaps raise ``ValueError``.
         """
         skipped: list[str] = []
-        present: dict[str, tuple[str, ...]] = {}
+        kern1: dict[str, tuple[str, ...]] = {}
+        kern2: dict[str, tuple[str, ...]] = {}
         for kc in table.classes:
             resolved_members: list[str] = []
             for m in kc.members:
@@ -201,16 +202,23 @@ class Font:
                     skipped.append(m)
                 else:
                     resolved_members.append(resolved)
-            if resolved_members:
-                present[kc.name] = tuple(resolved_members)
+            if not resolved_members:
+                continue
+            members_t = tuple(resolved_members)
+            if kc.side in ("left", "both"):
+                kern1[kc.name] = members_t
+            if kc.side in ("right", "both"):
+                kern2[kc.name] = members_t
 
-        for prefix in (KERN1_PREFIX, KERN2_PREFIX):
-            for name, members in present.items():
-                self.groups[prefix + name] = members
-            self._check_group_exclusive(prefix)
+        for name, members in kern1.items():
+            self.groups[KERN1_PREFIX + name] = members
+        self._check_group_exclusive(KERN1_PREFIX)
+        for name, members in kern2.items():
+            self.groups[KERN2_PREFIX + name] = members
+        self._check_group_exclusive(KERN2_PREFIX)
 
         for pair in table.pairs:
-            if pair.left_class in present and pair.right_class in present:
+            if pair.left_class in kern1 and pair.right_class in kern2:
                 key = (KERN1_PREFIX + pair.left_class, KERN2_PREFIX + pair.right_class)
                 self.kerning[key] = pair.value
         return sorted(set(skipped))

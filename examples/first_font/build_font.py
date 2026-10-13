@@ -17,14 +17,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 from typekernel.compile import build_font
 from typekernel.font import Font
-from typekernel.optics.space import suggest_sidebearings_optical, with_sidebearings
+from typekernel.optics.space import space_font
 from typekernel.parts import (
     Controls,
     DesignContext,
-    KernClass,
     auto_class_kern,
+    auto_side_kern_classes,
     rhythm_from_control_glyphs,
-    tabular,
 )
 from typekernel.parts.diacritics import add_composite_latin
 
@@ -41,19 +40,10 @@ PROOF_TEXT = (
 def design(controls: Controls, family: str = FAMILY) -> Font:
     ctx = controls.context
     drawn = controls.build_all()
-    spaced = {
-        ch: with_sidebearings(g, *suggest_sidebearings_optical(g, ctx))
-        for ch, g in drawn.items()
-    }
-    spaced.update(tabular({ch: g for ch, g in spaced.items() if ch.isdigit()}))
+    rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
+    spaced = space_font(drawn, ctx, rhythm=rhythm)
 
-    classes = (
-        KernClass("straight", ("n", "h", "m", "i", "l", "u")),
-        KernClass("round", ("o",)),
-        KernClass("straight_caps", ("H", "I", "M", "N", "U")),
-        KernClass("round_caps", ("O", "C", "G", "Q")),
-    )
-    rhythm = rhythm_from_control_glyphs(spaced["n"], spaced["o"])
+    classes = auto_side_kern_classes(spaced, ctx)
     kerning = auto_class_kern(spaced, classes, target=rhythm)
 
     font = Font.from_context(ctx, family, space_width=spaced["n"].advance * 0.45)

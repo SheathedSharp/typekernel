@@ -107,8 +107,8 @@ def test_to_fea_contains_classes_and_pos(
 ) -> None:
     table = auto_class_kern(synth_glyphs, synth_classes, target=40.0)
     fea = table.to_fea()
-    assert "@straight = [n h];" in fea
-    assert "pos @diagonal @round" in fea
+    assert "@straight_left = [n h];" in fea
+    assert "pos @diagonal_left @round_right" in fea
     assert fea.strip().startswith("feature kern {")
     assert fea.strip().endswith("} kern;")
 
@@ -120,6 +120,31 @@ def test_with_pair_and_default_classes() -> None:
     table2 = table.with_pair("diagonal", "round", -20.0)
     assert table2.lookup_classes("diagonal", "round") == -20.0
     assert table.lookup_classes("diagonal", "round") == 0.0
+
+
+def test_split_side_classes_export_different_kern1_kern2() -> None:
+    from typekernel.font import Font
+    from typekernel.optics.space import space_font
+    from typekernel.parts import Controls, DesignContext, auto_side_kern_classes
+
+    ctx = DesignContext.code_clear()
+    controls = Controls.from_context(ctx)
+    spaced = space_font(controls.build_all(), ctx)
+    classes = auto_side_kern_classes(spaced, ctx)
+    font = Font.from_context(ctx, "Side Kern")
+    font.add_chars({ch: spaced[ch] for ch in "bno"})
+    font.add_class_kern_table(
+        auto_class_kern(
+            spaced, classes, target=rhythm_from_control_glyphs(spaced["n"], spaced["o"])
+        )
+    )
+    left = font.groups.get("public.kern1.straight", ())
+    right = font.groups.get("public.kern2.round", ())
+    assert "b" in left or "n" in left
+    assert "b" in right or "o" in right
+    if "b" in left and "b" in right:
+        assert "public.kern1.straight" in font.groups
+        assert "public.kern2.round" in font.groups
 
 
 def test_skip_same_class(synth_glyphs: dict, synth_classes: tuple[KernClass, ...]) -> None:

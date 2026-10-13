@@ -6,10 +6,11 @@ from typekernel.optics.space import (
     fit_kern_pair,
     pair_gap_bbox,
     pair_gap_optical,
+    space_font,
     space_word_optical,
     suggest_sidebearings_optical,
 )
-from typekernel.parts import DesignContext, word_zayju
+from typekernel.parts import Controls, DesignContext, word_zayju
 
 
 def test_suggest_sidebearings_optical_asymmetric_for_open_shapes() -> None:
@@ -63,3 +64,11 @@ def test_space_word_optical_evens_optical_gaps() -> None:
     after_ratio = max(after) / min(after)
     assert after_ratio < before_ratio
     assert after_ratio <= 1.15
+
+
+def test_space_font_tabs_figures_and_sets_sidebearings() -> None:
+    ctx = DesignContext.code_clear()
+    drawn = Controls.from_context(ctx).build_all("no012")
+    spaced = space_font(drawn, ctx)
+    assert spaced["n"].advance > drawn["n"].advance * 0.5
+    assert spaced["0"].advance == spaced["1"].advance

@@ -14,12 +14,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 from typekernel.compile import build_variable_font
 from typekernel.font import Font, Master
-from typekernel.optics.space import suggest_sidebearings_optical, with_sidebearings
+from typekernel.optics.space import space_font
 from typekernel.parts import (
     Controls,
     DesignContext,
-    KernClass,
     auto_class_kern,
+    auto_side_kern_classes,
     rhythm_from_control_glyphs,
 )
 
@@ -29,14 +29,6 @@ DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel Var"
 TEXT = "SPHINX OF QUARTZ 2048 judge my vow"
-CLASSES = (
-    KernClass("straight", ("n", "h", "m", "i", "l", "u")),
-    KernClass("round", ("o",)),
-    KernClass("straight_caps", ("H", "I", "M", "N", "U")),
-    KernClass("round_caps", ("O", "C", "G", "Q")),
-)
-
-
 def master_controls(base: DesignContext, stem: float) -> Controls:
     """A control sheet for one weight: stems change, counters give way."""
     regular = Controls.from_context(base)
@@ -50,11 +42,10 @@ def master_controls(base: DesignContext, stem: float) -> Controls:
 def master_font(controls: Controls, style: str, weight_class: int) -> Font:
     ctx = controls.context
     drawn = controls.build_all()
-    spaced = {
-        ch: with_sidebearings(g, *suggest_sidebearings_optical(g, ctx)) for ch, g in drawn.items()
-    }
+    rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
+    spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(
-        spaced, CLASSES, target=rhythm_from_control_glyphs(spaced["n"], spaced["o"])
+        spaced, auto_side_kern_classes(spaced, ctx), target=rhythm
     )
     font = Font.from_context(
         ctx, FAMILY, style, weight_class=weight_class, space_width=spaced["n"].advance * 0.45

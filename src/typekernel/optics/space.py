@@ -8,6 +8,7 @@ uneven — that is exactly what this module measures.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 
 from fontTools.misc.bezierTools import curveLineIntersections, lineLineIntersections
@@ -18,7 +19,7 @@ from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.optics.context import OpticalContext
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.metrics import KernPair, KernTable
+from typekernel.parts.metrics import KernPair, KernTable, RhythmSpec, rhythm_from_control_glyphs
 
 _T_EPS = 1e-6
 DEFAULT_DEPTH = 0.12  # max counted white depth, fraction of x-height
@@ -349,3 +350,45 @@ def space_word_optical(
         kerning=KernTable(tuple(pairs)),
         target_gap=target,
     )
+
+
+def space_font(
+    glyphs: Mapping[str, ComposedGlyph],
+    ctx: DesignContext | None = None,
+    *,
+    rhythm: RhythmSpec | None = None,
+    samples: int = 17,
+) -> dict[str, ComposedGlyph]:
+    """Apply optical sidebearings across a glyph set (Tracy-style rhythm).
+
+    Lowercase and punctuation use ``n``/``o`` rhythm when ``rhythm`` is
+    omitted; pass :func:`~typekernel.parts.metrics.rhythm_from_control_glyphs`
+    explicitly to lock the target. Digits are left to :func:`~typekernel.parts.figures.tabular`.
+    """
+    from typekernel.parts.figures import tabular
+
+    if not glyphs:
+        return {}
+
+    first = next(iter(glyphs.values()))
+    ctx = ctx or first.context
+    if rhythm is None and "n" in glyphs and "o" in glyphs:
+        rhythm = rhythm_from_control_glyphs(glyphs["n"], glyphs["o"], samples=samples)
+    target_air = rhythm.target_gap * 0.5 if rhythm is not None else None
+
+    punct = frozenset(".,;:!?'\"-–—")
+    out: dict[str, ComposedGlyph] = {}
+    for ch, g in glyphs.items():
+        if ch.isdigit():
+            out[ch] = g
+            continue
+        air: float | None = target_air
+        if air is not None and ch in punct:
+            air = air * 0.72
+        lsb, rsb = suggest_sidebearings_optical(g, ctx, samples=samples, target_air=air)
+        out[ch] = with_sidebearings(g, lsb, rsb)
+
+    digits = {ch: out[ch] for ch in out if ch.isdigit()}
+    if digits:
+        out.update(tabular(digits))
+    return out
