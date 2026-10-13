@@ -36,6 +36,7 @@ from typekernel.parts.control import (
 )
 from typekernel.parts.diagonals import _hwidth
 from typekernel.parts.transforms import mirror_x, mirror_y
+from typekernel.parts.weight_relief import figure_width_floor
 
 __all__ = [
     "FIGURE_STEM_RATIO",
@@ -66,7 +67,7 @@ def _fig(H: ComposedGlyph) -> tuple[HMetrics, float, float, float]:
     h = _h_record(H)
     stem = h.stem * FIGURE_STEM_RATIO
     # heavy figures widen so round ones keep a counter
-    width = max(FIGURE_WIDTH * h.cap_height, 2.6 * stem)
+    width = max(FIGURE_WIDTH * h.cap_height, figure_width_floor(stem))
     return h, stem, h.bar * FIGURE_STEM_RATIO, width
 
 

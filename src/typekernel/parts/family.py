@@ -84,6 +84,7 @@ from typekernel.parts.figures import (
     zero_from_O,
 )
 from typekernel.parts.punctuation import PUNCT_FORMS
+from typekernel.parts.weight_relief import relieve_n_o
 
 __all__ = [
     "CAP_FORMS",
@@ -213,6 +214,11 @@ class Controls:
 
     def tuned_cap_o(self, **kwargs: float) -> Controls:
         return replace(self, cap_o=self.O.tuned(**kwargs))
+
+    def with_stem_relief(self) -> Controls:
+        """Widen ``n``/``o`` counters for heavy ``context.stem`` (black masters)."""
+        n, o = relieve_n_o(self.n, self.o, self.context.stem)
+        return replace(self, n=n, o=o)
 
     @property
     def supported(self) -> str:

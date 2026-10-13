@@ -31,12 +31,7 @@ FAMILY = "Typekernel Var"
 TEXT = "SPHINX OF QUARTZ 2048 judge my vow"
 def master_controls(base: DesignContext, stem: float) -> Controls:
     """A control sheet for one weight: stems change, counters give way."""
-    regular = Controls.from_context(base)
-    delta = stem - base.stem
-    sheet = Controls.from_context(base.tuned(stem=stem))
-    return sheet.tuned_n(counter=regular.n.counter - 0.6 * delta).tuned_o(
-        rx=regular.o.rx + 0.35 * delta
-    )
+    return Controls.from_context(base.tuned(stem=stem)).with_stem_relief()
 
 
 def master_font(controls: Controls, style: str, weight_class: int) -> Font:

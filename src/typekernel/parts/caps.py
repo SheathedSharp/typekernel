@@ -44,6 +44,7 @@ from typekernel.parts.control import (
     s_from_o,
 )
 from typekernel.parts.diagonals import _hwidth, k_points, v_points, w_points, x_points, z_points
+from typekernel.parts.weight_relief import min_bowl_stems
 
 __all__ = [
     "A_from_H",
@@ -382,7 +383,7 @@ def D_from_H(
     h = _h_record(H)
     e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
     t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, _MIN_BOWL_STEMS * t + 0.3 * t)
+    w = max(width * h.width, min_bowl_stems(t) * t + 0.3 * t)
     x0 = _straight_run(straight, w, t)
     cy = cap / 2.0
     _, _, _, q3 = _quarters(x0, cy, w - x0, cy, e)
@@ -407,8 +408,7 @@ def D_from_H(
     return _pack(c, h, _cap_anchors(w, h), _ccw(Outline((outer, counter))))
 
 
-_MIN_BOWL_STEMS = 2.3
-"""Heavy bowl capitals widen so each bowl keeps a counter between its walls."""
+"""Heavy bowl capitals widen via :func:`~typekernel.parts.weight_relief.min_bowl_stems`."""
 
 
 def _straight_run(straight: float, width: float, stem: float) -> float:
@@ -469,7 +469,7 @@ def P_from_H(
     """``P``: the ``H`` stem with a half bowl from ``bowl`` × cap height up."""
     c, h, e = _bowl_cap_setup(H, O, ctx)
     t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    w = max(width * h.width, min_bowl_stems(t) * t)
     x0, y_b = _straight_run(straight, w, t), bowl * cap - bt / 2.0
     q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, t, bt, e)
     b = PathBuilder()
@@ -502,7 +502,7 @@ def R_from_H(
     """
     c, h, e = _bowl_cap_setup(H, O, ctx)
     t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    w = max(width * h.width, min_bowl_stems(t) * t)
     bowl_w = 0.96 * w
     x0, y_b = _straight_run(straight, bowl_w, t), bowl * cap - bt / 2.0
     q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, bowl_w, t, bt, e)
@@ -551,7 +551,7 @@ def B_from_H(
     """
     c, h, e = _bowl_cap_setup(H, O, ctx)
     t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, _MIN_BOWL_STEMS * t / top_scale)
+    w = max(width * h.width, min_bowl_stems(t) * t / top_scale)
     wu = top_scale * w
     m1 = waist * cap + bt / 2.0
     m0 = m1 - bt
@@ -613,7 +613,7 @@ def U_from_H(
     h = _h_record(H)
     e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
     t, cap = h.stem, h.cap_height
-    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    w = max(width * h.width, min_bowl_stems(t) * t)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
 
@@ -650,7 +650,7 @@ def J_from_H(
     h = _h_record(H)
     e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
     t, cap = h.stem, h.cap_height
-    w = max(width * h.width, _MIN_BOWL_STEMS * t)
+    w = max(width * h.width, min_bowl_stems(t) * t)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
     cx = w / 2.0
