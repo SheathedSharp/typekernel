@@ -16,6 +16,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
+from fontTools.misc.bezierTools import splitCubic
+
 from typekernel.geo.contour import reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
@@ -31,14 +33,18 @@ __all__ = [
     "build_control_word",
     "build_h",
     "build_i",
+    "build_m",
     "build_n",
     "build_o",
+    "build_r",
     "build_u",
     "h_from_n",
     "i_from_n",
     "l_from_n",
+    "m_from_n",
     "n_metrics",
     "o_metrics",
+    "r_from_n",
     "u_from_n",
 ]
 
@@ -181,10 +187,10 @@ class _Shoulder:
     r1: float
 
 
-def _shoulder(m: NMetrics) -> _Shoulder:
+def _shoulder(m: NMetrics, x0: float = 0.0) -> _Shoulder:
     t, w, k = m.stem, m.counter, m.kappa
-    l0, l1 = 0.0, t
-    r0, r1 = t + w, t + w + t
+    l0, l1 = x0, x0 + t
+    r0, r1 = x0 + t + w, x0 + t + w + t
     mid = (l1 + r0) / 2.0
     crown, leg_top, join, ic = m.crown_y, m.leg_top, m.join_y, m.inner_crown
     spring = m.x_height
@@ -201,6 +207,15 @@ def _shoulder(m: NMetrics) -> _Shoulder:
 
 def _curve(b: PathBuilder, c: Cubic) -> None:
     b.curveTo(c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1])
+
+
+def _split(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic] | None:
+    """Split ``c`` where it crosses ``x = where`` (or ``y`` if ``horizontal``)."""
+    pieces = splitCubic(*c, where, horizontal)
+    if len(pieces) != 2:
+        return None
+    a, b = pieces
+    return (tuple(a), tuple(b))
 
 
 def _ccw(outline: Outline) -> Outline:
@@ -277,6 +292,104 @@ def h_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     yields a matching ``h``.
     """
     return build_h(ctx or n_glyph.context, _n_record(n_glyph))
+
+
+def r_from_n(
+    n_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.5,
+) -> ComposedGlyph:
+    """Derive ``r``: the ``n`` stem and shoulder, cut off at a vertical terminal.
+
+    ``arm`` places the terminal between the counter's centre (``0``) and the
+    right leg's inner face (``1``). Outer and inner shoulder curves are split
+    at that x, so the arm is literally the ``n`` shoulder, truncated.
+    """
+    if not 0.0 < arm < 1.0:
+        raise ValueError(f"arm must be in (0, 1), got {arm}")
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    s = _shoulder(m)
+    mid = s.outer[0][3][0]
+    x_t = mid + arm * (s.r0 - mid)
+    outer = _split(s.outer[1], x_t, horizontal=False)
+    inner = _split(s.inner[0], x_t, horizontal=False)
+    if outer is None or inner is None:  # pragma: no cover - monotonic by construction
+        raise ValueError("shoulder does not cross the terminal position")
+
+    b = PathBuilder()
+    b.moveTo(s.l0, 0.0)
+    b.lineTo(s.l0, m.x_height)
+    b.lineTo(s.l1, m.x_height)
+    _curve(b, s.outer[0])
+    _curve(b, outer[0])
+    b.lineTo(*inner[1][0])
+    _curve(b, inner[1])
+    _curve(b, s.inner[1])
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, _ccw(b.build()))
+
+
+def build_r(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
+    return r_from_n(build_n(ctx, metrics), ctx)
+
+
+def m_from_n(
+    n_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    counter_scale: float = 0.92,
+) -> ComposedGlyph:
+    """Derive ``m``: two ``n`` shoulders sharing the middle stem.
+
+    Each counter is ``counter_scale`` of the ``n`` counter (designers narrow
+    ``m`` so its colour matches ``n``). The first arch is cut where it comes
+    down to the middle stem's top, which forms the crotch; one continuous
+    contour, no boolean union.
+    """
+    if counter_scale <= 0:
+        raise ValueError(f"counter_scale must be positive, got {counter_scale}")
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    mm = m.tuned(counter=m.counter * counter_scale)
+    s1 = _shoulder(mm)
+    s2 = _shoulder(mm, s1.r0)
+    xh = mm.x_height
+
+    b = PathBuilder()
+    b.moveTo(s1.l0, 0.0)
+    b.lineTo(s1.l0, xh)
+    b.lineTo(s1.l1, xh)
+    _curve(b, s1.outer[0])
+    descent = _split(s1.outer[1], xh, horizontal=True)
+    if descent is not None:
+        a = descent[0]
+        _curve(b, (a[0], a[1], a[2], (a[3][0], xh)))
+    b.lineTo(s2.l1, xh)
+    _curve(b, s2.outer[0])
+    _curve(b, s2.outer[1])
+    b.lineTo(s2.r1, 0.0)
+    b.lineTo(s2.r0, 0.0)
+    b.lineTo(s2.r0, mm.join_y)
+    _curve(b, s2.inner[0])
+    _curve(b, s2.inner[1])
+    b.lineTo(s2.l1, 0.0)
+    b.lineTo(s1.r0, 0.0)
+    b.lineTo(s1.r0, mm.join_y)
+    _curve(b, s1.inner[0])
+    _curve(b, s1.inner[1])
+    b.lineTo(s1.l1, 0.0)
+    b.closePath()
+    cx = s2.r1 / 2.0
+    anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
+    return _pack(c, m, anchors, _ccw(b.build()))
+
+
+def build_m(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
+    return m_from_n(build_n(ctx, metrics), ctx)
 
 
 def build_u(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
@@ -371,9 +484,12 @@ def build_o(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyp
 CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "n": build_n,
     "h": build_h,
+    "m": build_m,
+    "r": build_r,
     "o": build_o,
     "u": build_u,
     "i": build_i,
+    "l": lambda ctx: l_from_n(build_n(ctx)),
 }
 
 
