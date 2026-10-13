@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.optics.space import space_font
 from typekernel.parts.family import Controls
 from typekernel.parts.metrics import (
@@ -44,7 +45,10 @@ def controls_sentence_report(
     letters = _letters(text)
     ctx = controls.context
     charset = "".join(dict.fromkeys(letters + "no"))
-    drawn = controls.build_all(charset)
+    drawn = polish_glyph_map(
+        controls.build_all(charset),
+        GlyphPolishOptions(joins_policy="tangent_fix"),
+    )
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     classes = auto_side_kern_classes(spaced, ctx)

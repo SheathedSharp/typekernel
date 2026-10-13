@@ -17,6 +17,8 @@ from typekernel.compile.features import (
 )
 from typekernel.parts.diacritics import add_composite_latin
 from typekernel.font import Font
+from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
+from typekernel.optics.joins import JoinPolicy
 from typekernel.optics.space import space_font
 from typekernel.parts.family import Controls
 from typekernel.parts.metrics import (
@@ -43,6 +45,14 @@ class FamilyBuildOptions:
     extended_latin: str = ""
     chars: str | None = None
     space_width_factor: float = 0.45
+    joins_policy: JoinPolicy = "tangent_fix"
+    ease_curvature: bool = False
+
+    def polish_options(self) -> GlyphPolishOptions:
+        return GlyphPolishOptions(
+            joins_policy=self.joins_policy,
+            ease_curvature=self.ease_curvature,
+        )
 
     def feature_text(self) -> str:
         return standard_feature_text(tnum=self.tnum, liga=self.liga, case=self.case)
@@ -51,7 +61,11 @@ class FamilyBuildOptions:
 def reference_kern_classes(controls: Controls) -> tuple[KernClass, ...]:
     """Kern classes from the regular control draw (reuse for VF masters)."""
     ctx = controls.context
-    drawn = controls.build_all(controls.supported if controls.supported else None)
+    opts = FamilyBuildOptions()
+    drawn = polish_glyph_map(
+        controls.build_all(controls.supported if controls.supported else None),
+        opts.polish_options(),
+    )
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     return auto_side_kern_classes(spaced, ctx)
@@ -70,12 +84,12 @@ def compose_font_from_controls(
     opts = options or FamilyBuildOptions()
     ctx = controls.context
     if opts.chars is not None:
-        charset: str | None = opts.chars
+        charset: str | None = "".join(dict.fromkeys(opts.chars + "no"))
     elif opts.extended_latin:
         charset = controls.supported + opts.extended_latin
     else:
         charset = None
-    drawn = controls.build_all(charset)
+    drawn = polish_glyph_map(controls.build_all(charset), opts.polish_options())
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     classes = (

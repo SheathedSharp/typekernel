@@ -428,6 +428,14 @@ def _hook_record(
     )
 
 
+def _finish_hook_letter(outline: Outline, ctx: DesignContext) -> Outline:
+    """Blend kinks on hook letters (``f`` ``t`` ``j``) after the fixed contour."""
+    from typekernel.geo.joins import blend_corners, default_selector
+
+    radius = max(5.0, ctx.join_radius * 2.0)
+    return blend_corners(outline, radius, select=default_selector, tension=1.0)
+
+
 def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) -> Bar:
     """Bar at x-height (dropped just enough to clear a heavy hook's crotch)."""
     tb = m.stem * c.contrast * 0.95
@@ -446,6 +454,7 @@ def f_from_n(
     m = _n_record(n_glyph)
     hook = _hook_record(m, m.ascender, c)
     outline, _ = _r_outline(hook, arm, _crossbar(c, m, hook, m.x_height))
+    outline = _finish_hook_letter(outline, c)
     anchors = {"bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
 
@@ -472,6 +481,7 @@ def t_from_n(
     tb = m.stem * c.contrast * 0.95
     bar = (top - m.x_height, top - m.x_height + tb, left, right)
     outline, x_t = _r_outline(hook, arm, bar)
+    outline = _finish_hook_letter(outline, c)
     anchors = {"bottom": (x_t / 2.0, 0.0)}
     return _pack(c, m, anchors, _ccw(mirror_y(outline, at_y=top / 2.0)))
 
@@ -488,6 +498,7 @@ def j_from_n(
     height = m.x_height - c.descender
     hook = _hook_record(m, height, c)
     outline, _ = _r_outline(hook, arm)
+    outline = _finish_hook_letter(outline, c)
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     dot_y = m.x_height + m.stem * 0.55

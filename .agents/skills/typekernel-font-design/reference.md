@@ -13,6 +13,7 @@ Font              cmap, metrics, groups, kerning, features.fea text
        ↓
 build_font        UFO → OTF/TTF/WOFF2
 build_variable_font   masters → designspace → VF
+polish_glyph_map      join cleanup after build_all (default in compose_font)
 ```
 
 ## Key imports

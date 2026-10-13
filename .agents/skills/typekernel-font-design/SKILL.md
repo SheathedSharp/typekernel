@@ -51,7 +51,8 @@ Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `dis
 `Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Heavy masters: `.with_stem_relief()` on that master’s sheet only.
 
 **4 — Build glyphs**  
-`drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).
+`drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
+`compose_font_from_controls` runs **join polish** (`tangent_fix`) on every outline before spacing; disable with `FamilyBuildOptions(joins_policy="noop")` for VF debugging.
 
 **5 — Spacing & kerning**  
 ```python

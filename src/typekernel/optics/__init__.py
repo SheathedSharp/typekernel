@@ -13,6 +13,7 @@ from typekernel.optics.contrast import (
     apply_designed_contrast,
     validate_contrast_params,
 )
+from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph, polish_glyph_map
 from typekernel.optics.joins import cleanup_joins
 from typekernel.optics.overshoot import apply_overshoot
 from typekernel.optics.pipeline import apply
@@ -57,7 +58,10 @@ __all__ = [
     "diagonal_compensation",
     "equalize_horizontal_stems",
     "equalize_vertical_stems",
+    "GlyphPolishOptions",
     "fit_kern_pair",
+    "polish_glyph",
+    "polish_glyph_map",
     "horizontal_vs_vertical_report",
     "list_horizontal_stems",
     "list_vertical_stems",

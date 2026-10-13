@@ -13,4 +13,4 @@ def test_code_clear_passes_agent_sentence_gate() -> None:
     # Pin baseline so improvements tighten limits deliberately.
     assert report.optical_gap_ratio <= 1.36
     assert report.stem_cv <= 0.06
-    assert report.g1_join_error_count - report.terminal_count <= 115
+    assert report.g1_join_error_count - report.terminal_count <= 100
