@@ -30,8 +30,6 @@ from typekernel.parts.compose import (
 )
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
-    RELATED_FORMS,
-    Controls,
     NMetrics,
     OMetrics,
     a_from_o,
@@ -59,6 +57,15 @@ from typekernel.parts.control import (
     r_from_n,
     u_from_n,
 )
+from typekernel.parts.diagonals import (
+    k_from_n,
+    v_from_n,
+    w_from_n,
+    x_from_n,
+    y_from_n,
+    z_from_n,
+)
+from typekernel.parts.family import RELATED_FORMS, Controls
 from typekernel.parts.latin import (
     LETTER_BUILDERS,
     build_letter,
@@ -239,6 +246,7 @@ __all__ = [
     "horizontal_bar",
     "i_from_n",
     "ink_trap",
+    "k_from_n",
     "l_from_n",
     "layout_glyphs",
     "letter_a",
@@ -301,7 +309,12 @@ __all__ = [
     "try_union",
     "u_bowl",
     "u_from_n",
+    "v_from_n",
     "vertical_stem",
+    "w_from_n",
     "wedge",
     "word_zayju",
+    "x_from_n",
+    "y_from_n",
+    "z_from_n",
 ]

@@ -30,8 +30,6 @@ from typekernel.parts.primitives import bowl, tittle, vertical_stem
 from typekernel.parts.transforms import mirror_x, mirror_y
 
 __all__ = [
-    "RELATED_FORMS",
-    "Controls",
     "NMetrics",
     "OMetrics",
     "a_from_o",
@@ -778,75 +776,6 @@ CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "c": lambda ctx: c_from_o(build_o(ctx)),
     "e": lambda ctx: e_from_o(build_o(ctx)),
 }
-
-Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
-
-RELATED_FORMS: dict[str, Derivation] = {
-    "n": lambda n, o, c: n,
-    "o": lambda n, o, c: o,
-    "h": lambda n, o, c: h_from_n(n, c),
-    "m": lambda n, o, c: m_from_n(n, c),
-    "r": lambda n, o, c: r_from_n(n, c),
-    "u": lambda n, o, c: u_from_n(n, c),
-    "i": lambda n, o, c: i_from_n(n, c),
-    "l": lambda n, o, c: l_from_n(n, c),
-    "b": lambda n, o, c: b_from_o(o, n, c),
-    "d": lambda n, o, c: d_from_o(o, n, c),
-    "p": lambda n, o, c: p_from_o(o, n, c),
-    "q": lambda n, o, c: q_from_o(o, n, c),
-    "a": lambda n, o, c: a_from_o(o, n, c),
-    "c": lambda n, o, c: c_from_o(o, c),
-    "e": lambda n, o, c: e_from_o(o, c),
-}
-"""Character → how it derives from control ``n`` and ``o``."""
-
-
-@dataclass(frozen=True, slots=True)
-class Controls:
-    """The family's control sheet: proportions plus the ``n`` and ``o`` records.
-
-    Every related form is derived from the two control glyphs this sheet
-    draws, so one adjustment (``tuned_n(counter=...)``) moves ``h m r u i l``
-    and ``tuned_o(rx=...)`` moves ``b d p q``::
-
-        controls = Controls.from_context(ctx).tuned_n(counter=280)
-        glyphs = controls.build_all()          # {"n": ..., "h": ..., ...}
-    """
-
-    context: DesignContext
-    n: NMetrics
-    o: OMetrics
-
-    @classmethod
-    def from_context(cls, ctx: DesignContext) -> Controls:
-        return cls(ctx, n_metrics(ctx), o_metrics(ctx))
-
-    def tuned_n(self, **kwargs: float) -> Controls:
-        return replace(self, n=self.n.tuned(**kwargs))
-
-    def tuned_o(self, **kwargs: float) -> Controls:
-        return replace(self, o=self.o.tuned(**kwargs))
-
-    @property
-    def supported(self) -> str:
-        return "".join(sorted(RELATED_FORMS))
-
-    def control_glyphs(self) -> tuple[ComposedGlyph, ComposedGlyph]:
-        """The drawn ``n`` and ``o`` every related form derives from."""
-        return build_n(self.context, self.n), build_o(self.context, self.o)
-
-    def build(self, ch: str) -> ComposedGlyph:
-        return self.build_all(ch)[ch]
-
-    def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
-        """Draw ``n`` / ``o`` once and derive ``chars`` (default: all supported)."""
-        wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
-        missing = [ch for ch in wanted if ch not in RELATED_FORMS]
-        if missing:
-            raise KeyError(f"no related form for {missing}; have {self.supported!r}")
-        n, o = self.control_glyphs()
-        return {ch: RELATED_FORMS[ch](n, o, self.context) for ch in wanted}
-
 
 def build_control_letter(ch: str, ctx: DesignContext) -> ComposedGlyph:
     key = ch.lower()
