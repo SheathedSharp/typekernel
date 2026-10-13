@@ -899,7 +899,16 @@ def g_from_o(
     nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
     stem, desc = nm.stem, c.descender
     height = o.x_height - desc
-    s, outer_arm, inner_arm, _ = _r_pieces(_hook_record(nm, height), arm)
+    hook = _hook_record(nm, height)
+    # The hook's crotch must sit below where the bowl meets the stem; heavy
+    # weights get a thinner hook rather than an outline that folds back.
+    s_l = 2.0 * o.rx - stem
+    bowl_meets = _cut(_ring(o)[0][3], s_l, horizontal=False)[0][3][1]
+    join_needed = height + desc - (bowl_meets - 0.2 * stem)
+    if hook.join_y < join_needed:
+        inner_crown = max(hook.inner_crown, join_needed + 0.35 * stem)
+        hook = hook.tuned(join_y=join_needed, inner_crown=min(inner_crown, hook.crown_y - 1.0))
+    s, outer_arm, inner_arm, _ = _r_pieces(hook, arm)
 
     def foot(b: PathBuilder, s_l: float) -> None:
         def turn(p: Pt) -> Pt:
