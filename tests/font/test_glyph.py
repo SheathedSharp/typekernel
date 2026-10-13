@@ -94,7 +94,8 @@ def test_for_char_names_and_maps() -> None:
     assert glyph.name == "n"
     assert glyph.unicodes == (ord("n"),)
     assert glyph.advance == n.advance
-    assert glyph.anchors[0].name == "top"
+    tops = [a for a in glyph.anchors if a.name == "top"]
+    assert [(a.x, a.y) for a in tops] == [(300, 600)]
     assert glyph.components[0].transform == (1.0, 0.0, 0.0, 1.0, 10, 20)
 
 

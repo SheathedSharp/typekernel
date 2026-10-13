@@ -4,14 +4,17 @@ Order: proportions (:class:`~typekernel.parts.context.DesignContext`) →
 control letters as **continuous cubic outlines** → derive related forms →
 optical / class spacing (elsewhere).
 
-This replaces CAD boolean trough recipes (``stem ∪ arch_slot ∪ stem``) for
-``n`` / ``h`` / ``o``. Pen-expand and Assembler unions remain available for
-experiments; they are not how control letters are defined.
+Each control glyph is drawn from a design record (:class:`NMetrics` for the
+``n`` family, :class:`OMetrics` for the ``o`` family) and carries it as
+``ComposedGlyph.design``. Related forms read that record from the control
+glyph, so tuning the control (``n_metrics(ctx).tuned(counter=...)``) carries
+through to ``h``, ``u``, ``i``, ``l`` without touching the context.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 
 from typekernel.geo.contour import reverse_contour, signed_area
 from typekernel.geo.outline import Outline
@@ -23,6 +26,7 @@ from typekernel.parts.primitives import bowl, tittle, vertical_stem
 
 __all__ = [
     "NMetrics",
+    "OMetrics",
     "build_control_letter",
     "build_control_word",
     "build_h",
@@ -31,28 +35,62 @@ __all__ = [
     "build_o",
     "build_u",
     "h_from_n",
+    "i_from_n",
+    "l_from_n",
     "n_metrics",
+    "o_metrics",
     "u_from_n",
 ]
+
+Pt = tuple[float, float]
+Cubic = tuple[Pt, Pt, Pt, Pt]
 
 
 @dataclass(frozen=True, slots=True)
 class NMetrics:
-    """Shared proportions for ``n`` / ``h`` / ``u`` (from :class:`DesignContext`)."""
+    """Design record for the ``n`` family (``n h m r u i l``).
+
+    Attributes:
+        stem: Vertical stem thickness.
+        counter: Inner face to inner face of the ``n`` counter.
+        x_height: Flat top of the left stem.
+        ascender: Top of ascending stems (``h``, ``l``).
+        overshoot: How far round extrema pass the zones.
+        crown_y: Outer shoulder peak.
+        leg_top: Where the outer shoulder lands on the right leg.
+        join_y: Inner crotch height where the counter springs from the stems.
+        inner_crown: Counter peak under the shoulder (``crown_y - inner_crown``
+            is the shoulder thickness).
+        kappa: Shoulder handle ratio (tension).
+    """
 
     stem: float
-    counter: float  # inner face to inner face
+    counter: float
     x_height: float
     ascender: float
     overshoot: float
-    crown_y: float  # outer arch peak (x-height + overshoot)
-    leg_top: float  # where outer arch meets the right leg top
-    join_y: float  # inner crotch / counter spring height
-    kappa: float  # shoulder handle ratio
+    crown_y: float
+    leg_top: float
+    join_y: float
+    kappa: float
+    inner_crown: float
+
+    @property
+    def shoulder_thickness(self) -> float:
+        return self.crown_y - self.inner_crown
+
+    @property
+    def width(self) -> float:
+        """Ink width of ``n``: two stems around one counter."""
+        return 2.0 * self.stem + self.counter
+
+    def tuned(self, **kwargs: float) -> NMetrics:
+        """Copy with selected fields overridden (designer adjustment)."""
+        return replace(self, **kwargs)
 
 
 def n_metrics(ctx: DesignContext) -> NMetrics:
-    """Derive ``n``-family metrics from family proportions."""
+    """Derive the ``n`` design record from family proportions."""
     stem = ctx.stem
     counter = ctx.x_height * (0.46 + 0.12 * ctx.aperture)
     # Slightly flatter shoulder when roundness is low (coding); rounder when soft.
@@ -61,6 +99,9 @@ def n_metrics(ctx: DesignContext) -> NMetrics:
     # Outer meet: just under x-height so crown overshoots; inner join lower.
     leg_top = ctx.x_height - stem * 0.02
     join_y = ctx.x_height * (0.50 + 0.04 * ctx.roundness)
+    inner_crown = crown_y - stem * (0.92 + 0.08 * ctx.contrast)
+    inner_crown = min(inner_crown, crown_y - stem * 0.75)
+    inner_crown = max(inner_crown, join_y + stem * 0.35)
     return NMetrics(
         stem=stem,
         counter=counter,
@@ -71,152 +112,182 @@ def n_metrics(ctx: DesignContext) -> NMetrics:
         leg_top=leg_top,
         join_y=join_y,
         kappa=kappa,
+        inner_crown=inner_crown,
     )
 
 
-def _pack(ctx: DesignContext, outline: Outline, *extra: Outline) -> ComposedGlyph:
-    """Sidebearing pack; single outline — no boolean letter topology."""
-    asm = GlyphAssembler(ctx).add(outline)
-    for e in extra:
-        asm.add(e)
-    return asm.build()
+@dataclass(frozen=True, slots=True)
+class OMetrics:
+    """Design record for the ``o`` family (``o b d p q``).
 
-
-def _n_family_outline(ctx: DesignContext, *, left_top: float, m: NMetrics) -> Outline:
-    """One continuous CCW outer contour: left stem + shoulder + right leg.
-
-    No third ``arch`` mesh and no ``union``. Inner counter is the hole formed
-    by the single outline (stem insides + inner shoulder).
+    The bowl is a superellipse ring centred at ``(rx, x_height / 2)``.
     """
-    t = m.stem
-    w = m.counter
-    # x bands: left stem [0,t], counter (t, t+w), right leg [t+w, t+w+t]
-    l0, l1 = 0.0, t
-    r0, r1 = t + w, t + w + t
-    mid = (l1 + r0) / 2.0
-    k = m.kappa
-    crown = m.crown_y
-    leg_top = m.leg_top
-    join = m.join_y
 
-    # Outer shoulder cubics: (l1, left_top_connect) → crown → (r1, leg_top)
-    # For n, left_top == x_height and we connect from top-right of left stem.
-    # For h, left stem rises to ascender; arch still springs at x_height on the
-    # right face of the left stem.
-    spring_y = min(left_top, m.x_height)
+    rx: float
+    ry: float
+    thickness: float
+    exponent: float
+    x_height: float
+    overshoot: float
 
-    b = PathBuilder()
-    # --- outer ---
-    b.moveTo(l0, 0.0)
-    b.lineTo(l0, left_top)
-    b.lineTo(l1, left_top)
-    if left_top > spring_y + 0.5:
-        # h: down the right face of the ascender stem to the arch spring
-        b.lineTo(l1, spring_y)
-    # outer arch (two cubics, horizontal tangent at crown)
-    b.curveTo(
-        l1,
-        spring_y + k * (crown - spring_y),
-        mid - k * (mid - l1),
-        crown,
-        mid,
-        crown,
-    )
-    b.curveTo(
-        mid + k * (r1 - mid),
-        crown,
-        r1,
-        leg_top + k * (crown - leg_top),
-        r1,
-        leg_top,
-    )
-    b.lineTo(r1, 0.0)
-    b.lineTo(r0, 0.0)
-    # --- inner right leg up to inner shoulder ---
-    b.lineTo(r0, join)
-    # inner arch (lower), right → left, horizontal at inner crown
-    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-    # Keep inner crown below outer and above join
-    inner_crown = min(inner_crown, crown - t * 0.75)
-    inner_crown = max(inner_crown, join + t * 0.35)
-    b.curveTo(
-        r0,
-        join + k * (inner_crown - join),
-        mid + k * (r0 - mid),
-        inner_crown,
-        mid,
-        inner_crown,
-    )
-    b.curveTo(
-        mid - k * (mid - l1),
-        inner_crown,
-        l1,
-        join + k * (inner_crown - join),
-        l1,
-        join,
-    )
-    b.lineTo(l1, 0.0)
-    b.closePath()
-    outline = b.build()
-    # Font convention: outer contour CCW (positive signed area).
-    c0 = outline.contours[0]
-    if signed_area(c0) < 0:
-        outline = Outline((reverse_contour(c0),))
-    return outline
+    @property
+    def width(self) -> float:
+        return 2.0 * self.rx
+
+    def tuned(self, **kwargs: float) -> OMetrics:
+        return replace(self, **kwargs)
 
 
-def build_n(ctx: DesignContext) -> ComposedGlyph:
-    """Control ``n``: continuous cubic outline from family proportions."""
-    m = n_metrics(ctx)
-    return _pack(ctx, _n_family_outline(ctx, left_top=m.x_height, m=m))
-
-
-def build_h(ctx: DesignContext) -> ComposedGlyph:
-    """``h`` from the same shoulder/leg recipe as ``n`` (ascender left stem)."""
-    m = n_metrics(ctx)
-    return _pack(ctx, _n_family_outline(ctx, left_top=m.ascender, m=m))
-
-
-def h_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Derive ``h`` from an ``n`` control glyph's context (shared metrics).
-
-    Does not copy point data from ``n_glyph``; recomputes with the same
-    :func:`n_metrics` so shoulder/leg match ``build_n`` for that context.
-    Passing ``n_glyph`` documents the designer dependency chain for agents.
-    """
-    c = ctx if ctx is not None else n_glyph.context
-    return build_h(c)
-
-
-def build_o(ctx: DesignContext) -> ComposedGlyph:
-    """Control ``o``: superellipse bowl (continuous cubics) + counter."""
+def o_metrics(ctx: DesignContext) -> OMetrics:
+    """Derive the ``o`` design record from family proportions."""
     ry = ctx.x_height / 2.0 + ctx.overshoot
     rx = ry * (0.88 + 0.10 * ctx.aperture)
     # Squircle when roundness low (coding); ellipse when soft.
-    n_exp = 2.0 + 0.7 * (1.0 - max(0.0, min(1.0, ctx.roundness)))
-    outer, hole = bowl(
-        ctx,
-        rx,
-        ctx.x_height / 2.0,
+    exponent = 2.0 + 0.7 * (1.0 - max(0.0, min(1.0, ctx.roundness)))
+    return OMetrics(
         rx=rx,
         ry=ry,
         thickness=ctx.stem,
-        shape="superellipse",
-        n=n_exp,
+        exponent=exponent,
+        x_height=ctx.x_height,
+        overshoot=ctx.overshoot,
     )
-    asm = GlyphAssembler(ctx).add(outer).add_hole(hole).subtract_holes()
+
+
+def _n_record(glyph: ComposedGlyph) -> NMetrics:
+    return glyph.design if isinstance(glyph.design, NMetrics) else n_metrics(glyph.context)
+
+
+def _o_record(glyph: ComposedGlyph) -> OMetrics:
+    return glyph.design if isinstance(glyph.design, OMetrics) else o_metrics(glyph.context)
+
+
+# --- shoulder geometry ------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class _Shoulder:
+    """Named cubics of an ``n`` shoulder in ``n`` coordinates (left stem at x=0).
+
+    ``outer`` runs left spring → crown → right leg top; ``inner`` runs right
+    join → inner crown → left join. ``r`` and ``m`` reuse these curves.
+    """
+
+    outer: tuple[Cubic, Cubic]
+    inner: tuple[Cubic, Cubic]
+    l0: float
+    l1: float
+    r0: float
+    r1: float
+
+
+def _shoulder(m: NMetrics) -> _Shoulder:
+    t, w, k = m.stem, m.counter, m.kappa
+    l0, l1 = 0.0, t
+    r0, r1 = t + w, t + w + t
+    mid = (l1 + r0) / 2.0
+    crown, leg_top, join, ic = m.crown_y, m.leg_top, m.join_y, m.inner_crown
+    spring = m.x_height
+    outer = (
+        ((l1, spring), (l1, spring + k * (crown - spring)), (mid - k * (mid - l1), crown), (mid, crown)),
+        ((mid, crown), (mid + k * (r1 - mid), crown), (r1, leg_top + k * (crown - leg_top)), (r1, leg_top)),
+    )
+    inner = (
+        ((r0, join), (r0, join + k * (ic - join)), (mid + k * (r0 - mid), ic), (mid, ic)),
+        ((mid, ic), (mid - k * (mid - l1), ic), (l1, join + k * (ic - join)), (l1, join)),
+    )
+    return _Shoulder(outer, inner, l0, l1, r0, r1)
+
+
+def _curve(b: PathBuilder, c: Cubic) -> None:
+    b.curveTo(c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1])
+
+
+def _ccw(outline: Outline) -> Outline:
+    """Font convention: outer contour CCW (positive signed area)."""
+    c0 = outline.contours[0]
+    if signed_area(c0) < 0:
+        return Outline((reverse_contour(c0),))
+    return outline
+
+
+def _n_family_outline(m: NMetrics, *, left_top: float) -> Outline:
+    """One continuous outer contour: left stem + shoulder + right leg.
+
+    No third ``arch`` mesh and no ``union``. The counter is the notch formed
+    by the stem insides and the inner shoulder.
+    """
+    s = _shoulder(m)
+    b = PathBuilder()
+    b.moveTo(s.l0, 0.0)
+    b.lineTo(s.l0, left_top)
+    b.lineTo(s.l1, left_top)
+    if left_top > m.x_height + 0.5:
+        # h: down the right face of the ascender stem to the shoulder spring
+        b.lineTo(s.l1, m.x_height)
+    _curve(b, s.outer[0])
+    _curve(b, s.outer[1])
+    b.lineTo(s.r1, 0.0)
+    b.lineTo(s.r0, 0.0)
+    b.lineTo(s.r0, m.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _pack(
+    ctx: DesignContext,
+    record: object,
+    anchors: dict[str, Pt],
+    *outlines: Outline,
+) -> ComposedGlyph:
+    """Sidebearing pack; single outline — no boolean letter topology."""
+    asm = GlyphAssembler(ctx).with_design(record)
+    for o in outlines:
+        asm.add(o)
+    for name, (x, y) in anchors.items():
+        asm.anchor(name, x, y)
     return asm.build()
 
 
-def build_u(ctx: DesignContext) -> ComposedGlyph:
+# --- n family -----------------------------------------------------------------
+
+
+def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
+    """Control ``n``: continuous cubic outline from its design record."""
+    m = metrics or n_metrics(ctx)
+    cx = m.width / 2.0
+    anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
+    return _pack(ctx, m, anchors, _n_family_outline(m, left_top=m.x_height))
+
+
+def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
+    """``h`` from the same shoulder/leg recipe as ``n`` (ascender left stem)."""
+    m = metrics or n_metrics(ctx)
+    anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.width / 2.0, 0.0)}
+    return _pack(ctx, m, anchors, _n_family_outline(m, left_top=m.ascender))
+
+
+def h_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+    """Derive ``h`` from control ``n``: same shoulder and leg, ascending stem.
+
+    Reads the ``n`` design record carried on ``n_glyph``, so a tuned ``n``
+    yields a matching ``h``.
+    """
+    return build_h(ctx or n_glyph.context, _n_record(n_glyph))
+
+
+def build_u(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """``u`` related to ``n``: mirrored trough logic (continuous outline)."""
-    return u_from_n(build_n(ctx), ctx)
+    return u_from_n(build_n(ctx, metrics), ctx)
 
 
 def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Derive ``u`` with the same counter/stem rhythm as control ``n``."""
-    c = ctx if ctx is not None else n_glyph.context
-    m = n_metrics(c)
+    """Derive ``u``: the ``n`` counter and stems, with the shoulder turned under."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
     t = m.stem
     w = m.counter
     l0, l1 = 0.0, t
@@ -224,66 +295,80 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     mid = (l1 + r0) / 2.0
     k = m.kappa
     top = m.x_height
-    # Bottom outer overshoots below baseline
+    # Bottom outer overshoots below baseline; trough as thick as the shoulder.
     bottom = -m.overshoot
-    inner_bottom = bottom + t * (0.92 + 0.08 * c.contrast)
-    inner_bottom = max(inner_bottom, bottom + t * 0.7)
+    inner_bottom = bottom + m.shoulder_thickness
 
     b = PathBuilder()
-    # outer: left down, bottom arch, right up
     b.moveTo(l0, top)
     b.lineTo(l0, m.join_y * 0.55 + t * 0.2)
-    # use join-ish spring into bottom bowl
     spring = max(m.join_y * 0.35, t * 1.1)
     b.lineTo(l0, spring)
-    b.curveTo(
-        l0,
-        spring - k * (spring - bottom),
-        mid - k * (mid - l0),
-        bottom,
-        mid,
-        bottom,
-    )
-    b.curveTo(
-        mid + k * (r1 - mid),
-        bottom,
-        r1,
-        spring - k * (spring - bottom),
-        r1,
-        spring,
-    )
+    b.curveTo(l0, spring - k * (spring - bottom), mid - k * (mid - l0), bottom, mid, bottom)
+    b.curveTo(mid + k * (r1 - mid), bottom, r1, spring - k * (spring - bottom), r1, spring)
     b.lineTo(r1, top)
     b.lineTo(r0, top)
     b.lineTo(r0, spring)
     b.curveTo(
-        r0,
-        spring - k * (spring - inner_bottom),
-        mid + k * (r0 - mid),
-        inner_bottom,
-        mid,
+        r0, spring - k * (spring - inner_bottom), mid + k * (r0 - mid), inner_bottom, mid,
         inner_bottom,
     )
     b.curveTo(
-        mid - k * (mid - l1),
-        inner_bottom,
-        l1,
-        spring - k * (spring - inner_bottom),
-        l1,
-        spring,
+        mid - k * (mid - l1), inner_bottom, l1, spring - k * (spring - inner_bottom), l1, spring
     )
     b.lineTo(l1, top)
     b.closePath()
-    return _pack(c, b.build())
+    cx = m.width / 2.0
+    anchors = {"top": (cx, top), "bottom": (cx, 0.0)}
+    return _pack(c, m, anchors, b.build())
 
 
-def build_i(ctx: DesignContext) -> ComposedGlyph:
-    """Simple ``i``: flat stem + tittle (not a control glyph; specimen helper)."""
-    stem = vertical_stem(ctx, 0.0, 0.0, ctx.x_height)
-    dot = tittle(ctx, ctx.stem / 2.0, ctx.x_height + ctx.stem * 0.55)
-    return GlyphAssembler(ctx).add(stem).add(dot).build()
+def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+    """``i``: the ``n`` stem plus a tittle."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
+    dot = tittle(c, m.stem / 2.0, m.x_height + m.stem * 0.55, size=m.stem * 0.95)
+    return _pack(c, m, {"bottom": (m.stem / 2.0, 0.0)}, stem, dot)
 
 
-CONTROL_BUILDERS = {
+def build_i(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
+    """``i`` from the ``n`` stem (specimen helper and related form)."""
+    return i_from_n(build_n(ctx, metrics), ctx)
+
+
+def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+    """``l``: the ``n`` stem rising to the ascender."""
+    c = ctx or n_glyph.context
+    m = _n_record(n_glyph)
+    stem = vertical_stem(c, 0.0, 0.0, m.ascender, width=m.stem)
+    anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.stem / 2.0, 0.0)}
+    return _pack(c, m, anchors, stem)
+
+
+# --- o family -----------------------------------------------------------------
+
+
+def build_o(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyph:
+    """Control ``o``: superellipse bowl (continuous cubics) + counter."""
+    m = metrics or o_metrics(ctx)
+    cx, cy = m.rx, m.x_height / 2.0
+    outer, hole = bowl(
+        ctx, cx, cy, rx=m.rx, ry=m.ry, thickness=m.thickness, shape="superellipse", n=m.exponent
+    )
+    return (
+        GlyphAssembler(ctx)
+        .with_design(m)
+        .add(outer)
+        .add_hole(hole)
+        .subtract_holes()
+        .anchor("top", cx, m.x_height)
+        .anchor("bottom", cx, 0.0)
+        .build()
+    )
+
+
+CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "n": build_n,
     "h": build_h,
     "o": build_o,

@@ -56,7 +56,9 @@ def test_font_to_ufo_writes_glyph_set(font: Font, ctx: DesignContext) -> None:
     assert ufo["o.alt"].unicodes == []
     assert ufo["n"].width == pytest.approx(font["n"].advance)
     assert len(ufo["o"].contours) == 2
-    assert [a.name for a in ufo["n"].anchors] == ["top"]
+    assert sorted(a.name for a in ufo["n"].anchors) == ["bottom", "top"]
+    top = next(a for a in ufo["n"].anchors if a.name == "top")
+    assert (top.x, top.y) == (300.0, ctx.x_height)
     assert [c.baseGlyph for c in ufo["oo"].components] == ["o", "o"]
     assert ufo.kerning[("n", "o")] == -15.0
     assert ufo.features.text.startswith("languagesystem")

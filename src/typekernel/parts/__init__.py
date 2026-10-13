@@ -31,6 +31,7 @@ from typekernel.parts.compose import (
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
+    OMetrics,
     build_control_letter,
     build_control_word,
     build_h,
@@ -39,7 +40,10 @@ from typekernel.parts.control import (
     build_o,
     build_u,
     h_from_n,
+    i_from_n,
+    l_from_n,
     n_metrics,
+    o_metrics,
     u_from_n,
 )
 from typekernel.parts.latin import (
@@ -170,6 +174,7 @@ __all__ = [
     "KernPair",
     "KernTable",
     "NMetrics",
+    "OMetrics",
     "Pen",
     "RhythmSpec",
     "Skeleton",
@@ -210,7 +215,9 @@ __all__ = [
     "hook_terminal",
     "hook_terminal_piece",
     "horizontal_bar",
+    "i_from_n",
     "ink_trap",
+    "l_from_n",
     "layout_glyphs",
     "letter_a",
     "letter_c",
@@ -228,6 +235,7 @@ __all__ = [
     "mirror_x",
     "mirror_y",
     "n_metrics",
+    "o_metrics",
     "open_bowl_ring",
     "open_counter",
     "pen_from_context",
