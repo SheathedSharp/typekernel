@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from typekernel.compile import build_font
+from typekernel.compile.features import add_tabular_alternates, standard_feature_text
 from typekernel.font import Font
 from typekernel.optics.space import space_font
 from typekernel.parts import (
@@ -32,13 +33,13 @@ DOCS_IMG = HERE.parents[1] / "docs" / "images"
 
 FAMILY = "Typekernel First"
 PROOF_TEXT = (
-    "Ça va? Déjà vu, naïve façade — the quick brown fox jumps over 0123456789."
+    "Ça va? Déjà vu, naïve façade, Ærøskøbing — the quick brown fox jumps over 0123456789."
 )
 
 
 def design(controls: Controls, family: str = FAMILY) -> Font:
     ctx = controls.context
-    drawn = controls.build_all()
+    drawn = controls.build_all(controls.supported + "æøÆØ")
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
 
@@ -48,6 +49,8 @@ def design(controls: Controls, family: str = FAMILY) -> Font:
     font = Font.from_context(ctx, family, space_width=spaced["n"].advance * 0.45)
     font.add_chars(spaced)
     add_composite_latin(font, controls.control_glyphs())
+    add_tabular_alternates(font, spaced)
+    font.features = standard_feature_text(liga=False)
     font.add_class_kern_table(kerning)
     return font
 

@@ -20,9 +20,16 @@ from typekernel.compile.build import (
     deep_check_masters,
     write_masters_designspace,
 )
+from typekernel.compile.features import add_tabular_alternates, standard_feature_text
+from typekernel.compile.oblique import oblique_font
 from typekernel.compile.ufo_export import font_to_ufo, write_font_to_ufo, write_outline_to_ufo
+from typekernel.compile.ufo_import import read_font_from_ufo
 
 __all__ = [
+    "add_tabular_alternates",
+    "oblique_font",
+    "read_font_from_ufo",
+    "standard_feature_text",
     "STRUCTURAL_PROBLEMS",
     "BuildManifest",
     "FontBuild",

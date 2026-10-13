@@ -197,6 +197,26 @@ MARK_BUILDERS: dict[str, MarkBuilder] = {
     "cedillacomb": cedilla_comb,
 }
 
+def _case_mark(
+    builder: MarkBuilder, n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None
+) -> ComposedGlyph:
+    """Cap-height variant: flatter mark sitting on ``cap_height``."""
+    c = ctx or n.context
+    m = _n_record(n)
+    cap_n = replace(m, x_height=c.cap_height, ascender=c.ascender)
+    from typekernel.parts.control import build_n
+
+    cap_glyph = build_n(c, cap_n)
+    return builder(cap_glyph, o, c)
+
+
+CASE_MARK_BUILDERS: dict[str, MarkBuilder] = {
+    f"{name}.case": (lambda n, o, c, fn=fn: _case_mark(fn, n, o, c))  # type: ignore[misc]
+    for name, fn in MARK_BUILDERS.items()
+    if name != "cedillacomb"
+}
+
+
 MARK_UNICODE: dict[str, int] = {
     "acutecomb": 0x0301,
     "gravecomb": 0x0300,

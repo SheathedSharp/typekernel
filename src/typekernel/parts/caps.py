@@ -685,7 +685,10 @@ def V_from_H(
     """``V``: the ``v`` construction at cap height with the cap stem."""
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
-    return _diag_cap(H, ctx, w, v_points(h.stem, h.cap_height, w, c.contrast))
+    bump = c.sharp_overshoot
+    return _diag_cap(
+        H, ctx, w, v_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
+    )
 
 
 def W_from_H(
@@ -694,7 +697,13 @@ def W_from_H(
     """``W``: the ``w`` construction at cap height (four lighter diagonals)."""
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
-    return _diag_cap(H, ctx, w, w_points(h.stem, h.cap_height, w, c.contrast))
+    bump = c.sharp_overshoot
+    return _diag_cap(
+        H,
+        ctx,
+        w,
+        w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump),
+    )
 
 
 def X_from_H(
@@ -741,6 +750,7 @@ def A_from_H(
     h = _h_record(H)
     # heavy A widens so the counter above the bar stays open
     w, cap = max(width * h.width, 3.2 * h.stem), h.cap_height
+    peak = cap + c.sharp_overshoot
     f = apex * h.stem
     a = (w - f) / 2.0
     hw = _hwidth(h.stem, c.contrast, a, cap)
@@ -765,8 +775,8 @@ def A_from_H(
             (right(y0), y0),
             (w - hw, 0.0),
             (w, 0.0),
-            ((w + f) / 2.0, cap),
-            ((w - f) / 2.0, cap),
+            ((w + f) / 2.0, peak),
+            ((w - f) / 2.0, peak),
         ]
     ):
         (b.moveTo if i == 0 else b.lineTo)(*p)

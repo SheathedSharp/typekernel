@@ -874,7 +874,9 @@ def c_from_o(
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
-    x_t = _terminal_x(o, c.aperture if aperture is None else aperture, 0.55)
+    ap = c.aperture if aperture is None else aperture
+    closure = 0.55 if c.terminal_style == "vertical" else 0.42
+    x_t = _terminal_x(o, ap, closure)
     top = _cut(q0, x_t, horizontal=False)[1]
     bot = _cut(q3, x_t, horizontal=False)[0]
     itop = _cut(i0, x_t, horizontal=False)[1]

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -66,7 +66,32 @@ class BuildManifest:
         return out
 
 
-OutputFormat = Literal["ttf", "otf"]
+OutputFormat = Literal["ttf", "otf", "woff2"]
+
+
+def _build_woff2_from_ttf(
+    ufo_path: str | Path,
+    out_path: str | Path,
+    *,
+    manifest_path: str | Path | None = None,
+) -> BuildManifest:
+    """Compile UFO to TTF in memory, then write WOFF2."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ttf = Path(tmp) / "tmp.ttf"
+        manifest = build_binary_from_ufo(ufo_path, ttf, "ttf")
+    from fontTools.ttLib import TTFont
+
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tt = TTFont(ttf)
+    tt.flavor = "woff2"
+    tt.save(out)
+    woff_manifest = replace(manifest, output_format="woff2", inputs={**manifest.inputs, "output": str(out)})
+    if manifest_path is not None:
+        woff_manifest.write_json(manifest_path)
+    return woff_manifest
 
 
 def build_ttf_from_ufo(
@@ -105,8 +130,10 @@ def build_binary_from_ufo(
     ``features.fea`` in the UFO become GPOS/GSUB through ufo2ft's feature
     writers.
     """
-    if output_format not in ("ttf", "otf"):
-        raise ValueError(f"output_format must be 'ttf' or 'otf', got {output_format!r}")
+    if output_format not in ("ttf", "otf", "woff2"):
+        raise ValueError(f"output_format must be 'ttf', 'otf', or 'woff2', got {output_format!r}")
+    if output_format == "woff2":
+        return _build_woff2_from_ttf(ufo_path, out_path, manifest_path=manifest_path)
     ufo = Path(ufo_path)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -278,6 +305,7 @@ def write_masters_designspace(
         axis = AxisDescriptor()
         axis.tag, axis.name = tag, names[tag]
         axis.minimum, axis.default, axis.maximum = lo, default, hi
+        axis.labelNames = {"en": names[tag]}
         doc.addAxis(axis)
 
     ufo_paths: list[Path] = []
@@ -340,13 +368,26 @@ def build_variable_font(
     binaries: dict[str, Path] = {}
     manifests: dict[str, BuildManifest] = {}
     for fmt in formats:
-        if fmt not in ("ttf", "otf"):
-            raise ValueError(f"output_format must be 'ttf' or 'otf', got {fmt!r}")
+        if fmt not in ("ttf", "otf", "woff2"):
+            raise ValueError(f"output_format must be 'ttf', 'otf', or 'woff2', got {fmt!r}")
         doc = DesignSpaceDocument.fromfile(ds_path)
         doc.loadSourceFonts(ufoLib2.Font.open)
-        compiler = ufo2ft.compileVariableTTF if fmt == "ttf" else ufo2ft.compileVariableCFF2
-        binary = out / f"{stem}-VF.{fmt}"
-        compiler(doc).save(binary)
+        if fmt == "woff2":
+            import tempfile
+
+            with tempfile.TemporaryDirectory() as tmp:
+                ttf = Path(tmp) / "vf.ttf"
+                ufo2ft.compileVariableTTF(doc).save(ttf)
+                from fontTools.ttLib import TTFont
+
+                binary = out / f"{stem}-VF.woff2"
+                tt = TTFont(ttf)
+                tt.flavor = "woff2"
+                tt.save(binary)
+        else:
+            compiler = ufo2ft.compileVariableTTF if fmt == "ttf" else ufo2ft.compileVariableCFF2
+            binary = out / f"{stem}-VF.{fmt}"
+            compiler(doc).save(binary)
         manifest = BuildManifest(
             fonttools_version=_pkg_version("fonttools"),
             fontmake_version=_pkg_version("fontmake"),

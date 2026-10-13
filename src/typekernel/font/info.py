@@ -36,11 +36,12 @@ def alignment_zones(ctx: DesignContext) -> tuple[tuple[Zone, ...], tuple[Zone, .
     (above). The descender zone goes to ``other_blues`` as PostScript requires.
     """
     o = abs(ctx.overshoot)
+    sharp = abs(ctx.sharp_bump())
     blues = _merge_zones(
         [
             (-o, 0.0),
-            (ctx.x_height, ctx.x_height + o),
-            (ctx.cap_height, ctx.cap_height + o),
+            (ctx.x_height, ctx.x_height + sharp),
+            (ctx.cap_height, ctx.cap_height + sharp),
             (ctx.ascender, ctx.ascender + o),
         ]
     )

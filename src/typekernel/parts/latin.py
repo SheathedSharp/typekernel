@@ -1,5 +1,9 @@
 """Latin lowercase recipes built from shared parts (demo family).
 
+.. deprecated::
+    Experimental demo recipes. Prefer :class:`~typekernel.parts.family.Controls`
+    and ``RELATED_FORMS`` for production families.
+
 All letters take the same :class:`~typekernel.parts.context.DesignContext` so
 stem, contrast, overshoot and spacing stay in one rhythm — the point of the
 parts layer versus one-off hard paths.

@@ -10,6 +10,7 @@ Presets are starting points for coding agents; tune fields per family.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from typing import Literal
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +33,9 @@ class DesignContext:
         sidebearing_ratio: Base sidebearing as a fraction of ``x_height``.
         aperture: How open counters / terminals feel (``0..1``); recipes may
             widen gaps in ``e``, ``c``, ``s`` from this knob.
+        sharp_overshoot: Extra height for flat sharp peaks (``v``, ``A``, …).
+            ``0`` means use ``overshoot``.
+        terminal_style: How open stroke ends are cut on ``c``, ``e``, ``r``, …
     """
 
     units_per_em: float = 1000.0
@@ -46,6 +50,8 @@ class DesignContext:
     tracking: float = 8.0
     sidebearing_ratio: float = 0.10
     aperture: float = 0.55
+    sharp_overshoot: float = 0.0
+    terminal_style: Literal["vertical", "horizontal", "angled"] = "vertical"
 
     @property
     def thin(self) -> float:
@@ -64,6 +70,22 @@ class DesignContext:
     def tuned(self, **kwargs: float) -> DesignContext:
         """Return a copy with selected fields overridden (agent-friendly)."""
         return replace(self, **kwargs)
+
+    def sharp_bump(self) -> float:
+        """Overshoot amount for sharp alignment zones and diagonal peaks."""
+        return self.sharp_overshoot if self.sharp_overshoot > 0.0 else self.overshoot
+
+    def to_optical(self) -> "OpticalContext":
+        """Map family proportions into :class:`~typekernel.optics.context.OpticalContext`."""
+        from typekernel.optics.context import OpticalContext
+
+        return OpticalContext(
+            units_per_em=self.units_per_em,
+            x_height=self.x_height,
+            cap_height=self.cap_height,
+            overshoot_round=self.overshoot,
+            overshoot_sharp=self.sharp_bump(),
+        )
 
     @classmethod
     def geometric_sans(cls) -> DesignContext:

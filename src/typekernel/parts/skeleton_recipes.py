@@ -1,5 +1,9 @@
 """Compatibility letter entry points — prefer :mod:`typekernel.parts.control`.
 
+.. deprecated::
+    Legacy ``skel_*`` aliases. Use :class:`~typekernel.parts.family.Controls`
+    instead.
+
 ``skel_n`` / ``skel_h`` / ``skel_o`` / ``skel_u`` / ``skel_i`` delegate to the
 control-glyph layer (continuous outlines + related forms). Kept so older
 callers and the specimen script keep working without CAD boolean troughs.

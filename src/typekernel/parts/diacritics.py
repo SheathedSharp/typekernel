@@ -5,7 +5,7 @@ from __future__ import annotations
 from typekernel.font import Font, Glyph
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.control import build_n, build_o, dotless_i_from_n, dotless_j_from_n
-from typekernel.parts.marks import MARK_BUILDERS, MARK_UNICODE
+from typekernel.parts.marks import CASE_MARK_BUILDERS, MARK_BUILDERS, MARK_UNICODE
 
 __all__ = ["COMPOSITE_LATIN", "add_composite_latin", "add_marks"]
 
@@ -36,14 +36,34 @@ COMPOSITE_LATIN: tuple[tuple[str, str, str, str, str], ...] = (
     ("ü", "u", "dieresiscomb", "top", "_top"),
     ("ý", "y", "acutecomb", "top", "_top"),
     ("ÿ", "y", "dieresiscomb", "top", "_top"),
-    ("Á", "A", "acutecomb", "top", "_top"),
-    ("É", "E", "acutecomb", "top", "_top"),
-    ("Í", "I", "acutecomb", "top", "_top"),
-    ("Ó", "O", "acutecomb", "top", "_top"),
-    ("Ú", "U", "acutecomb", "top", "_top"),
+    ("Á", "A", "acutecomb.case", "top", "_top"),
+    ("É", "E", "acutecomb.case", "top", "_top"),
+    ("Í", "I", "acutecomb.case", "top", "_top"),
+    ("Ó", "O", "acutecomb.case", "top", "_top"),
+    ("Ú", "U", "acutecomb.case", "top", "_top"),
     ("Ç", "C", "cedillacomb", "bottom", "_bottom"),
     ("Ñ", "N", "tildecomb", "top", "_top"),
     ("ñ", "n", "tildecomb", "top", "_top"),
+    ("õ", "o", "tildecomb", "top", "_top"),
+    ("À", "A", "gravecomb.case", "top", "_top"),
+    ("Â", "A", "circumflexcomb.case", "top", "_top"),
+    ("Ä", "A", "dieresiscomb.case", "top", "_top"),
+    ("Ã", "A", "tildecomb.case", "top", "_top"),
+    ("Å", "A", "ringcomb.case", "top", "_top"),
+    ("È", "E", "gravecomb.case", "top", "_top"),
+    ("Ê", "E", "circumflexcomb.case", "top", "_top"),
+    ("Ë", "E", "dieresiscomb.case", "top", "_top"),
+    ("Ì", "I", "gravecomb.case", "top", "_top"),
+    ("Î", "I", "circumflexcomb.case", "top", "_top"),
+    ("Ï", "I", "dieresiscomb.case", "top", "_top"),
+    ("Ò", "O", "gravecomb.case", "top", "_top"),
+    ("Ô", "O", "circumflexcomb.case", "top", "_top"),
+    ("Ö", "O", "dieresiscomb.case", "top", "_top"),
+    ("Ù", "U", "gravecomb.case", "top", "_top"),
+    ("Û", "U", "circumflexcomb.case", "top", "_top"),
+    ("Ü", "U", "dieresiscomb.case", "top", "_top"),
+    ("Ý", "Y", "acutecomb.case", "top", "_top"),
+    ("Õ", "O", "tildecomb.case", "top", "_top"),
 )
 
 
@@ -63,6 +83,9 @@ def add_marks(font: Font, n_o: tuple[ComposedGlyph, ComposedGlyph] | None = None
             ),
             replace=True,
         )
+    for name, builder in CASE_MARK_BUILDERS.items():
+        composed = builder(n, o, ctx)
+        font.add_glyph(Glyph.from_composed(name, composed), replace=True)
 
 
 def _add_dotless_bases(font: Font, n_o: tuple[ComposedGlyph, ComposedGlyph]) -> None:

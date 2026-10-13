@@ -74,11 +74,17 @@ def _v_geometry(
 
 
 def v_points(
-    stem: float, height: float, width: float, contrast: float, apex: float = 0.35
+    stem: float,
+    height: float,
+    width: float,
+    contrast: float,
+    apex: float = 0.35,
+    *,
+    top_overshoot: float = 0.0,
 ) -> list[Pt]:
     """Two compensated diagonals meeting at a flat apex on the baseline."""
     a0, hw, cy, _ = _v_geometry(stem, height, width, contrast, apex)
-    w, h = width, height
+    w, h = width, height + top_overshoot
     return [(0.0, h), (a0, 0.0), (w - a0, 0.0), (w, h), (w - hw, h), (w / 2.0, cy), (hw, h)]
 
 
@@ -91,26 +97,28 @@ def w_points(
     apex: float = 0.35,
     peak: float = 0.35,
     weight: float = 0.9,
+    top_overshoot: float = 0.0,
 ) -> list[Pt]:
     """Four lighter diagonals; the middle peak reaches ``height``.
 
     Very heavy weights thin the strokes further (down to 0.4) until they fit.
     """
-    ww, xh = width, height
+    ww, xh = width, height + top_overshoot
     f, fm = apex * stem, peak * stem
+    geom_h = height
     m_l = (ww - fm) / 2.0
     while True:
         # solve tan with hw depending on the angle (fixed point converges fast)
         hw = stem
         for _ in range(8):
-            tan = (m_l - f + hw) / (2.0 * xh)
-            hw = _hwidth(stem, contrast, tan * xh, xh, weight)
-        a1l = xh * tan
+            tan = (m_l - f + hw) / (2.0 * geom_h)
+            hw = _hwidth(stem, contrast, tan * geom_h, geom_h, weight)
+        a1l = geom_h * tan
         a1r = a1l + f
         low_y = (ww / 2.0 - a1r) / tan
         up_y = (2.0 * hw - f) / (2.0 * tan)
         up_x = a1r - hw + up_y * tan
-        if 0.0 < up_y < low_y < xh:
+        if 0.0 < up_y < low_y < geom_h:
             break
         if weight <= 0.4:
             raise ValueError("w strokes do not fit this width; widen it or thin the stem")
@@ -254,8 +262,10 @@ def v_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     w = m.width if width is None else width
-    pts = v_points(m.stem, m.x_height, w, c.contrast, apex)
-    return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
+    bump = c.sharp_overshoot
+    pts = v_points(m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump)
+    top = m.x_height + bump
+    return _pack(c, m, {"top": (w / 2.0, top), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
 
 
 def y_from_n(
@@ -307,7 +317,17 @@ def w_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     ww = 1.4 * m.width if width is None else width
-    pts = w_points(m.stem, m.x_height, ww, c.contrast, apex=apex, peak=peak, weight=weight)
+    bump = c.sharp_overshoot
+    pts = w_points(
+        m.stem,
+        m.x_height,
+        ww,
+        c.contrast,
+        apex=apex,
+        peak=peak,
+        weight=weight,
+        top_overshoot=bump,
+    )
     anchors = {"top": (ww / 2.0, m.x_height), "bottom": (ww / 2.0, 0.0)}
     return _pack(c, m, anchors, _polygon(pts))
 

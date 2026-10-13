@@ -1,0 +1,11 @@
+{
+  "gate": "compile-bridge",
+  "approved_by": "maintainer",
+  "approved_at": "2026-10-13",
+  "evidence": [
+    "tests/compile/test_font_build.py",
+    "tests/compile/test_variable_build.py",
+    "tests/compile/test_font_export.py"
+  ],
+  "notes": "build_font, build_variable_font, woff2 output, UFO import, and OpenType feature text path approved."
+}

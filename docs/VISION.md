@@ -31,6 +31,8 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 ## 状态
 
-**Geo-kernel public API** and **optical overshoot v0** are available under
-`typekernel.geo` / `typekernel.optics`. Masters / designspace and the compile
-bridge are next. See [dev-standards.md](dev-standards.md).
+**Geo-kernel**, **optical semantics**, **Controls → Font** family workflow,
+**compile bridge** (static + variable OTF/TTF/WOFF2, UFO round-trip), and
+**qa.proof** specimen helpers are in the tree. Next: true italic masters,
+richer OpenType (`case`, `liga`), and width/opsz axis examples. See
+[dev-standards.md](dev-standards.md) and `approvals/*.json`.

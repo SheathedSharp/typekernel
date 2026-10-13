@@ -1,0 +1,7 @@
+{
+  "gate": "font-model-public-api",
+  "approved_by": "maintainer",
+  "approved_at": "2026-10-13",
+  "evidence": ["tests/font/test_composite.py", "tests/compile/test_font_build.py"],
+  "notes": "Font, Glyph, Master, add_composite, and class kerning side tags reviewed for family workflow."
+}

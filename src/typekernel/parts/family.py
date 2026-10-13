@@ -71,6 +71,7 @@ from typekernel.parts.control import (
     u_from_n,
 )
 from typekernel.parts.diagonals import k_from_n, v_from_n, w_from_n, x_from_n, y_from_n, z_from_n
+from typekernel.parts.extended_latin import EXTENDED_LATIN_CAP_FORMS, EXTENDED_LATIN_FORMS
 from typekernel.parts.figures import (
     eight_from_O,
     five_from_O,
@@ -244,10 +245,15 @@ class Controls:
         """Draw the controls once and derive ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
         cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
+        extended = {**EXTENDED_LATIN_FORMS, **EXTENDED_LATIN_CAP_FORMS}
         missing = [
             ch
             for ch in wanted
-            if ch not in RELATED_FORMS and ch not in PUNCT_FORMS and ch not in cap_forms
+            if ch
+            not in RELATED_FORMS
+            and ch not in PUNCT_FORMS
+            and ch not in extended
+            and ch not in cap_forms
         ]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
@@ -255,6 +261,7 @@ class Controls:
         for forms, draw in (
             (RELATED_FORMS, self.control_glyphs),
             (PUNCT_FORMS, self.control_glyphs),
+            (extended, self.control_glyphs),
             (cap_forms, self.cap_control_glyphs),
         ):
             chars_here = [ch for ch in wanted if ch in forms]
