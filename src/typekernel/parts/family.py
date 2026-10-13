@@ -12,12 +12,19 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from typekernel.parts.caps import (
+    C_from_O,
+    D_from_H,
     E_from_H,
     F_from_H,
+    G_from_O,
     HMetrics,
     I_from_H,
+    J_from_H,
     L_from_H,
+    Q_from_O,
+    S_from_O,
     T_from_H,
+    U_from_H,
     build_H,
     build_O,
     cap_o_metrics,
@@ -95,6 +102,13 @@ CAP_FORMS: dict[str, Derivation] = {
     "E": lambda H, O, c: E_from_H(H, c),
     "F": lambda H, O, c: F_from_H(H, c),
     "T": lambda H, O, c: T_from_H(H, c),
+    "C": lambda H, O, c: C_from_O(O, c),
+    "G": lambda H, O, c: G_from_O(O, H, c),
+    "Q": lambda H, O, c: Q_from_O(O, H, c),
+    "S": lambda H, O, c: S_from_O(O, c),
+    "D": lambda H, O, c: D_from_H(H, O, c),
+    "U": lambda H, O, c: U_from_H(H, O, c),
+    "J": lambda H, O, c: J_from_H(H, O, c),
 }
 """Capital → how it derives from control ``H`` and ``O``."""
 
