@@ -19,16 +19,20 @@ from dataclasses import dataclass, replace
 from fontTools.misc.bezierTools import splitCubic
 
 from typekernel.geo.contour import reverse_contour, signed_area
+from typekernel.geo.curves import superellipse_cubics
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.path_helpers import KAPPA
+from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import bowl, tittle, vertical_stem
+from typekernel.parts.transforms import mirror_x
 
 __all__ = [
     "NMetrics",
     "OMetrics",
+    "b_from_o",
     "build_control_letter",
     "build_control_word",
     "build_h",
@@ -38,12 +42,15 @@ __all__ = [
     "build_o",
     "build_r",
     "build_u",
+    "d_from_o",
     "h_from_n",
     "i_from_n",
     "l_from_n",
     "m_from_n",
     "n_metrics",
     "o_metrics",
+    "p_from_o",
+    "q_from_o",
     "r_from_n",
     "u_from_n",
 ]
@@ -481,6 +488,168 @@ def build_o(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyp
     )
 
 
+def _cubic_pts(c: tuple[Point, Point, Point, Point]) -> Cubic:
+    return (c[0].as_tuple(), c[1].as_tuple(), c[2].as_tuple(), c[3].as_tuple())
+
+
+def _quarters(cx: float, cy: float, rx: float, ry: float, n: float) -> list[Cubic]:
+    """Four CCW superellipse quadrants from ``+x`` as point tuples."""
+    return [_cubic_pts(q) for q in superellipse_cubics(cx, cy, rx, ry, n)]
+
+
+def _scale_x(c: Cubic, about: float, f: float) -> Cubic:
+    return (
+        (about + (c[0][0] - about) * f, c[0][1]),
+        (about + (c[1][0] - about) * f, c[1][1]),
+        (about + (c[2][0] - about) * f, c[2][1]),
+        (about + (c[3][0] - about) * f, c[3][1]),
+    )
+
+
+def _bowl_stem_outline(
+    o: OMetrics,
+    stem: float,
+    *,
+    stem_bottom: float,
+    stem_top: float,
+    join: float,
+) -> Outline:
+    """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
+
+    The outer is the ``o`` bowl with its right side cut where it meets the
+    stem's left face. The counter keeps the ``o`` counter's left half; its
+    right half is stretched to the stem face so the counter has a straight
+    inner stem, with the bowl ``join`` × its thickness where it meets it.
+    """
+    cx, cy = o.rx, o.x_height / 2.0
+    s_r = cx + o.rx
+    s_l = s_r - stem
+    if s_l <= cx:
+        raise ValueError("stem is wider than half the bowl; widen the o or thin the stem")
+
+    q0, q1, q2, q3 = _quarters(cx, cy, o.rx, o.ry, o.exponent)
+    top_cut = _split(q0, s_l, horizontal=False)
+    bot_cut = _split(q3, s_l, horizontal=False)
+    if top_cut is None or bot_cut is None:  # pragma: no cover - s_l inside bowl
+        raise ValueError("stem face does not cross the bowl")
+    y_t, y_b = top_cut[1][0][1], bot_cut[0][3][1]
+    # Very bold stems meet the bowl beyond the stem ends; extend the stem.
+    stem_top, stem_bottom = max(stem_top, y_t), min(stem_bottom, y_b)
+
+    irx, iry = o.rx - o.thickness, o.ry - o.thickness
+    iq0, iq1, iq2, iq3 = _quarters(cx, cy, irx, iry, o.exponent)
+    flat = max(0.05, min(0.95, (y_t - join * o.thickness - cy) / iry))
+    e = o.exponent
+    q = 1.0 - (1.0 - flat**e) ** (1.0 / e)
+    reach = (s_l - cx) / (1.0 - q)
+    f = reach / irx
+    i_top = _split(_scale_x(iq0, cx, f), s_l, horizontal=False)
+    i_bot = _split(_scale_x(iq3, cx, f), s_l, horizontal=False)
+    if i_top is None or i_bot is None:  # pragma: no cover - reach > s_l - cx
+        raise ValueError("counter does not reach the stem face")
+
+    b = PathBuilder()
+    b.moveTo(s_r, stem_bottom)
+    b.lineTo(s_r, stem_top)
+    b.lineTo(s_l, stem_top)
+    b.lineTo(*top_cut[1][0])
+    _curve(b, top_cut[1])
+    _curve(b, q1)
+    _curve(b, q2)
+    _curve(b, bot_cut[0])
+    b.lineTo(s_l, stem_bottom)
+    b.closePath()
+    b.moveTo(*i_bot[0][3])
+    b.lineTo(*i_top[1][0])
+    _curve(b, i_top[1])
+    _curve(b, iq1)
+    _curve(b, iq2)
+    _curve(b, i_bot[0])
+    b.closePath()
+    outer, counter = b.build().contours
+    return Outline((outer, reverse_contour(counter)))
+
+
+def _bowl_glyph(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None,
+    ctx: DesignContext | None,
+    *,
+    stem_left: bool,
+    descends: bool,
+    join: float,
+) -> ComposedGlyph:
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
+    if descends:
+        bottom, top = c.descender, o.x_height
+    else:
+        bottom, top = 0.0, (_n_record(n_glyph).ascender if n_glyph is not None else c.ascender)
+    outline = _bowl_stem_outline(o, stem, stem_bottom=bottom, stem_top=top, join=join)
+    cx = o.rx
+    anchors = {"top": (cx, o.x_height)}
+    if not descends:
+        anchors["bottom"] = (cx, 0.0)
+    if stem_left:
+        outline = Outline(tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours))
+    return _pack(c, o, anchors, outline)
+
+
+def d_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive ``d``: the ``o`` bowl with the ``n`` stem rising on the right.
+
+    ``join`` is the bowl's thickness where it meets the stem, as a fraction of
+    the ``o`` thickness (below 1 thins the junction, as designers do).
+    """
+    return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=False, descends=False, join=join)
+
+
+def b_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive ``b``: mirror of ``d`` (stem on the left)."""
+    return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=True, descends=False, join=join)
+
+
+def q_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive ``q``: the ``o`` bowl with the stem descending on the right."""
+    return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=False, descends=True, join=join)
+
+
+def p_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive ``p``: mirror of ``q`` (stem descending on the left)."""
+    return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=True, descends=True, join=join)
+
+
+def _from_controls(
+    derive: Callable[[ComposedGlyph, ComposedGlyph | None], ComposedGlyph],
+) -> Callable[[DesignContext], ComposedGlyph]:
+    return lambda ctx: derive(build_o(ctx), build_n(ctx))
+
+
 CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "n": build_n,
     "h": build_h,
@@ -490,6 +659,10 @@ CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "u": build_u,
     "i": build_i,
     "l": lambda ctx: l_from_n(build_n(ctx)),
+    "b": _from_controls(b_from_o),
+    "d": _from_controls(d_from_o),
+    "p": _from_controls(p_from_o),
+    "q": _from_controls(q_from_o),
 }
 
 
