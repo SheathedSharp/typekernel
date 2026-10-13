@@ -77,6 +77,21 @@ def test_u_trough_matches_n_shoulder_thickness(ctx: DesignContext) -> None:
     assert bounds(u.solids[0])[1] == pytest.approx(-m.overshoot)
 
 
+def test_u_is_n_turned_180(ctx: DesignContext) -> None:
+    m = n_metrics(ctx).tuned(counter=250.0)
+    n = build_n(ctx, m)
+    u = u_from_n(n)
+
+    def rel(g) -> list[tuple[float, float]]:
+        x0 = bounds(g.solids[0])[0]
+        return [(p.x - x0, p.y) for s in g.solids[0].contours[0].segments for p in s.points]
+
+    turned = sorted((round(m.width - x, 6), round(m.x_height - y, 6)) for x, y in rel(n))
+    assert sorted((round(x, 6), round(y, 6)) for x, y in rel(u)) == turned
+    # right stem reaches the baseline flat, like the n's left stem reaches x-height
+    assert bounds(u.solids[0])[3] == pytest.approx(m.x_height)
+
+
 @pytest.mark.parametrize(
     ("builder", "names"),
     [

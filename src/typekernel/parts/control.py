@@ -27,7 +27,7 @@ from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import bowl, tittle, vertical_stem
-from typekernel.parts.transforms import mirror_x
+from typekernel.parts.transforms import mirror_x, mirror_y
 
 __all__ = [
     "RELATED_FORMS",
@@ -402,47 +402,23 @@ def build_m(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
 
 
 def build_u(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
-    """``u`` related to ``n``: mirrored trough logic (continuous outline)."""
+    """``u`` related to ``n``: the ``n`` turned through 180°."""
     return u_from_n(build_n(ctx, metrics), ctx)
 
 
 def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Derive ``u``: the ``n`` counter and stems, with the shoulder turned under."""
+    """Derive ``u``: the ``n`` outline turned through 180°.
+
+    The shoulder becomes the bowl (its crown overshoot now dips below the
+    baseline) and the ``n``'s full left stem becomes the right stem that
+    runs down to the baseline.
+    """
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    t = m.stem
-    w = m.counter
-    l0, l1 = 0.0, t
-    r0, r1 = t + w, t + w + t
-    mid = (l1 + r0) / 2.0
-    k = m.kappa
-    top = m.x_height
-    # Bottom outer overshoots below baseline; trough as thick as the shoulder.
-    bottom = -m.overshoot
-    inner_bottom = bottom + m.shoulder_thickness
-
-    b = PathBuilder()
-    b.moveTo(l0, top)
-    b.lineTo(l0, m.join_y * 0.55 + t * 0.2)
-    spring = max(m.join_y * 0.35, t * 1.1)
-    b.lineTo(l0, spring)
-    b.curveTo(l0, spring - k * (spring - bottom), mid - k * (mid - l0), bottom, mid, bottom)
-    b.curveTo(mid + k * (r1 - mid), bottom, r1, spring - k * (spring - bottom), r1, spring)
-    b.lineTo(r1, top)
-    b.lineTo(r0, top)
-    b.lineTo(r0, spring)
-    b.curveTo(
-        r0, spring - k * (spring - inner_bottom), mid + k * (r0 - mid), inner_bottom, mid,
-        inner_bottom,
-    )
-    b.curveTo(
-        mid - k * (mid - l1), inner_bottom, l1, spring - k * (spring - inner_bottom), l1, spring
-    )
-    b.lineTo(l1, top)
-    b.closePath()
-    cx = m.width / 2.0
-    anchors = {"top": (cx, top), "bottom": (cx, 0.0)}
-    return _pack(c, m, anchors, b.build())
+    cx, cy = m.width / 2.0, m.x_height / 2.0
+    turned = mirror_y(mirror_x(_n_family_outline(m, left_top=m.x_height), at_x=cx), at_y=cy)
+    anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
+    return _pack(c, m, anchors, turned)
 
 
 def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
