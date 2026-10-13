@@ -111,4 +111,9 @@ examples/first_font/out/**
 # variable_family example outputs (keep the proof)
 examples/variable_family/out/**
 !examples/variable_family/out/proof.png
+
+# italic / width VF examples (build scripts only)
+examples/italic_family/out/**
+examples/variable_width/out/**
+
 uploads/

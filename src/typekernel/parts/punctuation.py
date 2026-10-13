@@ -610,17 +610,20 @@ def percent_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     om = _o_record(o)
-    size = min(om.thickness * 0.88, m.x_height * 0.12)
+    size = min(om.thickness * 0.82, m.x_height * 0.11)
     cx = m.width / 2.0
-    y_top = m.x_height * 0.82
-    y_bot = m.x_height * 0.14
-    left = _dot_ellipse(cx - om.rx * 0.52, y_top, size)
-    right = _dot_ellipse(cx + om.rx * 0.52, y_bot, size)
-    hw = _hwidth(m.stem, c.contrast, m.width * 0.35, m.x_height * 0.55, weight=0.75)
+    y_top = m.x_height * 0.84
+    y_bot = m.x_height * 0.12
+    left = _dot_ellipse(cx - om.rx * 0.55, y_top, size)
+    right = _dot_ellipse(cx + om.rx * 0.55, y_bot, size)
+    hw = _hwidth(m.stem, c.contrast, m.width * 0.28, m.x_height * 0.5, weight=0.65)
     slash = stroke_polyline(
         c,
-        [(cx - m.width * 0.22, y_top + size), (cx + m.width * 0.22, y_bot - size)],
-        width=hw * 1.6,
+        [
+            (cx - om.rx * 0.18, y_top - size * 1.2),
+            (cx + om.rx * 0.18, y_bot + size * 1.2),
+        ],
+        width=min(hw * 1.35, size * 0.95),
         join_radius=0.0,
     )
     return _pack(c, m, {}, left, right, slash)
@@ -660,9 +663,8 @@ def degree_from_n_o(
 def ampersand_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    """Small ``e`` bowl plus a fixed diagonal leg (same topology at all stems)."""
+    """Single-storey ``e`` (stable topology at all stems)."""
     c = _ctx(n, o, ctx)
-    m = _n_record(n)
     return e_from_o(o, c, aperture=c.aperture * 0.85)
 
 
@@ -674,8 +676,12 @@ def at_sign_from_n_o(
     om = _o_record(o)
     cx = m.width / 2.0
     cy = m.x_height * 0.48
-    outer = _ring_outline_small(c, om, cx, cy, 0.95)
-    inner = _ring_outline_small(c, om, cx + om.rx * 0.22, cy, 0.30)
+    scale = 0.92
+    outer = _ring_outline_small(c, om, cx, cy, scale)
+    hole_r = om.rx * scale - om.thickness * scale
+    inner_r = min(om.thickness * 0.78, hole_r * 0.42)
+    dx = hole_r * 0.38
+    inner = _dot_ellipse(cx + dx, cy, inner_r * 2.0)
     return _pack(c, m, {}, outer, inner)
 
 
@@ -686,11 +692,13 @@ def dollar_from_n_o(
     m = _n_record(n)
     om = _o_record(o)
     cx = m.width / 2.0
-    top = _ring_outline_small(c, om, cx, m.x_height * 0.68, 0.32)
-    bot = _ring_outline_small(c, om, cx, m.x_height * 0.32, 0.32)
-    t = min(m.stem * 0.72, m.x_height * 0.09)
-    y_gap_lo = m.x_height * 0.38
-    y_gap_hi = m.x_height * 0.62
+    ring = min(0.30, 0.26 + m.stem / max(m.x_height, 1.0))
+    top = _ring_outline_small(c, om, cx, m.x_height * 0.76, ring)
+    bot = _ring_outline_small(c, om, cx, m.x_height * 0.24, ring)
+    hole = om.rx * ring - om.thickness * ring
+    t = min(m.stem * 0.62, hole * 1.35, m.x_height * 0.08)
+    y_gap_lo = m.x_height * 0.44
+    y_gap_hi = m.x_height * 0.56
     stem = vertical_stem(c, cx - t / 2.0, y_gap_lo, y_gap_hi, width=t)
     return _pack(c, m, {}, stem, top, bot)
 
@@ -729,11 +737,9 @@ PUNCT_FORMS = {
     ">": greater_from_n_o,
     "#": hash_from_n_o,
     "&": ampersand_from_n_o,
-}
-
-# ``$`` ``%`` ``@`` still overlap at extreme stems — opt in via ``build_all("…$%@")``.
-PUNCT_EXTENDED: dict[str, object] = {
     "%": percent_from_n_o,
     "@": at_sign_from_n_o,
     "$": dollar_from_n_o,
 }
+
+PUNCT_EXTENDED: dict[str, object] = {}

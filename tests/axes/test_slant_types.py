@@ -24,7 +24,7 @@ def test_oblique_transform_shears_x_with_y() -> None:
 
 def test_italic_design_raises() -> None:
     outline = closed_rect(0, 0, 1, 1)
-    with pytest.raises(NotImplementedError, match="designed masters"):
+    with pytest.raises(NotImplementedError, match="italic_controls"):
         ItalicDesign().apply(outline)
 
 
