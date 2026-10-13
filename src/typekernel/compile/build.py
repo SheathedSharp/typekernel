@@ -194,12 +194,57 @@ def build_font(
 
 @dataclass(frozen=True, slots=True)
 class VariableFontBuild:
-    """Files produced by :func:`build_variable_font`."""
+    """Files produced by :func:`build_variable_font`.
+
+    ``warnings`` lists fontTools interpolation findings that do not stop a
+    build (kinks, under/overweight midpoints) for a designer to review.
+    """
 
     designspace: Path
     masters: tuple[Path, ...]
     binaries: dict[str, Path]
     manifests: dict[str, BuildManifest]
+    warnings: tuple[str, ...] = ()
+
+
+STRUCTURAL_PROBLEMS = frozenset(
+    {
+        "missing",
+        "open_path",
+        "path_count",
+        "node_count",
+        "node_incompatibility",
+        "contour_order",
+        "wrong_start_point",
+    }
+)
+"""fontTools interpolation findings that make masters unusable."""
+
+
+def deep_check_masters(
+    ufo_paths: Sequence[str | Path], names: Sequence[str]
+) -> tuple[list[str], list[str]]:
+    """Run ``fontTools.varLib.interpolatable`` over master UFOs.
+
+    Catches what a segment-kind comparison cannot: wrong start points and
+    contour order. Returns ``(errors, warnings)``; errors are
+    :data:`STRUCTURAL_PROBLEMS`, warnings the quality findings.
+    """
+    import ufoLib2
+    from fontTools.varLib.interpolatable import test
+
+    fonts = [ufoLib2.Font.open(p) for p in ufo_paths]
+    glyphsets = [{glyph.name: glyph for glyph in font} for font in fonts]
+    errors: list[str] = []
+    warnings: list[str] = []
+    for glyph, problems in sorted(test(glyphsets, names=list(names)).items()):
+        for p in problems:
+            kind = p["type"]
+            where = f"{p.get('master_1', '?')}→{p.get('master_2', '?')}"
+            contour = f" contour {p['contour']}" if "contour" in p else ""
+            line = f"glyph {glyph!r}{contour}: {kind} ({where})"
+            (errors if kind in STRUCTURAL_PROBLEMS else warnings).append(line)
+    return errors, warnings
 
 
 def write_masters_designspace(
@@ -271,8 +316,10 @@ def build_variable_font(
 ) -> VariableFontBuild:
     """Check, write UFO masters + designspace, then compile a variable font.
 
-    ``"ttf"`` builds TrueType outlines with ``gvar``; ``"otf"`` builds CFF2.
-    Outputs are ``<stem>-VF.<format>`` with a manifest next to each.
+    Masters pass :func:`~typekernel.font.check_masters` and then
+    :func:`deep_check_masters` (fontTools) before compiling. ``"ttf"`` builds
+    TrueType outlines with ``gvar``; ``"otf"`` builds CFF2. Outputs are
+    ``<stem>-VF.<format>`` with a manifest next to each.
     """
     try:
         import ufo2ft
@@ -286,6 +333,9 @@ def build_variable_font(
 
     out = Path(out_dir)
     ds_path, ufo_paths = write_masters_designspace(masters, out, file_stem=file_stem)
+    errors, warnings = deep_check_masters(ufo_paths, [m.style_name for m in masters])
+    if errors:
+        raise ValueError("masters do not interpolate:\n  " + "\n  ".join(errors))
     stem = ds_path.stem
     binaries: dict[str, Path] = {}
     manifests: dict[str, BuildManifest] = {}
@@ -309,4 +359,4 @@ def build_variable_font(
         manifest.write_json(out / f"{stem}-VF.{fmt}.manifest.json")
         binaries[fmt] = binary
         manifests[fmt] = manifest
-    return VariableFontBuild(ds_path, ufo_paths, binaries, manifests)
+    return VariableFontBuild(ds_path, ufo_paths, binaries, manifests, tuple(warnings))

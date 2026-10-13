@@ -9,6 +9,7 @@ points. Geometry in, UFO or TTF/OTF out, via fontTools / ufoLib2 / fontmake
 from __future__ import annotations
 
 from typekernel.compile.build import (
+    STRUCTURAL_PROBLEMS,
     BuildManifest,
     FontBuild,
     VariableFontBuild,
@@ -16,11 +17,13 @@ from typekernel.compile.build import (
     build_font,
     build_ttf_from_ufo,
     build_variable_font,
+    deep_check_masters,
     write_masters_designspace,
 )
 from typekernel.compile.ufo_export import font_to_ufo, write_font_to_ufo, write_outline_to_ufo
 
 __all__ = [
+    "STRUCTURAL_PROBLEMS",
     "BuildManifest",
     "FontBuild",
     "VariableFontBuild",
@@ -28,6 +31,7 @@ __all__ = [
     "build_font",
     "build_ttf_from_ufo",
     "build_variable_font",
+    "deep_check_masters",
     "font_to_ufo",
     "write_font_to_ufo",
     "write_masters_designspace",

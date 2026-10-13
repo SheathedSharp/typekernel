@@ -63,6 +63,34 @@ def test_build_ttf_and_cff2(masters: list[Master], tmp_path: Path) -> None:
     assert (tmp_path / "VarSans-VF.ttf.manifest.json").is_file()
 
 
+def test_wrong_start_point_is_caught(masters: list[Master], tmp_path: Path) -> None:
+    from typekernel.font import Glyph
+    from typekernel.geo.contour import Contour
+    from typekernel.geo.outline import Outline
+
+    bold = masters[2].font
+    o = bold["o"]
+    outer, counter = o.outline.contours
+    rotated = Contour(outer.segments[1:] + outer.segments[:1], closed=True)
+    bold.add_glyph(
+        Glyph(o.name, Outline((rotated, counter)), o.advance, o.unicodes, o.anchors),
+        replace=True,
+    )
+    from typekernel.font import check_masters
+
+    assert check_masters(masters) == []  # segment kinds still line up
+    with pytest.raises(ValueError, match="wrong_start_point"):
+        build_variable_font(masters, tmp_path)
+
+
+def test_clean_masters_have_no_structural_problems(masters: list[Master], tmp_path: Path) -> None:
+    from typekernel.compile import deep_check_masters
+
+    _, ufos = write_masters_designspace(masters, tmp_path)
+    errors, _ = deep_check_masters(ufos, [m.style_name for m in masters])
+    assert errors == []
+
+
 @pytest.mark.parametrize(("wght", "index"), [(200, 1), (400, 0), (800, 2)])
 def test_instances_reproduce_masters(
     masters: list[Master], tmp_path: Path, wght: int, index: int
