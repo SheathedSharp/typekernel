@@ -44,9 +44,9 @@ def render_outline_png(
     """Draw ``outline`` into a square PNG at ``path``.
 
     Font Y-up coordinates are flipped for image Y-down. Closed contours are
-    filled; when more than one closed contour is present, the first is treated
-    as the outer shape and later closed contours punch holes (so a ring ``O``
-    shows its counter). Open contours are stroked.
+    filled with the even-odd rule, so counters punch holes (a ring ``O`` shows
+    its counter) and separate pieces of ink (the dot of ``i``) fill, whatever
+    their winding. Open contours are stroked.
 
     Anti-aliasing: the shape is rasterized at ``size * supersample`` then
     downsampled with Lanczos. Cubics remain the design truth — sampling is
@@ -57,7 +57,7 @@ def render_outline_png(
         ValueError: if ``size`` / ``supersample`` is not positive.
     """
     try:
-        from PIL import Image, ImageDraw
+        from PIL import Image, ImageChops, ImageDraw
     except ImportError as exc:  # pragma: no cover - exercised when extra missing
         raise ImportError(
             "render_outline_png requires Pillow; install with: pip install -e '.[specimen]'"
@@ -93,7 +93,6 @@ def render_outline_png(
 
     image = Image.new("RGBA", (render_size, render_size), background)
     mask = Image.new("L", (render_size, render_size), 0)
-    mask_draw = ImageDraw.Draw(mask)
 
     closed_polys: list[list[tuple[float, float]]] = []
     open_polylines: list[list[tuple[float, float]]] = []
@@ -112,9 +111,12 @@ def render_outline_png(
         else:
             open_polylines.append(poly)
 
-    for index, poly in enumerate(closed_polys):
-        fill_value = 255 if index == 0 else 0
-        mask_draw.polygon(poly, fill=fill_value)
+    # Even-odd: a counter inside ink punches out, separate ink (a tittle) fills,
+    # whatever each contour's winding direction.
+    for poly in closed_polys:
+        layer = Image.new("L", (render_size, render_size), 0)
+        ImageDraw.Draw(layer).polygon(poly, fill=255)
+        mask = ImageChops.difference(mask, layer)
 
     ink = Image.new("RGBA", (render_size, render_size), foreground)
     image = Image.composite(ink, image, mask)
