@@ -34,6 +34,7 @@ __all__ = [
     "Controls",
     "NMetrics",
     "OMetrics",
+    "a_from_o",
     "b_from_o",
     "build_control_letter",
     "build_control_word",
@@ -44,7 +45,9 @@ __all__ = [
     "build_o",
     "build_r",
     "build_u",
+    "c_from_o",
     "d_from_o",
+    "e_from_o",
     "h_from_n",
     "i_from_n",
     "l_from_n",
@@ -622,6 +625,136 @@ def p_from_o(
     return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=True, descends=True, join=join)
 
 
+def a_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive single-storey ``a``: the ``o`` bowl with the stem at x-height."""
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
+    outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=join)
+    anchors = {
+        "top": (o.rx, o.x_height),
+        "bottom": (o.rx, 0.0),
+        "ogonek": (2.0 * o.rx - stem / 2.0, 0.0),
+    }
+    return _pack(c, o, anchors, outline)
+
+
+def _rev(c: Cubic) -> Cubic:
+    return (c[3], c[2], c[1], c[0])
+
+
+def _ring(o: OMetrics) -> tuple[list[Cubic], list[Cubic]]:
+    """Outer and counter quadrants of the ``o`` ring (CCW from ``+x``)."""
+    cx, cy = o.rx, o.x_height / 2.0
+    outer = _quarters(cx, cy, o.rx, o.ry, o.exponent)
+    inner = _quarters(cx, cy, o.rx - o.thickness, o.ry - o.thickness, o.exponent)
+    return outer, inner
+
+
+def _terminal_x(o: OMetrics, aperture: float, closure: float) -> float:
+    """Vertical terminal cut: opens toward the centre as ``aperture`` grows."""
+    ap = max(0.0, min(1.0, aperture))
+    return o.rx + (o.rx - o.thickness) * (0.95 - closure * ap)
+
+
+def _cut(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic]:
+    pieces = _split(c, where, horizontal=horizontal)
+    if pieces is None:
+        axis = "y" if horizontal else "x"
+        raise ValueError(f"curve does not cross {axis}={where:.2f}; check o metrics")
+    return pieces
+
+
+def c_from_o(
+    o_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    aperture: float | None = None,
+) -> ComposedGlyph:
+    """Derive ``c``: the ``o`` ring opened on the right with vertical terminals.
+
+    ``aperture`` (default: the context's) moves both cuts toward the centre.
+    One contour: outer arc, terminal, counter arc back, terminal.
+    """
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    x_t = _terminal_x(o, c.aperture if aperture is None else aperture, 0.55)
+    top = _cut(q0, x_t, horizontal=False)[1]
+    bot = _cut(q3, x_t, horizontal=False)[0]
+    itop = _cut(i0, x_t, horizontal=False)[1]
+    ibot = _cut(i3, x_t, horizontal=False)[0]
+
+    b = PathBuilder()
+    b.moveTo(*top[0])
+    for cubic in (top, q1, q2, bot):
+        _curve(b, cubic)
+    b.lineTo(*ibot[3])
+    for cubic in (_rev(ibot), _rev(i2), _rev(i1), _rev(itop)):
+        _curve(b, cubic)
+    b.closePath()
+    anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
+    return _pack(c, o, anchors, _ccw(b.build()))
+
+
+def e_from_o(
+    o_glyph: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    aperture: float | None = None,
+    bar_raise: float = 0.25,
+) -> ComposedGlyph:
+    """Derive ``e``: the ``o`` ring with a crossbar and a lower aperture.
+
+    The bar (``o`` thickness × context contrast) sits ``bar_raise`` × its
+    thickness above the centre and runs from the inner left wall to the outer
+    right edge. Below it the ring is cut at a vertical lower terminal, so the
+    lower counter opens into the aperture. Two contours: outer and eye.
+    """
+    c = ctx or o_glyph.context
+    o = _o_record(o_glyph)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    cy = o.x_height / 2.0
+    # Heavy weights thin the bar so it still fits inside the counter.
+    room = 0.75 * (o.ry - o.thickness)
+    bar_t = min(o.thickness * c.contrast, 1.2 * room)
+    raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
+    raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
+    bar_bot, bar_top = cy + raise_ - bar_t / 2.0, cy + raise_ + bar_t / 2.0
+    x_t = _terminal_x(o, c.aperture if aperture is None else aperture, 0.45)
+
+    below, right = _cut(q3, bar_bot, horizontal=True)
+    lower = _cut(below, x_t, horizontal=False)[0]
+    ilower = _cut(i3, x_t, horizontal=False)[0]
+    iwall = _cut(i2, bar_bot, horizontal=True)[1]
+
+    b = PathBuilder()
+    b.moveTo(*right[0])
+    for cubic in (right, q0, q1, q2, lower):
+        _curve(b, cubic)
+    b.lineTo(*ilower[3])
+    _curve(b, _rev(ilower))
+    _curve(b, _rev(iwall))
+    b.closePath()
+
+    eye_r = _cut(i0, bar_top, horizontal=True)[1]
+    eye_l = _cut(i1, bar_top, horizontal=True)[0]
+    b.moveTo(*eye_r[0])
+    _curve(b, eye_r)
+    _curve(b, eye_l)
+    b.closePath()
+
+    outer, eye = b.build().contours
+    anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
+    return _pack(c, o, anchors, Outline((outer, reverse_contour(eye))))
+
+
 def _from_controls(
     derive: Callable[[ComposedGlyph, ComposedGlyph | None], ComposedGlyph],
 ) -> Callable[[DesignContext], ComposedGlyph]:
@@ -641,6 +774,9 @@ CONTROL_BUILDERS: dict[str, Callable[[DesignContext], ComposedGlyph]] = {
     "d": _from_controls(d_from_o),
     "p": _from_controls(p_from_o),
     "q": _from_controls(q_from_o),
+    "a": _from_controls(a_from_o),
+    "c": lambda ctx: c_from_o(build_o(ctx)),
+    "e": lambda ctx: e_from_o(build_o(ctx)),
 }
 
 Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
@@ -658,6 +794,9 @@ RELATED_FORMS: dict[str, Derivation] = {
     "d": lambda n, o, c: d_from_o(o, n, c),
     "p": lambda n, o, c: p_from_o(o, n, c),
     "q": lambda n, o, c: q_from_o(o, n, c),
+    "a": lambda n, o, c: a_from_o(o, n, c),
+    "c": lambda n, o, c: c_from_o(o, c),
+    "e": lambda n, o, c: e_from_o(o, c),
 }
 """Character → how it derives from control ``n`` and ``o``."""
 

@@ -20,7 +20,7 @@ def _width(g) -> float:
 
 def test_build_all_covers_related_forms(ctx: DesignContext) -> None:
     glyphs = Controls.from_context(ctx).build_all()
-    assert set(glyphs) == set(RELATED_FORMS) == set("bdhilmnopqru")
+    assert set(glyphs) == set(RELATED_FORMS) == set("abcdehilmnopqru")
     assert all(g.advance > 0 for g in glyphs.values())
 
 
@@ -31,7 +31,7 @@ def test_tuned_n_moves_n_family_only(ctx: DesignContext) -> None:
         assert _width(wide[ch]) == pytest.approx(_width(base[ch]) + 60)
     assert _width(wide["m"]) > _width(base["m"])
     assert _width(wide["r"]) > _width(base["r"])
-    for ch in "obdpq":
+    for ch in "obdpqace":
         assert _width(wide[ch]) == pytest.approx(_width(base[ch]))
 
 
