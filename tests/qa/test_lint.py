@@ -8,7 +8,7 @@ import pytest
 
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts import Controls, DesignContext
-from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
+from typekernel.parts.compose import ComposedGlyph
 from typekernel.qa.lint import lint_controls, lint_glyph
 
 pytestmark = pytest.mark.skipif(
