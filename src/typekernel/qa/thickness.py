@@ -9,12 +9,31 @@ from typekernel.geo.outline import Outline
 from typekernel.geo.pens import draw_outline
 from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.family import Controls
+
+REFERENCE_THICKNESS_CHARS = "noHO"
+THICKNESS_OUTLIER_FACTOR = 1.15
+LINT_THICKNESS_GRID = 16
 
 __all__ = [
+    "LINT_THICKNESS_GRID",
+    "REFERENCE_THICKNESS_CHARS",
+    "THICKNESS_OUTLIER_FACTOR",
+    "control_max_thickness_ratio",
     "max_local_thickness",
     "measurement_outline",
     "thickness_ratio_to_stem",
 ]
+
+
+def control_max_thickness_ratio(controls: Controls) -> float:
+    """Largest ``max_local_thickness / stem`` among control letters ``n/o/H/O``."""
+    ctx = controls.context
+    drawn = controls.build_all(REFERENCE_THICKNESS_CHARS)
+    return max(
+        thickness_ratio_to_stem(drawn[ch], ctx.stem, grid=LINT_THICKNESS_GRID)
+        for ch in REFERENCE_THICKNESS_CHARS
+    )
 
 
 def measurement_outline(glyph: ComposedGlyph) -> Outline:
@@ -92,8 +111,13 @@ def _min_oriented_width(
     return min(widths) if widths else 0.0
 
 
-def thickness_ratio_to_stem(glyph: ComposedGlyph, stem: float) -> float:
+def thickness_ratio_to_stem(
+    glyph: ComposedGlyph,
+    stem: float,
+    *,
+    grid: int = 28,
+) -> float:
     """``max_local_thickness / stem`` for a glyph built with that stem."""
     if stem <= 0:
         raise ValueError(f"stem must be positive, got {stem!r}")
-    return max_local_thickness(glyph) / stem
+    return max_local_thickness(glyph, grid=grid) / stem

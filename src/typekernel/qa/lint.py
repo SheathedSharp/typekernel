@@ -104,6 +104,7 @@ def lint_glyph(
     ctx: DesignContext,
     *,
     glyph_name: str = "?",
+    control_max_thickness_ratio: float | None = None,
 ) -> tuple[LintIssue, ...]:
     """Run structural rules on one :class:`~typekernel.parts.compose.ComposedGlyph`."""
     issues: list[LintIssue] = []
@@ -195,17 +196,43 @@ def lint_glyph(
                 )
             )
 
+    if control_max_thickness_ratio is not None:
+        from typekernel.qa.thickness import (
+            LINT_THICKNESS_GRID,
+            THICKNESS_OUTLIER_FACTOR,
+            thickness_ratio_to_stem,
+        )
+
+        ratio = thickness_ratio_to_stem(glyph, ctx.stem, grid=LINT_THICKNESS_GRID)
+        limit = control_max_thickness_ratio * THICKNESS_OUTLIER_FACTOR
+        if ratio > limit:
+            issues.append(
+                LintIssue(
+                    glyph_name,
+                    "R9_thickness_outlier",
+                    "warn",
+                    f"max/stem {ratio:.2f} exceeds control band {limit:.2f}",
+                )
+            )
+
     return tuple(issues)
 
 
 def lint_controls(
     controls: Controls,
     chars: str | None = None,
+    *,
+    thickness: bool = False,
 ) -> LintReport:
     """Lint every glyph from ``controls.build_all(chars)``."""
     charset = chars if chars is not None else controls.supported
     drawn = controls.build_all(charset)
     ctx = controls.context
+    control_ratio: float | None = None
+    if thickness:
+        from typekernel.qa.thickness import control_max_thickness_ratio
+
+        control_ratio = control_max_thickness_ratio(controls)
     all_issues: list[LintIssue] = []
     for ch in charset:
         if ch not in drawn:
@@ -213,5 +240,12 @@ def lint_controls(
                 LintIssue(ch, "R0_missing", "error", "glyph not built")
             )
             continue
-        all_issues.extend(lint_glyph(drawn[ch], ctx, glyph_name=ch))
+        all_issues.extend(
+            lint_glyph(
+                drawn[ch],
+                ctx,
+                glyph_name=ch,
+                control_max_thickness_ratio=control_ratio,
+            )
+        )
     return LintReport(tuple(all_issues))

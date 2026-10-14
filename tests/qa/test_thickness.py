@@ -7,7 +7,12 @@ import pytest
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.primitives import vertical_stem
-from typekernel.qa.thickness import max_local_thickness, thickness_ratio_to_stem
+from typekernel.qa.lint import lint_controls
+from typekernel.qa.thickness import (
+    THICKNESS_OUTLIER_FACTOR,
+    max_local_thickness,
+    thickness_ratio_to_stem,
+)
 
 _O_RING_MAX_RATIO = 1.10
 _STEM_TOLERANCE = 0.02
@@ -40,3 +45,15 @@ def test_vertical_stem_measures_stem_width() -> None:
     glyph = _stem_rect_glyph(ctx)
     measured = max_local_thickness(glyph)
     assert abs(measured - ctx.stem) <= ctx.stem * _STEM_TOLERANCE
+
+
+def test_m_thickness_outlier_warns() -> None:
+    controls = Controls.from_context(DesignContext.humanist_sans())
+    report = lint_controls(controls, "mn", thickness=True)
+    rules = {(i.glyph, i.rule) for i in report.issues}
+    assert ("m", "R9_thickness_outlier") in rules
+    assert ("n", "R9_thickness_outlier") not in rules
+
+
+def test_thickness_outlier_factor_frozen() -> None:
+    assert THICKNESS_OUTLIER_FACTOR == 1.15

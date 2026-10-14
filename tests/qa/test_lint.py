@@ -30,6 +30,13 @@ def test_lint_control_n_ok() -> None:
     assert not any(i.severity == "error" for i in issues)
 
 
+def test_lint_r9_optional_thickness() -> None:
+    ctx = DesignContext.humanist_sans()
+    controls = Controls.from_context(ctx)
+    report = lint_controls(controls, "o", thickness=True)
+    assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
+
+
 def test_lint_negative_sidebearing() -> None:
     ctx = DesignContext.code_clear()
     b = PathBuilder()
