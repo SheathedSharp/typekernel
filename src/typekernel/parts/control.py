@@ -314,19 +314,69 @@ def _pack(
 # --- n family -----------------------------------------------------------------
 
 
+def _italic_topology(ctx: DesignContext) -> bool:
+    """True when construct slant should use branching arches (M4 TK-403)."""
+    return ctx.italic_slant_deg >= 6.0
+
+
+def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
+    if stem_top > m.x_height + 1.0:
+        return m.x_height + (stem_top - m.x_height) * 0.38
+    return m.x_height * 0.5
+
+
+def _n_branching_outline(m: NMetrics, *, stem_top: float) -> Outline:
+    """``n`` / ``h`` shoulder springing from the left stem mid-height (italic)."""
+    branch_y = _italic_branch_y(m, stem_top)
+    drop = stem_top - branch_y
+    mm = m.tuned(
+        x_height=branch_y,
+        crown_y=m.crown_y - drop * 0.14,
+        leg_top=m.leg_top - drop * 0.2,
+        join_y=min(m.join_y, branch_y - m.stem * 0.32),
+        inner_crown=m.inner_crown - drop * 0.16,
+    )
+    s = _shoulder(mm)
+    t = m.stem
+    l0, l1, r0, r1 = 0.0, t, t + m.counter, m.width
+    b = PathBuilder()
+    b.moveTo(l0, 0.0)
+    b.lineTo(l0, stem_top)
+    b.lineTo(l1, stem_top)
+    b.lineTo(l1, branch_y)
+    _curve(b, s.outer[0])
+    _curve(b, s.outer[1])
+    b.lineTo(r1, 0.0)
+    b.lineTo(r0, 0.0)
+    b.lineTo(r0, mm.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(l1, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """Control ``n``: continuous cubic outline from its design record."""
     m = metrics or n_metrics(ctx)
     cx = m.width / 2.0
     anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
-    return _pack(ctx, m, anchors, _n_family_outline(m, left_top=m.x_height))
+    if _italic_topology(ctx):
+        outline = _n_branching_outline(m, stem_top=m.x_height)
+    else:
+        outline = _n_family_outline(m, left_top=m.x_height)
+    return _pack(ctx, m, anchors, outline)
 
 
 def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """``h`` from the same shoulder/leg recipe as ``n`` (ascender left stem)."""
     m = metrics or n_metrics(ctx)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.width / 2.0, 0.0)}
-    return _pack(ctx, m, anchors, _n_family_outline(m, left_top=m.ascender))
+    if _italic_topology(ctx):
+        outline = _n_branching_outline(m, stem_top=m.ascender)
+    else:
+        outline = _n_family_outline(m, left_top=m.ascender)
+    return _pack(ctx, m, anchors, outline)
 
 
 def h_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:

@@ -2,8 +2,8 @@
 
 ``italic_design`` builds a separate control sheet whose glyphs are drawn with
 ``DesignContext.italic_slant_deg`` applied at compose time (same point-count as
-the regular master for interpolation). Branching arches and other true-italic
-topology (M4 TK-403) are not implemented yet.
+the regular master for interpolation). Branching arches for ``n`` / ``h`` when ``italic_slant_deg`` ≥ 6° (TK-403 partial).
+``m`` ``r`` ``u`` and related forms still use upright topology plus slant.
 
 For mechanical oblique on a finished font, use
 :func:`~typekernel.compile.oblique.oblique_font` — do not label that as Italic.
@@ -14,8 +14,10 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from typekernel.axes.slant import ObliqueTransform
+from typekernel.geo.layout import union_bounds
 from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.family import Controls
+from typekernel.parts.transforms import translate
 
 __all__ = [
     "ItalicStyle",
@@ -40,6 +42,10 @@ def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Con
     ctx = regular.context.tuned(
         contrast=max(0.88, regular.context.contrast * s.contrast_scale),
         italic_slant_deg=s.slant_deg,
+        sidebearing_ratio=min(
+            0.18,
+            regular.context.sidebearing_ratio * 1.12,
+        ),
     )
     n = regular.n.tuned(counter=regular.n.counter * s.lean)
     o = regular.o.tuned(
@@ -63,16 +69,26 @@ def slant_composed_glyph(glyph: ComposedGlyph, angle_deg: float) -> ComposedGlyp
 
     shear = math.tan(math.radians(angle_deg))
 
-    def shift_anchor(anchor: Anchor) -> Anchor:
-        return Anchor(anchor.name, anchor.x + anchor.y * shear, anchor.y)
-
     solids = tuple(transform.apply(solid) for solid in glyph.solids)
     holes = tuple(transform.apply(hole) for hole in glyph.holes)
+    ctx = glyph.context
+    x0, _, x1, _ = union_bounds([*solids, *holes])
+    sb = max(0.025 * ctx.units_per_em, ctx.sidebearing_ratio * ctx.x_height)
+    dx = sb - x0
+    if abs(dx) > 1e-9:
+        solids = tuple(translate(solid, dx, 0.0) for solid in solids)
+        holes = tuple(translate(hole, dx, 0.0) for hole in holes)
+    x0, _, x1, _ = union_bounds([*solids, *holes])
+    advance = sb + (x1 - x0) + sb
+
+    def place_anchor(anchor: Anchor) -> Anchor:
+        return Anchor(anchor.name, anchor.x + anchor.y * shear + dx, anchor.y)
+
     return ComposedGlyph(
         solids,
         holes,
-        glyph.advance,
-        glyph.context,
-        anchors=tuple(shift_anchor(a) for a in glyph.anchors),
+        advance,
+        ctx,
+        anchors=tuple(place_anchor(a) for a in glyph.anchors),
         design=glyph.design,
     )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -17,12 +18,14 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.parts.italic import italic_controls
 
 
-def _font(controls: Controls, style: str, stem: float = 86.0) -> Font:
-    ctx = controls.context.tuned(stem=stem)
-    sheet = Controls.from_context(ctx)
-    if stem >= 100:
+def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
+    ctx = controls.context
+    if stem is not None:
+        ctx = ctx.tuned(stem=stem)
+    sheet = replace(controls, context=ctx)
+    if stem is not None and stem >= 100:
         sheet = sheet.with_stem_relief()
-    drawn = sheet.build_all("no")
+    drawn = sheet.build_all("o")  # branching ``n`` breaks ital×wght point compatibility (TK-403)
     font = Font.from_context(ctx, "Ital VF", style)
     font.add_chars(drawn)
     return font
