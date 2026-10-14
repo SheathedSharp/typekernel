@@ -14,6 +14,7 @@ from typekernel.geo.outline import Outline
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.family import Controls
+from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.score import WordReport, join_smoothness_glyph
 from typekernel.qa.sentence_gate import (
     AGENT_PAIRS,
@@ -72,6 +73,7 @@ class DesignReview:
     deltas: tuple[MetricDelta, ...]
     glyphs: tuple[GlyphScore, ...]
     l0_gaps: tuple[str, ...]
+    charset_failures: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
 
     @property
@@ -105,6 +107,12 @@ class DesignReview:
             lines.append(f"L0: {gap}")
         for failure in self.failures:
             lines.append(f"fail: {failure}")
+        if self.charset_failures:
+            lines.append(f"charset gate: {len(self.charset_failures)} issue(s) (report only until M2)")
+            for msg in self.charset_failures[:8]:
+                lines.append(f"  charset: {msg}")
+            if len(self.charset_failures) > 8:
+                lines.append(f"  charset: … and {len(self.charset_failures) - 8} more")
         for note in self.notes:
             lines.append(f"note: {note}")
         return "\n".join(lines)
@@ -154,6 +162,7 @@ def design_review(
         pairs=pairs,
     )
     l0_gaps = _l0_gaps(controls)
+    charset_failures = tuple(collect_family_gate_failures(controls))
     review = DesignReview(
         sentence=sentence,
         failures=failures,
@@ -161,10 +170,11 @@ def design_review(
         deltas=deltas,
         glyphs=glyphs,
         l0_gaps=l0_gaps,
+        charset_failures=charset_failures,
         notes=tuple(notes),
     )
     if out_dir is not None:
-        notes.extend(_write_artifacts(controls, review, Path(out_dir)))
+        notes.extend(_write_artifacts(controls, review, Path(out_dir), baseline=baseline))
         review = DesignReview(
             sentence=review.sentence,
             failures=review.failures,
@@ -172,6 +182,7 @@ def design_review(
             deltas=review.deltas,
             glyphs=review.glyphs,
             l0_gaps=review.l0_gaps,
+            charset_failures=review.charset_failures,
             notes=tuple(notes),
         )
     return review
@@ -245,19 +256,42 @@ def _preview_outline(glyph: ComposedGlyph) -> Outline:
     return Outline(contours)
 
 
-def _write_artifacts(controls: Controls, review: DesignReview, out_dir: Path) -> list[str]:
+def _write_artifacts(
+    controls: Controls,
+    review: DesignReview,
+    out_dir: Path,
+    *,
+    baseline: Controls | None = None,
+) -> list[str]:
     notes: list[str] = []
     out_dir.mkdir(parents=True, exist_ok=True)
     review.write_json(out_dir / "review.json")
     notes.append(f"review json: {out_dir / 'review.json'}")
+    artifact_paths: dict[str, Path] = {"review_json": out_dir / "review.json"}
     try:
+        from typekernel.qa.sheet import contact_sheet, diff_overlay, review_index
         from typekernel.qa.specimen_png import render_outline_png
     except ImportError as exc:
-        notes.append(f"control pngs skipped: {exc}")
+        notes.append(f"review artifacts skipped: {exc}")
         return notes
+    contact = contact_sheet(controls, out_dir / "contact.png")
+    artifact_paths["contact"] = contact
+    notes.append(f"contact sheet: {contact.name}")
+    if baseline is not None:
+        diff = diff_overlay(
+            controls,
+            baseline,
+            out_dir / "diff.png",
+            chars="mutj&#!$",
+        )
+        artifact_paths["diff"] = diff
+        notes.append(f"diff overlay: {diff.name}")
     drawn = controls.build_all("".join(dict.fromkeys("".join(REVIEW_GLYPHS))))
     for char in REVIEW_GLYPHS:
         destination = out_dir / f"{char}.png"
         render_outline_png(_preview_outline(drawn[char]), destination, size=256)
+        artifact_paths[f"glyph_{char}"] = destination
         notes.append(f"control png: {destination.name}")
+    index = review_index(out_dir, artifact_paths)
+    notes.append(f"review index: {index.name}")
     return notes

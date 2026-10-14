@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from typekernel.geo.contour import signed_area
 from typekernel.geo.layout import union_bounds
@@ -45,10 +45,10 @@ class LintReport:
 
 
 def _has_pathops() -> bool:
-    return importlib.util.find_spec("pathops") is not None
+    return bool(importlib.util.find_spec("pathops"))
 
 
-def _outline_to_path(outline: Outline):
+def _outline_to_path(outline: Outline) -> Any:
     import pathops
 
     path = pathops.Path()
@@ -86,7 +86,8 @@ def _path_self_intersects(outline: Outline) -> bool:
     path.draw(pen_a)
     pen_b = AreaPen()
     simplified.draw(pen_b)
-    return abs(abs(pen_a.value) - abs(pen_b.value)) > 0.01 * max(abs(pen_a.value), 1.0)
+    delta = abs(abs(pen_a.value) - abs(pen_b.value))
+    return bool(delta > 0.01 * max(abs(pen_a.value), 1.0))
 
 
 def _degenerate_contour(outline: Outline) -> bool:

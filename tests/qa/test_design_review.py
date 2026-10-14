@@ -51,6 +51,8 @@ def test_review_writes_json_and_control_pngs(tmp_path: Path) -> None:
         out_dir=tmp_path,
     )
     assert (tmp_path / "review.json").is_file()
+    assert (tmp_path / "contact.png").is_file()
+    assert (tmp_path / "index.json").is_file()
     assert (tmp_path / "n.png").is_file()
     assert (tmp_path / "f.png").is_file()
     assert "sentence gate ok" in review.summary()
