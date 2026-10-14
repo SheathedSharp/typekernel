@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.parts import (
     DesignContext,
@@ -77,6 +78,7 @@ def test_u_baseline_and_crown(ctx: DesignContext) -> None:
     box = bounds(u.solids[0])
     assert box[1] == pytest.approx(0.0)
     assert box[3] == pytest.approx(m.crown_y)
+    assert signed_area(u.solids[0].contours[0]) > 0
 
 
 def test_u_is_n_mirrored_with_right_stem(ctx: DesignContext) -> None:

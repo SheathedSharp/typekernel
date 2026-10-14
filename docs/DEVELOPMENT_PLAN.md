@@ -255,6 +255,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-204 `m`、`u`　〔M〕
 - **本轮（部分）**：`m` 双拱 `inner_crown` 抬高（`min(crown−0.55×stem, inner+0.32×stem)`）打开中柱 crotch；`u` 经 `mirror_x` 肩拱（非 180° 旋转），基线齐平回归 `test_b10_u_flat_baseline`。
 - `m`：内拱在 x-height 的 V 形缺口仍待（内肩曲线常够不到 `xh`，水平 split 失败时无法插点）。
+- **本轮（部分）**：直立 `u` 镜像后统一 `_ccw`（修复 R1）；golden `u` 三 preset 更新。
 - `u`：低 roundness preset 拱脚局部仍偏细，与 `n` 对称；需时可加专用接合几何。
 
 #### TK-205 钩类字形 `t j f g J`　〔M〕

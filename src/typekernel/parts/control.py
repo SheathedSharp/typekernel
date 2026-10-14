@@ -838,9 +838,7 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         base = _n_family_outline(
             m, left_top=m.x_height, vf_compat=_vf_compat_stem(c)
         )
-    outline = mirror_x(base, at_x=cx)
-    if _italic_topology(c):
-        outline = _ccw(outline)
+    outline = _ccw(mirror_x(base, at_x=cx))
     anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
     return _pack(c, m, anchors, outline)
 
