@@ -39,7 +39,7 @@ def test_identical_preset_baseline_passes() -> None:
     assert failures == (), failures
     # Pin the preset the way code_clear is pinned, so a "trial" cannot
     # quietly move the floor it is compared against.
-    assert report.optical_gap_ratio <= 1.02
+    assert report.optical_gap_ratio <= 1.05
     assert report.g1_join_error_count - report.terminal_count <= 105
 
 

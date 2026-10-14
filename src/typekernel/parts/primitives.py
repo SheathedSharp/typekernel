@@ -77,6 +77,8 @@ def bowl(
     rx: float | None = None,
     ry: float | None = None,
     thickness: float | None = None,
+    thickness_v: float | None = None,
+    thickness_h: float | None = None,
     shape: str = "ellipse",
     n: float = 2.0,
     tension: float = 1.0,
@@ -86,13 +88,18 @@ def bowl(
     ``shape`` is ``"ellipse"`` (default, κ-handles) or ``"superellipse"``
     (Lamé exponent ``n``, handle tension). Outer radius defaults to half
     x-height plus overshoot on the vertical axis. Counter inset uses
-    ``thickness`` (default ``ctx.stem``).
+    vertical stroke ``thickness_v`` (default ``ctx.stem``) and horizontal
+    ``thickness_h`` (default ``ctx.thin``). A single ``thickness`` sets both.
     """
     outer_ry = (ctx.x_height / 2.0 + ctx.overshoot) if ry is None else ry
     outer_rx = outer_ry if rx is None else rx
-    thick = ctx.stem if thickness is None else thickness
-    inner_rx = max(outer_rx - thick, 1.0)
-    inner_ry = max(outer_ry - thick, 1.0)
+    if thickness is not None:
+        tv = th = thickness
+    else:
+        tv = ctx.stem if thickness_v is None else thickness_v
+        th = ctx.thin if thickness_h is None else thickness_h
+    inner_rx = max(outer_rx - tv, 1.0)
+    inner_ry = max(outer_ry - th, 1.0)
     if shape == "ellipse":
         if abs(n - 2.0) > 1e-12 or abs(tension - 1.0) > 1e-12:
             # Explicit n/tension on ellipse shape → treat as superellipse
@@ -145,7 +152,7 @@ def counter(
     ry: float,
 ) -> Outline:
     """Standalone elliptical hole (clockwise or CCW — winding fixed at union)."""
-    del ctx  # reserved for future contrast-aware counters
+    del ctx
     return _ellipse(cx, cy, rx, ry)
 
 
@@ -372,8 +379,36 @@ def tittle(
 ) -> Outline:
     """Dot above ``i`` / ``j`` (slightly rounded square by default)."""
     s = ctx.stem * 0.95 if size is None else size
-    r = min(ctx.join_radius * 0.6, s * 0.35)
-    return rounded_rect(ctx, cx - s / 2.0, y_bottom, cx + s / 2.0, y_bottom + s, radius=r)
+    w = s * ctx.contrast
+    r = min(ctx.join_radius * 0.6, min(w, s) * 0.35)
+    return rounded_rect(ctx, cx - w / 2.0, y_bottom, cx + w / 2.0, y_bottom + s, radius=r)
+
+
+def contrast_stem_caps(
+    ctx: DesignContext,
+    x_left: float,
+    y_bottom: float,
+    y_top: float,
+    *,
+    width: float | None = None,
+) -> Outline:
+    """Vertical stem that tapers horizontally when ``contrast`` ≠ 1."""
+    w = ctx.stem if width is None else width
+    if abs(ctx.contrast - 1.0) < 1e-9:
+        return _rect(x_left, y_bottom, x_left + w, y_top)
+    inset = (w - w * ctx.contrast) / 2.0
+    pts = [
+        (x_left, y_bottom),
+        (x_left + w, y_bottom),
+        (x_left + w - inset, y_top),
+        (x_left + inset, y_top),
+    ]
+    b = PathBuilder()
+    b.moveTo(*pts[0])
+    for p in pts[1:]:
+        b.lineTo(*p)
+    b.closePath()
+    return b.build()
 
 
 def _rect(x0: float, y0: float, x1: float, y1: float) -> Outline:

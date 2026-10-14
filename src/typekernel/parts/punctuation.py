@@ -626,7 +626,8 @@ def percent_from_n_o(
     ring = min(0.34, 0.20 + m.stem / max(m.x_height * 0.95, 1.0))
     ring_rx = max(om.rx * ring, m.stem * 0.62, m.x_height * 0.16)
     ring_ry = max(om.ry * ring, m.stem * 0.58, m.x_height * 0.15)
-    thick = min(om.thickness * ring * 1.05, ring_rx * 0.42)
+    thick_v = min(om.thickness_v * ring * 1.05, ring_rx * 0.42)
+    thick_h = min(om.thickness_h * ring * 1.05, ring_ry * 0.42)
     y_top = m.x_height * 0.82
     y_bot = m.x_height * 0.18
     top_o, top_h = bowl(
@@ -635,7 +636,8 @@ def percent_from_n_o(
         y_top,
         rx=ring_rx,
         ry=ring_ry,
-        thickness=thick,
+        thickness_v=thick_v,
+        thickness_h=thick_h,
     )
     bot_o, bot_h = bowl(
         c,
@@ -643,7 +645,8 @@ def percent_from_n_o(
         y_bot,
         rx=ring_rx,
         ry=ring_ry,
-        thickness=thick,
+        thickness_v=thick_v,
+        thickness_h=thick_h,
     )
     hw = _hwidth(m.stem, c.contrast, m.width * 0.28, m.x_height * 0.5, weight=0.65)
     y_slash_top = y_top - ring_ry * 1.05
@@ -654,7 +657,7 @@ def percent_from_n_o(
             (cx - ring_rx * 0.85, y_slash_top),
             (cx + ring_rx * 0.85, y_slash_bot),
         ],
-        width=min(hw * 0.85, m.stem * 0.40, thick * 0.42, m.x_height * 0.016),
+        width=min(hw * 0.85, m.stem * 0.40, thick_v * 0.42, m.x_height * 0.016),
         join_radius=0.0,
     )
     return _pack_holes(c, m, top_o, bot_o, slash, holes=(top_h, bot_h))
@@ -675,7 +678,8 @@ def degree_from_n_o(
         cy,
         rx=om.rx * scale,
         ry=om.ry * scale,
-        thickness=om.thickness * scale,
+        thickness_v=om.thickness_v * scale,
+        thickness_h=om.thickness_h * scale,
     )
     return _pack_holes(c, m, outer, holes=(hole,))
 
@@ -688,11 +692,14 @@ def ampersand_from_n_o(
     m = _n_record(n)
     om = _o_record(o)
     cx = m.width / 2.0
-    thick = om.thickness * 0.9
+    thick_v = om.thickness_v * 0.9
+    thick_h = om.thickness_h * 0.9
     rx_u = om.rx * 0.46
     cy_u = c.x_height + (c.cap_height - c.x_height) * 0.58
     ry_u = (c.cap_height - cy_u) + om.ry * 0.22
-    outer_u, hole_u = bowl(c, cx - rx_u * 0.28, cy_u, rx=rx_u, ry=ry_u, thickness=thick)
+    outer_u, hole_u = bowl(
+        c, cx - rx_u * 0.28, cy_u, rx=rx_u, ry=ry_u, thickness_v=thick_v, thickness_h=thick_h
+    )
     rx_l = om.rx * 0.46
     cy_l = c.x_height * 0.36
     outer_l, hole_l = bowl(
@@ -701,7 +708,8 @@ def ampersand_from_n_o(
         cy_l,
         rx=rx_l,
         ry=om.ry * 0.48,
-        thickness=thick * 0.94,
+        thickness_v=thick_v * 0.94,
+        thickness_h=thick_h * 0.94,
     )
     return _pack_holes(c, m, outer_u, outer_l, holes=(hole_u, hole_l))
 
@@ -721,10 +729,11 @@ def at_sign_from_n_o(
         cy,
         rx=om.rx * scale,
         ry=om.ry * scale,
-        thickness=om.thickness * scale,
+        thickness_v=om.thickness_v * scale,
+        thickness_h=om.thickness_h * scale,
     )
-    hole_r = om.rx * scale - om.thickness * scale
-    inner_r = min(om.thickness * 0.78, hole_r * 0.42)
+    hole_r = om.rx * scale - om.thickness_v * scale
+    inner_r = min(om.thickness_v * 0.78, hole_r * 0.42)
     dx = hole_r * 0.38
     inner = _dot_ellipse(cx + dx, cy, inner_r * 2.0)
     return _pack_holes(c, m, outer, inner, holes=(ring_hole,))
@@ -737,12 +746,17 @@ def dollar_from_n_o(
     m = _n_record(n)
     om = _o_record(o)
     cx = m.width / 2.0
-    thick = om.thickness * 0.88
+    thick_v = om.thickness_v * 0.88
+    thick_h = om.thickness_h * 0.88
     rx = om.rx * 0.30
     ry = om.ry * 0.22
-    outer_t, hole_t = bowl(c, cx, m.x_height * 0.78, rx=rx, ry=ry, thickness=thick)
-    outer_b, hole_b = bowl(c, cx, m.x_height * 0.22, rx=rx, ry=ry, thickness=thick)
-    stem_w = min(m.stem * 0.72, thick * 1.05)
+    outer_t, hole_t = bowl(
+        c, cx, m.x_height * 0.78, rx=rx, ry=ry, thickness_v=thick_v, thickness_h=thick_h
+    )
+    outer_b, hole_b = bowl(
+        c, cx, m.x_height * 0.22, rx=rx, ry=ry, thickness_v=thick_v, thickness_h=thick_h
+    )
+    stem_w = min(m.stem * 0.72, thick_v * 1.05)
     y_gap_lo = m.x_height * 0.44
     y_gap_hi = m.x_height * 0.56
     stem = vertical_stem(c, cx - stem_w / 2.0, y_gap_lo, y_gap_hi, width=stem_w)

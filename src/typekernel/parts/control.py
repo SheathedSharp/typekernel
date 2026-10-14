@@ -27,7 +27,13 @@ from typekernel.geo.path_helpers import KAPPA
 from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
-from typekernel.parts.primitives import bowl, rounded_rect, tittle, vertical_stem
+from typekernel.parts.primitives import (
+    bowl,
+    contrast_stem_caps,
+    rounded_rect,
+    tittle,
+    vertical_stem,
+)
 from typekernel.parts.transforms import mirror_x, mirror_y, translate
 
 __all__ = [
@@ -145,11 +151,14 @@ class OMetrics:
     """Design record for the ``o`` family (``o b d p q``).
 
     The bowl is a superellipse ring centred at ``(rx, x_height / 2)``.
+    ``thickness_v`` is the side (vertical) stroke; ``thickness_h`` is the
+    top/bottom (horizontal) stroke — from ``stem`` and ``stem * contrast``.
     """
 
     rx: float
     ry: float
-    thickness: float
+    thickness_v: float
+    thickness_h: float
     exponent: float
     x_height: float
     overshoot: float
@@ -158,7 +167,16 @@ class OMetrics:
     def width(self) -> float:
         return 2.0 * self.rx
 
+    @property
+    def thickness(self) -> float:
+        """Vertical stroke width (legacy alias for ``thickness_v``)."""
+        return self.thickness_v
+
     def tuned(self, **kwargs: float) -> OMetrics:
+        if "thickness" in kwargs:
+            t = kwargs.pop("thickness")
+            kwargs.setdefault("thickness_v", t)
+            kwargs.setdefault("thickness_h", t)
         return replace(self, **kwargs)
 
 
@@ -171,7 +189,8 @@ def o_metrics(ctx: DesignContext) -> OMetrics:
     return OMetrics(
         rx=rx,
         ry=ry,
-        thickness=ctx.stem,
+        thickness_v=ctx.stem,
+        thickness_h=ctx.stem * ctx.contrast,
         exponent=exponent,
         x_height=ctx.x_height,
         overshoot=ctx.overshoot,
@@ -645,7 +664,7 @@ def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """``i``: the ``n`` stem plus a tittle."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
+    stem = contrast_stem_caps(c, 0.0, 0.0, m.x_height, width=m.stem)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
     anchors = {"top": (m.stem / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
@@ -687,7 +706,7 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """``l``: the ``n`` stem rising to the ascender."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    stem = vertical_stem(c, 0.0, 0.0, m.ascender, width=m.stem)
+    stem = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, stem)
 
@@ -700,7 +719,15 @@ def build_o(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyp
     m = metrics or o_metrics(ctx)
     cx, cy = m.rx, m.x_height / 2.0
     outer, hole = bowl(
-        ctx, cx, cy, rx=m.rx, ry=m.ry, thickness=m.thickness, shape="superellipse", n=m.exponent
+        ctx,
+        cx,
+        cy,
+        rx=m.rx,
+        ry=m.ry,
+        thickness_v=m.thickness_v,
+        thickness_h=m.thickness_h,
+        shape="superellipse",
+        n=m.exponent,
     )
     return (
         GlyphAssembler(ctx)
@@ -766,9 +793,9 @@ def _bowl_stem_outline(
     # Very bold stems meet the bowl beyond the stem ends; extend the stem.
     stem_top, stem_bottom = max(stem_top, y_t), min(stem_bottom, y_b)
 
-    irx, iry = o.rx - o.thickness, o.ry - o.thickness
+    irx, iry = o.rx - o.thickness_v, o.ry - o.thickness_h
     iq0, iq1, iq2, iq3 = _quarters(cx, cy, irx, iry, o.exponent)
-    flat = max(0.05, min(0.95, (y_t - join * o.thickness - cy) / iry))
+    flat = max(0.05, min(0.95, (y_t - join * o.thickness_v - cy) / iry))
     e = o.exponent
     q = 1.0 - (1.0 - flat**e) ** (1.0 / e)
     reach = (s_l - cx) / (1.0 - q)
@@ -905,14 +932,14 @@ def _ring(o: OMetrics) -> tuple[list[Cubic], list[Cubic]]:
     """Outer and counter quadrants of the ``o`` ring (CCW from ``+x``)."""
     cx, cy = o.rx, o.x_height / 2.0
     outer = _quarters(cx, cy, o.rx, o.ry, o.exponent)
-    inner = _quarters(cx, cy, o.rx - o.thickness, o.ry - o.thickness, o.exponent)
+    inner = _quarters(cx, cy, o.rx - o.thickness_v, o.ry - o.thickness_h, o.exponent)
     return outer, inner
 
 
 def _terminal_x(o: OMetrics, aperture: float, closure: float) -> float:
     """Vertical terminal cut: opens toward the centre as ``aperture`` grows."""
     ap = max(0.0, min(1.0, aperture))
-    return o.rx + (o.rx - o.thickness) * (0.95 - closure * ap)
+    return o.rx + (o.rx - o.thickness_v) * (0.95 - closure * ap)
 
 
 def _cut(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic]:
@@ -976,8 +1003,8 @@ def e_from_o(
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
     cy = o.x_height / 2.0
     # Heavy weights thin the bar so it still fits inside the counter.
-    room = 0.75 * (o.ry - o.thickness)
-    bar_t = min(o.thickness * c.contrast, 1.2 * room)
+    room = 0.75 * (o.ry - o.thickness_h)
+    bar_t = min(o.thickness_h, 1.2 * room)
     raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
     raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
     bar_bot, bar_top = cy + raise_ - bar_t / 2.0, cy + raise_ + bar_t / 2.0
@@ -1083,13 +1110,13 @@ def s_from_o(
     ym = spine * xh
     rx_l = width * o.rx
     rx_u = rx_l * top_scale
-    tv = min(o.thickness * c.contrast, 0.3 * xh)
+    tv = min(o.thickness_h, 0.3 * xh)
     ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
     ry_l = (ym + tv / 2.0 + os_) / 2.0
     tv = min(tv, 0.6 * min(ry_u, ry_l))
     ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
     ry_l = (ym + tv / 2.0 + os_) / 2.0
-    th = min(o.thickness, 0.6 * rx_u)
+    th = min(o.thickness_v, 0.6 * rx_u)
     cx = rx_l
     cy_u, cy_l = xh + os_ - ry_u, ry_l - os_
 

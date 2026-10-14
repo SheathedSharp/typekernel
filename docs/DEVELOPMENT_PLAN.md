@@ -275,11 +275,12 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 > 这是工作量最大、最需要人审的阶段。**每个子任务都必须保证默认值下输出与旧版哈希一致**（除非任务明确声明改变并经人批准），这样不会回归。
 
 #### TK-301 让 `contrast` 真实起作用　〔M〕★ 优先
-- **做什么**：`OMetrics` 目前只有一个 `thickness`，内圈统一用 `rx - thickness, ry - thickness` 构造（可见于 `control.py` 的 `_bowl_stem_outline`（约 `:710`，`b d p q g` 共用）与 `punctuation.py` 的 `_ring_outline_small`；`build_o` 在 `:673`）。拆成竖向笔画厚度与横向笔画厚度（默认由 `ctx.contrast` 推出），环构造函数据此生成；把 `NMetrics` 肩部厚度、`a b c d e g p q s` 与 `C G O Q S 0 3 5 6 8 9` 全部接上。
-- **验收**：
-  - `contrast=0.5` 时附录 C 里「不变」的字形集合为空（圆形字母全部变化）；TK-107 的对应 xfail 转正。
-  - 探针：`o` 顶/底厚度 ÷ 侧边厚度 = `contrast` ± 0.05。
-  - `contrast=1.0` 的 preset（`geometric_sans mono code_clear paper_ink`）哈希不变；`humanist_sans(0.82)`、`display(0.90)`、`open_print(0.98)` 会变，属**预期的外观变化，需人审**后更新快照。
+- **做什么**：`OMetrics` 拆成 `thickness_v` / `thickness_h`（`stem` 与 `stem * contrast`）；`bowl`、`_bowl_stem_outline`、`_ring`、`s_from_o`、标点环与 `0` 等接上；`i/j/l/I` 用对比度梯形竖笔与横扁 tittle。
+- **验收**（已完成核心）：
+  - `contrast=0.5` 时圆形字母集合全动；TK-107 `contrast` xfail 已转正。
+  - 探针：`test_o_contrast_top_to_side_thickness_ratio`（`o` 顶/底 ÷ 侧边 ≈ `contrast` ± 0.05）。
+  - `code_clear` / `geometric_sans` 哈希不变；`humanist_sans` 快照已更新。
+  - 待续：`display` / `open_print` 快照、数字 `3 5 8 9` 与 `G Q S` 的独立 contrast 审计（多数经 `O` 已连带变化）。
 
 #### TK-302 应力轴（stress）　〔M〕
 - **做什么**：圆形笔画的最细处不一定在顶/底。新增 `DesignContext.stress`（度，默认 0，加字段属公共 API 变更，先写签名草图），环构造按角度函数分配厚度。`humanist_sans` 是否采用非零值是设计决定，需人审。

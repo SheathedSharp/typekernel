@@ -82,7 +82,10 @@ def zero_from_O(
     c = ctx or O.context
     o = _o_rec(O)
     _, stem, _, w = _fig(H)
-    return build_o(c, replace(o, rx=w / 2.0, thickness=stem))
+    return build_o(
+        c,
+        replace(o, rx=w / 2.0, thickness_v=stem, thickness_h=stem * c.contrast),
+    )
 
 
 def one_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:

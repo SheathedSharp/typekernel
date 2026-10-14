@@ -47,7 +47,6 @@ def _build(ctx: DesignContext) -> dict[str, object]:
     return Controls.from_context(ctx).build_all()
 
 
-@pytest.mark.xfail(strict=True, reason="contrast should move all round letters (M3)")
 def test_contrast_moves_round_letters() -> None:
     base = DesignContext.humanist_sans()
     a = _build(base)

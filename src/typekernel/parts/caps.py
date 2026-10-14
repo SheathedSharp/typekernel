@@ -125,10 +125,12 @@ def cap_o_metrics(ctx: DesignContext, n: NMetrics | None = None) -> OMetrics:
     """The ``O`` record: the ``o`` construction at cap height with the cap stem."""
     lower = o_metrics(ctx)
     ry = ctx.cap_height / 2.0 + ctx.overshoot
+    cap_stem = (n or n_metrics(ctx)).stem * CAP_STEM_RATIO
     return OMetrics(
         rx=ry * (0.90 + 0.10 * ctx.aperture),
         ry=ry,
-        thickness=(n or n_metrics(ctx)).stem * CAP_STEM_RATIO,
+        thickness_v=cap_stem,
+        thickness_h=cap_stem * ctx.contrast,
         exponent=lower.exponent,
         x_height=ctx.cap_height,
         overshoot=ctx.overshoot,
@@ -183,8 +185,10 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     """``I``: one ``H`` stem."""
     c = ctx or H.context
     h = _h_record(H)
-    pts = [(0.0, 0.0), (h.stem, 0.0), (h.stem, h.cap_height), (0.0, h.cap_height)]
-    return _pack(c, h, _cap_anchors(h.stem, h), _polygon(pts))
+    from typekernel.parts.primitives import contrast_stem_caps
+
+    stem = contrast_stem_caps(c, 0.0, 0.0, h.cap_height, width=h.stem)
+    return _pack(c, h, _cap_anchors(h.stem, h), stem)
 
 
 def L_from_H(
@@ -297,7 +301,7 @@ def G_from_O(
     top = _cut(q0, x_t, horizontal=False)[1]
     itop = _cut(i0, x_t, horizontal=False)[1]
     bar_top = cy - 0.02 * o.x_height
-    bar_bot = bar_top - min(h.bar, 0.8 * (o.ry - o.thickness))
+    bar_bot = bar_top - min(h.bar, 0.8 * (o.ry - o.thickness_h))
     lower = _cut(q3, bar_top, horizontal=True)[0]
     ilower = _cut(i3, bar_bot, horizontal=True)[0]
     x_bar = cx + bar_reach * o.rx
@@ -339,7 +343,7 @@ def Q_from_O(
     cx, cy = o.rx, o.x_height / 2.0
     # tail axis: from inside the wall (centreline, -45°) out past the bottom right
     k = math.cos(math.radians(45.0))
-    start = (cx + (o.rx - o.thickness / 2.0) * k, cy - (o.ry - o.thickness / 2.0) * k)
+    start = (cx + (o.rx - o.thickness_v / 2.0) * k, cy - (o.ry - o.thickness_h / 2.0) * k)
     end = (cx + 1.0 * o.rx, -o.overshoot - 0.1 * o.x_height)
     hw = _hwidth(h.stem * 0.95, c.contrast, end[0] - start[0], start[1] - end[1])
     hits: list[float] = []
