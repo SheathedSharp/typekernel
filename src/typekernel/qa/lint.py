@@ -116,10 +116,10 @@ def lint_glyph(
                 issues.append(
                     LintIssue(glyph_name, "R6_degenerate", "error", f"{label} has empty contour")
                 )
-            for contour in outline.contours:
-                piece = Outline((contour,))
-                area = signed_area(contour)
-                if label == "solid" and contour.closed and area < 0:
+            contours = outline.contours
+            if label == "solid":
+                closed = [c for c in contours if c.closed]
+                if len(closed) == 1 and signed_area(closed[0]) < 0:
                     issues.append(
                         LintIssue(
                             glyph_name,
@@ -128,6 +128,18 @@ def lint_glyph(
                             f"{label} contour has negative signed area",
                         )
                     )
+                elif len(closed) > 1 and not any(signed_area(c) > 0 for c in closed):
+                    issues.append(
+                        LintIssue(
+                            glyph_name,
+                            "R1_winding",
+                            "error",
+                            "solid outline has no counter-clockwise outer contour",
+                        )
+                    )
+            for contour in contours:
+                piece = Outline((contour,))
+                area = signed_area(contour)
                 if label == "hole" and contour.closed and area > 0:
                     issues.append(
                         LintIssue(

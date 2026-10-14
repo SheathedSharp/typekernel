@@ -23,6 +23,15 @@ def test_lint_humanist_charset_no_keyhole() -> None:
     assert not keyholes, keyholes
 
 
+def test_lint_multi_contour_solids_not_r1_false_positive() -> None:
+    """Counters inside one solid outline are clockwise (negative area) by design."""
+    ctx = DesignContext.humanist_sans()
+    controls = Controls.from_context(ctx)
+    for ch in "aeobd":
+        issues = lint_glyph(controls.build(ch), ctx, glyph_name=ch)
+        assert not any(i.rule == "R1_winding" for i in issues), ch
+
+
 def test_lint_control_n_ok() -> None:
     ctx = DesignContext.code_clear()
     glyph = Controls.from_context(ctx).build_all("n")["n"]

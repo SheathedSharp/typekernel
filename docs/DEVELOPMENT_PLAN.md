@@ -178,6 +178,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 > 共同要求：QA 采样（把三次曲线离散）只用于测量，**不得写回字形**，符合 `dev-standards.md`「Sampling may be derived on demand」。
 
 #### TK-101 字形体检 `qa/lint.py`　〔M〕
+- **本轮（部分）**：R1 对「单 solid 多轮廓」按外轮廓 CCW 判定，内环负面积不再误报（`a`/`o` 等）。
 - **做什么**：新增 `lint_glyph(glyph, ctx)` 与 `lint_controls(controls, chars=None) -> LintReport`；`LintIssue(glyph, rule, severity, detail)`。规则：
   | 规则 | 检查 | 严重度 |
   | --- | --- | --- |
