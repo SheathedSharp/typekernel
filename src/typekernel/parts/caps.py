@@ -301,6 +301,8 @@ def G_from_O(
     lower = _cut(q3, bar_top, horizontal=True)[0]
     ilower = _cut(i3, bar_bot, horizontal=True)[0]
     x_bar = cx + bar_reach * o.rx
+    bar_h = bar_top - bar_bot
+    chamfer = min(h.stem * 0.32, bar_h * 0.48, 0.07 * o.x_height)
 
     b = PathBuilder()
     b.moveTo(*top[0])
@@ -308,6 +310,10 @@ def G_from_O(
         _curve(b, cubic)
     b.lineTo(x_bar, bar_top)
     b.lineTo(x_bar, bar_bot)
+    use = max(0.08, min(chamfer, bar_h * 0.45))
+    if h.stem > 180.0:
+        use = min(use, 0.32)
+    b.lineTo(x_bar + use, bar_bot - use)
     b.lineTo(*ilower[3])
     for cubic in (_rev(ilower), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)

@@ -55,6 +55,17 @@ def test_b09_m_crotch_no_keyhole() -> None:
     assert not any(i.rule == "R2_keyhole" for i in issues)
 
 
+def test_b13_three_no_flat_top_shelf() -> None:
+    three = _glyph("3")
+    cap_top = _CTX.cap_height + _CTX.overshoot
+    for seg in three.solids[0].contours[0].segments:
+        if len(seg.points) < 2:
+            continue
+        y0, y1 = seg.points[0].y, seg.points[-1].y
+        if abs(y0 - y1) < 0.05 and y0 >= cap_top - 0.5:
+            raise AssertionError("horizontal shelf on 3 cap")
+
+
 def test_b09_m_thickness_band() -> None:
     report = lint_controls(_CONTROLS, "m", thickness=True)
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)

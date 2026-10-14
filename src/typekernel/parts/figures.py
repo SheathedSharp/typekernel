@@ -423,8 +423,9 @@ def three_from_O(
     right = _single_crossing(l0, u3)
     l0a, _ = splitCubicAtT(*l0, right.t1)
     _, u3b = splitCubicAtT(*u3, right.t2)
-    u_top = _cut(u1, x_tu, horizontal=False)[0]
-    ui_top = _cut(ui1, x_tu, horizontal=False)[0]
+    # Keep the full upper ``u0`` arc (rounded top); open the bowl on the right via ``u1``.
+    u_side = _cut(u1, x_tu, horizontal=False)[0]
+    ui_side = _cut(ui1, x_tu, horizontal=False)[0]
     l_bot = _cut(l2, x_tl, horizontal=False)[1]
     li_bot = _cut(li2, x_tl, horizontal=False)[1]
     waist_top = _cut(ui2, x_w, horizontal=False)[1]  # x_w → inner bottom of upper
@@ -432,10 +433,10 @@ def three_from_O(
 
     b = PathBuilder()
     b.moveTo(*l_bot[0])
-    for cubic in (l_bot, l3, l0a, (l0a[3], u3b[1], u3b[2], u3b[3]), u0, u_top):
+    for cubic in (l_bot, l3, l0a, (l0a[3], u3b[1], u3b[2], u3b[3]), u0, u_side):
         _curve(b, cubic)
-    b.lineTo(*ui_top[3])
-    for cubic in (_rev(ui_top), _rev(ui0), _rev(ui3), _rev(waist_top)):
+    b.lineTo(*ui_side[3])
+    for cubic in (_rev(ui_side), _rev(ui0), _rev(ui3), _rev(waist_top)):
         _curve(b, cubic)
     b.lineTo(*waist_bot[3])
     for cubic in (_rev(waist_bot), _rev(li0), _rev(li3), _rev(li_bot)):
