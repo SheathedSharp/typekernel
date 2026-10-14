@@ -13,7 +13,7 @@
 | 先定 brief / 比例 / 字族性格 | 选或调 `DesignContext`（preset + 有记录的 override），写清 family 用途 |
 | 画 control 字（n/o、H/O）再扩族 | `Controls.from_context` → 验证 control → `build_all()`，不是逐字随机堆轮廓 |
 | 每个字重是 **重画母版**，不是描粗 | 每个 `wght` 独立 `Controls`（stem + `with_stem_relief()` 等 **designed delta**） |
-| 斜体是 **另一套母版** | `italic_design(regular)` 给出独立 control sheet + **构造倾角**（`italic_slant_deg`，默认约 10°），可与 Regular 插值。M4 的拱形分支等拓扑差异仍待补。VF 的 `ital=1` 用 `italic_design`，不要用 `oblique_font` 冒充 Italic 风格名 |
+| 斜体是 **另一套母版** | `italic_design(regular)` 给出独立 control sheet + **构造倾角**（`italic_slant_deg`，默认约 10°），`n/h/r/u/m` 分支拱、`f` 下伸等拓扑与直立不同；可与 Regular 做 `wght×ital` VF（`vf_upright_controls` 对齐段数）。`ital=1` 用 `italic_design`，不要用 `oblique_font` 冒充 Italic 风格名 |
 | 符号、数字、变音属于同一族 | 标点 / figures / extended Latin / 特性 glyph 与 `features.fea` **同时存在** |
 | 侧距与字偶是设计的一部分 | `space_font` → class kern；VF 各母版 **同一 kern groups** |
 | 用固定句子 proof 验收 | 编译后 `qa.proof`。过关句锁死 `AGENT_SENTENCE`；brief 句只作第二张 specimen。`design_review` 给出相对 preset 的 delta、弱字与最差 pair |
@@ -91,7 +91,7 @@ paths = build_glyph_preview(
 
 - **间距 / 字偶**：缺 `H`/`O` 的子集现在仍会给大写分类并字偶，`AGENT_SENTENCE` 的 optical ratio 从约 1.34 收到约 1.02（剩下的是类代表字带不动的形状，例如 `ow`）。pair gate 仍只抓撞字，不负责字偶好看。
 - **弱字默认质量**：`f` / `t` / `j`、`s`、大写 `I` / `J` 仍常要 `tuned_glyph` / `with_glyph`。默认链里的 boolean 接合要继续降 G1、降 gap，而不是把负担全推给 agent。
-- **Designed deltas**：`with_stem_relief()`、`tuned_glyph`、`italic_design`、VF 共用 kern class 已有 API。斜体拱形拓扑（TK-403）、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md) 与 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
+- **Designed deltas**：`with_stem_relief()`、`tuned_glyph`、`italic_design`、VF 共用 kern class 已有 API。斜体水平补偿与极值重平衡（TK-402 部分）、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md) 与 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
 - **视觉回归**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。试作被接受后才记 `approvals/`，防止「门槛过了但越改越丑」只靠 agent 自评。
 - **参考距离**：与 oh-my-font / zayJu 的对比是「离参考还有多远」，不是拷贝轮廓。手绘下沉见 `examples/zayju_letter/design_n.py`。
 

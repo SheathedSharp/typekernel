@@ -167,7 +167,7 @@ Show the user **`grid.png`**, **`sentence.png`**, and the review summary (deltas
 
 - **Static family**: one `Controls` + one `build_font` per weight/style file.
 - **VF**: each location is a full redrawn `Font` inside `Master({axis: value}, font)`. Minimum masters so **each axis** min ≠ max (`check_masters`).
-- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is an alias). Topology branching (TK-403) is still open. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
+- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is a deprecated alias). Branching `n/h/r/u/m` and italic `f` descender ship with M4; use `vf_upright_controls` for upright VF masters. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
 
 ## Symbols & charset
 

@@ -13,6 +13,7 @@ For mechanical oblique on a finished font, use
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass, replace
 
 from typekernel.axes.slant import ObliqueTransform
@@ -63,6 +64,11 @@ def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Con
 
 def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
     """Deprecated name for :func:`italic_design` (kept for examples and VF demos)."""
+    warnings.warn(
+        "italic_controls() is deprecated; use italic_design(regular, style=ItalicStyle(...))",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return italic_design(regular, style=ItalicStyle(lean=lean))
 
 

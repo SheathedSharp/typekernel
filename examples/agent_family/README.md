@@ -11,7 +11,7 @@ Regular is checked against the unmodified preset (`optical_gap_ratio`, non-termi
 
 Not in this template yet (see the TODOs and [`docs/agent-recipes.md`](../../docs/agent-recipes.md)):
 
-- italic masters (`italic_controls`, not oblique shear)
+- italic masters (`italic_design`, not oblique shear)
 - variable font
 - `tnum` / `case` / extended Latin
 
