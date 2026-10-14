@@ -13,6 +13,12 @@ def test_punct_forms_build() -> None:
         assert glyphs[ch].advance > 0
 
 
+def test_at_sign_inner_bowl_has_counter() -> None:
+    glyph = Controls.from_context(DesignContext.humanist_sans()).build("@")
+    assert len(glyph.solids) == 2
+    assert len(glyph.holes) == 2
+
+
 def test_sentence_chars_in_supported() -> None:
     controls = Controls.from_context(DesignContext.code_clear())
     supported = controls.supported

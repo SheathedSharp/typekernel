@@ -752,10 +752,23 @@ def at_sign_from_n_o(
         thickness_h=om.thickness_h * scale,
     )
     hole_r = om.rx * scale - om.thickness_v * scale
-    inner_r = min(om.thickness_v * 0.78, hole_r * 0.42)
-    dx = hole_r * 0.38
-    inner = _dot_ellipse(cx + dx, cy, inner_r * 2.0)
-    return _pack_holes(c, m, outer, inner, holes=(ring_hole,))
+    heavy = max(0.0, (c.stem - 110.0) / 110.0)
+    dx = hole_r * 0.35
+    belly_rx = hole_r * (0.34 - heavy * 0.06)
+    belly_ry = belly_rx * 0.85
+    belly_cy = cy
+    tv = min(om.thickness_v * scale * 0.65, belly_rx * 0.38)
+    th = min(om.thickness_h * scale * 0.65, belly_ry * 0.38)
+    inner_o, inner_h = bowl(
+        c,
+        cx + dx * 0.5,
+        belly_cy,
+        rx=belly_rx,
+        ry=belly_ry,
+        thickness_v=tv,
+        thickness_h=th,
+    )
+    return _pack_holes(c, m, outer, inner_o, holes=(ring_hole, inner_h))
 
 
 def dollar_from_n_o(
