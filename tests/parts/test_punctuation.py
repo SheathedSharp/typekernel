@@ -7,6 +7,8 @@ import pytest
 from typekernel.axes.interpolatable import check_interpolatable
 from typekernel.font import Glyph
 from typekernel.parts import PUNCT_FORMS, Controls, DesignContext
+from typekernel.qa.identity import _hole_contour_count
+from typekernel.qa.thickness import _point_in_ink
 
 
 def test_punct_forms_build() -> None:
@@ -29,6 +31,16 @@ def test_ampersand_interpolates_across_stems(preset: str) -> None:
         for s in stems
     ]
     assert check_interpolatable(outlines) == []
+
+
+def test_dollar_waist_coupled_topology() -> None:
+    ctx = DesignContext.code_clear()
+    g = Controls.from_context(ctx).build("$")
+    assert len(g.solids) == 1
+    assert _hole_contour_count(g) == 2
+    assert len(g.solids[0].contours) == 3
+    cx = g.advance / 2.0
+    assert _point_in_ink(cx, ctx.x_height * 0.5, g)
 
 
 @pytest.mark.parametrize(

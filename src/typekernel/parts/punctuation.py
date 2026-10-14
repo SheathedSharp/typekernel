@@ -855,7 +855,11 @@ def _dollar_stacked_outline(
     waist: float = 0.50,
     top_scale: float = 0.90,
 ) -> Outline:
-    """Stacked S-coupled rings (``8`` topology) with two counters — one solid, VF-safe."""
+    """Stacked S-coupled rings (``8`` topology) with two counters — one solid, VF-safe.
+
+    Top/bottom vertical stroke caps still need spline detours (light stems fail
+    ``test_outlines_are_simple`` if drawn as a separate solid or naive splice).
+    """
     cap = m.x_height
     e = om.exponent
     cx = m.width / 2.0
