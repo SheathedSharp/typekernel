@@ -460,6 +460,8 @@ def _r_outline(
 
     b = PathBuilder()
     b.moveTo(s.l0, 0.0)
+    if vf_compat:
+        b.lineTo(s.l0, 0.0)
     if bar is not None:
         y0, y1, left, _ = bar
         for p in ((s.l0, y0), (s.l0 - left, y0), (s.l0 - left, y1), (s.l0, y1)):
@@ -500,6 +502,7 @@ def _r_branching_outline(
     b.moveTo(s.l0, 0.0)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
+    b.lineTo(s.l1, branch_y)
     b.lineTo(s.l1, branch_y)
     _curve(b, s.outer[0])
     _curve(b, outer_arm)
@@ -585,8 +588,8 @@ def _hook_with_crossbar_outline(
     blend: bool = True,
 ) -> tuple[Outline, float]:
     """Hook master + rounded crossbar (boolean union when pathops is available)."""
-    body, x_t = _r_outline(hook, arm, None)
     y0, y1, left, right = bar
+    body, x_t = _r_outline(hook, arm, None)
     s = _shoulder(hook)
     fillet = min(ctx.join_radius * 1.1, (y1 - y0) * 0.42, n_m.stem * 0.32)
     cross = rounded_rect(ctx, s.l0 - left, y0, s.l1 + right, y1, radius=fillet)
@@ -1069,6 +1072,8 @@ def _single_storey_a_from_o(
     join: float,
 ) -> ComposedGlyph:
     o = _o_record(o_glyph)
+    if _italic_topology(c):
+        o = o.tuned(rx=o.rx * 0.965, ry=o.ry * 0.985)
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
     outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=join)
     outline = apply_terminal_shear(c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92))

@@ -32,6 +32,19 @@ def test_italic_branching_n_lint_clean() -> None:
         assert not [i for i in issues if i.severity == "error"]
 
 
+def test_italic_a_bowl_narrower_before_slant() -> None:
+    from typekernel.geo.outline import bounds
+    from typekernel.parts.control import a_from_o, build_n, build_o
+
+    ctx = DesignContext.code_clear().tuned(italic_slant_deg=10.0)
+    reg = Controls.from_context(DesignContext.code_clear())
+    a_reg = a_from_o(build_o(reg.context), build_n(reg.context), reg.context)
+    a_ital = a_from_o(build_o(ctx), build_n(ctx), ctx)
+    w_reg = bounds(a_reg.solids[0])[2] - bounds(a_reg.solids[0])[0]
+    w_ital = bounds(a_ital.solids[0])[2] - bounds(a_ital.solids[0])[0]
+    assert w_ital < w_reg
+
+
 def test_italic_ru_topology_differs_from_sheared_regular() -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 
