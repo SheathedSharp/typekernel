@@ -922,15 +922,13 @@ def p_from_o(
     return _bowl_glyph(o_glyph, n_glyph, ctx, stem_left=True, descends=True, join=join)
 
 
-def a_from_o(
+def _single_storey_a_from_o(
     o_glyph: ComposedGlyph,
-    n_glyph: ComposedGlyph | None = None,
-    ctx: DesignContext | None = None,
+    n_glyph: ComposedGlyph | None,
+    c: DesignContext,
     *,
-    join: float = 0.85,
+    join: float,
 ) -> ComposedGlyph:
-    """Derive single-storey ``a``: the ``o`` bowl with the stem at x-height."""
-    c = ctx or o_glyph.context
     o = _o_record(o_glyph)
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
     outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=join)
@@ -941,6 +939,99 @@ def a_from_o(
         "ogonek": (2.0 * o.rx - stem / 2.0, 0.0),
     }
     return _pack(c, o, anchors, outline)
+
+
+def _double_storey_a_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None,
+    c: DesignContext,
+) -> ComposedGlyph:
+    """Two-storey ``a``: lower bowl, upper arch, right stem (TK-305)."""
+    o = _o_record(o_glyph)
+    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    stem = m.stem
+    xh = o.x_height
+    width = 2.0 * o.rx
+    sx0, sx1 = width - stem, width
+
+    bowl_ry = xh * 0.36
+    bowl_rx = bowl_ry * (o.rx / o.ry) * 0.9
+    bowl_cx = bowl_rx + stem * 0.38
+    bowl_cy = bowl_ry
+    lower_outer, lower_hole = bowl(
+        c,
+        bowl_cx,
+        bowl_cy,
+        rx=bowl_rx,
+        ry=bowl_ry,
+        thickness_v=stem * 0.96,
+        thickness_h=stem * c.contrast * 0.96,
+        shape="superellipse",
+        n=o.exponent,
+    )
+    stem_o = contrast_stem_caps(c, sx0, 0.0, xh, width=stem)
+    x0 = sx0 - m.counter - stem
+    join_y = bowl_cy + bowl_ry * 0.38
+    mm = m.tuned(
+        join_y=join_y,
+        crown_y=xh + c.overshoot * 0.28,
+        leg_top=xh - stem * 0.06,
+        inner_crown=xh * 0.74,
+    )
+    s = _shoulder(mm, x0)
+    bowl_join = bowl_cy + bowl_ry * 0.68
+
+    b = PathBuilder()
+    b.moveTo(sx0, bowl_join)
+    b.lineTo(sx0, xh)
+    b.lineTo(sx1, xh)
+    b.lineTo(sx1, mm.leg_top)
+    _curve(b, s.outer[1])
+    _curve(b, s.outer[0])
+    b.lineTo(sx0, bowl_join)
+    b.closePath()
+    arch_band = _ccw(b.build())
+
+    bi = PathBuilder()
+    bi.moveTo(sx0, bowl_join - stem * 0.08)
+    bi.lineTo(s.l1, mm.join_y)
+    _curve(bi, s.inner[0])
+    _curve(bi, s.inner[1])
+    bi.lineTo(sx0, bowl_join - stem * 0.08)
+    bi.closePath()
+    upper_eye = _ccw(bi.build())
+
+    glyph = (
+        GlyphAssembler(c)
+        .with_design(o)
+        .add(stem_o)
+        .add(lower_outer)
+        .add(arch_band)
+        .add_hole(lower_hole)
+        .add_hole(upper_eye)
+        .union_solids()
+        .subtract_holes()
+        .blend_joins(max(2.5, c.join_radius * 0.95))
+        .anchor("top", width * 0.46, xh)
+        .anchor("bottom", bowl_cx, 0.0)
+        .anchor("ogonek", sx0 + stem / 2.0, 0.0)
+        .build()
+    )
+    return glyph
+
+
+def a_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    join: float = 0.85,
+) -> ComposedGlyph:
+    """Derive ``a`` (single- or double-storey per ``ctx.style.a_form``)."""
+    c = ctx or o_glyph.context
+    if c.style.a_form == "double":
+        return _double_storey_a_from_o(o_glyph, n_glyph, c)
+    return _single_storey_a_from_o(o_glyph, n_glyph, c, join=join)
 
 
 def _rev(c: Cubic) -> Cubic:

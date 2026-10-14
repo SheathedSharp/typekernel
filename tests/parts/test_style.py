@@ -33,3 +33,21 @@ def test_non_default_style_raises_voice_distance() -> None:
     base = Controls.from_context(DesignContext.humanist_sans())
     styled = base.with_style(i_dot="diamond")
     assert nearest_voice_distance(styled) > nearest_voice_distance(base)
+
+
+def test_a_form_double_changes_topology_and_voice() -> None:
+    ctx = DesignContext.geometric_sans()
+    single = Controls.from_context(ctx).build_all("a")["a"]
+    double = Controls.from_context(ctx, style=Style(a_form="double")).build_all("a")["a"]
+    assert topology_signature(single) != topology_signature(double)
+    base_dist = nearest_voice_distance(Controls.from_context(ctx))
+    double_dist = nearest_voice_distance(Controls.from_context(ctx, style=Style(a_form="double")))
+    assert double_dist > base_dist
+
+
+def test_a_form_double_lint_clean_on_geometric() -> None:
+    controls = Controls.from_context(DesignContext.geometric_sans(), style=Style(a_form="double"))
+    from typekernel.qa.lint import lint_glyph
+
+    issues = lint_glyph(controls.build_all("a")["a"], controls.context, glyph_name="a")
+    assert not [i for i in issues if i.severity == "error"]
