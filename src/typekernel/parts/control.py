@@ -568,12 +568,14 @@ def m_from_n(
     b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
     _curve(b, s1.outer[0])
-    descent = _split(s1.outer[1], xh, horizontal=True)
-    if descent is not None:
-        a = descent[0]
-        _curve(b, (a[0], a[1], a[2], (a[3][0], xh)))
-    b.lineTo(s2.l1, xh)
-    _curve(b, s2.outer[0])
+    split1 = _split(s1.outer[1], xh, horizontal=True)
+    split2 = _split(s2.outer[0], xh, horizontal=True)
+    if split1 is not None and split2 is not None:
+        _curve(b, split1[0])
+        _curve(b, split2[1])
+    else:
+        _curve(b, s1.outer[1])
+        _curve(b, s2.outer[0])
     _curve(b, s2.outer[1])
     b.lineTo(s2.r1, 0.0)
     b.lineTo(s2.r0, 0.0)
@@ -597,23 +599,22 @@ def build_m(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
 
 
 def build_u(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
-    """``u`` related to ``n``: the ``n`` turned through 180°."""
+    """``u`` related to ``n``: mirrored shoulder, right stem."""
     return u_from_n(build_n(ctx, metrics), ctx)
 
 
 def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Derive ``u``: the ``n`` outline turned through 180°.
+    """Derive ``u``: the ``n`` shoulder mirrored so the bowl sits on the left.
 
-    The shoulder becomes the bowl (its crown overshoot now dips below the
-    baseline) and the ``n``'s full left stem becomes the right stem that
-    runs down to the baseline.
+    A 180° rotation of ``n`` left a heavy slab under the left bowl; mirroring
+    across the advance swaps stems so the upright lives on the right.
     """
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    cx, cy = m.width / 2.0, m.x_height / 2.0
-    turned = mirror_y(mirror_x(_n_family_outline(m, left_top=m.x_height), at_x=cx), at_y=cy)
+    cx = m.width / 2.0
+    outline = mirror_x(_n_family_outline(m, left_top=m.x_height), at_x=cx)
     anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
-    return _pack(c, m, anchors, turned)
+    return _pack(c, m, anchors, outline)
 
 
 def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:

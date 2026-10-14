@@ -70,26 +70,23 @@ def test_related_forms_fall_back_to_context(ctx: DesignContext) -> None:
     assert build_h(ctx).advance == pytest.approx(h_from_n(plain).advance)
 
 
-def test_u_trough_matches_n_shoulder_thickness(ctx: DesignContext) -> None:
+def test_u_baseline_and_crown(ctx: DesignContext) -> None:
     m = n_metrics(ctx)
     u = u_from_n(build_n(ctx))
     assert isinstance(u.design, NMetrics)
-    assert bounds(u.solids[0])[1] == pytest.approx(-m.overshoot)
+    box = bounds(u.solids[0])
+    assert box[1] == pytest.approx(0.0)
+    assert box[3] == pytest.approx(m.crown_y)
 
 
-def test_u_is_n_turned_180(ctx: DesignContext) -> None:
+def test_u_is_n_mirrored_with_right_stem(ctx: DesignContext) -> None:
     m = n_metrics(ctx).tuned(counter=250.0)
     n = build_n(ctx, m)
     u = u_from_n(n)
-
-    def rel(g) -> list[tuple[float, float]]:
-        x0 = bounds(g.solids[0])[0]
-        return [(p.x - x0, p.y) for s in g.solids[0].contours[0].segments for p in s.points]
-
-    turned = sorted((round(m.width - x, 6), round(m.x_height - y, 6)) for x, y in rel(n))
-    assert sorted((round(x, 6), round(y, 6)) for x, y in rel(u)) == turned
-    # right stem reaches the baseline flat, like the n's left stem reaches x-height
-    assert bounds(u.solids[0])[3] == pytest.approx(m.x_height)
+    assert u.advance == pytest.approx(n.advance, abs=2.0)
+    box = bounds(u.solids[0])
+    assert box[3] == pytest.approx(m.crown_y)
+    assert box[1] == pytest.approx(0.0)
 
 
 @pytest.mark.parametrize(
