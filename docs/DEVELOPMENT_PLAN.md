@@ -263,7 +263,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`m` 双拱 `inner_crown` 抬高（`min(crown−0.55×stem, inner+0.32×stem)`）打开中柱 crotch；`u` 经 `mirror_x` 肩拱（非 180° 旋转），基线齐平回归 `test_b10_u_flat_baseline`。
 - **本轮（部分）**：`m` 在双拱 metrics 之后将 `inner_crown` 抬至 `x-height`（上限 `crown−0.06×stem`），内肩可水平 split、中柱 crotch 接 shelf；golden `m` 三 preset 更新。
 - **本轮（部分）**：直立 `u` 镜像后统一 `_ccw`（修复 R1）；golden `u` 三 preset 更新。
-- `u`：低 roundness preset 拱脚局部仍偏细；专用 baseline toe cubic 试验会推高 AGENT_SENTENCE 中 `u` 的 G1，仍待切线对齐方案。
+- **本轮（部分）**：低 roundness（``<0.35``）``u`` 左 baseline toe：G1 cubic + shelf（12 段）；高 roundness 仍 11 段镜像；golden ``u``（``code_clear`` / ``geometric_sans``）更新。
 
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。

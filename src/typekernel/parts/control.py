@@ -268,6 +268,102 @@ def _ccw(outline: Outline) -> Outline:
     return outline
 
 
+def _mirror_cubic(cx: float, c: Cubic) -> Cubic:
+    return (
+        (2.0 * cx - c[0][0], c[0][1]),
+        (2.0 * cx - c[1][0], c[1][1]),
+        (2.0 * cx - c[2][0], c[2][1]),
+        (2.0 * cx - c[3][0], c[3][1]),
+    )
+
+
+def _u_foot_bulge(c: DesignContext, stem: float) -> float:
+    """Baseline toe fillet on low-roundness presets (TK-204)."""
+    if c.roundness >= 0.35:
+        return 0.0
+    return max(stem * 0.08, 4.0)
+
+
+def _u_foot_shelf(stem: float) -> float:
+    return stem * 0.20
+
+
+def _u_append_baseline_toe(
+    b: PathBuilder, lo: float, li: float, bulge: float, shelf: float
+) -> None:
+    x_shelf = li - shelf
+    if bulge <= 0.0:
+        b.lineTo(li, 0.0)
+        return
+    b.curveTo(lo, -bulge, x_shelf - bulge * 0.5, 0.0, x_shelf, 0.0)
+    b.lineTo(li, 0.0)
+
+
+def _u_family_outline(m: NMetrics, ctx: DesignContext, *, vf_compat: bool = False) -> Outline:
+    bulge = _u_foot_bulge(ctx, m.stem)
+    if bulge <= 0.0:
+        return _ccw(
+            mirror_x(
+                _n_family_outline(m, left_top=m.x_height, vf_compat=vf_compat),
+                at_x=m.width / 2.0,
+            )
+        )
+    s = _shoulder(m)
+    cx = m.width / 2.0
+    ro, ri = 2.0 * cx - s.l0, 2.0 * cx - s.l1
+    lo, li = 2.0 * cx - s.r1, 2.0 * cx - s.r0
+    b = PathBuilder()
+    b.moveTo(ro, 0.0)
+    b.lineTo(ro, m.x_height)
+    b.lineTo(ri, m.x_height)
+    if vf_compat:
+        b.lineTo(ri, m.x_height)
+    _curve(b, _mirror_cubic(cx, s.outer[0]))
+    _curve(b, _mirror_cubic(cx, s.outer[1]))
+    b.lineTo(lo, 0.0)
+    _u_append_baseline_toe(b, lo, li, bulge, _u_foot_shelf(m.stem))
+    b.lineTo(li, m.join_y)
+    _curve(b, _mirror_cubic(cx, s.inner[0]))
+    _curve(b, _mirror_cubic(cx, s.inner[1]))
+    b.lineTo(ri, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) -> Outline:
+    bulge = _u_foot_bulge(ctx, m.stem)
+    if bulge <= 0.0:
+        return _ccw(mirror_x(_n_branching_outline(m, stem_top=stem_top), at_x=m.width / 2.0))
+    branch_y = _italic_branch_y(m, stem_top)
+    drop = stem_top - branch_y
+    mm = m.tuned(
+        x_height=branch_y,
+        crown_y=m.crown_y - drop * 0.14,
+        leg_top=m.leg_top - drop * 0.2,
+        join_y=min(m.join_y, branch_y - m.stem * 0.32),
+        inner_crown=m.inner_crown - drop * 0.16,
+    )
+    s = _shoulder(mm)
+    cx = m.width / 2.0
+    ro, ri = 2.0 * cx - 0.0, 2.0 * cx - m.stem
+    lo, li = 2.0 * cx - m.width, 2.0 * cx - (m.stem + m.counter)
+    b = PathBuilder()
+    b.moveTo(ro, 0.0)
+    b.lineTo(ro, stem_top)
+    b.lineTo(ri, stem_top)
+    b.lineTo(ri, branch_y)
+    _curve(b, _mirror_cubic(cx, s.outer[0]))
+    _curve(b, _mirror_cubic(cx, s.outer[1]))
+    b.lineTo(lo, 0.0)
+    _u_append_baseline_toe(b, lo, li, bulge, _u_foot_shelf(m.stem))
+    b.lineTo(li, mm.join_y)
+    _curve(b, _mirror_cubic(cx, s.inner[0]))
+    _curve(b, _mirror_cubic(cx, s.inner[1]))
+    b.lineTo(ri, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def _n_family_outline(m: NMetrics, *, left_top: float, vf_compat: bool = False) -> Outline:
     """One continuous outer contour: left stem + shoulder + right leg.
 
@@ -852,12 +948,9 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     m = _n_record(n_glyph)
     cx = m.width / 2.0
     if _italic_topology(c):
-        base = _n_branching_outline(m, stem_top=m.x_height)
+        outline = _u_branching_outline(m, c, stem_top=m.x_height)
     else:
-        base = _n_family_outline(
-            m, left_top=m.x_height, vf_compat=_vf_compat_stem(c)
-        )
-    outline = _ccw(mirror_x(base, at_x=cx))
+        outline = _u_family_outline(m, c, vf_compat=_vf_compat_stem(c))
     anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
     return _pack(c, m, anchors, outline)
 

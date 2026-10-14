@@ -76,7 +76,8 @@ def test_u_baseline_and_crown(ctx: DesignContext) -> None:
     u = u_from_n(build_n(ctx))
     assert isinstance(u.design, NMetrics)
     box = bounds(u.solids[0])
-    assert box[1] == pytest.approx(0.0)
+    foot_slack = ctx.stem * 0.09 if ctx.roundness < 0.35 else 0.0
+    assert box[1] == pytest.approx(0.0, abs=foot_slack)
     assert box[3] == pytest.approx(m.crown_y)
     assert signed_area(u.solids[0].contours[0]) > 0
 
@@ -88,7 +89,31 @@ def test_u_is_n_mirrored_with_right_stem(ctx: DesignContext) -> None:
     assert u.advance == pytest.approx(n.advance, abs=2.0)
     box = bounds(u.solids[0])
     assert box[3] == pytest.approx(m.crown_y)
-    assert box[1] == pytest.approx(0.0)
+    foot_slack = ctx.stem * 0.09 if ctx.roundness < 0.35 else 0.0
+    assert box[1] == pytest.approx(0.0, abs=foot_slack)
+
+
+def test_u_low_roundness_baseline_toe_segment_count() -> None:
+    """TK-204: square presets add one cubic + shelf at the left baseline toe."""
+    low = DesignContext.code_clear()
+    high = DesignContext.humanist_sans()
+    u_low = u_from_n(build_n(low), low)
+    u_high = u_from_n(build_n(high), high)
+    assert len(u_low.solids[0].contours[0].segments) == 12
+    assert len(u_high.solids[0].contours[0].segments) == 11
+    for stem in (30.0, 86.0, 220.0):
+        ctx = low.tuned(stem=stem)
+        u = u_from_n(build_n(ctx), ctx)
+        assert len(u.solids[0].contours[0].segments) == 12
+
+
+def test_u_baseline_toe_keeps_sentence_g1_budget() -> None:
+    from typekernel.qa.score import word_report
+
+    ctx = DesignContext.code_clear()
+    u = u_from_n(build_n(ctx), ctx)
+    report = word_report([u], ["u"])
+    assert report.g1_join_error_count - report.terminal_count <= 1
 
 
 @pytest.mark.parametrize(
