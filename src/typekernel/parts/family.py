@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
+from typing import Any
 
 from typekernel.parts.caps import (
     A_from_H,
@@ -84,6 +85,7 @@ from typekernel.parts.figures import (
     two_from_O,
     zero_from_O,
 )
+from typekernel.parts.glyph_specs import WEAK_GLYPH_SPECS, build_from_spec, merge_spec
 from typekernel.parts.punctuation import PUNCT_FORMS
 
 __all__ = [
@@ -191,6 +193,7 @@ class Controls:
     cap_h: HMetrics | None = None
     cap_o: OMetrics | None = None
     glyph_overrides: Mapping[str, Derivation] = field(default_factory=dict)
+    glyph_specs: Mapping[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_context(cls, ctx: DesignContext) -> Controls:
@@ -236,6 +239,23 @@ class Controls:
         merged = dict(self.glyph_overrides)
         merged.update(builders)
         return replace(self, glyph_overrides=merged)
+
+    def tuned_glyph(self, ch: str, **kwargs: float) -> Controls:
+        """Override one weak glyph via its typed spec (see ``glyph_specs``)."""
+        if ch not in WEAK_GLYPH_SPECS:
+            raise KeyError(
+                f"tuned_glyph: no spec for {ch!r}; have {sorted(WEAK_GLYPH_SPECS)}"
+            )
+        spec = merge_spec(ch, self.glyph_specs.get(ch), **kwargs)
+
+        def builder(n: ComposedGlyph, o: ComposedGlyph, c: DesignContext) -> ComposedGlyph:
+            return build_from_spec(ch, spec, n, o, c)
+
+        specs = dict(self.glyph_specs)
+        specs[ch] = spec
+        overrides = dict(self.glyph_overrides)
+        overrides[ch] = builder
+        return replace(self, glyph_specs=specs, glyph_overrides=overrides)
 
     @property
     def supported(self) -> str:

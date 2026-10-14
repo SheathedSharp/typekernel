@@ -23,14 +23,25 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 
 默认派生经常先在这些字上露馅：`f` `t` `j` `a` `s` `e`。L0 至少对其中两个 `with_glyph`。builder 签名是 `(n_glyph, o_glyph, ctx)`。
 
-已有、可直接调用的单字 master（参数是臂长一类的比例，不是绝对 stem）：
+优先用 **`Controls.tuned_glyph`**（类型化规格，默认等于派生行为）：
+
+```python
+controls = (
+    Controls.from_context(ctx)
+    .tuned_glyph("f", arm=0.82)
+    .tuned_glyph("t", arm=0.58, rise=0.28)
+    .tuned_glyph("e", bar_raise=0.15)
+)
+```
+
+字段见 `typekernel.parts.glyph_specs`（`FSpec` / `TSpec` / `JSpec` / `ASpec` / `ESpec` / `SSpec`）。`design_review` 的 `notes` 会列出 `spec f: {...}`。
+
+仍可直接 `with_glyph` 挂自定义 builder：
 
 ```python
 from typekernel.parts.control import f_from_n, t_from_n, j_from_n
 
 controls = controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.82))
-controls = controls.with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.58))
-controls = controls.with_glyph("j", lambda n, o, c: j_from_n(n, c, arm=0.75))
 ```
 
 改完看 `design_review` 里该字的 `g1_errors`，以及 `AGENT_SENTENCE` 的 optical ratio **没有**差于 preset。一个 `f` 不算试字完成。

@@ -163,6 +163,7 @@ def design_review(
     )
     l0_gaps = _l0_gaps(controls)
     charset_failures = tuple(collect_family_gate_failures(controls))
+    notes.extend(_spec_notes(controls))
     review = DesignReview(
         sentence=sentence,
         failures=failures,
@@ -221,13 +222,28 @@ def _deltas(trial: WordReport, baseline: WordReport) -> tuple[MetricDelta, ...]:
     )
 
 
+def _spec_notes(controls: Controls) -> list[str]:
+    return [f"spec {ch}: {asdict(controls.glyph_specs[ch])}" for ch in sorted(controls.glyph_specs)]
+
+
+def _weak_overrides(controls: Controls) -> tuple[str, ...]:
+    return tuple(
+        ch
+        for ch in WEAK_GLYPHS
+        if ch in controls.glyph_overrides or ch in controls.glyph_specs
+    )
+
+
 def _l0_gaps(controls: Controls) -> tuple[str, ...]:
-    overridden = tuple(ch for ch in WEAK_GLYPHS if ch in controls.glyph_overrides)
+    overridden = _weak_overrides(controls)
     if len(overridden) >= L0_MIN_WEAK_OVERRIDES:
         return ()
     have = ", ".join(overridden) if overridden else "none"
     listed = "".join(WEAK_GLYPHS)
-    return (f"need >={L0_MIN_WEAK_OVERRIDES} with_glyph overrides among {listed}; have {have}",)
+    return (
+        f"need >={L0_MIN_WEAK_OVERRIDES} with_glyph/tuned_glyph overrides among {listed}; "
+        + f"have {have}",
+    )
 
 
 def _glyph_scores(controls: Controls) -> tuple[GlyphScore, ...]:
@@ -243,7 +259,7 @@ def _glyph_scores(controls: Controls) -> tuple[GlyphScore, ...]:
             GlyphScore(
                 char=char,
                 g1_errors=int(smoothness.detail["error_count"]),
-                overridden=char in controls.glyph_overrides,
+                overridden=char in controls.glyph_overrides or char in controls.glyph_specs,
             )
         )
     return tuple(scores)
