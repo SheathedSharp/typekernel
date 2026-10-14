@@ -88,7 +88,7 @@ paths = build_glyph_preview(
 
 下面这些 **不是** 再写一份 prompt 就能出现的。agent 调 `DesignContext` 也补不上。
 
-- **间距 / 字偶**：`optical_gap_ratio` 目前只会被绝对上限和「不得差于所选 preset」夹住。pair gate 只抓撞字（光学间距 ≤ 0），不负责字偶好看。这是库内专项。
+- **间距 / 字偶**：缺 `H`/`O` 的子集现在仍会给大写分类并字偶，`AGENT_SENTENCE` 的 optical ratio 从约 1.34 收到约 1.02（剩下的是类代表字带不动的形状，例如 `ow`）。pair gate 仍只抓撞字，不负责字偶好看。
 - **弱字默认质量**：`f` / `t` / `j`、`s`、大写 `I` / `J` 仍常要 `with_glyph`。默认链里的 boolean 接合要继续降 G1、降 gap，而不是把负担全推给 agent。
 - **Designed deltas**：`with_stem_relief()`、`italic_controls`、VF 共用 kern class 已有 API。`examples/agent_family/` 是静态三母版模板；真斜体母版、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md)。
 - **视觉回归**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。试作被接受后才记 `approvals/`，防止「门槛过了但越改越丑」只靠 agent 自评。

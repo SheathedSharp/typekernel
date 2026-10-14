@@ -147,6 +147,33 @@ def test_split_side_classes_export_different_kern1_kern2() -> None:
         assert "public.kern2.round" in font.groups
 
 
+def test_capitals_are_classed_without_ho_controls() -> None:
+    """A proof set with I/B but not H/O must still kern those capitals."""
+    from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
+    from typekernel.optics.space import pair_gap_optical, space_font
+    from typekernel.parts import (
+        Controls,
+        DesignContext,
+        auto_class_kern,
+        auto_side_kern_classes,
+        rhythm_from_control_glyphs,
+    )
+
+    controls = Controls.from_context(DesignContext.code_clear())
+    drawn = polish_glyph_map(
+        controls.build_all("IdrBuno"),
+        GlyphPolishOptions(joins_policy="tangent_fix"),
+    )
+    assert "H" not in drawn and "O" not in drawn
+    rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
+    spaced = space_font(drawn, controls.context, rhythm=rhythm)
+    classes = auto_side_kern_classes(spaced, controls.context)
+    assert any("I" in kc.members for kc in classes)
+    kern = auto_class_kern(spaced, classes, target=rhythm)
+    gap = pair_gap_optical(spaced["I"], spaced["d"], kern=kern.lookup("I", "d"))
+    assert abs(gap - rhythm.target_gap) < 2.0
+
+
 def test_skip_same_class(synth_glyphs: dict, synth_classes: tuple[KernClass, ...]) -> None:
     table = auto_class_kern(
         synth_glyphs, synth_classes, target=50.0, skip_same_class=True

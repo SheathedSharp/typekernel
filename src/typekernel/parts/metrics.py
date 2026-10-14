@@ -384,6 +384,11 @@ def auto_side_kern_classes(
     Compares each glyph's mean side inset to straight/round control letters
     (``n``/``o`` or ``H``/``O``) and assigns shape labels: ``straight``,
     ``round``, ``diagonal``, ``hook``.
+
+    When the control pair is absent (a proof charset that has ``I`` and ``B``
+    but not ``H`` and ``O``), the flattest and roundest glyphs of that case
+    stand in as the two references. Capitals are still classed and kerned;
+    they are not dropped.
     """
     from typekernel.geo.outline import Outline
     from typekernel.optics.space import measure_side_whitespace
@@ -392,14 +397,21 @@ def auto_side_kern_classes(
         return list(g.solids) + list(g.holes)
 
     def _inset(g: ComposedGlyph, side: str, y1: float) -> float:
-        return measure_side_whitespace(
-            _outlines(g), side, y0=0.0, y1=y1, samples=samples
-        )
+        return measure_side_whitespace(_outlines(g), side, y0=0.0, y1=y1, samples=samples)
 
-    def _refs(lo: str, hi: str, y1: float, side: str) -> tuple[float, float] | None:
-        if lo not in glyphs or hi not in glyphs:
-            return None
-        return (_inset(glyphs[lo], side, y1), _inset(glyphs[hi], side, y1))
+    def _pool(upper: bool) -> tuple[str, ...]:
+        return tuple(ch for ch in glyphs if len(ch) == 1 and ch.isalpha() and ch.isupper() == upper)
+
+    def _refs(lo: str, hi: str, y1: float, side: str, *, upper: bool) -> tuple[float, float] | None:
+        if lo in glyphs and hi in glyphs:
+            straight_g, round_g = glyphs[lo], glyphs[hi]
+        else:
+            pool = _pool(upper)
+            if not pool:
+                return None
+            ranked = sorted(pool, key=lambda ch: _inset(glyphs[ch], side, y1))
+            straight_g, round_g = glyphs[ranked[0]], glyphs[ranked[-1]]
+        return (_inset(straight_g, side, y1), _inset(round_g, side, y1))
 
     def _label(inset: float, straight: float, round_: float) -> str:
         span = max(round_ - straight, 1.0)
@@ -426,8 +438,8 @@ def auto_side_kern_classes(
             y1 = ctx.cap_height
         else:
             continue
-        left_refs = _refs(lo, hi, y1, "left")
-        right_refs = _refs(lo, hi, y1, "right")
+        left_refs = _refs(lo, hi, y1, "left", upper=ch.isupper())
+        right_refs = _refs(lo, hi, y1, "right", upper=ch.isupper())
         if left_refs is None or right_refs is None:
             continue
         li = _inset(g, "left", y1)
