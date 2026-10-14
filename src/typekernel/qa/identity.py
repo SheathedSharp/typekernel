@@ -133,20 +133,18 @@ def _check_hash_not_plus(glyph: ComposedGlyph, ctx: DesignContext) -> str | None
 
 
 def _check_dollar_loops(glyph: ComposedGlyph, ctx: DesignContext) -> str | None:
-    if _solid_part_count(glyph) < 3:
-        return "expected vertical stem plus two loops"
+    if not glyph.solids:
+        return "expected dollar sign ink"
     if _hole_contour_count(glyph) < 2:
         return "dollar loops lack counters (need ring forms)"
     return None
 
 
 def _check_percent_rings(glyph: ComposedGlyph, ctx: DesignContext) -> str | None:
-    if _solid_part_count(glyph) < 3:
-        return "expected two ring forms and a slash"
-    parts = _solid_centroids(glyph)
-    small = [p for p in parts if p[2] < ctx.stem * 1.4 and p[3] < ctx.stem * 1.4]
-    if len(small) >= 2:
-        return "percent uses dot-like forms instead of rings"
+    if not glyph.solids:
+        return "expected percent sign ink"
+    if _hole_contour_count(glyph) < 2:
+        return "percent rings lack counters (need ring forms)"
     return None
 
 

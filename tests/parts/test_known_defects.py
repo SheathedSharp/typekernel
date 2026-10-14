@@ -26,25 +26,21 @@ def test_b02_question() -> None:
     assert not issues
 
 
-@pytest.mark.xfail(strict=True, reason="B-03 ampersand reads as e")
 def test_b03_ampersand() -> None:
     issues = check_identity_glyph(_glyph("&"), _CTX, glyph_name="&")
     assert not issues
 
 
-@pytest.mark.xfail(strict=True, reason="B-04 hash is a plus")
 def test_b04_hash() -> None:
     issues = check_identity_glyph(_glyph("#"), _CTX, glyph_name="#")
     assert not issues
 
 
-@pytest.mark.xfail(strict=True, reason="B-05 dollar missing S loops")
 def test_b05_dollar() -> None:
     issues = check_identity_glyph(_glyph("$"), _CTX, glyph_name="$")
     assert not issues
 
 
-@pytest.mark.xfail(strict=True, reason="B-06 percent uses dots")
 def test_b06_percent() -> None:
     issues = check_identity_glyph(_glyph("%"), _CTX, glyph_name="%")
     assert not issues

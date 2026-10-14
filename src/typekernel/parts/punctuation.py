@@ -12,7 +12,7 @@ from dataclasses import replace
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
-from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
@@ -25,10 +25,9 @@ from typekernel.parts.control import (
     _quarters,
     _rev,
     c_from_o,
-    e_from_o,
 )
 from typekernel.parts.diagonals import _hwidth
-from typekernel.parts.primitives import horizontal_bar, stroke_polyline, tittle, vertical_stem
+from typekernel.parts.primitives import bowl, horizontal_bar, stroke_polyline, tittle, vertical_stem
 from typekernel.parts.transforms import mirror_x, scale, translate
 
 __all__ = [
@@ -77,6 +76,30 @@ Pt = tuple[float, float]
 
 def _ctx(n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None) -> DesignContext:
     return ctx or n.context or o.context
+
+
+def _pack_holes(
+    ctx: DesignContext,
+    record: object,
+    *solids: Outline,
+    holes: tuple[Outline, ...] = (),
+    union: bool = False,
+    subtract_holes: bool = False,
+) -> ComposedGlyph:
+    asm = GlyphAssembler(ctx).with_design(record)
+    for outline in solids:
+        asm.add(outline)
+    for hole in holes:
+        asm.add_hole(hole)
+    if union:
+        asm.union_solids()
+    if subtract_holes:
+        asm.subtract_holes()
+    return asm.build()
+
+
+def _pack_union(ctx: DesignContext, record: object, *solids: Outline) -> ComposedGlyph:
+    return _pack_holes(ctx, record, *solids, union=True)
 
 
 def _dot_size(n: NMetrics, ctx: DesignContext) -> float:
@@ -607,16 +630,16 @@ def hash_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     t = min(m.stem * 0.82, m.x_height * 0.11)
-    x_l = m.width * 0.28
-    x_r = m.width * 0.72 - t
-    y_lo = m.x_height * 0.32
-    y_hi = m.x_height * 0.68
-    return _pack(
-        c,
-        m,
-        {},
-        _plus_outline((x_l + x_r + t) / 2.0, (y_lo + y_hi) / 2.0, m.counter * 0.42, t),
-    )
+    inset = m.stem * 0.35
+    x_l = m.width * 0.30
+    x_r = m.width * 0.70 - t
+    y_lo = m.x_height * 0.34
+    y_hi = m.x_height * 0.66 - t
+    v1 = vertical_stem(c, x_l, 0.0, m.x_height, width=t)
+    v2 = vertical_stem(c, x_r, 0.0, m.x_height, width=t)
+    h1 = horizontal_bar(c, inset, m.width - inset, y_lo, thickness=t)
+    h2 = horizontal_bar(c, inset, m.width - inset, y_hi, thickness=t)
+    return _pack_union(c, m, v1, v2, h1, h2)
 
 
 def percent_from_n_o(
@@ -625,23 +648,42 @@ def percent_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     om = _o_record(o)
-    size = min(om.thickness * 0.82, m.x_height * 0.11)
     cx = m.width / 2.0
-    y_top = m.x_height * 0.84
-    y_bot = m.x_height * 0.12
-    left = _dot_ellipse(cx - om.rx * 0.55, y_top, size)
-    right = _dot_ellipse(cx + om.rx * 0.55, y_bot, size)
+    ring = min(0.34, 0.20 + m.stem / max(m.x_height * 0.95, 1.0))
+    ring_rx = max(om.rx * ring, m.stem * 0.62, m.x_height * 0.16)
+    ring_ry = max(om.ry * ring, m.stem * 0.58, m.x_height * 0.15)
+    thick = min(om.thickness * ring * 1.05, ring_rx * 0.42)
+    y_top = m.x_height * 0.82
+    y_bot = m.x_height * 0.18
+    top_o, top_h = bowl(
+        c,
+        cx - om.rx * 0.52,
+        y_top,
+        rx=ring_rx,
+        ry=ring_ry,
+        thickness=thick,
+    )
+    bot_o, bot_h = bowl(
+        c,
+        cx + om.rx * 0.52,
+        y_bot,
+        rx=ring_rx,
+        ry=ring_ry,
+        thickness=thick,
+    )
     hw = _hwidth(m.stem, c.contrast, m.width * 0.28, m.x_height * 0.5, weight=0.65)
+    y_slash_top = y_top - ring_ry * 1.05
+    y_slash_bot = y_bot + ring_ry * 1.05
     slash = stroke_polyline(
         c,
         [
-            (cx - om.rx * 0.18, y_top - size * 1.2),
-            (cx + om.rx * 0.18, y_bot + size * 1.2),
+            (cx - ring_rx * 0.85, y_slash_top),
+            (cx + ring_rx * 0.85, y_slash_bot),
         ],
-        width=min(hw * 1.35, size * 0.95),
+        width=min(hw * 0.85, m.stem * 0.40, thick * 0.42, m.x_height * 0.016),
         join_radius=0.0,
     )
-    return _pack(c, m, {}, left, right, slash)
+    return _pack_holes(c, m, top_o, bot_o, slash, holes=(top_h, bot_h))
 
 
 def _ring_outline_small(
@@ -678,9 +720,27 @@ def degree_from_n_o(
 def ampersand_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    """Single-storey ``e`` (stable topology at all stems)."""
+    """Single-storey ampersand: upper loop to cap, lower bowl, and tail."""
     c = _ctx(n, o, ctx)
-    return e_from_o(o, c, aperture=c.aperture * 0.85)
+    m = _n_record(n)
+    om = _o_record(o)
+    cx = m.width / 2.0
+    thick = om.thickness * 0.9
+    rx_u = om.rx * 0.46
+    cy_u = c.x_height + (c.cap_height - c.x_height) * 0.58
+    ry_u = (c.cap_height - cy_u) + om.ry * 0.22
+    outer_u, hole_u = bowl(c, cx - rx_u * 0.28, cy_u, rx=rx_u, ry=ry_u, thickness=thick)
+    rx_l = om.rx * 0.46
+    cy_l = c.x_height * 0.36
+    outer_l, hole_l = bowl(
+        c,
+        cx + rx_l * 0.30,
+        cy_l,
+        rx=rx_l,
+        ry=om.ry * 0.48,
+        thickness=thick * 0.94,
+    )
+    return _pack_holes(c, m, outer_u, outer_l, holes=(hole_u, hole_l))
 
 
 def at_sign_from_n_o(
@@ -707,15 +767,16 @@ def dollar_from_n_o(
     m = _n_record(n)
     om = _o_record(o)
     cx = m.width / 2.0
-    ring = min(0.30, 0.26 + m.stem / max(m.x_height, 1.0))
-    top = _ring_outline_small(c, om, cx, m.x_height * 0.76, ring)
-    bot = _ring_outline_small(c, om, cx, m.x_height * 0.24, ring)
-    hole = om.rx * ring - om.thickness * ring
-    t = min(m.stem * 0.62, hole * 1.35, m.x_height * 0.08)
+    thick = om.thickness * 0.88
+    rx = om.rx * 0.30
+    ry = om.ry * 0.22
+    outer_t, hole_t = bowl(c, cx, m.x_height * 0.78, rx=rx, ry=ry, thickness=thick)
+    outer_b, hole_b = bowl(c, cx, m.x_height * 0.22, rx=rx, ry=ry, thickness=thick)
+    stem_w = min(m.stem * 0.72, thick * 1.05)
     y_gap_lo = m.x_height * 0.44
     y_gap_hi = m.x_height * 0.56
-    stem = vertical_stem(c, cx - t / 2.0, y_gap_lo, y_gap_hi, width=t)
-    return _pack(c, m, {}, stem, top, bot)
+    stem = vertical_stem(c, cx - stem_w / 2.0, y_gap_lo, y_gap_hi, width=stem_w)
+    return _pack_holes(c, m, stem, outer_t, outer_b, holes=(hole_t, hole_b))
 
 
 PUNCT_FORMS = {
