@@ -316,9 +316,9 @@ def G_from_O(
     for cubic in (top, q1, q2, lower):
         _curve(b, cubic)
     b.lineTo(x_bar, bar_top)
-    use = max(0.08, min(chamfer, bar_h * 0.45))
+    use = max(h.stem * 0.055, min(chamfer, bar_h * 0.5))
     if h.stem > 180.0:
-        use = min(use, 0.32)
+        use = min(use, 0.34)
     b.lineTo(x_bar, bar_bot + use)
     b.curveTo(
         x_bar,
