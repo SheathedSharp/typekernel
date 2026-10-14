@@ -76,6 +76,10 @@ def test_m_first_arch_matches_narrowed_n(ctx: DesignContext) -> None:
             rec.inner_crown + 0.32 * rec.stem,
         ),
     )
+    xh = mm.x_height
+    mm = mm.tuned(
+        inner_crown=min(max(mm.inner_crown, xh), mm.crown_y - mm.stem * 0.06),
+    )
     narrowed = build_n(ctx, mm)
     assert _cubics_from_left(m_from_n(n))[0] == _cubics_from_left(narrowed)[0]
 
@@ -94,6 +98,12 @@ def test_m_inner_shoulder_sits_higher_than_n(ctx: DesignContext) -> None:
     m = build_m(ctx)
     rec = n_metrics(ctx)
     n_inner = rec.inner_crown
-    m_inner = min(rec.crown_y - rec.stem * 0.55, rec.inner_crown + 0.32 * rec.stem)
+    m_inner = min(
+        max(
+            min(rec.crown_y - rec.stem * 0.55, rec.inner_crown + 0.32 * rec.stem),
+            rec.x_height,
+        ),
+        rec.crown_y - rec.stem * 0.06,
+    )
     assert m_inner > n_inner
     assert _cubics_from_left(m)[0] != _cubics_from_left(n)[0]

@@ -752,6 +752,13 @@ def m_from_n(
         ),
     )
     xh = mm.x_height
+    # Lift inner crown to x-height when needed so inner shoulders can meet the crotch shelf.
+    mm = mm.tuned(
+        inner_crown=min(
+            max(mm.inner_crown, xh),
+            mm.crown_y - mm.stem * 0.06,
+        ),
+    )
     branch_y: float | None = None
     if _italic_topology(c):
         branch_y = _italic_branch_y(m, xh)
