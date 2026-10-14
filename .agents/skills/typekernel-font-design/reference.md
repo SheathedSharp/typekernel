@@ -39,6 +39,17 @@ from typekernel.qa.trial_protocol import snapshot_trial, FIXED_TRIAL_BRIEFS
 
 `design_review(...).charset_failures` runs lint + identity on `controls.supported` (same as family gate). Agent builds should exit non-zero when non-empty.
 
+## Glyph specs (`tuned_glyph`)
+
+Typed knobs in `parts/glyph_specs.py` (defaults match stock derivations):
+
+| Char | Spec | Fields |
+| --- | --- | --- |
+| `f` `t` `j` `a` `s` `e` | `FSpec` … `SSpec` | see dataclass docstrings |
+| `G` `R` `Y` | `GSpec` `RSpec` `YSpec` | `bar_reach`; `width`/`leg_at`/…; `junction` |
+
+L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family polish and review notes.
+
 ## Glyph derivation (today)
 
 - Lowercase: mostly `n` / `o` families (`RELATED_FORMS` in `parts/family.py`).
