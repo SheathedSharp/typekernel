@@ -7,7 +7,7 @@ from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts.compose import ComposedGlyph
 
 # B-16 bowl letters and round figures (not ``h``/``k`` stem slivers).
-COUNTER_PINCH_CHARSET = frozenset("03a68e9emno")
+COUNTER_PINCH_CHARSET = frozenset("03a68e9emno$")
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]
 
