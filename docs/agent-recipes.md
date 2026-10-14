@@ -19,6 +19,21 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 
 大改 `stem` 属于 **另一套母版**（Light / Bold），不要拿去和 Regular 的未改 preset 比 gap。
 
+## Style DNA（离散拓扑）
+
+在 preset 之上用 `Controls.from_context(ctx, style=Style(...))` 或 `controls.with_style(...)`。默认值与未传 `style` 相同，**不会**改变 golden preset 哈希。
+
+| 字段 | 非默认取值 | 主要影响 |
+| --- | --- | --- |
+| `i_dot` | `square` / `diamond` | `i` `j` 点形 |
+| `a_form` | `double` | 双层 `a` |
+| `g_form` | `double` | 双层 `g` |
+| `l_tail` | `tailed` | `l` 底弯钩 |
+| `y_tail` | `curved` | `y` 右下弧 |
+| `t_cut` | `slanted` | `t` 底端斜切（可独立于 `terminal_style`） |
+
+`a_form` / `g_form` 与字重阶梯插值点位不完全兼容时，VF 应只用 Regular/Bold **独立母版**或避开跨 master 插值那些字。其余选项在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
+
 ## 弱字
 
 默认派生经常先在这些字上露馅：`f` `t` `j` `a` `s` `e`。L0 至少对其中两个 `with_glyph`。builder 签名是 `(n_glyph, o_glyph, ctx)`。

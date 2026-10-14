@@ -398,6 +398,8 @@ def tittle(
     if kind == "square":
         return rounded_rect(ctx, x0, y0, x1, y1, radius=0.0)
     if kind == "diamond":
+        from typekernel.geo.contour import reverse_contour
+
         mid_y = (y0 + y1) / 2.0
         b = PathBuilder()
         b.moveTo(cx, y1)
@@ -405,7 +407,8 @@ def tittle(
         b.lineTo(cx, y0)
         b.lineTo(x0, mid_y)
         b.closePath()
-        return b.build()
+        (contour,) = b.build().contours
+        return Outline((reverse_contour(contour),))
     r = min(ctx.join_radius * 0.6, min(w, s) * 0.35)
     return rounded_rect(ctx, x0, y0, x1, y1, radius=r)
 
