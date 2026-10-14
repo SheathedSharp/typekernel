@@ -549,7 +549,7 @@ def m_from_n(
     n_glyph: ComposedGlyph,
     ctx: DesignContext | None = None,
     *,
-    counter_scale: float = 0.92,
+    counter_scale: float | None = None,
 ) -> ComposedGlyph:
     """Derive ``m``: two ``n`` shoulders sharing the middle stem.
 
@@ -558,13 +558,16 @@ def m_from_n(
     down to the middle stem's top, which forms the crotch; one continuous
     contour, no boolean union.
     """
-    if counter_scale <= 0:
-        raise ValueError(f"counter_scale must be positive, got {counter_scale}")
     c = ctx or n_glyph.context
+    from typekernel.parts.weight_relief import m_counter_scale
+
+    scale = counter_scale if counter_scale is not None else m_counter_scale(c.stem)
+    if scale <= 0:
+        raise ValueError(f"counter_scale must be positive, got {scale}")
     m = _n_record(n_glyph)
     # Slightly shallower shoulders than ``n`` so the double arch stays inside R9.
     mm = m.tuned(
-        counter=m.counter * counter_scale,
+        counter=m.counter * scale,
         inner_crown=m.inner_crown + 0.24 * m.stem,
     )
     s1 = _shoulder(mm)

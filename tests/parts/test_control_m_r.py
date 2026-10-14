@@ -66,8 +66,11 @@ def test_m_width_and_shared_stem(ctx: DesignContext) -> None:
 def test_m_first_arch_matches_narrowed_n(ctx: DesignContext) -> None:
     n = build_n(ctx)
     rec = n_metrics(ctx)
+    from typekernel.parts.weight_relief import m_counter_scale
+
+    scale = m_counter_scale(ctx.stem)
     mm = rec.tuned(
-        counter=rec.counter * 0.92,
+        counter=rec.counter * scale,
         inner_crown=rec.inner_crown + 0.24 * rec.stem,
     )
     narrowed = build_n(ctx, mm)

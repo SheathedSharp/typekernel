@@ -18,8 +18,8 @@ __all__ = [
     "weight_ladder_sheet",
 ]
 
-_DEFAULT_LADDER_CHARS = "Hamburgefonstiv &!?#$"
-_DEFAULT_LADDER_STEMS = (50.0, 70.0, 110.0, 150.0)
+_DEFAULT_LADDER_CHARS = "Hamburgefonstiv&!?#$"
+_DEFAULT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0)
 
 
 def _require_pil() -> tuple[Any, Any, Any]:
@@ -131,7 +131,9 @@ def weight_ladder_sheet(
     for row, stem in enumerate(stems):
         ctx = preset.tuned(stem=float(stem))
         controls = Controls.from_context(ctx)
-        if stem >= 110.0:
+        from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
+
+        if stem >= STEM_RELIEF_ONSET:
             controls = controls.with_stem_relief()
         built = compose_font_from_controls(
             controls,

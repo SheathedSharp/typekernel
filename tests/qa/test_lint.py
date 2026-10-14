@@ -37,6 +37,13 @@ def test_lint_r9_optional_thickness() -> None:
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
 
 
+def test_lint_r8_counter_min() -> None:
+    ctx = DesignContext.code_clear().tuned(stem=180.0)
+    controls = Controls.from_context(ctx).with_stem_relief()
+    report = lint_controls(controls, "m", counter_min=True)
+    assert not any(i.rule == "R8_counter_min" for i in report.issues)
+
+
 def test_lint_negative_sidebearing() -> None:
     ctx = DesignContext.code_clear()
     b = PathBuilder()

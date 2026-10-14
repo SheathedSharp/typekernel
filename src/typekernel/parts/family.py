@@ -85,7 +85,6 @@ from typekernel.parts.figures import (
     zero_from_O,
 )
 from typekernel.parts.punctuation import PUNCT_FORMS
-from typekernel.parts.weight_relief import relieve_n_o
 
 __all__ = [
     "CAP_FORMS",
@@ -219,6 +218,10 @@ class Controls:
 
     def with_stem_relief(self) -> Controls:
         """Widen ``n``/``o`` counters for heavy ``context.stem`` (black masters)."""
+        from typekernel.parts.weight_relief import STEM_RELIEF_ONSET, relieve_n_o
+
+        if self.context.stem < STEM_RELIEF_ONSET:
+            return self
         n, o = relieve_n_o(self.n, self.o, self.context.stem)
         return replace(self, n=n, o=o)
 

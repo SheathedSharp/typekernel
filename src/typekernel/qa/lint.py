@@ -105,6 +105,7 @@ def lint_glyph(
     *,
     glyph_name: str = "?",
     control_max_thickness_ratio: float | None = None,
+    counter_gap_floor: float | None = None,
 ) -> tuple[LintIssue, ...]:
     """Run structural rules on one :class:`~typekernel.parts.compose.ComposedGlyph`."""
     issues: list[LintIssue] = []
@@ -215,6 +216,20 @@ def lint_glyph(
                 )
             )
 
+    if counter_gap_floor is not None and counter_gap_floor > 0:
+        from typekernel.qa.counter import min_counter_gap
+
+        gap = min_counter_gap(glyph)
+        if gap < counter_gap_floor:
+            issues.append(
+                LintIssue(
+                    glyph_name,
+                    "R8_counter_min",
+                    "error",
+                    f"counter pinch {gap:.1f} below floor {counter_gap_floor:.1f}",
+                )
+            )
+
     return tuple(issues)
 
 
@@ -223,6 +238,7 @@ def lint_controls(
     chars: str | None = None,
     *,
     thickness: bool = False,
+    counter_min: bool = False,
 ) -> LintReport:
     """Lint every glyph from ``controls.build_all(chars)``."""
     charset = chars if chars is not None else controls.supported
@@ -233,6 +249,11 @@ def lint_controls(
         from typekernel.qa.thickness import control_max_thickness_ratio
 
         control_ratio = control_max_thickness_ratio(controls)
+    gap_floor: float | None = None
+    if counter_min:
+        from typekernel.parts.weight_relief import counter_gap_floor
+
+        gap_floor = counter_gap_floor(ctx.stem)
     all_issues: list[LintIssue] = []
     for ch in charset:
         if ch not in drawn:
@@ -240,12 +261,16 @@ def lint_controls(
                 LintIssue(ch, "R0_missing", "error", "glyph not built")
             )
             continue
+        from typekernel.qa.counter import COUNTER_PINCH_CHARSET
+
+        floor = gap_floor if counter_min and ch in COUNTER_PINCH_CHARSET else None
         all_issues.extend(
             lint_glyph(
                 drawn[ch],
                 ctx,
                 glyph_name=ch,
                 control_max_thickness_ratio=control_ratio,
+                counter_gap_floor=floor,
             )
         )
     return LintReport(tuple(all_issues))
