@@ -350,7 +350,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮（部分）**：`italic_slant_deg ≥ 6°` 时 `n`/`h`/`r`/`u`/`m` 分支拱；`f`/`a` 待续；`tests/parts/test_italic_topology.py`。
-- **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。
+- **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。
+- **本轮（部分）**：`onhrum` 插值检查 + VF 编译；全 charset 待续。
 - **验收**：
   - 竖笔实测倾角 = 目标 ± 0.5°。
   - 与 `oblique_font(regular)` 比较：至少 N 个字母（`a e f g h k m n r u v w y`，N 待定）的拓扑签名或形状距离显著不同。

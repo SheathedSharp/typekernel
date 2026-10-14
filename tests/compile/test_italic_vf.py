@@ -22,13 +22,30 @@ def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
     ctx = controls.context
     if stem is not None:
         ctx = ctx.tuned(stem=stem)
+    ctx = ctx.tuned(vf_compat_stem_segments=True)
     sheet = replace(controls, context=ctx)
     if stem is not None and stem >= 100:
         sheet = sheet.with_stem_relief()
-    drawn = sheet.build_all("o")  # branching ``n`` breaks ital×wght point compatibility (TK-403)
+    drawn = sheet.build_all("onhrum")
     font = Font.from_context(ctx, "Ital VF", style)
     font.add_chars(drawn)
     return font
+
+
+def test_wght_ital_masters_interpolate() -> None:
+    from typekernel.font import check_masters
+
+    base = DesignContext.code_clear()
+    reg = Controls.from_context(base)
+    ital = italic_controls(reg)
+    bold = Controls.from_context(base.tuned(stem=120.0))
+
+    masters = [
+        Master({"wght": 400, "ital": 0}, _font(reg, "Regular")),
+        Master({"wght": 400, "ital": 1}, _font(ital, "Italic")),
+        Master({"wght": 700, "ital": 0}, _font(bold, "Bold", stem=120.0)),
+    ]
+    assert check_masters(masters) == []
 
 
 def test_wght_ital_vf_builds(tmp_path: Path) -> None:

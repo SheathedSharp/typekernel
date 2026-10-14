@@ -42,6 +42,9 @@ class DesignContext:
             ``0`` means use ``overshoot``.
         terminal_style: How open stroke ends are cut on ``c``, ``e``, ``r``, …
         italic_slant_deg: Right-leaning stem slant for italic masters (0 = upright).
+        vf_compat_stem_segments: When true, upright ``n``-family glyphs emit an
+            extra colinear stem segment so segment counts match branching italics
+            for ``wght×ital`` interpolation (TK-404).
         stress: Degrees CCW rotation of the thin/thick axis on round strokes
             (``0`` = thick on the sides, thin on top/bottom when ``contrast`` < 1).
         style: Discrete topology switches (see :class:`~typekernel.parts.style.Style`).
@@ -62,6 +65,7 @@ class DesignContext:
     sharp_overshoot: float = 0.0
     terminal_style: Literal["vertical", "horizontal", "angled"] = "vertical"
     italic_slant_deg: float = 0.0
+    vf_compat_stem_segments: bool = False
     stress: float = 0.0
     style: Style = DEFAULT_STYLE
 

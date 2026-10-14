@@ -270,7 +270,7 @@ def _ccw(outline: Outline) -> Outline:
     return outline
 
 
-def _n_family_outline(m: NMetrics, *, left_top: float) -> Outline:
+def _n_family_outline(m: NMetrics, *, left_top: float, vf_compat: bool = False) -> Outline:
     """One continuous outer contour: left stem + shoulder + right leg.
 
     No third ``arch`` mesh and no ``union``. The counter is the notch formed
@@ -284,6 +284,8 @@ def _n_family_outline(m: NMetrics, *, left_top: float) -> Outline:
     if left_top > m.x_height + 0.5:
         # h: down the right face of the ascender stem to the shoulder spring
         b.lineTo(s.l1, m.x_height)
+    elif vf_compat:
+        b.lineTo(s.l1, left_top)
     _curve(b, s.outer[0])
     _curve(b, s.outer[1])
     b.lineTo(s.r1, 0.0)
@@ -317,6 +319,10 @@ def _pack(
 def _italic_topology(ctx: DesignContext) -> bool:
     """True when construct slant should use branching arches (M4 TK-403)."""
     return ctx.italic_slant_deg >= 6.0
+
+
+def _vf_compat_stem(ctx: DesignContext) -> bool:
+    return bool(ctx.vf_compat_stem_segments)
 
 
 def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
@@ -364,7 +370,9 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     if _italic_topology(ctx):
         outline = _n_branching_outline(m, stem_top=m.x_height)
     else:
-        outline = _n_family_outline(m, left_top=m.x_height)
+        outline = _n_family_outline(
+            m, left_top=m.x_height, vf_compat=_vf_compat_stem(ctx)
+        )
     return _pack(ctx, m, anchors, outline)
 
 
@@ -375,7 +383,9 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     if _italic_topology(ctx):
         outline = _n_branching_outline(m, stem_top=m.ascender)
     else:
-        outline = _n_family_outline(m, left_top=m.ascender)
+        outline = _n_family_outline(
+            m, left_top=m.ascender, vf_compat=_vf_compat_stem(ctx)
+        )
     return _pack(ctx, m, anchors, outline)
 
 
@@ -406,7 +416,7 @@ def r_from_n(
     if _italic_topology(c):
         outline, x_t = _r_branching_outline(m, scaled, c)
     else:
-        outline, x_t = _r_outline(m, scaled)
+        outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c))
     outline = apply_terminal_shear(c, outline)
     anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
@@ -436,7 +446,9 @@ Bar = tuple[float, float, float, float]
 ``left`` past the stem's left face and ``right`` past its right face."""
 
 
-def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline, float]:
+def _r_outline(
+    m: NMetrics, arm: float, bar: Bar | None = None, *, vf_compat: bool = False
+) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
     ``bar`` adds a crossbar as straight detours on both stem faces, so the
@@ -454,6 +466,8 @@ def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline
             b.lineTo(*p)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
+    if vf_compat:
+        b.lineTo(s.l1, m.x_height)
     _curve(b, s.outer[0])
     _curve(b, outer_arm)
     b.lineTo(*inner_arm[0])
@@ -717,6 +731,8 @@ def m_from_n(
     b.lineTo(s1.l1, xh)
     if branch_y is not None:
         b.lineTo(s1.l1, branch_y)
+    elif _vf_compat_stem(c):
+        b.lineTo(s1.l1, xh)
     _curve(b, s1.outer[0])
     split1 = _split(s1.outer[1], xh, horizontal=True)
     split2 = _split(s2.outer[0], xh, horizontal=True)
@@ -778,7 +794,9 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     if _italic_topology(c):
         base = _n_branching_outline(m, stem_top=m.x_height)
     else:
-        base = _n_family_outline(m, left_top=m.x_height)
+        base = _n_family_outline(
+            m, left_top=m.x_height, vf_compat=_vf_compat_stem(c)
+        )
     outline = mirror_x(base, at_x=cx)
     if _italic_topology(c):
         outline = _ccw(outline)
