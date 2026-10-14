@@ -547,7 +547,13 @@ def t_from_n(
     except ValueError:
         min_y, max_x = 0.0, m.stem
     tip = (max_x, min_y + m.stem * 0.12)
-    outline = apply_terminal_shear(c, flipped, at=tip)
+    if c.style.t_cut == "slanted":
+        from typekernel.parts.terminals import shear_end
+
+        band = max(6.0, c.stem * 0.38)
+        outline = shear_end(flipped, tip, -16.0, band=band, along="y", inward="-")
+    else:
+        outline = apply_terminal_shear(c, flipped, at=tip)
     anchors = {"bottom": (x_t / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
 

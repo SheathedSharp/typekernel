@@ -60,6 +60,20 @@ def test_g_form_double_changes_topology() -> None:
     assert topology_signature(single) != topology_signature(double)
 
 
+def test_t_cut_slanted_changes_outline_on_vertical_terminal() -> None:
+    ctx = DesignContext.geometric_sans().tuned(terminal_style="vertical")
+    flat = Controls.from_context(ctx).build_all("t")["t"]
+    slant = Controls.from_context(ctx, style=Style(t_cut="slanted")).build_all("t")["t"]
+    assert composed_glyph_hash(flat) != composed_glyph_hash(slant)
+
+
+def test_t_cut_flat_matches_default_on_preset() -> None:
+    ctx = DesignContext.humanist_sans()
+    a = composed_glyph_hash(Controls.from_context(ctx).build_all("t")["t"])
+    b = composed_glyph_hash(Controls.from_context(ctx, style=Style(t_cut="flat")).build_all("t")["t"])
+    assert a == b
+
+
 def test_g_form_double_lint_clean_on_geometric() -> None:
     controls = Controls.from_context(DesignContext.geometric_sans(), style=Style(g_form="double"))
     from typekernel.qa.lint import lint_glyph
