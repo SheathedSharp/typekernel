@@ -13,6 +13,7 @@ from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.path_helpers import KAPPA
 from typekernel.parts.context import DesignContext
+from typekernel.parts.transforms import rotate
 
 
 def vertical_stem(
@@ -107,16 +108,27 @@ def bowl(
         else:
             return (
                 _ellipse(cx, cy, outer_rx, outer_ry),
-                _ellipse(cx, cy, inner_rx, inner_ry),
+                _stress_inner(ctx, cx, cy, _ellipse(cx, cy, inner_rx, inner_ry)),
             )
     if shape == "superellipse":
         from typekernel.geo.curves import superellipse_outline
 
         return (
             superellipse_outline(cx, cy, outer_rx, outer_ry, n, tension=tension),
-            superellipse_outline(cx, cy, inner_rx, inner_ry, n, tension=tension),
+            _stress_inner(
+                ctx,
+                cx,
+                cy,
+                superellipse_outline(cx, cy, inner_rx, inner_ry, n, tension=tension),
+            ),
         )
     raise ValueError(f"unknown bowl shape: {shape!r} (use 'ellipse' or 'superellipse')")
+
+
+def _stress_inner(ctx: DesignContext, cx: float, cy: float, hole: Outline) -> Outline:
+    if abs(ctx.stress) < 1e-9:
+        return hole
+    return rotate(hole, ctx.stress, origin=(cx, cy))
 
 
 def superellipse_ring(

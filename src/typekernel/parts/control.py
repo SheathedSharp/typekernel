@@ -14,6 +14,7 @@ through to ``h``, ``u``, ``i``, ``l`` without touching the context.
 from __future__ import annotations
 
 import importlib.util
+import math
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
@@ -946,11 +947,24 @@ def _rev(c: Cubic) -> Cubic:
     return (c[3], c[2], c[1], c[0])
 
 
-def _ring(o: OMetrics) -> tuple[list[Cubic], list[Cubic]]:
+def _rotate_cubic(c: Cubic, degrees: float, ox: float, oy: float) -> Cubic:
+    rad = math.radians(degrees)
+    co, si = math.cos(rad), math.sin(rad)
+
+    def rot(pt: Pt) -> Pt:
+        x, y = pt[0] - ox, pt[1] - oy
+        return (ox + x * co - y * si, oy + x * si + y * co)
+
+    return (rot(c[0]), rot(c[1]), rot(c[2]), rot(c[3]))
+
+
+def _ring(o: OMetrics, ctx: DesignContext) -> tuple[list[Cubic], list[Cubic]]:
     """Outer and counter quadrants of the ``o`` ring (CCW from ``+x``)."""
     cx, cy = o.rx, o.x_height / 2.0
     outer = _quarters(cx, cy, o.rx, o.ry, o.exponent)
     inner = _quarters(cx, cy, o.rx - o.thickness_v, o.ry - o.thickness_h, o.exponent)
+    if abs(ctx.stress) > 1e-9:
+        inner = [_rotate_cubic(c, ctx.stress, cx, cy) for c in inner]
     return outer, inner
 
 
@@ -981,7 +995,7 @@ def c_from_o(
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     ap = c.aperture if aperture is None else aperture
     x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
     top = _cut(q0, x_t, horizontal=False)[1]
@@ -1017,7 +1031,7 @@ def e_from_o(
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     cy = o.x_height / 2.0
     # Heavy weights thin the bar so it still fits inside the counter.
     room = 0.75 * (o.ry - o.thickness_h)
@@ -1077,7 +1091,7 @@ def g_from_o(
     # The hook's crotch must sit below where the bowl meets the stem; heavy
     # weights get a thinner hook rather than an outline that folds back.
     s_l = 2.0 * o.rx - stem
-    bowl_meets = _cut(_ring(o)[0][3], s_l, horizontal=False)[0][3][1]
+    bowl_meets = _cut(_ring(o, c)[0][3], s_l, horizontal=False)[0][3][1]
     join_needed = height + desc - (bowl_meets - 0.2 * stem)
     if hook.join_y < join_needed:
         inner_crown = max(hook.inner_crown, join_needed + 0.35 * stem)

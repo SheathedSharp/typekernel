@@ -297,7 +297,7 @@ def G_from_O(
     c = ctx or O.context
     o = _o_rec(O)
     h = _h_record(H) if H is not None else h_cap_metrics(c)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     cx, cy = o.rx, o.x_height / 2.0
     x_t = _terminal_x(o, c.aperture, opening_closure(c, 0.55))
     top = _cut(q0, x_t, horizontal=False)[1]
@@ -341,7 +341,7 @@ def Q_from_O(
     c = ctx or O.context
     o = _o_rec(O)
     h = _h_record(H) if H is not None else h_cap_metrics(c)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     cx, cy = o.rx, o.x_height / 2.0
     # tail axis: from inside the wall (centreline, -45°) out past the bottom right
     k = math.cos(math.radians(45.0))

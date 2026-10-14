@@ -40,6 +40,8 @@ class DesignContext:
             ``0`` means use ``overshoot``.
         terminal_style: How open stroke ends are cut on ``c``, ``e``, ``r``, …
         italic_slant_deg: Right-leaning stem slant for italic masters (0 = upright).
+        stress: Degrees CCW rotation of the thin/thick axis on round strokes
+            (``0`` = thick on the sides, thin on top/bottom when ``contrast`` < 1).
     """
 
     units_per_em: float = 1000.0
@@ -57,6 +59,7 @@ class DesignContext:
     sharp_overshoot: float = 0.0
     terminal_style: Literal["vertical", "horizontal", "angled"] = "vertical"
     italic_slant_deg: float = 0.0
+    stress: float = 0.0
 
     @property
     def thin(self) -> float:
