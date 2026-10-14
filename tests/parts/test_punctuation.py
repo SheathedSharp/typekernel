@@ -43,6 +43,7 @@ def test_dollar_waist_coupled_topology() -> None:
     assert _point_in_ink(cx, ctx.x_height * 0.5, g)
     assert _point_in_ink(cx - ctx.stem * 0.35, 0.5, g)
     assert _point_in_ink(cx, ctx.x_height - 0.5, g)
+    assert len(g.solids[0].contours[0].segments) == 15
 
 
 @pytest.mark.parametrize(

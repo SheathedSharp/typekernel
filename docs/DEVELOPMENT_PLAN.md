@@ -251,7 +251,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`@` 外环 + 环内小 bowl（双孔），重字重缩小 belly 避免叠墨；golden `@` 三 preset 更新。
 - **本轮（部分）**：`$` 改为腰接双环单 solid（`8` 式 S 脊柱、双孔，无第三 solid / union）；golden `$` 三 preset 更新；`&` / `$` 三 preset 字重插值 `check_interpolatable` 回归。
 - **本轮（部分）**：`$` 外轮廓基线 + 顶环竖笔帽（`u0` 水平 split + `xl`–`xr` detour，`l2` split）；golden `$` 三 preset 更新。
-- `$`：`test_dollar_waist_coupled_topology` 固化单 solid 双孔、腰墨与基线帽墨迹。`#`：双竖加双横（`hash_from_n_o`）。`%`：双环 + 斜线（`percent_from_n_o`）。
+- **本轮（部分）**：`test_dollar_waist_coupled_topology` 固化单 solid 双孔、腰墨、顶/底竖笔帽与外轮廓 15 段 VF 拓扑。
+- `$` 真 S 贯穿竖笔（非仅顶/底帽）仍非目标；`#`/`%` 见 `hash_from_n_o` / `percent_from_n_o`。
 
 #### TK-203 消除 keyhole 轮廓　〔S〕
 - **本轮**：三内置 preset 全字符 `R2_keyhole` 零报（`humanist_sans` / `code_clear` / `geometric_sans`）。
@@ -267,6 +268,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
 - **本轮（部分）**：`f`/`t` 横笔改为 `_r_outline` 固定段数 detour（去掉 pathops union）；`min_hook_thickness` 采样带 + `hook_min_thin_floor` 分档；golden `f`/`t` 三 preset 更新。
+- **本轮（部分）**：`g`/`J` 钩根 QA 已满足 `hook_min_thin_floor`（≈2.4× 余量）；`blend_corners` 于 `g` 会破坏 VF 段数，内联圆角仍待。
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
