@@ -176,6 +176,14 @@ def _with_advance(g: ComposedGlyph, advance: float) -> ComposedGlyph:
     return replace(moved, advance=advance)
 
 
+def _mirror_packed_solids(g: ComposedGlyph) -> ComposedGlyph:
+    """Mirror solids about the glyph's ink center (after ``_with_advance``)."""
+    box = union_bounds(list(g.solids) + list(g.holes))
+    cx = (box[0] + box[2]) / 2.0
+    solids = tuple(_ccw(mirror_x(s, at_x=cx)) for s in g.solids)
+    return replace(g, solids=solids)
+
+
 def _bar_y(n: NMetrics) -> float:
     return n.x_height * 0.52
 
@@ -493,11 +501,7 @@ def quote_single_left_from_n_o(
 def quote_single_right_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    g = quote_single_left_from_n_o(n, o, ctx)
-    m = _n_record(n)
-    cx = m.width / 2.0
-    solids = tuple(_ccw(mirror_x(s, at_x=cx)) for s in g.solids)
-    return replace(g, solids=solids)
+    return _mirror_packed_solids(quote_single_left_from_n_o(n, o, ctx))
 
 
 def quote_ascii_from_n_o(
@@ -525,11 +529,7 @@ def quote_double_left_from_n_o(
 def quote_double_right_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    g = quote_double_left_from_n_o(n, o, ctx)
-    m = _n_record(n)
-    cx = m.width / 2.0
-    solids = tuple(_ccw(mirror_x(s, at_x=cx)) for s in g.solids)
-    return replace(g, solids=solids)
+    return _mirror_packed_solids(quote_double_left_from_n_o(n, o, ctx))
 
 
 def quote_dbl_ascii_from_n_o(

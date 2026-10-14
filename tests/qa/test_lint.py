@@ -23,6 +23,14 @@ def test_lint_humanist_charset_no_keyhole() -> None:
     assert not keyholes, keyholes
 
 
+def test_lint_quote_marks_fit_advance() -> None:
+    ctx = DesignContext.humanist_sans()
+    controls = Controls.from_context(ctx)
+    for ch in ('"', "'", "\u2019", "\u201d"):
+        issues = lint_glyph(controls.build(ch), ctx, glyph_name=ch)
+        assert not any(i.rule == "R7_sidebearing" for i in issues), ch
+
+
 def test_lint_humanist_charset_no_r1_winding_errors() -> None:
     report = lint_controls(Controls.from_context(DesignContext.humanist_sans()))
     r1 = [i for i in report.issues if i.rule == "R1_winding" and i.severity == "error"]

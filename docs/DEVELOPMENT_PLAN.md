@@ -221,7 +221,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - 声明字符集必须来自 `FamilyBuildOptions.chars` / `controls.supported`，门禁不接受更小的字符集。
   - 新增 `tests/qa/test_gate_thresholds_locked.py`，断言所有阈值常量等于冻结值：改阈值必须显式改这个测试。
   - 保留现有句子门禁与 pair 门禁不变（`AGENT_SENTENCE` 不动）。
-- **验收**：在当前 HEAD 上，对 `humanist_sans` **应当失败**（因附录 B 的缺陷）；失败信息按字符列出。
+- **验收**：`collect_family_gate_failures(humanist_sans)` 零 error（TK-101/202 后已达成）；多母版 `check_family_gate` 同样零 error。
 - **依赖**：TK-101、TK-103。
 
 #### TK-106 缺陷登记（strict-xfail）　〔S〕
@@ -245,6 +245,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - `!`：竖笔从 cap 高度向下，圆点在基线附近（现为圆点在上、竖笔仅 `0.72×x-height`，`punctuation.py:239`）。`?`：钩 + 向下的竖笔 + 圆点（现为缩放的 `c` + 点，`:252`）。
 
 #### TK-202 `&` `@` `$` `#` `%` 真实字形　〔M〕
+- **本轮（部分）**：闭引号在已排版墨迹中心镜像（非 `n.width/2`），`'"''""` R7 清零；`humanist_sans` 默认 preset `family_gate` 全过。
 - `&`：现在直接返回 `e_from_o`（`punctuation.py:663`，docstring 自述占位）。需要自己的拓扑：脊线 + 环 + 尾。
 - `$`：S 形加贯穿竖笔（现为两个小环 + 短竖笔，`:688`）。`#`：双竖加双横，可带倾角（现为 `_plus_outline`，`:589`）。`%`：两个**小环**加斜线，比例重做（现为两个点 + 细斜线，`:607`）。`@`：外环 + 内部小 a + 尾（现为环 + 点，`:671`）。
 
