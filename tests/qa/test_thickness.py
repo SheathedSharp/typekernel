@@ -49,11 +49,11 @@ def test_vertical_stem_measures_stem_width() -> None:
     assert abs(measured - ctx.stem) <= ctx.stem * _STEM_TOLERANCE
 
 
-def test_m_thickness_outlier_warns() -> None:
+def test_m_thickness_within_control_band() -> None:
     controls = Controls.from_context(DesignContext.humanist_sans())
     report = lint_controls(controls, "mn", thickness=True)
     rules = {(i.glyph, i.rule) for i in report.issues}
-    assert ("m", "R9_thickness_outlier") in rules
+    assert ("m", "R9_thickness_outlier") not in rules
     assert ("n", "R9_thickness_outlier") not in rules
 
 

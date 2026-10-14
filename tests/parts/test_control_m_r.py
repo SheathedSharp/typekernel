@@ -65,7 +65,12 @@ def test_m_width_and_shared_stem(ctx: DesignContext) -> None:
 
 def test_m_first_arch_matches_narrowed_n(ctx: DesignContext) -> None:
     n = build_n(ctx)
-    narrowed = build_n(ctx, n_metrics(ctx).tuned(counter=n_metrics(ctx).counter * 0.92))
+    rec = n_metrics(ctx)
+    mm = rec.tuned(
+        counter=rec.counter * 0.92,
+        inner_crown=rec.inner_crown + 0.24 * rec.stem,
+    )
+    narrowed = build_n(ctx, mm)
     assert _cubics_from_left(m_from_n(n))[0] == _cubics_from_left(narrowed)[0]
 
 

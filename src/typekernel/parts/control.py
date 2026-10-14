@@ -562,7 +562,11 @@ def m_from_n(
         raise ValueError(f"counter_scale must be positive, got {counter_scale}")
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    mm = m.tuned(counter=m.counter * counter_scale)
+    # Slightly shallower shoulders than ``n`` so the double arch stays inside R9.
+    mm = m.tuned(
+        counter=m.counter * counter_scale,
+        inner_crown=m.inner_crown + 0.24 * m.stem,
+    )
     s1 = _shoulder(mm)
     s2 = _shoulder(mm, s1.r0)
     xh = mm.x_height

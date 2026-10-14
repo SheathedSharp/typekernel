@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from typekernel.geo.outline import bounds
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.identity import check_identity_glyph
@@ -57,7 +55,6 @@ def test_b09_m_crotch_no_keyhole() -> None:
     assert not any(i.rule == "R2_keyhole" for i in issues)
 
 
-@pytest.mark.xfail(strict=True, reason="B-09 m thickness above control band until calibrated")
 def test_b09_m_thickness_band() -> None:
     report = lint_controls(_CONTROLS, "m", thickness=True)
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
