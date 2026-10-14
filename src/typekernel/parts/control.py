@@ -335,6 +335,12 @@ def _f_use_inline_crossbar(ctx: DesignContext) -> bool:
     return _italic_topology(ctx) or _vf_compat_stem(ctx)
 
 
+def _horizontal_slant_scale(ctx: DesignContext) -> float:
+    from typekernel.parts.italic import horizontal_slant_compensation
+
+    return horizontal_slant_compensation(ctx)
+
+
 def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     if stem_top > m.x_height + 1.0:
         return m.x_height + (stem_top - m.x_height) * 0.38
@@ -588,14 +594,14 @@ def _finish_hook_letter(outline: Outline, ctx: DesignContext) -> Outline:
 
 def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) -> Bar:
     """Bar at x-height (dropped just enough to clear a heavy hook's crotch)."""
-    tb = m.stem * c.contrast * 0.95
+    tb = m.stem * c.contrast * 0.95 * _horizontal_slant_scale(c)
     y1 = min(x_height, hook.join_y - 0.1 * m.stem)
     return (y1 - tb, y1, 0.42 * m.counter, 0.52 * m.counter)
 
 
 def _t_crossbar_in_hook_space(c: DesignContext, m: NMetrics, hook: NMetrics, top: float) -> Bar:
     """Crossbar in hook coordinates before ``t`` is flipped."""
-    tb = m.stem * c.contrast * 0.95
+    tb = m.stem * c.contrast * 0.95 * _horizontal_slant_scale(c)
     y0 = top - m.x_height
     return (y0, y0 + tb, 0.42 * m.counter, 0.52 * m.counter)
 
@@ -1312,7 +1318,7 @@ def e_from_o(
     cy = o.x_height / 2.0
     # Heavy weights thin the bar so it still fits inside the counter.
     room = 0.75 * (o.ry - o.thickness_h)
-    bar_t = min(o.thickness_h, 1.2 * room)
+    bar_t = min(o.thickness_h * _horizontal_slant_scale(c), 1.2 * room)
     raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
     raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
     bar_bot, bar_top = cy + raise_ - bar_t / 2.0, cy + raise_ + bar_t / 2.0

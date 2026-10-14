@@ -12,21 +12,36 @@ For mechanical oblique on a finished font, use
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace
 
 from typekernel.axes.slant import ObliqueTransform
 from typekernel.geo.layout import union_bounds
 from typekernel.parts.compose import Anchor, ComposedGlyph
+from typekernel.parts.context import DesignContext
 from typekernel.parts.family import Controls
 from typekernel.parts.transforms import translate
 
 __all__ = [
     "ItalicStyle",
+    "horizontal_slant_compensation",
     "italic_controls",
     "italic_design",
     "slant_composed_glyph",
     "vf_upright_controls",
 ]
+
+
+def horizontal_slant_compensation(ctx: DesignContext) -> float:
+    """Scale horizontal stroke thickness before construct slant (TK-402).
+
+    Oblique shear thins horizontals by roughly ``cos(slant)``; bump bar
+    thickness by ``1/cos(slant)`` at draw time instead of shearing outlines.
+    """
+    slant = abs(ctx.italic_slant_deg)
+    if slant < 1e-9:
+        return 1.0
+    return 1.0 / math.cos(math.radians(slant))
 
 
 @dataclass(frozen=True, slots=True)
