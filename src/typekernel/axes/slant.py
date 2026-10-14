@@ -46,5 +46,5 @@ class ObliqueTransform:
         return Outline(tuple(new_contours))
 
 
-# True italic: redraw masters via ``typekernel.parts.italic.italic_controls`` and
-# ``Master({"ital": 1})``. Do not shear under an Italic style name.
+# True italic masters: ``typekernel.parts.italic.italic_design`` (construct slant
+# at compose time). Do not use this transform under a Roman master name.

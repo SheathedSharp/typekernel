@@ -306,5 +306,11 @@ class Controls:
             if chars_here:
                 a, b = draw()
                 for ch in chars_here:
-                    out[ch] = forms[ch](a, b, self.context)
+                    glyph = forms[ch](a, b, self.context)
+                    slant = self.context.italic_slant_deg
+                    if abs(slant) > 1e-9:
+                        from typekernel.parts.italic import slant_composed_glyph
+
+                        glyph = slant_composed_glyph(glyph, slant)
+                    out[ch] = glyph
         return {ch: out[ch] for ch in wanted}
