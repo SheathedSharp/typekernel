@@ -1,4 +1,4 @@
-"""Hook letters with rounded crossbar union (pathops)."""
+"""Hook letters with inline crossbar contours (f/t weight interpolation)."""
 
 from __future__ import annotations
 

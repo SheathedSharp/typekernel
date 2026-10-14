@@ -13,7 +13,6 @@ through to ``h``, ``u``, ``i``, ``l`` without touching the context.
 
 from __future__ import annotations
 
-import importlib.util
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -31,7 +30,6 @@ from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import (
     bowl,
     contrast_stem_caps,
-    rounded_rect,
     tittle,
     vertical_stem,
 )
@@ -616,29 +614,17 @@ def _hook_with_crossbar_outline(
     blend: bool = True,
     inline_crossbar: bool = False,
 ) -> tuple[Outline, float]:
-    """Hook master + rounded crossbar (boolean union when pathops is available)."""
-    y0, y1, left, right = bar
-    if inline_crossbar:
-        outline, x_t = _r_outline(
-            hook,
-            arm,
-            bar,
-            vf_compat=True,
-            stem_floor=_f_stem_floor(ctx),
-            hook_stem_knots=True,
-        )
-        return outline, x_t
-    body, x_t = _r_outline(hook, arm, None)
-    s = _shoulder(hook)
-    fillet = min(ctx.join_radius * 1.1, (y1 - y0) * 0.42, n_m.stem * 0.32)
-    cross = rounded_rect(ctx, s.l0 - left, y0, s.l1 + right, y1, radius=fillet)
-    if importlib.util.find_spec("pathops") is not None:
-        from typekernel.geo.boolean import boolean_op
-
-        outline = _ccw(boolean_op(body, cross, "union"))
-    else:
-        outline, x_t = _r_outline(hook, arm, bar)
-    if blend:
+    """Hook master + crossbar as fixed stem detours (no boolean union)."""
+    del n_m
+    outline, x_t = _r_outline(
+        hook,
+        arm,
+        bar,
+        vf_compat=inline_crossbar,
+        stem_floor=_f_stem_floor(ctx) if inline_crossbar else 0.0,
+        hook_stem_knots=inline_crossbar,
+    )
+    if blend and not inline_crossbar:
         outline = _finish_hook_letter(outline, ctx)
     return outline, x_t
 
