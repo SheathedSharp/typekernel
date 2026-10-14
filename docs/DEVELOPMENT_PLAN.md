@@ -373,6 +373,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-501 文档与 skill 同步　〔S〕
 - **本轮**：`AGENT_GOAL`、`SKILL`、`reference.md`、`VISION`、`README`、`examples/italic_family` 已对齐 `tuned_glyph`、`italic_design`、TK-301/304 状态；`VISION`/`AGENT_GOAL` 同步 M4 斜体与 TK-205 `f`/`t`。
+- **本轮（部分）**：SKILL / `reference.md` 补充 `charset_failures`、family gate、`snapshot_trial` 与 `agent_studio` 退出码行为。
 - **待续**：`Style`（TK-305）、L3 验收全文、与 `agent-recipes` 的最终统一核对。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕

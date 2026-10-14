@@ -124,7 +124,8 @@ from typekernel.qa.sentence_gate import AGENT_SENTENCE, check_sentence_gate
 
 baseline = Controls.from_context(DesignContext.humanist_sans())  # the preset you started from
 review = design_review(controls, baseline=baseline)
-# review.failures must be empty. review.l0_gaps must be empty for an L0 trial.
+# review.failures, review.l0_gaps, and review.charset_failures must all be empty.
+# charset_failures = full supported charset lint + identity (family_gate).
 # Do not pass the brief sentence here — it cannot make the gate pass.
 _report, failures = check_sentence_gate(controls, baseline=baseline)
 
@@ -140,7 +141,9 @@ Use the locked sentence and the brief sentence at **body** size (24–36 px), `f
 
 **Do not** treat the repo as “run one script → finished font.” The agent **writes** the design in Python, then exports proofs.
 
-**L0 trial** — edit **`examples/agent_studio/design.py`**, run **`python examples/agent_studio/build.py`**. One Regular voice. The gate scores `AGENT_SENTENCE`; `BRIEF_SENTENCE` is `sentence_brief.png` only. A failing review exits non-zero. Read `out/review/` (deltas, worst pair, control PNGs) before a second pass.
+**L0 trial** — edit **`examples/agent_studio/design.py`**, run **`python examples/agent_studio/build.py`**. One Regular voice. The gate scores `AGENT_SENTENCE`; `BRIEF_SENTENCE` is `sentence_brief.png` only. A failing review (sentence, L0 gaps, or **charset / family_gate**) exits non-zero. Built-in presets pass charset gate; agent deltas must keep it green. Read `out/review/` (deltas, worst pair, control PNGs) before a second pass.
+
+M5 trial metrics: `typekernel.qa.trial_protocol.snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (see `docs/AGENT_TRIALS.md`).
 
 **L2 family** — copy **`examples/agent_family/`** to `examples/<family>/`. Implement `design_controls` / `design_light` / `design_bold` (or VF masters) and `build_family.py` (`compose_font_from_controls`, shared kern classes). Do not deliver Light/Bold inside `agent_studio`.
 

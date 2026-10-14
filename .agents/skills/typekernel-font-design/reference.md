@@ -32,7 +32,12 @@ from typekernel.compile.features import (
 )
 from typekernel.compile.oblique import oblique_font  # slnt only, not ital semantics
 from typekernel.qa.proof import proof_context, proof_sheet, proof_labeled_waterfall
+from typekernel.qa.design_review import design_review
+from typekernel.qa.family_gate import check_family_gate, collect_family_gate_failures
+from typekernel.qa.trial_protocol import snapshot_trial, FIXED_TRIAL_BRIEFS
 ```
+
+`design_review(...).charset_failures` runs lint + identity on `controls.supported` (same as family gate). Agent builds should exit non-zero when non-empty.
 
 ## Glyph derivation (today)
 
