@@ -862,8 +862,8 @@ def dollar_from_n_o(
         c, cx, m.x_height * 0.22, rx=rx, ry=ry, thickness_v=thick_v, thickness_h=thick_h
     )
     stem_w = min(m.stem * 0.72, thick_v * 1.05)
-    y_gap_lo = m.x_height * 0.44
-    y_gap_hi = m.x_height * 0.56
+    y_gap_lo = m.x_height * 0.38
+    y_gap_hi = m.x_height * 0.62
     stem = vertical_stem(c, cx - stem_w / 2.0, y_gap_lo, y_gap_hi, width=stem_w)
     return _pack_holes(c, m, stem, outer_t, outer_b, holes=(hole_t, hole_b))
 

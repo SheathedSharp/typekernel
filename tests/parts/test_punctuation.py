@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
+
+from typekernel.axes.interpolatable import check_interpolatable
+from typekernel.font import Glyph
 from typekernel.parts import PUNCT_FORMS, Controls, DesignContext
 
 
@@ -11,6 +15,20 @@ def test_punct_forms_build() -> None:
     for ch in ".,;!?-":
         assert ch in glyphs
         assert glyphs[ch].advance > 0
+
+
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_ampersand_interpolates_across_stems(preset: str) -> None:
+    base = getattr(DesignContext, preset)()
+    stems = (50.0, base.stem, 140.0)
+    outlines = [
+        Glyph.from_composed("&", Controls.from_context(base.tuned(stem=s)).build("&")).outline
+        for s in stems
+    ]
+    assert check_interpolatable(outlines) == []
 
 
 def test_ampersand_tail_reaches_baseline() -> None:
