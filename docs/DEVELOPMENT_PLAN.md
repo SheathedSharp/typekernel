@@ -334,8 +334,9 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - `voice_distance(a, b)`：两套 `Controls` 之间「拓扑签名不同的字形占比」，及按 `stem/x_height` 归一化后的形状距离。
   - `originality_report(controls)`：对所有内置 preset 取最近邻距离。
   在 `AGENT_GOAL.md` 新增 **L3「独特声音」**：最近邻 `voice_distance` ≥ 阈值（待校准，初值建议 0.35）**且** lint+identity 全过**且**经人审。
+- **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
-- **验收**：当前 7 个 preset 两两距离为 0（作为反例基线）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
+- **验收**：当前 7 个 preset 两两**拓扑**距离为 0（形状距离 > 0）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
 
 #### TK-308 曲线感知的笔偏移（可选 spike，默认不做）　〔L〕
 - 给 `Centerline` 增加三次曲线中线，笔偏移输出三次曲线并附误差报告（类似现有 `ConversionReport` 的诚实原则）。**只作构造手段，不作字重机制，不进入默认管线。**

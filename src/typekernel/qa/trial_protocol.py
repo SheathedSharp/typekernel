@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -12,16 +12,12 @@ from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls
-from typekernel.qa.outline_hash import composed_glyph_hash
+from typekernel.qa.originality import (
+    L3_VOICE_DISTANCE_THRESHOLD,
+    nearest_voice_distance,
+)
 
-L3_VOICE_DISTANCE_THRESHOLD = 0.35
 WEIGHT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0)
-
-_PRESET_FACTORIES: dict[str, Callable[[], DesignContext]] = {
-    "code_clear": DesignContext.code_clear,
-    "humanist_sans": DesignContext.humanist_sans,
-    "geometric_sans": DesignContext.geometric_sans,
-}
 
 __all__ = [
     "FIXED_TRIAL_BRIEFS",
@@ -95,20 +91,8 @@ class TrialSnapshot:
 
 
 def voice_distance(controls: Controls) -> float:
-    """Share of charset glyphs that differ from the nearest built-in preset default."""
-    glyphs = controls.build_all()
-    charset = controls.supported
-    if not charset:
-        return 0.0
-    trial_hashes = {ch: composed_glyph_hash(glyphs[ch]) for ch in charset}
-    best_match = 0.0
-    for factory in _PRESET_FACTORIES.values():
-        ref = Controls.from_context(factory()).build_all()
-        same = sum(
-            1 for ch in charset if composed_glyph_hash(ref[ch]) == trial_hashes[ch]
-        )
-        best_match = max(best_match, same / len(charset))
-    return 1.0 - best_match
+    """Distance to the nearest built-in preset (see ``qa.originality``)."""
+    return nearest_voice_distance(controls)
 
 
 def weight_ladder_r8_failures(ctx: DesignContext) -> int:
