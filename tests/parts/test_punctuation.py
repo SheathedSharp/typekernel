@@ -13,6 +13,16 @@ def test_punct_forms_build() -> None:
         assert glyphs[ch].advance > 0
 
 
+def test_ampersand_tail_reaches_baseline() -> None:
+    from typekernel.geo.layout import union_bounds
+
+    glyph = Controls.from_context(DesignContext.humanist_sans()).build("&")
+    assert len(glyph.solids) == 2
+    assert len(glyph.holes) == 2
+    y0 = union_bounds(list(glyph.solids))[1]
+    assert y0 < glyph.context.x_height * 0.05
+
+
 def test_at_sign_inner_bowl_has_counter() -> None:
     glyph = Controls.from_context(DesignContext.humanist_sans()).build("@")
     assert len(glyph.solids) == 2

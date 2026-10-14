@@ -9,15 +9,19 @@ from __future__ import annotations
 import math
 from dataclasses import replace
 
+from fontTools.misc.bezierTools import curveLineIntersections, splitCubicAtT
+
 from typekernel.geo.contour import canonical_contour_start, reverse_contour, signed_area
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
+from typekernel.geo.path_helpers import ellipse_cubics
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
     _ccw,
+    _curve,
     _n_record,
     _o_record,
     _pack,
@@ -703,6 +707,67 @@ def degree_from_n_o(
     return _pack_holes(c, m, outer, holes=(hole,))
 
 
+def _cubic_pts(q: tuple) -> tuple[tuple[float, float], ...]:
+    return tuple((p.x, p.y) for p in q)
+
+
+def _ampersand_lower_with_tail(
+    c: DesignContext,
+    m: NMetrics,
+    om,
+    *,
+    cx: float,
+    rx_l: float,
+    cy_l: float,
+    ry_l: float,
+    thick_v: float,
+    thick_h: float,
+) -> tuple[Outline, Outline]:
+    """Lower bowl with a Q-style tail splice (single outer contour, fixed topology)."""
+    lcx = cx + rx_l * 0.30
+    tv = thick_v * 0.94
+    th = thick_h * 0.94
+    q0, q1, q2, q3 = ellipse_cubics(lcx, cy_l, rx_l, ry_l)
+    end = (cx - m.stem * 0.58, max(m.stem * 0.05, 3.0))
+    k = math.cos(math.radians(45.0))
+    start = (lcx - (rx_l - tv) * k, cy_l - (ry_l - th) * k)
+    hw = _hwidth(m.stem, c.contrast, end[0] - start[0], end[1] - start[1], weight=0.65)
+    hits: list[float] = []
+    q2_pts = _cubic_pts(q2)
+    for side in (-0.5, 0.5):
+        a = (start[0] + side * hw, start[1])
+        z = (end[0] + side * hw, end[1])
+        far = (a[0] - (z[0] - a[0]), a[1] - (z[1] - a[1]))
+        found = [
+            i.t1
+            for i in curveLineIntersections(list(q2_pts), [far, z])
+            if 0.0 < i.t1 < 1.0
+        ]
+        if len(found) != 1:
+            raise ValueError("ampersand tail does not meet the lower bowl once per edge")
+        hits.append(found[0])
+    t_lo, t_hi = sorted(hits)
+    before, _, after = splitCubicAtT(*q2_pts, t_lo, t_hi)
+    b = PathBuilder()
+    b.moveTo(*_cubic_pts(q0)[0])
+    _curve(b, _cubic_pts(q0))
+    _curve(b, _cubic_pts(q1))
+    _curve(b, before)
+    b.lineTo(end[0] - hw / 2.0, end[1])
+    b.lineTo(end[0] + hw / 2.0, end[1])
+    b.lineTo(*after[0])
+    _curve(b, after)
+    _curve(b, _cubic_pts(q3))
+    b.closePath()
+    iq0, iq1, iq2, iq3 = ellipse_cubics(lcx, cy_l, rx_l - tv, ry_l - th)
+    b.moveTo(iq0[0].x, iq0[0].y)
+    for cubic in (iq0, iq1, iq2, iq3):
+        _curve(b, _cubic_pts(cubic))
+    b.closePath()
+    outer, hole = b.build().contours
+    return Outline((outer,)), Outline((reverse_contour(hole),))
+
+
 def ampersand_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
@@ -721,14 +786,17 @@ def ampersand_from_n_o(
     )
     rx_l = om.rx * 0.46
     cy_l = c.x_height * 0.36
-    outer_l, hole_l = bowl(
+    ry_l = om.ry * 0.48
+    outer_l, hole_l = _ampersand_lower_with_tail(
         c,
-        cx + rx_l * 0.30,
-        cy_l,
-        rx=rx_l,
-        ry=om.ry * 0.48,
-        thickness_v=thick_v * 0.94,
-        thickness_h=thick_h * 0.94,
+        m,
+        om,
+        cx=cx,
+        rx_l=rx_l,
+        cy_l=cy_l,
+        ry_l=ry_l,
+        thick_v=thick_v,
+        thick_h=thick_h,
     )
     return _pack_holes(c, m, outer_u, outer_l, holes=(hole_u, hole_l))
 

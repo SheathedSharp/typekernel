@@ -247,7 +247,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-202 `&` `@` `$` `#` `%` 真实字形　〔M〕
 - **本轮（部分）**：闭引号在已排版墨迹中心镜像（非 `n.width/2`），`'"''""` R7 清零；`humanist_sans` 默认 preset `family_gate` 全过。
-- `&`：双环已落地；**尾笔**须与 `wght×ital` VF 同拓扑（第三 solid 在斜体 deep_check 上 `wrong_start_point`），待与 TK-402/403 一并接。
+- **本轮（部分）**：`&` 下环外轮廓 Q 式接左下尾笔（双 solid、双孔，无第三 solid）；golden `&` 三 preset 更新。
 - **本轮（部分）**：`@` 外环 + 环内小 bowl（双孔），重字重缩小 belly 避免叠墨；golden `@` 三 preset 更新。
 - `$`：S 形加贯穿竖笔（现为两个小环 + 短竖笔，`:688`）。`#`：双竖加双横（`hash_from_n_o`）。`%`：双环 + 斜线（`percent_from_n_o`）。
 
