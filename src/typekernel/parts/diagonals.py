@@ -287,16 +287,32 @@ def y_from_n(
     join_y = xh - (w - hw) / (2.0 * tan)
     join_x = (xh - join_y) * tan
     tail_r = w - (xh - desc) * tan
-    pts = [
-        (0.0, xh),
-        (join_x, join_y),
-        (tail_r - hw, desc),
-        (tail_r, desc),
-        (w, xh),
-        (w - hw, xh),
-        (w / 2.0, cy),
-        (hw, xh),
-    ]
+    if c.style.y_tail == "curved":
+        bulge = w * 0.09
+        mid_y = (join_y + desc) / 2.0
+        pts = [
+            (0.0, xh),
+            (join_x, join_y),
+            (tail_r - hw * 0.45 + bulge, mid_y),
+            (tail_r - hw, desc),
+            (tail_r, desc),
+            (tail_r + bulge * 0.35, mid_y),
+            (w, xh),
+            (w - hw, xh),
+            (w / 2.0, cy),
+            (hw, xh),
+        ]
+    else:
+        pts = [
+            (0.0, xh),
+            (join_x, join_y),
+            (tail_r - hw, desc),
+            (tail_r, desc),
+            (w, xh),
+            (w - hw, xh),
+            (w / 2.0, cy),
+            (hw, xh),
+        ]
     outline = apply_terminal_shear(c, _polygon(pts), at=(tail_r, desc + m.stem * 0.08))
     return _pack(c, m, {"top": (w / 2.0, xh)}, outline)
 

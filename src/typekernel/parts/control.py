@@ -730,9 +730,22 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """``l``: the ``n`` stem rising to the ascender."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    stem = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
+    if c.style.l_tail == "tailed":
+        t = m.stem
+        ext = t * 0.88
+        dip = t * 0.26
+        b = PathBuilder()
+        b.moveTo(0.0, m.ascender)
+        b.lineTo(t, m.ascender)
+        b.lineTo(t, dip)
+        b.curveTo(t + ext * 0.5, dip * 0.3, t + ext, dip * 0.5, t + ext, 0.0)
+        b.lineTo(0.0, 0.0)
+        b.closePath()
+        outline = _ccw(b.build())
+    else:
+        outline = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.stem / 2.0, 0.0)}
-    return _pack(c, m, anchors, stem)
+    return _pack(c, m, anchors, outline)
 
 
 # --- o family -----------------------------------------------------------------

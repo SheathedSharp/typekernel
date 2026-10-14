@@ -53,6 +53,20 @@ def test_a_form_double_lint_clean_on_geometric() -> None:
     assert not [i for i in issues if i.severity == "error"]
 
 
+def test_l_tail_tailed_changes_topology() -> None:
+    ctx = DesignContext.geometric_sans()
+    plain = Controls.from_context(ctx).build_all("l")["l"]
+    tailed = Controls.from_context(ctx, style=Style(l_tail="tailed")).build_all("l")["l"]
+    assert topology_signature(plain) != topology_signature(tailed)
+
+
+def test_y_tail_curved_changes_outline() -> None:
+    ctx = DesignContext.geometric_sans()
+    straight = Controls.from_context(ctx).build_all("y")["y"]
+    curved = Controls.from_context(ctx, style=Style(y_tail="curved")).build_all("y")["y"]
+    assert composed_glyph_hash(straight) != composed_glyph_hash(curved)
+
+
 def test_g_form_double_changes_topology() -> None:
     ctx = DesignContext.geometric_sans()
     single = Controls.from_context(ctx).build_all("g")["g"]
