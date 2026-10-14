@@ -15,18 +15,17 @@ from fontTools.ttLib import TTFont
 from typekernel.compile import build_variable_font
 from typekernel.font import Font, Master
 from typekernel.parts import Controls, DesignContext
-from typekernel.parts.italic import italic_controls
+from typekernel.parts.italic import italic_controls, vf_upright_controls
 
 
 def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
     ctx = controls.context
     if stem is not None:
         ctx = ctx.tuned(stem=stem)
-    ctx = ctx.tuned(vf_compat_stem_segments=True)
     sheet = replace(controls, context=ctx)
     if stem is not None and stem >= 100:
         sheet = sheet.with_stem_relief()
-    drawn = sheet.build_all("onhrum")
+    drawn = sheet.build_all()
     font = Font.from_context(ctx, "Ital VF", style)
     font.add_chars(drawn)
     return font
@@ -36,9 +35,11 @@ def test_wght_ital_masters_interpolate() -> None:
     from typekernel.font import check_masters
 
     base = DesignContext.code_clear()
-    reg = Controls.from_context(base)
+    reg = vf_upright_controls(Controls.from_context(base))
     ital = italic_controls(reg)
-    bold = Controls.from_context(base.tuned(stem=120.0))
+    bold = vf_upright_controls(
+        Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+    )
 
     masters = [
         Master({"wght": 400, "ital": 0}, _font(reg, "Regular")),
@@ -50,7 +51,7 @@ def test_wght_ital_masters_interpolate() -> None:
 
 def test_wght_ital_vf_builds(tmp_path: Path) -> None:
     base = DesignContext.code_clear()
-    reg = Controls.from_context(base)
+    reg = vf_upright_controls(Controls.from_context(base))
     masters = [
         Master({"wght": 400, "ital": 0}, _font(reg, "Regular")),
         Master({"wght": 400, "ital": 1}, _font(italic_controls(reg), "Italic")),

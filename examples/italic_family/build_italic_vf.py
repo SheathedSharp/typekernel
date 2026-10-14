@@ -1,7 +1,7 @@
 """Regular + ``ital`` axis VF (italic master via ``italic_design``).
 
 ``italic_design`` applies construct stem slant (default 10°) plus counter lean.
-M4 TK-403 branching topology is not implemented yet.
+Upright masters use ``vf_upright_controls`` for ``wght×ital`` segment compatibility (TK-404).
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typekernel.parts import (
     auto_side_kern_classes,
     rhythm_from_control_glyphs,
 )
-from typekernel.parts.italic import italic_design
+from typekernel.parts.italic import italic_design, vf_upright_controls
 
 HERE = Path(__file__).resolve().parent
 OUT_DIR = HERE / "out"
@@ -46,13 +46,15 @@ def master_font(
 
 def main() -> None:
     base = DesignContext.code_clear()
-    reg = Controls.from_context(base)
+    reg = vf_upright_controls(Controls.from_context(base))
     ital = italic_design(reg)
     ref_drawn = reg.build_all()
     ref_rhythm = rhythm_from_control_glyphs(ref_drawn["n"], ref_drawn["o"])
     ref_spaced = space_font(ref_drawn, base, rhythm=ref_rhythm)
     kern_classes = auto_side_kern_classes(ref_spaced, base)
-    bold = Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+    bold = vf_upright_controls(
+        Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+    )
     bold_ital = italic_design(bold)
     masters = [
         Master({"wght": 400, "ital": 0}, master_font(reg, "Regular", 400, kern_classes)),

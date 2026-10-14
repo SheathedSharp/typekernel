@@ -1,9 +1,10 @@
 """Italic masters: metric tweak plus construct-time stem slant (M4a).
 
 ``italic_design`` builds a separate control sheet whose glyphs are drawn with
-``DesignContext.italic_slant_deg`` applied at compose time (same point-count as
-the regular master for interpolation). Branching arches for ``n`` / ``h`` when ``italic_slant_deg`` ≥ 6° (TK-403 partial).
-``m`` ``r`` ``u`` and related forms still use upright topology plus slant.
+``DesignContext.italic_slant_deg`` applied at compose time. Branching arches
+for ``n`` / ``h`` / ``r`` / ``u`` / ``m`` when ``italic_slant_deg`` ≥ 6°
+(TK-403). Upright masters in a ``wght×ital`` VF should use
+:func:`vf_upright_controls` so segment counts match the italic master.
 
 For mechanical oblique on a finished font, use
 :func:`~typekernel.compile.oblique.oblique_font` — do not label that as Italic.
@@ -24,6 +25,7 @@ __all__ = [
     "italic_controls",
     "italic_design",
     "slant_composed_glyph",
+    "vf_upright_controls",
 ]
 
 
@@ -42,6 +44,7 @@ def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Con
     ctx = regular.context.tuned(
         contrast=max(0.88, regular.context.contrast * s.contrast_scale),
         italic_slant_deg=s.slant_deg,
+        vf_compat_stem_segments=False,
         sidebearing_ratio=min(
             0.18,
             regular.context.sidebearing_ratio * 1.12,
@@ -58,6 +61,14 @@ def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Con
 def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
     """Deprecated name for :func:`italic_design` (kept for examples and VF demos)."""
     return italic_design(regular, style=ItalicStyle(lean=lean))
+
+
+def vf_upright_controls(regular: Controls) -> Controls:
+    """Upright sheet for ``wght×ital`` VFs (TK-404 segment compatibility)."""
+    return replace(
+        regular,
+        context=regular.context.tuned(vf_compat_stem_segments=True),
+    )
 
 
 def slant_composed_glyph(glyph: ComposedGlyph, angle_deg: float) -> ComposedGlyph:
