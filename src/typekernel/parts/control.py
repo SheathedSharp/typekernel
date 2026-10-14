@@ -1554,9 +1554,14 @@ def g_from_o(
         return _double_storey_g_from_o(o_glyph, n_glyph, c)
     o = _o_record(o_glyph)
     nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
     stem, desc = nm.stem, c.descender
+    t_relief = stem_weight_fraction(stem)
     height = o.x_height - desc
-    hook = _hook_record(nm, height, c)
+    ease = min(1.0, max(0.0, (c.roundness - 0.30) / 0.18))
+    hook_depth = 0.45 - 0.24 * t_relief * ease
+    hook = _hook_record(nm, height, c, depth=hook_depth)
     join_y = _g_hook_join_y(stem, hook.join_y, hook.inner_crown)
     if join_y != hook.join_y:
         hook = hook.tuned(join_y=join_y)
