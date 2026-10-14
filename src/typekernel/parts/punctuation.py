@@ -24,6 +24,7 @@ from typekernel.parts.control import (
 )
 from typekernel.parts.diagonals import _hwidth
 from typekernel.parts.primitives import bowl, horizontal_bar, stroke_polyline, tittle, vertical_stem
+from typekernel.parts.slant_compensate import horizontal_slant_compensation
 from typekernel.parts.transforms import mirror_x, scale, translate
 
 __all__ = [
@@ -611,8 +612,9 @@ def hash_from_n_o(
     y_hi = m.x_height * 0.66 - t
     v1 = vertical_stem(c, x_l, 0.0, m.x_height, width=t)
     v2 = vertical_stem(c, x_r, 0.0, m.x_height, width=t)
-    h1 = horizontal_bar(c, inset, m.width - inset, y_lo, thickness=t)
-    h2 = horizontal_bar(c, inset, m.width - inset, y_hi, thickness=t)
+    th = t * horizontal_slant_compensation(c)
+    h1 = horizontal_bar(c, inset, m.width - inset, y_lo, thickness=th)
+    h2 = horizontal_bar(c, inset, m.width - inset, y_hi, thickness=th)
     return _pack_union(c, m, v1, v2, h1, h2)
 
 

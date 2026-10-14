@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts import Controls, DesignContext
+from typekernel.parts.control import o_metrics
 from typekernel.parts.italic import horizontal_slant_compensation, italic_design
 from typekernel.qa.thickness import measurement_outline
 
@@ -19,6 +20,23 @@ def test_horizontal_slant_compensation_is_secant() -> None:
     ctx = DesignContext.code_clear().tuned(italic_slant_deg=10.0)
     assert horizontal_slant_compensation(ctx) > 1.01
     assert horizontal_slant_compensation(DesignContext.code_clear()) == 1.0
+
+
+def test_italic_o_top_stroke_near_upright_after_slant() -> None:
+    ctx = DesignContext.geometric_sans()
+    reg = Controls.from_context(ctx).build("o")
+    ital = italic_design(Controls.from_context(ctx)).build("o")
+    m = o_metrics(ctx)
+    outline_reg = measurement_outline(reg)
+    outline_ital = measurement_outline(ital)
+    cx = m.rx
+    top_y = m.x_height + m.overshoot * 0.5
+    w_reg = measure_oriented_stem(outline_reg, (cx, top_y - m.thickness_h * 0.5), 0.0)
+    w_ital = measure_oriented_stem(
+        outline_ital, (cx, top_y - m.thickness_h * 0.5), 0.0
+    )
+    assert w_reg is not None and w_ital is not None
+    assert w_ital >= w_reg * 0.94
 
 
 def test_italic_e_crossbar_not_thinner_than_upright_after_slant() -> None:

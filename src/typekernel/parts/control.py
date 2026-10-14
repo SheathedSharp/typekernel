@@ -197,7 +197,7 @@ def o_metrics(ctx: DesignContext) -> OMetrics:
         rx=rx,
         ry=ry,
         thickness_v=ctx.stem,
-        thickness_h=ctx.stem * ctx.contrast,
+        thickness_h=ctx.stem * ctx.contrast * _horizontal_slant_scale(ctx),
         exponent=exponent,
         x_height=ctx.x_height,
         overshoot=ctx.overshoot,
@@ -336,7 +336,7 @@ def _f_use_inline_crossbar(ctx: DesignContext) -> bool:
 
 
 def _horizontal_slant_scale(ctx: DesignContext) -> float:
-    from typekernel.parts.italic import horizontal_slant_compensation
+    from typekernel.parts.slant_compensate import horizontal_slant_compensation
 
     return horizontal_slant_compensation(ctx)
 
