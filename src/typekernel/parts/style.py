@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import Any, Literal
 
 AForm = Literal["single", "double"]
 GForm = Literal["single", "double"]
@@ -35,7 +35,7 @@ class Style:
     i_dot: IDot = "round"
     t_cut: TCut = "flat"
 
-    def tuned(self, **kwargs: str) -> Style:
+    def tuned(self, **kwargs: Any) -> Style:
         return replace(self, **kwargs)
 
 
