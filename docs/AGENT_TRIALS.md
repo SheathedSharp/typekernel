@@ -25,7 +25,7 @@
 
 | 阶段 | 日期 | 模型 | brief-1 gate | brief-2 gate | brief-3 gate | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 基线 | _待填_ | _待填_ | | | | M1 后首次跑 |
+| 基线 | 2026-10-14 | 库维护者 | fail | fail | fail | `artifacts/trials/preset-baseline-2026-10-14/`（未改 preset，`gate_ok` 预期为假直至 M2 清零） |
 | 终验 | _待填_ | | | | | M5 TK-502 |
 
 ## 跑预设基线快照（库维护者）
