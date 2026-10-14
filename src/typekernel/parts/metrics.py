@@ -482,7 +482,7 @@ def layout_glyphs(
     names: list[str] | None = None,
     *,
     tracking: float | None = None,
-    kerning: KernTable | None = None,
+    kerning: KernTable | ClassKernTable | None = None,
     origin_x: float = 0.0,
 ) -> list[float]:
     """Return pen-x positions for each glyph, applying tracking and kerning.

@@ -46,6 +46,7 @@ from typekernel.optics.stem import (
 
 __all__ = [
     "ContrastParams",
+    "GlyphPolishOptions",
     "HorizontalStemSpan",
     "OpticalContext",
     "OpticalSpacingResult",
@@ -58,10 +59,7 @@ __all__ = [
     "diagonal_compensation",
     "equalize_horizontal_stems",
     "equalize_vertical_stems",
-    "GlyphPolishOptions",
     "fit_kern_pair",
-    "polish_glyph",
-    "polish_glyph_map",
     "horizontal_vs_vertical_report",
     "list_horizontal_stems",
     "list_vertical_stems",
@@ -71,6 +69,8 @@ __all__ = [
     "measure_vertical_stem",
     "pair_gap_bbox",
     "pair_gap_optical",
+    "polish_glyph",
+    "polish_glyph_map",
     "space_font",
     "space_word_optical",
     "suggest_sidebearings",

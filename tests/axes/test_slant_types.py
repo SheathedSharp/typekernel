@@ -9,8 +9,8 @@ import pytest
 from tests.axes._rect_helpers import closed_rect
 from typekernel.axes import slant
 from typekernel.axes.slant import ObliqueTransform
-from typekernel.parts.italic import italic_controls
 from typekernel.parts import Controls, DesignContext
+from typekernel.parts.italic import italic_controls
 
 
 def test_oblique_transform_shears_x_with_y() -> None:

@@ -26,7 +26,9 @@ from typekernel.optics.stem import measure_vertical_stem
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.latin import word_zayju
-from typekernel.parts.metrics import KernTable, default_sans_kern, layout_glyphs
+from typekernel.parts.metrics import ClassKernTable, KernTable, default_sans_kern, layout_glyphs
+
+KernLookup = KernTable | ClassKernTable
 
 GapMode = Literal["bbox", "optical"]
 
@@ -89,7 +91,7 @@ def _gap_ratio(gaps: list[float]) -> float:
     return hi / lo
 
 
-def _kern_between(table: KernTable | None, a: str, b: str) -> float:
+def _kern_between(table: KernLookup | None, a: str, b: str) -> float:
     if table is None:
         return 0.0
     return table.lookup(a, b)
@@ -100,7 +102,7 @@ def word_gap_spread(
     names: list[str],
     *,
     mode: GapMode = "optical",
-    kerning: KernTable | None = None,
+    kerning: KernLookup | None = None,
     samples: int = 17,
 ) -> Score:
     """Spread (max−min) of consecutive letter gaps in ``mode``."""
@@ -230,7 +232,7 @@ def word_report(
     glyphs: list[ComposedGlyph],
     names: list[str],
     *,
-    kerning: KernTable | None = None,
+    kerning: KernLookup | None = None,
     samples: int = 17,
     target_gap: float | None = None,
     notes: tuple[str, ...] = (),
@@ -317,7 +319,7 @@ def zayju_report(
 def layout_xs(
     glyphs: list[ComposedGlyph],
     names: list[str],
-    kerning: KernTable | None,
+    kerning: KernLookup | None,
 ) -> list[float]:
     """Pen-x positions matching :func:`word_report` layout."""
     return layout_glyphs(glyphs, names, kerning=kerning)

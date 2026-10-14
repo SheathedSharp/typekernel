@@ -6,8 +6,9 @@ files** — the same binaries you ship — not live ``Font`` objects.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 __all__ = [
     "DEFAULT_KERN_PAIRS",
@@ -38,7 +39,7 @@ _INK = (22, 22, 26)
 _BG = (255, 255, 255)
 
 
-def _require_pil():
+def _require_pil() -> tuple[Any, Any, Any]:
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError as exc:  # pragma: no cover
@@ -48,14 +49,14 @@ def _require_pil():
     return Image, ImageDraw, ImageFont
 
 
-def _fit_line(draw, text: str, font, max_width: float) -> str:
+def _fit_line(draw: Any, text: str, font: Any, max_width: float) -> str:
     words = text.split()
     while len(words) > 1 and draw.textlength(" ".join(words), font=font) > max_width:
         words.pop()
     return " ".join(words)
 
 
-def _save(img, out: Path) -> Path:
+def _save(img: Any, out: str | Path) -> Path:
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out)
@@ -247,7 +248,7 @@ def proof_sheet(
     font_path = Path(font_path)
     sections = []
 
-    def _render(fn, *args, **kwargs) -> None:
+    def _render(fn: Callable[..., Path], *args: Any, **kwargs: Any) -> None:
         tmp = Path(out).with_suffix(".section.png")
         fn(*args, **kwargs, out=tmp)
         pil_image = Image.open(tmp).convert("RGB")

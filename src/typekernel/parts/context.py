@@ -10,7 +10,10 @@ Presets are starting points for coding agents; tune fields per family.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from typekernel.optics.context import OpticalContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +70,7 @@ class DesignContext:
     def baseline(self) -> float:
         return 0.0
 
-    def tuned(self, **kwargs: float) -> DesignContext:
+    def tuned(self, **kwargs: Any) -> DesignContext:
         """Return a copy with selected fields overridden (agent-friendly)."""
         return replace(self, **kwargs)
 
@@ -75,7 +78,7 @@ class DesignContext:
         """Overshoot amount for sharp alignment zones and diagonal peaks."""
         return self.sharp_overshoot if self.sharp_overshoot > 0.0 else self.overshoot
 
-    def to_optical(self) -> "OpticalContext":
+    def to_optical(self) -> OpticalContext:
         """Map family proportions into :class:`~typekernel.optics.context.OpticalContext`."""
         from typekernel.optics.context import OpticalContext
 

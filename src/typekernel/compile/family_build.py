@@ -6,7 +6,7 @@ exist. Prefer this over hand-rolling ``Font`` + ``standard_feature_text``.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from typekernel.compile.features import (
@@ -15,11 +15,11 @@ from typekernel.compile.features import (
     add_tabular_alternates,
     standard_feature_text,
 )
-from typekernel.parts.diacritics import add_composite_latin
 from typekernel.font import Font
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.optics.joins import JoinPolicy
 from typekernel.optics.space import space_font
+from typekernel.parts.diacritics import add_composite_latin
 from typekernel.parts.family import Controls
 from typekernel.parts.metrics import (
     KernClass,

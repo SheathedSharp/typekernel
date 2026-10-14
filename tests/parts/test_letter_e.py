@@ -10,8 +10,8 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import DesignContext, bowl, crossbar
-from typekernel.parts.latin import letter_e
 from typekernel.parts.compose import try_difference, try_union
+from typekernel.parts.latin import letter_e
 
 
 @pytest.mark.parametrize("preset", ["geometric_sans", "paper_ink", "code_clear"])

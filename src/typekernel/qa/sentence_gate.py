@@ -11,8 +11,11 @@ from dataclasses import dataclass
 
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.optics.space import pair_gap_optical, space_font
+from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.family import Controls
 from typekernel.parts.metrics import (
+    ClassKernTable,
+    RhythmSpec,
     auto_class_kern,
     auto_side_kern_classes,
     rhythm_from_control_glyphs,
@@ -68,7 +71,9 @@ def _letters(text: str) -> str:
     return "".join(dict.fromkeys(ch for ch in text if ch.isalpha()))
 
 
-def _spaced(controls: Controls, charset: str):
+def _spaced(
+    controls: Controls, charset: str
+) -> tuple[dict[str, ComposedGlyph], ClassKernTable, RhythmSpec]:
     ctx = controls.context
     drawn_chars = "".join(dict.fromkeys(charset + "no"))
     drawn = polish_glyph_map(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 
+from typekernel.geo.outline import Outline
 from typekernel.optics.joins import JoinPolicy, cleanup_joins
 from typekernel.parts.compose import ComposedGlyph
 
@@ -29,7 +30,7 @@ class GlyphPolishOptions:
         return cls(joins_policy="noop")
 
 
-def _polish_outline(outline, opts: GlyphPolishOptions):
+def _polish_outline(outline: Outline, opts: GlyphPolishOptions) -> Outline:
     from typekernel.geo.joins import ease_curvature
 
     if opts.joins_policy == "noop":

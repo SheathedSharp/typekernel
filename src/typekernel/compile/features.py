@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from typekernel.font import Font, Glyph, glyph_name_for_char
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.figures import tabular
@@ -17,9 +19,9 @@ __all__ = [
 _CASE_CHARS = ".,:;!?-"
 
 
-def add_tabular_alternates(font: Font, digits: dict[str, object]) -> None:
+def add_tabular_alternates(font: Font, digits: Mapping[str, ComposedGlyph]) -> None:
     """Register ``zero.tf`` … ``nine.tf`` from :func:`~typekernel.parts.figures.tabular`."""
-    tab = tabular({k: v for k, v in digits.items() if isinstance(v, ComposedGlyph)})
+    tab = tabular(dict(digits))
     for ch, g in tab.items():
         base = font.resolve(ch)
         if base is None:
