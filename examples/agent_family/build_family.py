@@ -50,8 +50,12 @@ def main() -> None:
     review = design_review(regular, baseline=baseline_controls(), out_dir=out / "review")
     print(review.summary())
     if review.charset_failures:
-        print(f"charset issues (fix before L2 ship): {len(review.charset_failures)}")
-    if review.failures or review.l0_gaps:
+        print("charset gate failures:")
+        for line in review.charset_failures[:20]:
+            print(f"  {line}")
+        if len(review.charset_failures) > 20:
+            print(f"  … and {len(review.charset_failures) - 20} more")
+    if review.failures or review.l0_gaps or review.charset_failures:
         sys.exit(1)
 
     # Absolute ceilings only. Do not use the Regular preset as Bold's baseline.

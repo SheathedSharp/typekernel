@@ -216,6 +216,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-101。
 
 #### TK-105 家族级门禁 `qa/family_gate.py`　〔M〕
+- **本轮**：`examples/agent_studio/build.py` 与 `examples/agent_family/build_family.py` 在 `charset_failures` 非空时 `exit(1)`（与 sentence/L0 门禁并列）。
 - **做什么**：`check_family_gate(controls, charset=None, baseline=None, masters=None) -> list[str]`：对**声明字符集**（默认 `controls.supported`）跑 lint + identity，error 级即失败；对多母版逐个检查。接入 `examples/agent_studio/build.py`、`examples/agent_family/build_family.py` 与 `design_review`。
 - **防钻空子**：
   - 声明字符集必须来自 `FamilyBuildOptions.chars` / `controls.supported`，门禁不接受更小的字符集。
@@ -242,7 +243,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 > 每个字形任务的共同验收：①对应 TK-106 登记条目转为通过并移除 xfail；②在 5 个 preset 与 `stem` 50/70/110/150 上通过 lint + identity；③附 before/after 校样；④更新 TK-108 快照并列出变更字形。字形设计须保持**连续三次曲线轮廓**，不允许退回折线或「布尔拼装」做主定义。
 
 #### TK-201 `!` `?`　〔S〕
-- `!`：竖笔从 cap 高度向下，圆点在基线附近（现为圆点在上、竖笔仅 `0.72×x-height`，`punctuation.py:239`）。`?`：钩 + 向下的竖笔 + 圆点（现为缩放的 `c` + 点，`:252`）。
+- **完成**：`exclam_from_n_o` / `question_from_n_o`（cap 竖笔 + 基线圆点 + `?` 钩肩）；`test_known_defects` B-01/B-02 与 identity 回归。
 
 #### TK-202 `&` `@` `$` `#` `%` 真实字形　〔M〕
 - **本轮（部分）**：闭引号在已排版墨迹中心镜像（非 `n.width/2`），`'"''""` R7 清零；`humanist_sans` 默认 preset `family_gate` 全过。

@@ -32,7 +32,11 @@ def main() -> None:
     )
     print(review.summary())
     if review.charset_failures:
-        print(f"charset issues (fix in library / M2): {len(review.charset_failures)}")
+        print("charset gate failures:")
+        for line in review.charset_failures[:20]:
+            print(f"  {line}")
+        if len(review.charset_failures) > 20:
+            print(f"  … and {len(review.charset_failures) - 20} more")
 
     paths = build_glyph_preview(
         controls,
@@ -52,7 +56,7 @@ def main() -> None:
     for name, path in paths.items():
         print(f"{name}: {path}")
 
-    if review.failures or review.l0_gaps:
+    if review.failures or review.l0_gaps or review.charset_failures:
         sys.exit(1)
 
 
