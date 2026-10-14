@@ -263,12 +263,13 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`m` 双拱 `inner_crown` 抬高（`min(crown−0.55×stem, inner+0.32×stem)`）打开中柱 crotch；`u` 经 `mirror_x` 肩拱（非 180° 旋转），基线齐平回归 `test_b10_u_flat_baseline`。
 - **本轮（部分）**：`m` 在双拱 metrics 之后将 `inner_crown` 抬至 `x-height`（上限 `crown−0.06×stem`），内肩可水平 split、中柱 crotch 接 shelf；golden `m` 三 preset 更新。
 - **本轮（部分）**：直立 `u` 镜像后统一 `_ccw`（修复 R1）；golden `u` 三 preset 更新。
-- `u`：低 roundness preset 拱脚局部仍偏细，与 `n` 对称；需时可加专用接合几何。
+- `u`：低 roundness preset 拱脚局部仍偏细；专用 baseline toe cubic 试验会推高 AGENT_SENTENCE 中 `u` 的 G1，仍待切线对齐方案。
 
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
 - **本轮（部分）**：`f`/`t` 横笔改为 `_r_outline` 固定段数 detour（去掉 pathops union）；`min_hook_thickness` 采样带 + `hook_min_thin_floor` 分档；golden `f`/`t` 三 preset 更新。
-- **本轮（部分）**：`g` 钩腹单 cubic detour + 重字重 `join_y` 抬升（禁 `blend_corners`）；`test_g_hook_outer_segment_count_fixed_across_stems` / VF 阶梯回归；golden `g` 三 preset 更新；`J` 内联圆角仍待。
+- **本轮（部分）**：`g` 钩腹单 cubic detour + 重字重 `join_y` 抬升（禁 `blend_corners`）；`test_g_hook_outer_segment_count_fixed_across_stems` / VF 阶梯回归；golden `g` 三 preset 更新。
+- **本轮（部分）**：`J` 碗脚 spring 单 cubic detour（段数 8 不变）；golden `J` 三 preset 更新。
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕

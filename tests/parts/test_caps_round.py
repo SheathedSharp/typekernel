@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from typekernel.font import Font, Master, check_masters
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
@@ -61,6 +62,28 @@ def test_q_tail_below_baseline_and_counter_untouched(caps, ctx: DesignContext) -
     o_counter = caps["O"].solids[0].contours[1]
     q_counter = caps["Q"].solids[0].contours[1]
     assert abs(signed_area(q_counter)) == pytest.approx(abs(signed_area(o_counter)), rel=1e-6)
+
+
+def test_j_outer_segment_count_fixed_across_stems() -> None:
+    ctx = DesignContext.humanist_sans()
+    ref = Controls.from_context(ctx).build("J")
+    ref_n = len(ref.solids[0].contours[0].segments)
+    for stem in (30.0, 86.0, 220.0):
+        heavy = ctx.tuned(stem=stem)
+        j = Controls.from_context(heavy).build("J")
+        assert len(j.solids[0].contours[0].segments) == ref_n
+
+
+def test_j_interpolates_across_weight_ladder() -> None:
+    ctx = DesignContext.humanist_sans()
+    light = Controls.from_context(ctx.tuned(stem=30.0))
+    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    reg_font = Font.from_context(ctx, "J Sans", "Regular", weight_class=400)
+    reg_font.add_chars(light.build_all("J"))
+    bold_font = Font.from_context(ctx, "J Sans", "Bold", weight_class=700)
+    bold_font.add_chars(bold.build_all("J"))
+    masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
+    assert check_masters(masters) == []
 
 
 def test_u_and_j_use_cap_stems(caps, ctx: DesignContext) -> None:

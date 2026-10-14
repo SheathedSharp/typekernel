@@ -685,7 +685,16 @@ def J_from_H(
     b.lineTo(w - t, y_s)
     _curve(b, _rev(i3))
     _curve(b, _rev(inner))
-    b.lineTo(*outer[0])
+    bulge = max(t * 0.09, 5.0)
+    ji, jo = inner[0], outer[0]
+    b.curveTo(
+        ji[0] - bulge * 0.4,
+        ji[1] - bulge * 0.12,
+        jo[0],
+        jo[1] + bulge * 0.18,
+        jo[0],
+        jo[1],
+    )
     _curve(b, outer)
     _curve(b, q3)
     b.closePath()
