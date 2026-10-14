@@ -270,6 +270,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`f`/`t` 横笔改为 `_r_outline` 固定段数 detour（去掉 pathops union）；`min_hook_thickness` 采样带 + `hook_min_thin_floor` 分档；golden `f`/`t` 三 preset 更新。
 - **本轮（部分）**：`g` 钩腹单 cubic detour + 重字重 `join_y` 抬升（禁 `blend_corners`）；`test_g_hook_outer_segment_count_fixed_across_stems` / VF 阶梯回归；golden `g` 三 preset 更新。
 - **本轮（部分）**：`J` 碗脚 spring 单 cubic detour（段数 8 不变）；golden `J` 三 preset 更新。
+- **本轮（部分）**：`j` 去掉 ``blend_corners``，``_r_outline`` ``hook_belly`` cubic；golden ``j`` 三 preset 与 VF 阶梯回归。
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕

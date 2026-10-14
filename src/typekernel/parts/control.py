@@ -468,6 +468,7 @@ def _r_outline(
     vf_compat: bool = False,
     stem_floor: float = 0.0,
     hook_stem_knots: bool = False,
+    hook_belly: float = 0.0,
 ) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
@@ -494,7 +495,19 @@ def _r_outline(
         b.lineTo(s.l1, m.x_height)
     _curve(b, s.outer[0])
     _curve(b, outer_arm)
-    b.lineTo(*inner_arm[0])
+    if hook_belly > 0.0:
+        p_here = outer_arm[3]
+        p_out = inner_arm[0]
+        b.curveTo(
+            p_here[0] - hook_belly * 0.55,
+            p_here[1] - hook_belly * 0.4,
+            p_out[0],
+            p_out[1] + hook_belly * 0.2,
+            p_out[0],
+            p_out[1],
+        )
+    else:
+        b.lineTo(*inner_arm[0])
     _curve(b, inner_arm)
     _curve(b, s.inner[1])
     if bar is not None:
@@ -703,8 +716,7 @@ def j_from_n(
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
     hook = _hook_record(m, height, c)
-    outline, _ = _r_outline(hook, arm)
-    outline = _finish_hook_letter(outline, c)
+    outline, _ = _r_outline(hook, arm, hook_belly=_hook_belly_fillet(m.stem))
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     tip = (m.stem * 1.05, c.descender + m.stem * 0.28)
@@ -1426,9 +1438,13 @@ def _g_hook_join_y(stem: float, join_y: float, inner_crown: float) -> float:
     return join_y + max(0.0, lift)
 
 
-def _g_hook_belly_fillet(stem: float) -> float:
-    """Fixed two-line detour scale at the hook belly (replaces ``blend_corners``)."""
+def _hook_belly_fillet(stem: float) -> float:
+    """Cubic belly detour scale on hook letters (replaces ``blend_corners``)."""
     return max(stem * 0.065, 4.5)
+
+
+def _g_hook_belly_fillet(stem: float) -> float:
+    return _hook_belly_fillet(stem)
 
 
 def g_from_o(
