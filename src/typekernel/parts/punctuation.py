@@ -9,8 +9,8 @@ from __future__ import annotations
 import math
 from dataclasses import replace
 
-from typekernel.geo.layout import union_bounds
 from typekernel.geo.contour import canonical_contour_start
+from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler

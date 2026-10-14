@@ -28,6 +28,18 @@ def test_italic_master_has_readable_slant() -> None:
     assert slant >= 6.0
 
 
+def test_italic_construct_slant_matches_target_within_half_degree() -> None:
+    """M4 acceptance: measured stem slant vs ``italic_slant_deg``."""
+    for preset in ("code_clear", "humanist_sans", "geometric_sans"):
+        ctx = getattr(DesignContext, preset)()
+        ital = italic_design(Controls.from_context(ctx))
+        target = ital.context.italic_slant_deg
+        y_lo, y_hi = ctx.x_height * 0.15, ctx.x_height * 0.85
+        for ch in "iln":
+            measured = _stem_slant_degrees(ital.build(ch), y_lo, y_hi)
+            assert measured == pytest.approx(target, abs=0.5)
+
+
 def test_italic_design_matches_italic_controls_default() -> None:
     ctx = DesignContext.code_clear()
     reg = Controls.from_context(ctx)
