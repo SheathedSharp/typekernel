@@ -305,7 +305,7 @@ def _pack(
     """Sidebearing pack; single outline — no boolean letter topology."""
     asm = GlyphAssembler(ctx).with_design(record)
     for o in outlines:
-        asm.add(o)
+        asm.add(_ccw(o))
     for name, (x, y) in anchors.items():
         asm.anchor(name, x, y)
     return asm.build()

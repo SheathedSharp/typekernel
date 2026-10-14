@@ -23,6 +23,12 @@ def test_lint_humanist_charset_no_keyhole() -> None:
     assert not keyholes, keyholes
 
 
+def test_lint_humanist_charset_no_r1_winding_errors() -> None:
+    report = lint_controls(Controls.from_context(DesignContext.humanist_sans()))
+    r1 = [i for i in report.issues if i.rule == "R1_winding" and i.severity == "error"]
+    assert not r1, r1
+
+
 def test_lint_multi_contour_solids_not_r1_false_positive() -> None:
     """Counters inside one solid outline are clockwise (negative area) by design."""
     ctx = DesignContext.humanist_sans()

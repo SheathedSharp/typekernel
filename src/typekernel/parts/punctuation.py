@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from dataclasses import replace
 
-from typekernel.geo.contour import canonical_contour_start
+from typekernel.geo.contour import canonical_contour_start, reverse_contour, signed_area
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
@@ -76,6 +76,16 @@ def _ctx(n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None) -> Desig
     return ctx or n.context or o.context
 
 
+def _cw_hole(outline: Outline) -> Outline:
+    """Hole contours are clockwise (negative signed area)."""
+    return Outline(
+        tuple(
+            reverse_contour(c) if c.closed and signed_area(c) > 0 else c
+            for c in outline.contours
+        )
+    )
+
+
 def _pack_holes(
     ctx: DesignContext,
     record: object,
@@ -86,9 +96,9 @@ def _pack_holes(
 ) -> ComposedGlyph:
     asm = GlyphAssembler(ctx).with_design(record)
     for outline in solids:
-        asm.add(outline)
+        asm.add(_ccw(outline))
     for hole in holes:
-        asm.add_hole(hole)
+        asm.add_hole(_cw_hole(hole))
     if union:
         asm.union_solids()
     if subtract_holes:
@@ -336,8 +346,9 @@ def _scaled_paren(
     cy = om.x_height / 2.0
     shaped = scale(base, 1.0, sy, origin=(om.rx, cy))
     shaped = translate(shaped, 0.0, (y_top + y_bot) / 2.0 - cy)
+    shaped = _ccw(shaped)
     if right:
-        shaped = mirror_x(shaped, at_x=om.rx)
+        shaped = _ccw(mirror_x(shaped, at_x=om.rx))
     return _pack(c, m, {}, shaped)
 
 
@@ -373,9 +384,10 @@ def _bracket_outline(
         b.lineTo(x0 + stem_w, y_top - ctx.thin)
         b.lineTo(x1, y_top - ctx.thin)
         b.closePath()
+        outline = _ccw(b.build())
         if right:
-            return mirror_x(_ccw(b.build()), at_x=m.width / 2.0)
-        return _ccw(b.build())
+            outline = _ccw(mirror_x(outline, at_x=m.width / 2.0))
+        return outline
     mid = (y_top + y_bot) / 2.0
     hook = depth * 0.55
     b.moveTo(x1, y_top)
@@ -388,9 +400,10 @@ def _bracket_outline(
     b.lineTo(x0 + stem_w, y_top - ctx.thin)
     b.lineTo(x1, y_top - ctx.thin)
     b.closePath()
+    outline = _ccw(b.build())
     if right:
-        return mirror_x(_ccw(b.build()), at_x=m.width / 2.0)
-    return _ccw(b.build())
+        outline = _ccw(mirror_x(outline, at_x=m.width / 2.0))
+    return outline
 
 
 def bracket_left_from_n_o(
@@ -483,7 +496,7 @@ def quote_single_right_from_n_o(
     g = quote_single_left_from_n_o(n, o, ctx)
     m = _n_record(n)
     cx = m.width / 2.0
-    solids = tuple(mirror_x(s, at_x=cx) for s in g.solids)
+    solids = tuple(_ccw(mirror_x(s, at_x=cx)) for s in g.solids)
     return replace(g, solids=solids)
 
 
@@ -515,7 +528,7 @@ def quote_double_right_from_n_o(
     g = quote_double_left_from_n_o(n, o, ctx)
     m = _n_record(n)
     cx = m.width / 2.0
-    solids = tuple(mirror_x(s, at_x=cx) for s in g.solids)
+    solids = tuple(_ccw(mirror_x(s, at_x=cx)) for s in g.solids)
     return replace(g, solids=solids)
 
 

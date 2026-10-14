@@ -19,7 +19,9 @@ def test_humanist_preset_has_charset_failures() -> None:
         Controls.from_context(DesignContext.humanist_sans())
     )
     assert failures
-    assert any("!" in f or "&" in f or "#" in f for f in failures)
+    assert any(
+        ch in f for ch in ('"', "'", "\u2019", "\u201d") for f in failures
+    )
 
 
 def test_check_family_gate_multiple_masters() -> None:
