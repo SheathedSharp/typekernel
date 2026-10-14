@@ -1,8 +1,10 @@
-"""Designed italic control sheet (metric/structure tune, not post-hoc shear).
+"""Italic control-sheet placeholder (metric tweak only — not a slanted master).
 
-True italic here means a **redrawn master** with the same topology as the
-regular control sheet so ``wght``/``ital`` axes interpolate. For mechanical
-oblique, use :func:`~typekernel.compile.oblique.oblique_font` instead.
+``italic_controls`` widens ``n``/``o`` counters slightly for interpolation
+experiments. It does **not** slant stems or change italic topology. True italic
+masters (readable slant, branching arches, etc.) are planned in
+``docs/DEVELOPMENT_PLAN.md`` (M4). For mechanical oblique, use
+:func:`~typekernel.compile.oblique.oblique_font` instead.
 """
 
 from __future__ import annotations
@@ -15,11 +17,11 @@ __all__ = ["italic_controls"]
 
 
 def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
-    """Return an italic control sheet derived from ``regular``.
+    """Return a **non-italic** metric variant of ``regular`` (VF placeholder).
 
-    ``lean`` widens counters and o-bowls slightly and lowers contrast so the
-    italic master reads lighter and forward-leaning without changing contour
-    topology (same segment counts as the regular master).
+    ``lean`` widens counters and o-bowls slightly and lowers contrast. Contour
+    topology and stem angles stay the same as the regular master. Do not ship
+    this as a designed italic style until M4 lands.
     """
     ctx = regular.context
     n = regular.n.tuned(counter=regular.n.counter * lean)

@@ -167,7 +167,7 @@ Show the user **`grid.png`**, **`sentence.png`**, and the review summary (deltas
 
 - **Static family**: one `Controls` + one `build_font` per weight/style file.
 - **VF**: each location is a full redrawn `Font` inside `Master({axis: value}, font)`. Minimum masters so **each axis** min ≠ max (`check_masters`).
-- Italic axis: `italic_controls(regular_sheet)` per italic master; do not use `ObliqueTransform` for `ital=1`.
+- Italic axis: **true italic** = redrawn slanted masters (M4 in `docs/DEVELOPMENT_PLAN.md`). Today's `italic_controls()` is only a metric tweak (not slanted) — use for VF plumbing, not as finished italic. Do not use `ObliqueTransform` for `ital=1` style names.
 
 ## Symbols & charset
 

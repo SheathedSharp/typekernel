@@ -1,4 +1,8 @@
-"""Regular + designed italic variable font (``wght`` + ``ital``)."""
+"""Regular + ``ital`` axis VF (italic master uses ``italic_controls`` placeholder).
+
+``italic_controls`` widens counters only — stems are not slanted. See
+``docs/DEVELOPMENT_PLAN.md`` M4 for true italic masters.
+"""
 
 from __future__ import annotations
 
