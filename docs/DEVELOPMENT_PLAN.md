@@ -250,7 +250,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`&` 下环外轮廓 Q 式接左下尾笔（双 solid、双孔，无第三 solid）；golden `&` 三 preset 更新。
 - **本轮（部分）**：`@` 外环 + 环内小 bowl（双孔），重字重缩小 belly 避免叠墨；golden `@` 三 preset 更新。
 - **本轮（部分）**：`$` 改为腰接双环单 solid（`8` 式 S 脊柱、双孔，无第三 solid / union）；golden `$` 三 preset 更新；`&` / `$` 三 preset 字重插值 `check_interpolatable` 回归。
-- **本轮（部分）**：`$` 外轮廓基线竖笔帽（`xl`–`xr` 固定 line detour + `l2` split）；golden `$` 三 preset 更新；顶帽仍待（环顶弦在 `stem≈30` 叠墨）。
+- **本轮（部分）**：`$` 外轮廓基线 + 顶环竖笔帽（`u0` 水平 split + `xl`–`xr` detour，`l2` split）；golden `$` 三 preset 更新。
 - `$`：`test_dollar_waist_coupled_topology` 固化单 solid 双孔、腰墨与基线帽墨迹。`#`：双竖加双横（`hash_from_n_o`）。`%`：双环 + 斜线（`percent_from_n_o`）。
 
 #### TK-203 消除 keyhole 轮廓　〔S〕
