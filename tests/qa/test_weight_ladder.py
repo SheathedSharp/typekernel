@@ -15,7 +15,7 @@ pytestmark = pytest.mark.skipif(
     reason="lint needs skia-pathops",
 )
 
-_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0)
+_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
 
 @pytest.mark.parametrize("stem", _LADDER_STEMS)
