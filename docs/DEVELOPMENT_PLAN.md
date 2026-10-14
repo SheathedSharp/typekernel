@@ -273,6 +273,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`j` / dotless ``ȷ`` 去掉 ``blend_corners``，``_r_outline`` ``hook_belly`` cubic；golden ``j`` 三 preset 与 VF 阶梯回归。
 - **本轮（部分）**：``g`` 重字重按 ``roundness`` 略减 ``_hook_record`` depth（``open_print`` 阶梯钩根）；``tests/qa/test_hook_weight_ladder.py`` 四 preset × ``stem`` 30–180（含 ``with_stem_relief()``）钩厚回归。
 - **本轮（部分）**：``f``/``t`` 横笔 detour 用 ``_crossbar_counter``（relief 不全量加宽 counter）；``g`` 重 stem 略回拉 ``o`` bowl 以利钩根；``t`` 固定拓扑 ``hook_belly``；``humanist_sans`` ``stem=200``+relief 钩厚回归；golden ``t`` 三 preset。
+- **本轮（部分）**：``t`` 高 roundness 黑体横笔额外 counter 回拉；neo-grotesque（``roundness≈0.28``）黑体略减 hook depth；钩厚阶梯含 ``stem=200`` 四 preset。
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕

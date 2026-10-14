@@ -722,9 +722,16 @@ def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) ->
 
 def _t_crossbar_in_hook_space(c: DesignContext, m: NMetrics, hook: NMetrics, top: float) -> Bar:
     """Crossbar in hook coordinates before ``t`` is flipped."""
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
     tb = m.stem * c.contrast * 0.95 * _horizontal_slant_scale(c)
     y0 = top - m.x_height
     ctr = _crossbar_counter(m, c)
+    t = stem_weight_fraction(m.stem)
+    if t > 0.78 and c.roundness >= 0.35:
+        base = n_metrics(c).counter
+        blend = min(1.0, (t - 0.78) / 0.22) * 0.62
+        ctr = ctr + blend * (base - ctr)
     return (y0, y0 + tb, 0.42 * ctr, 0.52 * ctr)
 
 
@@ -799,7 +806,10 @@ def t_from_n(
     from typekernel.parts.weight_relief import stem_weight_fraction
 
     t_w = stem_weight_fraction(m.stem)
-    hook = _hook_record(m, top, c)
+    hook_depth = 0.45
+    if 0.24 <= c.roundness < 0.32 and t_w > 0.75:
+        hook_depth = 0.45 - 0.1 * min(1.0, (t_w - 0.75) / 0.25)
+    hook = _hook_record(m, top, c, depth=hook_depth)
     # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
     # sits at [top - xh, top - xh + tb] before the flip.
     bar = _t_crossbar_in_hook_space(c, m, hook, top)
