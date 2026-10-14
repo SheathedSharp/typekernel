@@ -405,7 +405,7 @@ def _hook_record(
     m: NMetrics,
     top: float,
     ctx: DesignContext,
-    depth: float = 0.5,
+    depth: float = 0.45,
 ) -> NMetrics:
     """The ``n`` record re-based so its shoulder caps a stem of height ``top``.
 
@@ -433,7 +433,7 @@ def _finish_hook_letter(outline: Outline, ctx: DesignContext) -> Outline:
     """Blend kinks on hook letters (``f`` ``t`` ``j``) after the fixed contour."""
     from typekernel.geo.joins import blend_corners, default_selector
 
-    radius = max(5.0, ctx.join_radius * 2.0)
+    radius = max(3.0, ctx.join_radius * 1.15)
     return blend_corners(outline, radius, select=default_selector, tension=1.0)
 
 
@@ -457,6 +457,8 @@ def _hook_with_crossbar_outline(
     ctx: DesignContext,
     arm: float,
     bar: Bar,
+    *,
+    blend: bool = True,
 ) -> tuple[Outline, float]:
     """Hook master + rounded crossbar (boolean union when pathops is available)."""
     body, x_t = _r_outline(hook, arm, None)
@@ -470,7 +472,9 @@ def _hook_with_crossbar_outline(
         outline = _ccw(boolean_op(body, cross, "union"))
     else:
         outline, x_t = _r_outline(hook, arm, bar)
-    return _finish_hook_letter(outline, ctx), x_t
+    if blend:
+        outline = _finish_hook_letter(outline, ctx)
+    return outline, x_t
 
 
 def f_from_n(
@@ -508,7 +512,7 @@ def t_from_n(
     # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
     # sits at [top - xh, top - xh + tb] before the flip.
     bar = _t_crossbar_in_hook_space(c, m, hook, top)
-    outline, x_t = _hook_with_crossbar_outline(hook, m, c, arm, bar)
+    outline, x_t = _hook_with_crossbar_outline(hook, m, c, arm, bar, blend=False)
     anchors = {"bottom": (x_t / 2.0, 0.0)}
     return _pack(c, m, anchors, _ccw(mirror_y(outline, at_y=top / 2.0)))
 

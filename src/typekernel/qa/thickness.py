@@ -9,19 +9,25 @@ from typekernel.geo.outline import Outline
 from typekernel.geo.pens import draw_outline
 from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.context import DesignContext
 from typekernel.parts.family import Controls
 
 REFERENCE_THICKNESS_CHARS = "noHO"
 THICKNESS_OUTLIER_FACTOR = 1.15
 LINT_THICKNESS_GRID = 16
+# Hook-root QA: minimum ``min_hook_thickness / thin`` on ``f t j g J`` (humanist_sans).
+HOOK_MIN_THIN_RATIO = 0.26
 
 __all__ = [
+    "HOOK_MIN_THIN_RATIO",
     "LINT_THICKNESS_GRID",
     "REFERENCE_THICKNESS_CHARS",
     "THICKNESS_OUTLIER_FACTOR",
     "control_max_thickness_ratio",
     "max_local_thickness",
     "measurement_outline",
+    "min_hook_thickness",
+    "min_local_thickness",
     "thickness_ratio_to_stem",
 ]
 
@@ -94,6 +100,79 @@ def max_local_thickness(
             local = _min_oriented_width(outline, (x, y), directions)
             best = max(best, local)
     return best
+
+
+def min_local_thickness(
+    glyph: ComposedGlyph,
+    *,
+    grid: int = 28,
+    direction_step_deg: float = 15.0,
+    y_min: float | None = None,
+    y_max: float | None = None,
+) -> float:
+    """Smallest perpendicular span among grid samples inside an optional y band."""
+    if not glyph.solids:
+        return 0.0
+    outline = measurement_outline(glyph)
+    try:
+        x0, y0, x1, y1 = union_bounds(list(glyph.solids))
+    except ValueError:
+        return 0.0
+    if x1 <= x0 or y1 <= y0:
+        return 0.0
+
+    sample_y0 = y_min if y_min is not None else y0
+    sample_y1 = y_max if y_max is not None else y1
+    if sample_y1 <= sample_y0:
+        return 0.0
+
+    directions = tuple(
+        float(d) for d in range(0, 180, max(1, round(direction_step_deg)))
+    )
+    best = float("inf")
+    for iy in range(grid):
+        fy = (iy + 0.5) / grid
+        y = sample_y0 + fy * (sample_y1 - sample_y0)
+        for ix in range(grid):
+            fx = (ix + 0.5) / grid
+            x = x0 + fx * (x1 - x0)
+            if not _point_in_ink(x, y, glyph):
+                continue
+            local = _min_oriented_width(outline, (x, y), directions)
+            if 0.0 < local < best:
+                best = local
+    return 0.0 if best == float("inf") else best
+
+
+def min_hook_thickness(
+    glyph: ComposedGlyph,
+    char: str,
+    ctx: DesignContext,
+    *,
+    grid: int = 28,
+) -> float:
+    """Min thickness in the hook/crossbar spring band (excludes terminal ball tips)."""
+    from typekernel.parts.control import _hook_record, n_metrics
+
+    m = n_metrics(ctx)
+    xh = ctx.x_height
+    hook_f = _hook_record(m, m.ascender, ctx)
+    des = ctx.descender
+    bands: dict[str, tuple[float, float]] = {
+        # Shoulder spring above the crossbar (skip bar-end slivers below mid x-height).
+        "f": (0.50 * xh, hook_f.join_y),
+        # Baseline hook: lower stem spring only (exclude full-width stem higher up).
+        "t": (0.04 * xh, 0.42 * xh),
+        # Descender hooks: spring band above the terminal (``j``: body solid only).
+        "j": (des * 0.98, des * 0.73),
+        "g": (des * 0.91, des * 0.36),
+        "J": (des * 1.27, 0.0),
+    }
+    try:
+        y_lo, y_hi = bands[char]
+    except KeyError:
+        raise ValueError(f"no hook thickness band for {char!r}") from None
+    return min_local_thickness(glyph, grid=grid, y_min=y_lo, y_max=y_hi)
 
 
 def _min_oriented_width(

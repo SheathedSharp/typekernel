@@ -9,8 +9,10 @@ from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.primitives import vertical_stem
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.thickness import (
+    HOOK_MIN_THIN_RATIO,
     THICKNESS_OUTLIER_FACTOR,
     max_local_thickness,
+    min_hook_thickness,
     thickness_ratio_to_stem,
 )
 
@@ -57,3 +59,19 @@ def test_m_thickness_outlier_warns() -> None:
 
 def test_thickness_outlier_factor_frozen() -> None:
     assert THICKNESS_OUTLIER_FACTOR == 1.15
+
+
+@pytest.mark.parametrize("char", ("f", "t", "g", "J"))
+def test_hook_root_thickness(char: str) -> None:
+    ctx = DesignContext.humanist_sans()
+    glyphs = Controls.from_context(ctx).build_all(char)
+    floor = ctx.thin * HOOK_MIN_THIN_RATIO
+    assert min_hook_thickness(glyphs[char], char, ctx) >= floor
+
+
+def test_j_hook_root_thickness_on_body() -> None:
+    ctx = DesignContext.humanist_sans()
+    j = Controls.from_context(ctx).build_all("j")["j"]
+    body = ComposedGlyph((j.solids[0],), (), j.advance, ctx)
+    floor = ctx.thin * HOOK_MIN_THIN_RATIO
+    assert min_hook_thickness(body, "j", ctx) >= floor
