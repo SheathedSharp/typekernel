@@ -264,7 +264,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
 - **本轮（部分）**：`f`/`t` 横笔改为 `_r_outline` 固定段数 detour（去掉 pathops union）；`min_hook_thickness` 采样带 + `hook_min_thin_floor` 分档；golden `f`/`t` 三 preset 更新。
-- **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（待校准，写入测试）。
+- **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试；`s` 仍低优先。
@@ -272,7 +272,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。
-- **本轮（部分）**：`COUNTER_PINCH_CHARSET` 阶梯 R8 回归含 `stem=200`（`tests/qa/test_weight_ladder.py`）；`weight_ladder_sheet` 可写 PNG 且清理 UFO 临时目录（`tests/qa/test_sheet.py`）；`.gitignore` 忽略本地 `_ladder_tmp` 校样残件。
+- **本轮（部分）**：`COUNTER_PINCH_CHARSET` 阶梯 R8 回归含 `stem=200`（`tests/qa/test_weight_ladder.py`）；三 golden preset × 阶梯；`family_gate` 三 preset 回归；`weight_ladder_sheet` 可写 PNG 且清理 UFO 临时目录；`.gitignore` 忽略 `_ladder_tmp`。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

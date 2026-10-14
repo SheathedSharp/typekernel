@@ -18,9 +18,13 @@ pytestmark = pytest.mark.skipif(
 _LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
 
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
 @pytest.mark.parametrize("stem", _LADDER_STEMS)
-def test_counter_pinch_charset_passes_r8(stem: float) -> None:
-    ctx = DesignContext.humanist_sans().tuned(stem=stem)
+def test_counter_pinch_charset_passes_r8(preset: str, stem: float) -> None:
+    ctx = getattr(DesignContext, preset)().tuned(stem=stem)
     controls = Controls.from_context(ctx)
     if stem >= STEM_RELIEF_ONSET:
         controls = controls.with_stem_relief()

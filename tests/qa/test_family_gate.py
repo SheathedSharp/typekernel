@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.family_gate import (
     FAMILY_GATE_VERSION,
@@ -14,9 +16,13 @@ def test_version_locked() -> None:
     assert FAMILY_GATE_VERSION == "1"
 
 
-def test_humanist_preset_passes_family_gate() -> None:
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_preset_passes_family_gate(preset: str) -> None:
     failures = collect_family_gate_failures(
-        Controls.from_context(DesignContext.humanist_sans())
+        Controls.from_context(getattr(DesignContext, preset)())
     )
     assert not failures, failures
 
