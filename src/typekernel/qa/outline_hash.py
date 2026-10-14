@@ -11,9 +11,9 @@ import hashlib
 
 from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
-from typekernel.parts.compose import ComposedGlyph
 from typekernel.geo.rounding import DEFAULT_NDIGITS, quantize
 from typekernel.geo.segment import CubicSegment, LineSegment
+from typekernel.parts.compose import ComposedGlyph
 
 
 def outline_hash(outline: Outline, *, ndigits: int = DEFAULT_NDIGITS) -> str:
