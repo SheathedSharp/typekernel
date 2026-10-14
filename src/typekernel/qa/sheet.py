@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -148,9 +149,7 @@ def weight_ladder_sheet(
         draw.text((120, y), chars, font=face, fill=(20, 20, 24))
 
     sheet.save(out_path)
-    for p in tmp_dir.glob("*"):
-        p.unlink(missing_ok=True)
-    tmp_dir.rmdir()
+    shutil.rmtree(tmp_dir, ignore_errors=True)
     return out_path
 
 
