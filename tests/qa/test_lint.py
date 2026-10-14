@@ -17,8 +17,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_lint_humanist_charset_no_keyhole() -> None:
-    report = lint_controls(Controls.from_context(DesignContext.humanist_sans()))
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_lint_preset_charset_no_keyhole(preset: str) -> None:
+    report = lint_controls(Controls.from_context(getattr(DesignContext, preset)()))
     keyholes = [i for i in report.issues if i.rule == "R2_keyhole"]
     assert not keyholes, keyholes
 
