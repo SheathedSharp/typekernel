@@ -696,14 +696,27 @@ def m_from_n(
         counter=m.counter * scale,
         inner_crown=m.inner_crown + 0.24 * m.stem,
     )
+    xh = mm.x_height
+    branch_y: float | None = None
+    if _italic_topology(c):
+        branch_y = _italic_branch_y(m, xh)
+        drop = xh - branch_y
+        mm = mm.tuned(
+            x_height=branch_y,
+            crown_y=mm.crown_y - drop * 0.14,
+            leg_top=mm.leg_top - drop * 0.2,
+            join_y=min(mm.join_y, branch_y - mm.stem * 0.32),
+            inner_crown=mm.inner_crown - drop * 0.16,
+        )
     s1 = _shoulder(mm)
     s2 = _shoulder(mm, s1.r0)
-    xh = mm.x_height
 
     b = PathBuilder()
     b.moveTo(s1.l0, 0.0)
     b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
+    if branch_y is not None:
+        b.lineTo(s1.l1, branch_y)
     _curve(b, s1.outer[0])
     split1 = _split(s1.outer[1], xh, horizontal=True)
     split2 = _split(s2.outer[0], xh, horizontal=True)

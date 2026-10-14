@@ -26,7 +26,7 @@ def test_italic_h_outline_differs_from_sheared_regular() -> None:
 
 def test_italic_branching_n_lint_clean() -> None:
     controls = italic_design(Controls.from_context(DesignContext.geometric_sans()))
-    for ch in "nhru":
+    for ch in "nhrum":
         issues = lint_glyph(controls.build_all(ch)[ch], controls.context, glyph_name=ch)
         assert not [i for i in issues if i.severity == "error"]
 
