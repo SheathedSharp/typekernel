@@ -272,7 +272,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。
-- **本轮（部分）**：`COUNTER_PINCH_CHARSET` 阶梯 R8 回归含 `stem=200`（`tests/qa/test_weight_ladder.py`）；`weight_ladder_sheet` 可写 PNG 且清理 UFO 临时目录（`tests/qa/test_sheet.py`）。
+- **本轮（部分）**：`COUNTER_PINCH_CHARSET` 阶梯 R8 回归含 `stem=200`（`tests/qa/test_weight_ladder.py`）；`weight_ladder_sheet` 可写 PNG 且清理 UFO 临时目录（`tests/qa/test_sheet.py`）；`.gitignore` 忽略本地 `_ladder_tmp` 校样残件。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

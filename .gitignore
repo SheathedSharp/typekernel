@@ -77,6 +77,10 @@ artifacts/build/**
 artifacts/trials/**
 !artifacts/trials/.gitkeep
 
+# weight_ladder_sheet UFO scratch (see tests/qa/test_sheet.py)
+artifacts/_ladder_tmp/
+artifacts/_test_ladder.png
+
 
 # Example compile dumps (keep showcase PNGs)
 examples/zayju_letter/out/**
