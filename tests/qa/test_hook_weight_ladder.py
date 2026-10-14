@@ -29,3 +29,15 @@ def test_hook_root_thickness_weight_ladder(preset: str, stem: float) -> None:
         if char == "j":
             glyph = ComposedGlyph((glyph.solids[0],), (), glyph.advance, ctx)
         assert min_hook_thickness(glyph, char, ctx) >= floor
+
+
+@pytest.mark.parametrize("char", _HOOK_CHARS)
+def test_hook_root_thickness_humanist_stem_200_with_relief(char: str) -> None:
+    """Black master + relief: main UI preset must keep hook spring (TK-205)."""
+    ctx = DesignContext.humanist_sans().tuned(stem=200.0)
+    controls = Controls.from_context(ctx).with_stem_relief()
+    floor = hook_min_thin_floor(ctx)
+    glyph = controls.build(char)
+    if char == "j":
+        glyph = ComposedGlyph((glyph.solids[0],), (), glyph.advance, ctx)
+    assert min_hook_thickness(glyph, char, ctx) >= floor

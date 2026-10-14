@@ -699,18 +699,33 @@ def _finish_hook_letter(outline: Outline, ctx: DesignContext) -> Outline:
     return blend_corners(outline, radius, select=default_selector, tension=1.0)
 
 
+def _crossbar_counter(m: NMetrics, ctx: DesignContext) -> float:
+    """Stem-relief counter widening without over-wide ``f``/``t`` crossbar detours."""
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
+    t = stem_weight_fraction(m.stem)
+    if t <= 0.68:
+        return m.counter
+    base = n_metrics(ctx).counter
+    pull = min(1.0, (t - 0.68) / 0.32)
+    coef = 0.78 + 0.15 * min(1.0, max(0.0, (t - 0.75) / 0.25))
+    return m.counter + pull * coef * (base - m.counter)
+
+
 def _crossbar(c: DesignContext, m: NMetrics, hook: NMetrics, x_height: float) -> Bar:
     """Bar at x-height (dropped just enough to clear a heavy hook's crotch)."""
     tb = m.stem * c.contrast * 0.95 * _horizontal_slant_scale(c)
     y1 = min(x_height, hook.join_y - 0.1 * m.stem)
-    return (y1 - tb, y1, 0.42 * m.counter, 0.52 * m.counter)
+    ctr = _crossbar_counter(m, c)
+    return (y1 - tb, y1, 0.42 * ctr, 0.52 * ctr)
 
 
 def _t_crossbar_in_hook_space(c: DesignContext, m: NMetrics, hook: NMetrics, top: float) -> Bar:
     """Crossbar in hook coordinates before ``t`` is flipped."""
     tb = m.stem * c.contrast * 0.95 * _horizontal_slant_scale(c)
     y0 = top - m.x_height
-    return (y0, y0 + tb, 0.42 * m.counter, 0.52 * m.counter)
+    ctr = _crossbar_counter(m, c)
+    return (y0, y0 + tb, 0.42 * ctr, 0.52 * ctr)
 
 
 def _hook_with_crossbar_outline(
@@ -722,6 +737,7 @@ def _hook_with_crossbar_outline(
     *,
     blend: bool = True,
     inline_crossbar: bool = False,
+    hook_belly: float = 0.0,
 ) -> tuple[Outline, float]:
     """Hook master + crossbar as fixed stem detours (no boolean union)."""
     del n_m
@@ -732,6 +748,7 @@ def _hook_with_crossbar_outline(
         vf_compat=inline_crossbar,
         stem_floor=_f_stem_floor(ctx) if inline_crossbar else 0.0,
         hook_stem_knots=inline_crossbar,
+        hook_belly=hook_belly,
     )
     if blend and not inline_crossbar:
         outline = _finish_hook_letter(outline, ctx)
@@ -779,11 +796,18 @@ def t_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     top = m.x_height + rise * (m.ascender - m.x_height)
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
+    t_w = stem_weight_fraction(m.stem)
     hook = _hook_record(m, top, c)
     # Built upside down (hook on top), then flipped: the bar [xh - tb, xh]
     # sits at [top - xh, top - xh + tb] before the flip.
     bar = _t_crossbar_in_hook_space(c, m, hook, top)
-    outline, x_t = _hook_with_crossbar_outline(hook, m, c, arm, bar, blend=False)
+    belly_scale = 0.06 + 0.94 * min(1.0, max(0.0, (t_w - 0.68) / 0.32))
+    belly = _hook_belly_fillet(m.stem) * belly_scale
+    outline, x_t = _hook_with_crossbar_outline(
+        hook, m, c, arm, bar, blend=False, hook_belly=belly
+    )
     flipped = _ccw(mirror_y(outline, at_y=top / 2.0))
     try:
         _, min_y, max_x, _ = bounds(flipped)
@@ -1558,6 +1582,13 @@ def g_from_o(
 
     stem, desc = nm.stem, c.descender
     t_relief = stem_weight_fraction(stem)
+    if t_relief > 0.55:
+        o_nom = o_metrics(c)
+        blend = min(1.0, (t_relief - 0.55) / 0.38) * 0.48
+        o = o.tuned(
+            rx=o.rx + blend * (o_nom.rx - o.rx),
+            ry=o.ry + blend * (o_nom.ry - o.ry),
+        )
     height = o.x_height - desc
     ease = min(1.0, max(0.0, (c.roundness - 0.30) / 0.18))
     hook_depth = 0.45 - 0.24 * t_relief * ease
