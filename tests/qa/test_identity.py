@@ -14,13 +14,20 @@ _PRESETS = (
 )
 
 
-def test_exclam_fails_on_humanist() -> None:
+def test_exclam_ok_on_humanist() -> None:
     report = check_identity_controls(
         Controls.from_context(DesignContext.humanist_sans()),
         "!",
     )
-    assert not report.ok()
-    assert any(i.glyph == "!" for i in report.errors)
+    assert report.ok()
+
+
+def test_question_ok_on_humanist() -> None:
+    report = check_identity_controls(
+        Controls.from_context(DesignContext.humanist_sans()),
+        "?",
+    )
+    assert report.ok()
 
 
 def test_ampersand_fails_on_humanist() -> None:

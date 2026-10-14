@@ -242,10 +242,19 @@ def exclam_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     size = _dot_size(m, c)
-    cx = m.stem / 2.0
-    stem_h = m.x_height * 0.72
-    stem = vertical_stem(c, 0.0, _dot_bottom_y(m) + size * 1.15, stem_h, width=m.stem * 0.92)
-    dot = tittle(c, cx, stem_h + size * 0.55, size=size)
+    cx = m.width / 2.0
+    dot_y = _dot_bottom_y(m)
+    gap = size * 0.45
+    stem_bottom = dot_y + size + gap
+    stem_w = m.stem * 0.92
+    stem = vertical_stem(
+        c,
+        cx - stem_w / 2.0,
+        stem_bottom,
+        c.cap_height,
+        width=stem_w,
+    )
+    dot = tittle(c, cx, dot_y, size=size)
     return _pack(c, m, {}, stem, dot)
 
 
@@ -257,15 +266,21 @@ def question_from_n_o(
     om = _o_record(o)
     size = _dot_size(m, c)
     cx = m.width / 2.0
+    dot_y = _dot_bottom_y(m)
+    gap = size * 0.4
+    stem_bottom = dot_y + size + gap
+    stem_top = m.x_height * 0.36
+    stem_w = m.stem * 0.9
+    stem = vertical_stem(c, cx - stem_w / 2.0, stem_bottom, stem_top, width=stem_w)
     hook = scale(
-        c_from_o(o, c, aperture=0.42).solids[0],
-        0.52,
-        0.62,
+        c_from_o(o, c, aperture=0.40).solids[0],
+        0.50,
+        0.58,
         origin=(om.rx, om.x_height / 2.0),
     )
-    hook = translate(hook, cx - om.rx * 0.52, m.x_height * 0.18)
-    dot = _dot_ellipse(cx, _dot_bottom_y(m), size)
-    return _pack(c, m, {}, hook, dot)
+    hook = translate(hook, cx - om.rx * 0.50, m.x_height * 0.42)
+    dot = tittle(c, cx, dot_y, size=size)
+    return _pack(c, m, {}, hook, stem, dot)
 
 
 def hyphen_from_n_o(

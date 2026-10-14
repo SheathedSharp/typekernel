@@ -97,8 +97,14 @@ def _check_exclam_dot_low(glyph: ComposedGlyph, ctx: DesignContext) -> str | Non
 
 
 def _check_question_tail(glyph: ComposedGlyph, ctx: DesignContext) -> str | None:
-    _x0, y0, _, _y1 = _ink_bounds(glyph)
-    if y0 > ctx.x_height * 0.22:
+    xh = ctx.x_height
+    parts = _solid_centroids(glyph)
+    stem_like = [
+        p
+        for p in parts
+        if p[2] <= ctx.stem * 1.2 and p[3] >= xh * 0.08 and p[1] < xh * 0.52
+    ]
+    if not stem_like:
         return "missing descender stem below bowl"
     return None
 

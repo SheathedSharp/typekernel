@@ -16,9 +16,13 @@ def _glyph(ch: str):
     return _CONTROLS.build_all(ch)[ch]
 
 
-@pytest.mark.xfail(strict=True, reason="B-01 exclamation dot above stem")
 def test_b01_exclam() -> None:
     issues = check_identity_glyph(_glyph("!"), _CTX, glyph_name="!")
+    assert not issues
+
+
+def test_b02_question() -> None:
+    issues = check_identity_glyph(_glyph("?"), _CTX, glyph_name="?")
     assert not issues
 
 
