@@ -5,6 +5,10 @@ from __future__ import annotations
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.italic import italic_design, slant_composed_glyph
 from typekernel.qa.lint import lint_glyph
+from typekernel.qa.originality import topology_signature
+
+_OBLIQUE_VS_ITALIC_CHARS = "aefghkmnruvwy"
+_MIN_OUTLINE_DIFFS = 8
 
 
 def test_italic_n_outline_differs_from_sheared_regular() -> None:
@@ -43,6 +47,26 @@ def test_italic_a_bowl_narrower_before_slant() -> None:
     w_reg = bounds(a_reg.solids[0])[2] - bounds(a_reg.solids[0])[0]
     w_ital = bounds(a_ital.solids[0])[2] - bounds(a_ital.solids[0])[0]
     assert w_ital < w_reg
+
+
+def test_italic_design_differs_from_construct_oblique_on_key_letters() -> None:
+    """TK-403 acceptance: true italic vs sheared regular on branching letters."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    outline_diffs = 0
+    topology_diffs = 0
+    for ch in _OBLIQUE_VS_ITALIC_CHARS:
+        oblique = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.build(ch)
+        if composed_glyph_hash(oblique) != composed_glyph_hash(drawn):
+            outline_diffs += 1
+        if topology_signature(oblique) != topology_signature(drawn):
+            topology_diffs += 1
+    assert outline_diffs >= _MIN_OUTLINE_DIFFS
+    assert topology_diffs >= 4
 
 
 def test_italic_ru_topology_differs_from_sheared_regular() -> None:

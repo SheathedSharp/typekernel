@@ -354,7 +354,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：全 charset `check_masters` + VF 编译；`vf_upright_controls`；示例 `build_italic_vf.py` 已对齐；`deep_check_masters` 跨轴待续。
 - **验收**：
   - 竖笔实测倾角 = 目标 ± 0.5°。
-  - 与 `oblique_font(regular)` 比较：至少 N 个字母（`a e f g h k m n r u v w y`，N 待定）的拓扑签名或形状距离显著不同。
+  - 与构造 oblique（`slant_composed_glyph`）比较：至少 8/13 个字母（`a e f g h k m n r u v w y`）轮廓哈希不同，且 ≥4 个拓扑签名不同（`test_italic_topology.py`）。
   - TK-002 加的 strict-xfail 测试转正并移除标记。
   - 人审。
 - **依赖**：M2、TK-305。
