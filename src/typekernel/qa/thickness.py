@@ -168,16 +168,17 @@ def min_hook_thickness(
     grid: int = 28,
 ) -> float:
     """Min thickness in the hook/crossbar spring band (excludes terminal ball tips)."""
-    from typekernel.parts.control import _hook_record, n_metrics
+    from typekernel.parts.control import _crossbar, _hook_record, n_metrics
 
     m = n_metrics(ctx)
     xh = ctx.x_height
     hook_f = _hook_record(m, m.ascender, ctx)
+    bar_top = _crossbar(ctx, m, hook_f, xh)[1]
     des = ctx.descender
     cap = ctx.cap_height
     bands: dict[str, tuple[float, float]] = {
-        # Shoulder spring above the crossbar (skip bar-end slivers below mid x-height).
-        "f": (0.50 * xh, hook_f.join_y),
+        # Shoulder spring above the boolean crossbar (skip stem/bar seam corners).
+        "f": (bar_top + 0.06 * m.stem, hook_f.join_y),
         # Baseline hook: lower stem spring only (exclude full-width stem higher up).
         "t": (0.04 * xh, 0.42 * xh),
         # Descender hooks: spring band above the terminal ball (``j``: body solid only).
