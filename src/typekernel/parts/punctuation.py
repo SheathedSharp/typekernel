@@ -16,9 +16,11 @@ from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.path_helpers import ellipse_cubics
+from typekernel.geo.point import Point
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
+    Cubic,
     NMetrics,
     _ccw,
     _curve,
@@ -707,14 +709,18 @@ def degree_from_n_o(
     return _pack_holes(c, m, outer, holes=(hole,))
 
 
-def _cubic_pts(q: tuple) -> tuple[tuple[float, float], ...]:
-    return tuple((p.x, p.y) for p in q)
+def _cubic_pts(q: tuple[Point, Point, Point, Point]) -> Cubic:
+    pts = tuple((p.x, p.y) for p in q)
+    return (pts[0], pts[1], pts[2], pts[3])
+
+
+def _cubic4(b: Cubic) -> Cubic:
+    return b
 
 
 def _ampersand_lower_with_tail(
     c: DesignContext,
     m: NMetrics,
-    om,
     *,
     cx: float,
     rx_l: float,
@@ -752,11 +758,11 @@ def _ampersand_lower_with_tail(
     b.moveTo(*_cubic_pts(q0)[0])
     _curve(b, _cubic_pts(q0))
     _curve(b, _cubic_pts(q1))
-    _curve(b, before)
+    _curve(b, _cubic4(before))
     b.lineTo(end[0] - hw / 2.0, end[1])
     b.lineTo(end[0] + hw / 2.0, end[1])
     b.lineTo(*after[0])
-    _curve(b, after)
+    _curve(b, _cubic4(after))
     _curve(b, _cubic_pts(q3))
     b.closePath()
     iq0, iq1, iq2, iq3 = ellipse_cubics(lcx, cy_l, rx_l - tv, ry_l - th)
@@ -790,7 +796,6 @@ def ampersand_from_n_o(
     outer_l, hole_l = _ampersand_lower_with_tail(
         c,
         m,
-        om,
         cx=cx,
         rx_l=rx_l,
         cy_l=cy_l,
