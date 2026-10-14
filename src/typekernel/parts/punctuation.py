@@ -16,14 +16,10 @@ from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
-    OMetrics,
     _ccw,
-    _curve,
     _n_record,
     _o_record,
     _pack,
-    _quarters,
-    _rev,
     c_from_o,
 )
 from typekernel.parts.diagonals import _hwidth
@@ -135,27 +131,6 @@ def _plus_outline(cx: float, cy: float, arm: float, thickness: float) -> Outline
     b.moveTo(*pts[0])
     for p in pts[1:]:
         b.lineTo(*p)
-    b.closePath()
-    return _ccw(b.build())
-
-
-def _equal_outline(x0: float, x1: float, cy: float, gap: float, thickness: float) -> Outline:
-    """Two stacked bars as one CCW loop."""
-    t = thickness
-    g = gap / 2.0
-    y_top = cy + g + t
-    y_mid_top = cy + g
-    y_mid_bot = cy - g
-    y_bot = cy - g - t
-    b = PathBuilder()
-    b.moveTo(x0, y_bot)
-    b.lineTo(x1, y_bot)
-    b.lineTo(x1, y_mid_bot)
-    b.lineTo(x0, y_mid_bot)
-    b.lineTo(x0, y_mid_top)
-    b.lineTo(x1, y_mid_top)
-    b.lineTo(x1, y_top)
-    b.lineTo(x0, y_top)
     b.closePath()
     return _ccw(b.build())
 
@@ -569,12 +544,11 @@ def equal_from_n_o(
     gap = m.stem * 0.85
     cy = _bar_y(m)
     w = m.counter * 0.55
-    return _pack(
-        c,
-        m,
-        {},
-        _equal_outline(cx - w / 2.0, cx + w / 2.0, cy, gap, c.thin),
-    )
+    t = c.thin
+    x0, x1 = cx - w / 2.0, cx + w / 2.0
+    lower = horizontal_bar(c, x0, x1, cy - gap / 2.0 - t, thickness=t)
+    upper = horizontal_bar(c, x0, x1, cy + gap / 2.0, thickness=t)
+    return _pack(c, m, {}, lower, upper)
 
 
 def less_from_n_o(
@@ -686,25 +660,6 @@ def percent_from_n_o(
     return _pack_holes(c, m, top_o, bot_o, slash, holes=(top_h, bot_h))
 
 
-def _ring_outline_small(
-    c: DesignContext, om: OMetrics, cx: float, cy: float, ring_scale: float
-) -> Outline:
-    rx = om.rx * ring_scale
-    ry = om.ry * ring_scale
-    thick = om.thickness * ring_scale
-    q0, q1, q2, q3 = _quarters(cx, cy, rx, ry, om.exponent)
-    i0, i1, i2, i3 = _quarters(cx, cy, rx - thick, ry - thick, om.exponent)
-    b = PathBuilder()
-    b.moveTo(*q0[0])
-    for cubic in (q0, q1, q2, q3):
-        _curve(b, cubic)
-    b.lineTo(*i3[3])
-    for cubic in (_rev(i3), _rev(i2), _rev(i1), _rev(i0)):
-        _curve(b, cubic)
-    b.closePath()
-    return _ccw(b.build())
-
-
 def degree_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
@@ -713,8 +668,16 @@ def degree_from_n_o(
     om = _o_record(o)
     cx = m.width / 2.0
     cy = m.x_height + om.ry * 0.28
-    ring = _ring_outline_small(c, om, cx, cy, 0.22)
-    return _pack(c, m, {}, ring)
+    scale = 0.22
+    outer, hole = bowl(
+        c,
+        cx,
+        cy,
+        rx=om.rx * scale,
+        ry=om.ry * scale,
+        thickness=om.thickness * scale,
+    )
+    return _pack_holes(c, m, outer, holes=(hole,))
 
 
 def ampersand_from_n_o(
@@ -752,12 +715,19 @@ def at_sign_from_n_o(
     cx = m.width / 2.0
     cy = m.x_height * 0.48
     scale = 0.92
-    outer = _ring_outline_small(c, om, cx, cy, scale)
+    outer, ring_hole = bowl(
+        c,
+        cx,
+        cy,
+        rx=om.rx * scale,
+        ry=om.ry * scale,
+        thickness=om.thickness * scale,
+    )
     hole_r = om.rx * scale - om.thickness * scale
     inner_r = min(om.thickness * 0.78, hole_r * 0.42)
     dx = hole_r * 0.38
     inner = _dot_ellipse(cx + dx, cy, inner_r * 2.0)
-    return _pack(c, m, {}, outer, inner)
+    return _pack_holes(c, m, outer, inner, holes=(ring_hole,))
 
 
 def dollar_from_n_o(

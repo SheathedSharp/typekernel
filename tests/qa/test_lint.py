@@ -17,10 +17,10 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_lint_humanist_finds_keyhole_on_equals() -> None:
-    report = lint_controls(Controls.from_context(DesignContext.humanist_sans()), "=")
-    rules = {i.rule for i in report.issues}
-    assert "R2_keyhole" in rules
+def test_lint_humanist_charset_no_keyhole() -> None:
+    report = lint_controls(Controls.from_context(DesignContext.humanist_sans()))
+    keyholes = [i for i in report.issues if i.rule == "R2_keyhole"]
+    assert not keyholes, keyholes
 
 
 def test_lint_control_n_ok() -> None:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.identity import check_identity_glyph
 from typekernel.qa.lint import lint_glyph
@@ -46,7 +44,6 @@ def test_b06_percent() -> None:
     assert not issues
 
 
-@pytest.mark.xfail(strict=True, reason="B-08 equals keyhole contour")
 def test_b08_equals_keyhole() -> None:
     issues = lint_glyph(_glyph("="), _CTX, glyph_name="=")
     assert not any(i.rule == "R2_keyhole" for i in issues)
