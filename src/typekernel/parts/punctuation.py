@@ -22,14 +22,17 @@ from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     Cubic,
     NMetrics,
+    OMetrics,
     _ccw,
     _curve,
     _n_record,
     _o_record,
     _pack,
+    _quarters,
     c_from_o,
 )
 from typekernel.parts.diagonals import _hwidth
+from typekernel.parts.figures import _outer_and_counters, _single_crossing
 from typekernel.parts.primitives import bowl, horizontal_bar, stroke_polyline, tittle, vertical_stem
 from typekernel.parts.slant_compensate import horizontal_slant_compensation
 from typekernel.parts.transforms import mirror_x, scale, translate
@@ -844,28 +847,69 @@ def at_sign_from_n_o(
     return _pack_holes(c, m, outer, inner_o, holes=(ring_hole, inner_h))
 
 
+def _dollar_stacked_outline(
+    c: DesignContext,
+    m: NMetrics,
+    om: OMetrics,
+    *,
+    waist: float = 0.50,
+    top_scale: float = 0.90,
+) -> Outline:
+    """Stacked S-coupled rings (``8`` topology) with two counters — one solid, VF-safe."""
+    cap = m.x_height
+    e = om.exponent
+    cx = m.width / 2.0
+    tv = min(om.thickness_h * 0.88, 0.24 * cap)
+    ym = waist * cap
+    rx_l = min(om.rx * 0.50, m.width * 0.23)
+    rx_u = top_scale * rx_l
+    ry_l = (ym + tv / 2.0) / 2.0
+    ry_u = (cap - (ym - tv / 2.0)) / 2.0
+    th = min(om.thickness_v * 0.88, 0.6 * rx_u)
+    tv = min(tv, 0.6 * min(ry_u, ry_l))
+    ry_l = (ym + tv / 2.0) / 2.0
+    ry_u = (cap - (ym - tv / 2.0)) / 2.0
+    cy_l, cy_u = ry_l, cap - ry_u
+    l0, l1, l2, l3 = _quarters(cx, cy_l, rx_l, ry_l, e)
+    u0, u1, u2, u3 = _quarters(cx, cy_u, rx_u, ry_u, e)
+    right = _single_crossing(l0, u3)
+    left = _single_crossing(l1, u2)
+    l0a, _ = splitCubicAtT(*l0, right.t1)
+    _, u3b = splitCubicAtT(*u3, right.t2)
+    u2a, _ = splitCubicAtT(*u2, left.t2)
+    _, l1b = splitCubicAtT(*l1, left.t1)
+    b = PathBuilder()
+    b.moveTo(*l3[0])
+    _curve(b, l3)
+    _curve(b, l0a)
+    _curve(b, (l0a[3], u3b[1], u3b[2], u3b[3]))
+    _curve(b, u0)
+    _curve(b, u1)
+    _curve(b, u2a)
+    _curve(b, (u2a[3], l1b[1], l1b[2], l1b[3]))
+    _curve(b, l2)
+    b.closePath()
+    for qx, qy, rx, ry in (
+        (cx, cy_l, rx_l - th, ry_l - tv),
+        (cx, cy_u, rx_u - th, ry_u - tv),
+    ):
+        q = _quarters(qx, qy, rx, ry, e)
+        b.moveTo(*q[0][0])
+        for cubic in q:
+            _curve(b, cubic)
+        b.closePath()
+    return _outer_and_counters(b.build())
+
+
 def dollar_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
+    """Dollar: waist-coupled upper/lower rings (S spine) and two counters."""
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     om = _o_record(o)
-    cx = m.width / 2.0
-    thick_v = om.thickness_v * 0.88
-    thick_h = om.thickness_h * 0.88
-    rx = om.rx * 0.30
-    ry = om.ry * 0.22
-    outer_t, hole_t = bowl(
-        c, cx, m.x_height * 0.78, rx=rx, ry=ry, thickness_v=thick_v, thickness_h=thick_h
-    )
-    outer_b, hole_b = bowl(
-        c, cx, m.x_height * 0.22, rx=rx, ry=ry, thickness_v=thick_v, thickness_h=thick_h
-    )
-    stem_w = min(m.stem * 0.72, thick_v * 1.05)
-    y_gap_lo = m.x_height * 0.38
-    y_gap_hi = m.x_height * 0.62
-    stem = vertical_stem(c, cx - stem_w / 2.0, y_gap_lo, y_gap_hi, width=stem_w)
-    return _pack_holes(c, m, stem, outer_t, outer_b, holes=(hole_t, hole_b))
+    outline = _dollar_stacked_outline(c, m, om)
+    return _pack_holes(c, m, outline)
 
 
 PUNCT_FORMS = {

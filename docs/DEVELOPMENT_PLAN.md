@@ -249,8 +249,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：闭引号在已排版墨迹中心镜像（非 `n.width/2`），`'"''""` R7 清零；`humanist_sans` 默认 preset `family_gate` 全过。
 - **本轮（部分）**：`&` 下环外轮廓 Q 式接左下尾笔（双 solid、双孔，无第三 solid）；golden `&` 三 preset 更新。
 - **本轮（部分）**：`@` 外环 + 环内小 bowl（双孔），重字重缩小 belly 避免叠墨；golden `@` 三 preset 更新。
-- **本轮（部分）**：`$` 双环间竖笔略加长（`0.38–0.62×x-height`，叠墨阈值内）；golden `$` 三 preset 更新；`&` / `$` 三 preset 字重插值 `check_interpolatable` 回归。
-- `$`：真 S 形仍待（勿全高竖笔叠双环）。`#`：双竖加双横（`hash_from_n_o`）。`%`：双环 + 斜线（`percent_from_n_o`）。
+- **本轮（部分）**：`$` 改为腰接双环单 solid（`8` 式 S 脊柱、双孔，无第三 solid / union）；golden `$` 三 preset 更新；`&` / `$` 三 preset 字重插值 `check_interpolatable` 回归。
+- `$`：贯穿竖笔帽可再 splice（勿全高竖笔叠独立双环）。`#`：双竖加双横（`hash_from_n_o`）。`%`：双环 + 斜线（`percent_from_n_o`）。
 
 #### TK-203 消除 keyhole 轮廓　〔S〕
 - **本轮**：三内置 preset 全字符 `R2_keyhole` 零报（`humanist_sans` / `code_clear` / `geometric_sans`）。
