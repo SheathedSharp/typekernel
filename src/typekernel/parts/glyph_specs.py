@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, replace
 from typing import Any
 
+from typekernel.parts.caps import G_from_O, R_from_H, Y_from_H
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
@@ -21,9 +22,12 @@ __all__ = [
     "ASpec",
     "ESpec",
     "FSpec",
+    "GSpec",
     "JSpec",
+    "RSpec",
     "SSpec",
     "TSpec",
+    "YSpec",
     "build_from_spec",
     "merge_spec",
     "spec_fields",
@@ -77,6 +81,31 @@ class SSpec:
     aperture: float | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class GSpec:
+    """``G``: inward crossbar reach past the cap ``O`` centre."""
+
+    bar_reach: float = 0.1
+
+
+@dataclass(frozen=True, slots=True)
+class RSpec:
+    """``R``: bowl width and leg splice along the lower curve."""
+
+    width: float = 0.94
+    straight: float = 0.45
+    bowl: float = 0.47
+    leg_at: float = 0.3
+
+
+@dataclass(frozen=True, slots=True)
+class YSpec:
+    """``Y``: arm meeting height on the cap stem."""
+
+    width: float = 0.98
+    junction: float = 0.42
+
+
 WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "f": FSpec,
     "t": TSpec,
@@ -84,6 +113,9 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "a": ASpec,
     "e": ESpec,
     "s": SSpec,
+    "G": GSpec,
+    "R": RSpec,
+    "Y": YSpec,
 }
 
 
@@ -128,4 +160,18 @@ def build_from_spec(
         if spec.aperture is not None:
             kw["aperture"] = spec.aperture
         return s_from_o(o_glyph, ctx, **kw)
+    if ch == "G" and isinstance(spec, GSpec):
+        return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
+    if ch == "R" and isinstance(spec, RSpec):
+        return R_from_H(
+            n_glyph,
+            o_glyph,
+            ctx,
+            width=spec.width,
+            straight=spec.straight,
+            bowl=spec.bowl,
+            leg_at=spec.leg_at,
+        )
+    if ch == "Y" and isinstance(spec, YSpec):
+        return Y_from_H(n_glyph, ctx, width=spec.width, junction=spec.junction)
     raise KeyError(f"no builder for spec {ch!r}")

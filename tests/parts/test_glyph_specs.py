@@ -19,6 +19,34 @@ def test_tuned_glyph_defaults_match_stock_derivation() -> None:
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
 
 
+def test_cap_glyph_specs_default_match_stock() -> None:
+    ctx = DesignContext.humanist_sans()
+    base = Controls.from_context(ctx).build_all("GRY")
+    tuned = (
+        Controls.from_context(ctx)
+        .tuned_glyph("G")
+        .tuned_glyph("R")
+        .tuned_glyph("Y")
+        .build_all("GRY")
+    )
+    for ch in "GRY":
+        assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
+
+
+def test_g_bar_reach_moves_crossbar() -> None:
+    ctx = DesignContext.humanist_sans()
+    short = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.05).build("G")
+    long = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.18).build("G")
+    assert composed_glyph_hash(short) != composed_glyph_hash(long)
+
+
+def test_y_junction_moves_crotch() -> None:
+    ctx = DesignContext.humanist_sans()
+    low = Controls.from_context(ctx).tuned_glyph("Y", junction=0.34).build("Y")
+    high = Controls.from_context(ctx).tuned_glyph("Y", junction=0.52).build("Y")
+    assert composed_glyph_hash(low) != composed_glyph_hash(high)
+
+
 def test_t_arm_monotone_moves_terminal() -> None:
     ctx = DesignContext.humanist_sans()
     narrow = Controls.from_context(ctx).tuned_glyph("t", arm=0.45).build("t")
