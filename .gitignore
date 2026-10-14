@@ -73,6 +73,10 @@ artifacts/specimens/**
 artifacts/build/**
 !artifacts/build/.gitkeep
 
+# Agent trial dumps (summaries live in docs/AGENT_TRIALS.md)
+artifacts/trials/**
+!artifacts/trials/.gitkeep
+
 
 # Example compile dumps (keep showcase PNGs)
 examples/zayju_letter/out/**
