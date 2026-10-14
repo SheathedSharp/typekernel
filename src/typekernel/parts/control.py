@@ -1160,6 +1160,76 @@ def e_from_o(
     return _pack(c, o, anchors, Outline((outer, reverse_contour(eye))))
 
 
+def _double_storey_g_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None,
+    c: DesignContext,
+) -> ComposedGlyph:
+    """Two-storey ``g``: upper bowl, descender loop, right link (TK-305)."""
+    o = _o_record(o_glyph)
+    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    stem, desc, xh = m.stem, c.descender, o.x_height
+    width = 2.0 * o.rx
+    sx0 = width - stem
+    tv, th = stem * 0.96, stem * c.contrast * 0.96
+
+    upper_ry = xh * 0.24
+    upper_rx = upper_ry * (o.rx / o.ry) * 0.92
+    upper_cx = upper_rx + stem * 0.4
+    upper_cy = xh - upper_ry * 0.72
+    upper_outer, upper_hole = bowl(
+        c,
+        upper_cx,
+        upper_cy,
+        rx=upper_rx,
+        ry=upper_ry,
+        thickness_v=tv,
+        thickness_h=th,
+        shape="superellipse",
+        n=o.exponent,
+    )
+
+    lower_ry = xh * 0.34
+    lower_rx = lower_ry * (o.rx / o.ry) * 0.9
+    lower_cx = upper_cx
+    lower_cy = desc + lower_ry * 1.08
+    lower_outer, lower_hole = bowl(
+        c,
+        lower_cx,
+        lower_cy,
+        rx=lower_rx,
+        ry=lower_ry,
+        thickness_v=tv,
+        thickness_h=th,
+        shape="superellipse",
+        n=o.exponent,
+    )
+
+    stem_bottom = lower_cy + lower_ry * 0.35
+    stem_o = contrast_stem_caps(c, sx0, stem_bottom, xh, width=stem * 1.02)
+    counters = Outline(
+        tuple(
+            reverse_contour(contour)
+            for hole in (upper_hole, lower_hole)
+            for contour in hole.contours
+        )
+    )
+
+    return (
+        GlyphAssembler(c)
+        .with_design(o)
+        .add(stem_o)
+        .add(upper_outer)
+        .add(lower_outer)
+        .add_hole(counters)
+        .union_solids()
+        .blend_joins(max(2.5, c.join_radius * 0.95))
+        .anchor("top", upper_cx, xh)
+        .anchor("bottom", lower_cx, desc)
+        .build()
+    )
+
+
 def g_from_o(
     o_glyph: ComposedGlyph,
     n_glyph: ComposedGlyph | None = None,
@@ -1168,12 +1238,10 @@ def g_from_o(
     arm: float = 0.75,
     join: float = 0.85,
 ) -> ComposedGlyph:
-    """Derive single-storey ``g``: the ``q`` bowl whose stem ends in the ``j`` hook.
-
-    The hook is the tall ``r`` shoulder turned 180°, spliced into the bowl's
-    outer contour below the bowl — one outer contour plus the counter.
-    """
+    """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``)."""
     c = ctx or o_glyph.context
+    if c.style.g_form == "double":
+        return _double_storey_g_from_o(o_glyph, n_glyph, c)
     o = _o_record(o_glyph)
     nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
     stem, desc = nm.stem, c.descender

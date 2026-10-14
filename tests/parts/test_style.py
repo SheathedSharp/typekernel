@@ -51,3 +51,18 @@ def test_a_form_double_lint_clean_on_geometric() -> None:
 
     issues = lint_glyph(controls.build_all("a")["a"], controls.context, glyph_name="a")
     assert not [i for i in issues if i.severity == "error"]
+
+
+def test_g_form_double_changes_topology() -> None:
+    ctx = DesignContext.geometric_sans()
+    single = Controls.from_context(ctx).build_all("g")["g"]
+    double = Controls.from_context(ctx, style=Style(g_form="double")).build_all("g")["g"]
+    assert topology_signature(single) != topology_signature(double)
+
+
+def test_g_form_double_lint_clean_on_geometric() -> None:
+    controls = Controls.from_context(DesignContext.geometric_sans(), style=Style(g_form="double"))
+    from typekernel.qa.lint import lint_glyph
+
+    issues = lint_glyph(controls.build_all("g")["g"], controls.context, glyph_name="g")
+    assert not [i for i in issues if i.severity == "error"]
