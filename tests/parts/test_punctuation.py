@@ -31,6 +31,20 @@ def test_ampersand_interpolates_across_stems(preset: str) -> None:
     assert check_interpolatable(outlines) == []
 
 
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_dollar_interpolates_across_stems(preset: str) -> None:
+    base = getattr(DesignContext, preset)()
+    stems = (50.0, base.stem, 140.0)
+    outlines = [
+        Glyph.from_composed("$", Controls.from_context(base.tuned(stem=s)).build("$")).outline
+        for s in stems
+    ]
+    assert check_interpolatable(outlines) == []
+
+
 def test_ampersand_tail_reaches_baseline() -> None:
     from typekernel.geo.layout import union_bounds
 
