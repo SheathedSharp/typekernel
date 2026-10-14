@@ -11,6 +11,7 @@ import hashlib
 
 from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
+from typekernel.parts.compose import ComposedGlyph
 from typekernel.geo.rounding import DEFAULT_NDIGITS, quantize
 from typekernel.geo.segment import CubicSegment, LineSegment
 
@@ -31,6 +32,14 @@ def outline_hash(outline: Outline, *, ndigits: int = DEFAULT_NDIGITS) -> str:
     """
     canonical = _canonical_text(outline, ndigits=ndigits)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def composed_glyph_hash(glyph: ComposedGlyph, *, ndigits: int = DEFAULT_NDIGITS) -> str:
+    """Hash all solid and hole contours of a composed glyph as one outline."""
+    contours = tuple(
+        contour for outline in (*glyph.solids, *glyph.holes) for contour in outline.contours
+    )
+    return outline_hash(Outline(contours), ndigits=ndigits)
 
 
 def _canonical_text(outline: Outline, *, ndigits: int) -> str:
