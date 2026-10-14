@@ -580,13 +580,26 @@ def m_from_n(
     b.lineTo(s2.r1, 0.0)
     b.lineTo(s2.r0, 0.0)
     b.lineTo(s2.r0, mm.join_y)
-    _curve(b, s2.inner[0])
-    _curve(b, s2.inner[1])
+    isplit2 = _split(s2.inner[0], xh, horizontal=True)
+    isplit1 = _split(s1.inner[1], xh, horizontal=True)
+    if isplit2 is not None:
+        _curve(b, isplit2[0])
+    else:
+        _curve(b, s2.inner[0])
+    if isplit1 is not None and isplit2 is not None:
+        b.lineTo(s1.r1, xh)
+        b.lineTo(s2.l0, xh)
+        _curve(b, isplit1[1])
+    else:
+        _curve(b, s2.inner[1])
     b.lineTo(s2.l1, 0.0)
     b.lineTo(s1.r0, 0.0)
     b.lineTo(s1.r0, mm.join_y)
     _curve(b, s1.inner[0])
-    _curve(b, s1.inner[1])
+    if isplit1 is not None:
+        _curve(b, isplit1[0])
+    else:
+        _curve(b, s1.inner[1])
     b.lineTo(s1.l1, 0.0)
     b.closePath()
     cx = s2.r1 / 2.0
