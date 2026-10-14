@@ -49,6 +49,8 @@ def main() -> None:
 
     review = design_review(regular, baseline=baseline_controls(), out_dir=out / "review")
     print(review.summary())
+    if review.charset_failures:
+        print(f"charset issues (fix before L2 ship): {len(review.charset_failures)}")
     if review.failures or review.l0_gaps:
         sys.exit(1)
 

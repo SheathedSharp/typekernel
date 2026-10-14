@@ -31,6 +31,8 @@ def main() -> None:
         out_dir=args.out / "review",
     )
     print(review.summary())
+    if review.charset_failures:
+        print(f"charset issues (fix in library / M2): {len(review.charset_failures)}")
 
     paths = build_glyph_preview(
         controls,
