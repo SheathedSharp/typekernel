@@ -71,7 +71,10 @@ def test_m_first_arch_matches_narrowed_n(ctx: DesignContext) -> None:
     scale = m_counter_scale(ctx.stem)
     mm = rec.tuned(
         counter=rec.counter * scale,
-        inner_crown=rec.inner_crown + 0.24 * rec.stem,
+        inner_crown=min(
+            rec.crown_y - rec.stem * 0.55,
+            rec.inner_crown + 0.32 * rec.stem,
+        ),
     )
     narrowed = build_n(ctx, mm)
     assert _cubics_from_left(m_from_n(n))[0] == _cubics_from_left(narrowed)[0]
@@ -83,3 +86,14 @@ def test_m_crotch_sits_on_x_height(ctx: DesignContext) -> None:
     ys = {round(p.y, 6) for s in g.solids[0].contours[0].segments for p in s.points}
     assert round(m.x_height, 6) in ys
     assert max(ys) == pytest.approx(m.crown_y)
+
+
+def test_m_inner_shoulder_sits_higher_than_n(ctx: DesignContext) -> None:
+    """TK-204: ``m`` inner crown is tuned above the ``n`` default for crotch air."""
+    n = build_n(ctx)
+    m = build_m(ctx)
+    rec = n_metrics(ctx)
+    n_inner = rec.inner_crown
+    m_inner = min(rec.crown_y - rec.stem * 0.55, rec.inner_crown + 0.32 * rec.stem)
+    assert m_inner > n_inner
+    assert _cubics_from_left(m)[0] != _cubics_from_left(n)[0]

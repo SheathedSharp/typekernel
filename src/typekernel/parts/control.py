@@ -745,7 +745,11 @@ def m_from_n(
     # Slightly shallower shoulders than ``n`` so the double arch stays inside R9.
     mm = m.tuned(
         counter=m.counter * scale,
-        inner_crown=m.inner_crown + 0.24 * m.stem,
+        # Shallower inner shoulder than ``n`` so the double-arch crotch stays open (TK-204).
+        inner_crown=min(
+            m.crown_y - m.stem * 0.55,
+            m.inner_crown + 0.32 * m.stem,
+        ),
     )
     xh = mm.x_height
     branch_y: float | None = None

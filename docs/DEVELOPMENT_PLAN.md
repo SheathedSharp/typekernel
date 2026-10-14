@@ -252,8 +252,9 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：R2 在全部 98 字形零报。可与 TK-202 合并提交，但要在说明里分开列出。
 
 #### TK-204 `m`、`u`　〔M〕
-- `m`：两拱之间在 x-height 以 `b.lineTo(s2.l1, xh)` 平线直连（`control.py:575`），导致顶部实心黑块、缺少内角缺口；需要真正的 crotch。
-- `u`：现为 `n` 旋转 180°（`control.py:604`），左下出现类似 slab 的重脚。**根因为假设**（n 的肩–腿接合经旋转变成重脚），先放大轮廓确认再改；`u` 应有自己的接合几何。
+- **本轮（部分）**：`m` 双拱 `inner_crown` 抬高（`min(crown−0.55×stem, inner+0.32×stem)`）打开中柱 crotch；`u` 经 `mirror_x` 肩拱（非 180° 旋转），基线齐平回归 `test_b10_u_flat_baseline`。
+- `m`：内拱在 x-height 的 V 形缺口仍待（内肩曲线常够不到 `xh`，水平 split 失败时无法插点）。
+- `u`：低 roundness preset 拱脚局部仍偏细，与 `n` 对称；需时可加专用接合几何。
 
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
