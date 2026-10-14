@@ -35,6 +35,7 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 **Geo-kernel**, **optical semantics**, **Controls → Font** family workflow,
 **compile bridge** (static + variable OTF/TTF/WOFF2, UFO round-trip), and
-**qa.proof** specimen helpers are in the tree. Next: true italic masters,
-richer OpenType (`case`, `liga`), and width/opsz axis examples. See
+**qa.proof** specimen helpers are in the tree. **Italic**: `italic_design`
+construct slant (M4a); branching topology still planned. Next: richer OpenType
+(`case`, `liga`), width/opsz axis examples. See
 [dev-standards.md](dev-standards.md) and `approvals/*.json`.

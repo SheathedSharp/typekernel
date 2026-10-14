@@ -229,7 +229,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-101、TK-103。
 
 #### TK-107 旋钮覆盖测试　〔S〕
-- **做什么**：`tests/parts/test_knob_coverage.py`，把附录 C 的敏感度实验固化：每个 `DesignContext` 字段改动后，受影响字形集合不得小于下限。当前不达标的两条用 strict-xfail：`contrast` 应影响所有圆形字母（TK-301 修复）；`terminal_style` 应影响 ≥ 20 个字形（TK-304 修复）。
+- **做什么**：`tests/parts/test_knob_coverage.py`，把附录 C 的敏感度实验固化：每个 `DesignContext` 字段改动后，受影响字形集合不得小于下限。`contrast` 与 `terminal_style` 两条 strict-xfail 已转正（TK-301、TK-304）。
 - **验收**：测试通过；xfail 条目与 TK-301/TK-304 对应。
 
 #### TK-108 字形哈希快照　〔S〕
@@ -357,7 +357,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 ### M5 工作流与验收闭环
 
 #### TK-501 文档与 skill 同步　〔S〕
-- 更新 `docs/AGENT_GOAL.md`（L3、新验收）、`SKILL.md`（流程加入 lint/identity/contact sheet/`tuned_glyph`/`Style`）、`docs/agent-recipes.md`、`docs/VISION.md`、`README.md`。每次 M2–M4 的功能落地时就同步，最后统一核对。
+- **本轮**：`AGENT_GOAL`、`SKILL`、`reference.md`、`VISION`、`README`、`examples/italic_family` 已对齐 `tuned_glyph`、`italic_design`、TK-301/304 状态。
+- **待续**：`Style`（TK-305）、L3 验收全文、与 `agent-recipes` 的最终统一核对。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
@@ -481,9 +482,9 @@ M5：TK-501（贯穿）→ TK-502
 | B-14 | `G` | spur 生硬 | 视觉确认，根因未查 | `caps.py:278` | 视觉 |
 | B-15 | `s` | 偏生硬（可读） | 视觉确认；低优先 | `control.py:1037` | 视觉 |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
-| B-17 | `contrast` | 对圆形字母无效 | 已确认 | `control.py`（`OMetrics.thickness`） | TK-107 |
+| B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
 | B-18 | `terminal_style` | 只影响 `c C ( ) ?` | 已确认 | 多处 | TK-107 |
-| B-19 | italic | `italic_controls` 无倾斜 | 已确认 | `parts/italic.py` | TK-002 的 xfail |
+| B-19 | italic | 无拓扑分支 | 部分修（TK-401 倾角） | `italic_design` | TK-403 |
 | B-20 | 扩展拉丁 | 默认不在字体中 | 已确认（设计如此） | `family.py` / `FamilyBuildOptions` | 决策（TK-208） |
 
 ---

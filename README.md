@@ -38,7 +38,7 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 - **字体模型**（`typekernel.font`）— `Font` / `Glyph` / `FontInfo`：字形名、码位、锚点、组件、字偶组、特性代码；竖直度量与对齐区从 `DesignContext` 推出
 
-**编译桥**（`typekernel.compile`）— `build_font` / `build_variable_font` → OTF、TTF、可选 WOFF2；UFO 回流 `read_font_from_ufo`；斜体 oblique 母版 `oblique_font`；基础 `tnum` 特性文本。人审见 `approvals/compile-bridge.json`。
+**编译桥**（`typekernel.compile`）— `build_font` / `build_variable_font` → OTF、TTF、可选 WOFF2；UFO 回流 `read_font_from_ufo`；斜体母版 `italic_design`（`ital` 轴）、机械倾斜 `oblique_font`（`slnt`）；基础 `tnum` 特性文本。人审见 `approvals/compile-bridge.json`。
 
 **推荐路径**：`DesignContext` → `Controls.build_all()` → `space_font` → `Font` → `build_font` / `build_variable_font`。实验性 `parts/latin.py`、`skel_*` 已标弃用。
 

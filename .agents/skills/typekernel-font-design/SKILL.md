@@ -28,7 +28,7 @@ Do **not** simulate weight with stroke expand, script with oblique shear, or Ope
 
 | Level | Where | Done when |
 | --- | --- | --- |
-| **L0 trial** | `examples/agent_studio/` | Named preset + **one documented delta** from that preset's fields + `with_glyph` on **≥2** of `f t j a s e`. Gate text is `AGENT_SENTENCE` only. `design_review(..., baseline=Controls.from_context(preset))` shows optical gap ratio and non-terminal G1 **not worse** than that preset. |
+| **L0 trial** | `examples/agent_studio/` | Named preset + **one documented delta** from that preset's fields + `tuned_glyph` / `with_glyph` on **≥2** of `f t j a s e`. Gate text is `AGENT_SENTENCE` only. `design_review(..., baseline=Controls.from_context(preset))` shows optical gap ratio and non-terminal G1 **not worse** than that preset. |
 | **L1 one style** | still one weight | L0, and the fixed pairs `Ta To fi fl rn 011` have **no silhouette collision** (`min optical gap > 0`). |
 | **L2 family** | `examples/agent_family/` or `examples/<family>/build_*.py` | Regular + Light and Bold (or a VF) as **separate** `Controls` masters. Bold uses `with_stem_relief()`. `compose_font_from_controls` + `reference_kern_classes` shared across masters. |
 
@@ -76,7 +76,7 @@ Record: family name, target style (geometric sans / humanist / mono / …), axes
 Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `paper_ink()`, `mono()`. Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset.
 
 **3 — Controls**  
-`Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Heavy masters: `.with_stem_relief()` on that master’s sheet only.
+`Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
 
 **4 — Build glyphs**  
 `drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
@@ -104,7 +104,7 @@ font = compose_font_from_controls(
 build_font(font, out_dir, formats=("otf", "ttf"))
 ```
 
-Single-glyph master: `controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.9))`.
+Single-glyph master: `controls.tuned_glyph("f", arm=0.9)` or `with_glyph(...)` for custom topology.
 
 **7 — Variable fonts**  
 ```python
@@ -167,7 +167,7 @@ Show the user **`grid.png`**, **`sentence.png`**, and the review summary (deltas
 
 - **Static family**: one `Controls` + one `build_font` per weight/style file.
 - **VF**: each location is a full redrawn `Font` inside `Master({axis: value}, font)`. Minimum masters so **each axis** min ≠ max (`check_masters`).
-- Italic axis: **true italic** = redrawn slanted masters (M4 in `docs/DEVELOPMENT_PLAN.md`). Today's `italic_controls()` is only a metric tweak (not slanted) — use for VF plumbing, not as finished italic. Do not use `ObliqueTransform` for `ital=1` style names.
+- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is an alias). Topology branching (TK-403) is still open. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
 
 ## Symbols & charset
 

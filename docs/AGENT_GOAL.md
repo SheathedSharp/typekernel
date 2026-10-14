@@ -13,12 +13,12 @@
 | 先定 brief / 比例 / 字族性格 | 选或调 `DesignContext`（preset + 有记录的 override），写清 family 用途 |
 | 画 control 字（n/o、H/O）再扩族 | `Controls.from_context` → 验证 control → `build_all()`，不是逐字随机堆轮廓 |
 | 每个字重是 **重画母版**，不是描粗 | 每个 `wght` 独立 `Controls`（stem + `with_stem_relief()` 等 **designed delta**） |
-| 斜体是 **另一套母版** | 真斜体须重画母版（倾角 + 拓扑差异，见 `docs/DEVELOPMENT_PLAN.md` M4）。**当前** `italic_controls()` 只是略放宽字腔/碗宽的度量微调，**不是**斜体；VF 轴上的 `ital=1` 暂勿当作交付斜体。机械 oblique 仅作 `slnt`，不得冒充 italic 名 |
+| 斜体是 **另一套母版** | `italic_design(regular)` 给出独立 control sheet + **构造倾角**（`italic_slant_deg`，默认约 10°），可与 Regular 插值。M4 的拱形分支等拓扑差异仍待补。VF 的 `ital=1` 用 `italic_design`，不要用 `oblique_font` 冒充 Italic 风格名 |
 | 符号、数字、变音属于同一族 | 标点 / figures / extended Latin / 特性 glyph 与 `features.fea` **同时存在** |
 | 侧距与字偶是设计的一部分 | `space_font` → class kern；VF 各母版 **同一 kern groups** |
 | 用固定句子 proof 验收 | 编译后 `qa.proof`。过关句锁死 `AGENT_SENTENCE`；brief 句只作第二张 specimen。`design_review` 给出相对 preset 的 delta、弱字与最差 pair |
 | 特性与 glyph 一致 | 优先 `compose_font_from_controls` + `FamilyBuildOptions`，避免幽灵 `.tf`/`.case` |
-| 单字 master | `Controls.with_glyph(ch, builder)` 替换派生，而非只拧 context |
+| 单字 master | `Controls.tuned_glyph(ch, **spec)` 或 `with_glyph(ch, builder)`，而非只拧 context |
 
 ## 不是什么
 
@@ -32,13 +32,13 @@
 
 | 级别 | 落在哪 | 完成条件 |
 | --- | --- | --- |
-| **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset。 |
+| **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`tuned_glyph` 或 `with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset。 |
 | **L1 单 style 可读** | 仍是一个字重 | L0，且固定 pair/word（`Ta` `To` `fi` `fl` `rn` `011`）**无撞字**（光学间距 ≤ 0 即失败）。pair 检查已经做进 `check_sentence_gate`。 |
 | **L2 字族** | `examples/agent_family/` 或自建 `examples/<family>/build_*.py` | Regular + Light/Bold（或 VF），每个字重独立 `Controls`。Bold 用 `with_stem_relief()`。`compose_font_from_controls` + 各母版共用 `reference_kern_classes`。 |
 
 字族级还要同时满足：
 
-1. **字符集声明与实现一致**：`build_all` 子集、`features`、UFO 里 glyph 名一致（无 `.tf` / `.case` 幽灵引用）。italic 若承诺，须是可实测倾角的真斜体母版，不是 `italic_controls()` 微调、也不是把 oblique 叫做 italic。
+1. **字符集声明与实现一致**：`build_all` 子集、`features`、UFO 里 glyph 名一致（无 `.tf` / `.case` 幽灵引用）。italic 若承诺，须用 `italic_design` 等可实测倾角（≥ 6° 竖笔）的斜体母版，而不是把 `oblique_font` 标成 Italic。
 2. **两张校样**：锁死句 `sentence.png`（参与 pass/fail）+ brief 句 `sentence_brief.png`（不参与）。正文字号约 24–36 px。
 3. **可复现**：上述脚本一键 build；依赖 `[compile,specimen,boolean]` 写进 README。
 
@@ -89,8 +89,8 @@ paths = build_glyph_preview(
 下面这些 **不是** 再写一份 prompt 就能出现的。agent 调 `DesignContext` 也补不上。
 
 - **间距 / 字偶**：缺 `H`/`O` 的子集现在仍会给大写分类并字偶，`AGENT_SENTENCE` 的 optical ratio 从约 1.34 收到约 1.02（剩下的是类代表字带不动的形状，例如 `ow`）。pair gate 仍只抓撞字，不负责字偶好看。
-- **弱字默认质量**：`f` / `t` / `j`、`s`、大写 `I` / `J` 仍常要 `with_glyph`。默认链里的 boolean 接合要继续降 G1、降 gap，而不是把负担全推给 agent。
-- **Designed deltas**：`with_stem_relief()`、VF 共用 kern class 已有 API。`italic_controls()` 仅为占位度量微调。**真斜体母版**、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md) 与 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
+- **弱字默认质量**：`f` / `t` / `j`、`s`、大写 `I` / `J` 仍常要 `tuned_glyph` / `with_glyph`。默认链里的 boolean 接合要继续降 G1、降 gap，而不是把负担全推给 agent。
+- **Designed deltas**：`with_stem_relief()`、`tuned_glyph`、`italic_design`、VF 共用 kern class 已有 API。斜体拱形拓扑（TK-403）、`opsz`、`frac` / `ordn` 仍见 [VISION.md](VISION.md) 与 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
 - **视觉回归**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。试作被接受后才记 `approvals/`，防止「门槛过了但越改越丑」只靠 agent 自评。
 - **参考距离**：与 oh-my-font / zayJu 的对比是「离参考还有多远」，不是拷贝轮廓。手绘下沉见 `examples/zayju_letter/design_n.py`。
 

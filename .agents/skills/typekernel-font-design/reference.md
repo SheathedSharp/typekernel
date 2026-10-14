@@ -20,7 +20,7 @@ polish_glyph_map      join cleanup after build_all (default in compose_font)
 
 ```python
 from typekernel.parts import Controls, DesignContext, auto_class_kern, auto_side_kern_classes, rhythm_from_control_glyphs
-from typekernel.parts.italic import italic_controls
+from typekernel.parts.italic import italic_design, italic_controls
 from typekernel.optics.space import space_font
 from typekernel.font import Font, Master
 from typekernel.compile import build_font, build_variable_font
