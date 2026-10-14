@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from typekernel.font import Font, Master, check_masters
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
+    Controls,
     DesignContext,
     build_n,
     build_o,
@@ -55,6 +57,30 @@ def test_s_single_contour_crosses_three_times(ctx: DesignContext) -> None:
         hits += inside and not prev
         prev = inside
     assert hits == 3
+
+
+def test_g_hook_outer_segment_count_fixed_across_stems() -> None:
+    """TK-205: belly fillet detour keeps one segment count for VF."""
+    ctx = DesignContext.humanist_sans()
+    ref = g_from_o(build_o(ctx), build_n(ctx), ctx)
+    ref_n = len(ref.solids[0].contours[0].segments)
+    for stem in (30.0, 86.0, 220.0):
+        heavy = ctx.tuned(stem=stem)
+        g = g_from_o(build_o(heavy), build_n(heavy), heavy)
+        assert len(g.solids[0].contours[0].segments) == ref_n
+
+
+def test_g_interpolates_across_weight_ladder() -> None:
+    ctx = DesignContext.humanist_sans()
+    charset = "g"
+    light = Controls.from_context(ctx.tuned(stem=30.0))
+    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    reg_font = Font.from_context(ctx, "G Sans", "Regular", weight_class=400)
+    reg_font.add_chars(light.build_all(charset))
+    bold_font = Font.from_context(ctx, "G Sans", "Bold", weight_class=700)
+    bold_font.add_chars(bold.build_all(charset))
+    masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
+    assert check_masters(masters) == []
 
 
 def test_s_top_bowl_narrower(ctx: DesignContext) -> None:

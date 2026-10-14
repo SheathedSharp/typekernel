@@ -268,7 +268,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
 - **本轮（部分）**：`f`/`t` 横笔改为 `_r_outline` 固定段数 detour（去掉 pathops union）；`min_hook_thickness` 采样带 + `hook_min_thin_floor` 分档；golden `f`/`t` 三 preset 更新。
-- **本轮（部分）**：`g`/`J` 钩根 QA 已满足 `hook_min_thin_floor`（≈2.4× 余量）；`blend_corners` 于 `g` 会破坏 VF 段数，内联圆角仍待。
+- **本轮（部分）**：`g` 钩腹单 cubic detour + 重字重 `join_y` 抬升（禁 `blend_corners`）；`test_g_hook_outer_segment_count_fixed_across_stems` / VF 阶梯回归；golden `g` 三 preset 更新；`J` 内联圆角仍待。
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕

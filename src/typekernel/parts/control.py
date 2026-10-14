@@ -1417,6 +1417,20 @@ def _double_storey_g_from_o(
     )
 
 
+def _g_hook_join_y(stem: float, join_y: float, inner_crown: float) -> float:
+    """Raise the descender hook crotch on heavy stems (VF-safe, no extra segments)."""
+    if stem <= 110.0:
+        return join_y
+    headroom = inner_crown - 0.25 * stem - join_y
+    lift = min((stem - 110.0) * 0.55, headroom)
+    return join_y + max(0.0, lift)
+
+
+def _g_hook_belly_fillet(stem: float) -> float:
+    """Fixed two-line detour scale at the hook belly (replaces ``blend_corners``)."""
+    return max(stem * 0.065, 4.5)
+
+
 def g_from_o(
     o_glyph: ComposedGlyph,
     n_glyph: ComposedGlyph | None = None,
@@ -1434,6 +1448,9 @@ def g_from_o(
     stem, desc = nm.stem, c.descender
     height = o.x_height - desc
     hook = _hook_record(nm, height, c)
+    join_y = _g_hook_join_y(stem, hook.join_y, hook.inner_crown)
+    if join_y != hook.join_y:
+        hook = hook.tuned(join_y=join_y)
     # The hook's crotch must sit below where the bowl meets the stem; heavy
     # weights get a thinner hook rather than an outline that folds back.
     s_l = 2.0 * o.rx - stem
@@ -1455,7 +1472,17 @@ def g_from_o(
         b.lineTo(*turn(s.inner[1][3]))
         _curve(b, turned(s.inner[1]))
         _curve(b, turned(inner_arm))
-        b.lineTo(*turn(outer_arm[3]))
+        bulge = _g_hook_belly_fillet(stem)
+        p_here = turn(inner_arm[0])
+        p_out = turn(outer_arm[3])
+        b.curveTo(
+            p_here[0] - bulge * 0.35,
+            p_here[1] - bulge * 0.15,
+            p_out[0],
+            p_out[1] + bulge * 0.2,
+            p_out[0],
+            p_out[1],
+        )
         _curve(b, turned(outer_arm))
         _curve(b, turned(s.outer[0]))
 
