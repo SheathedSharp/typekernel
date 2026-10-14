@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Literal
 
+from typekernel.parts.style import DEFAULT_STYLE, Style
+
 if TYPE_CHECKING:
     from typekernel.optics.context import OpticalContext
 
@@ -42,6 +44,7 @@ class DesignContext:
         italic_slant_deg: Right-leaning stem slant for italic masters (0 = upright).
         stress: Degrees CCW rotation of the thin/thick axis on round strokes
             (``0`` = thick on the sides, thin on top/bottom when ``contrast`` < 1).
+        style: Discrete topology switches (see :class:`~typekernel.parts.style.Style`).
     """
 
     units_per_em: float = 1000.0
@@ -60,6 +63,7 @@ class DesignContext:
     terminal_style: Literal["vertical", "horizontal", "angled"] = "vertical"
     italic_slant_deg: float = 0.0
     stress: float = 0.0
+    style: Style = DEFAULT_STYLE
 
     @property
     def thin(self) -> float:

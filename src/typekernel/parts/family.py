@@ -87,6 +87,7 @@ from typekernel.parts.figures import (
 )
 from typekernel.parts.glyph_specs import WEAK_GLYPH_SPECS, build_from_spec, merge_spec
 from typekernel.parts.punctuation import PUNCT_FORMS
+from typekernel.parts.style import DEFAULT_STYLE, Style
 
 __all__ = [
     "CAP_FORMS",
@@ -194,10 +195,17 @@ class Controls:
     cap_o: OMetrics | None = None
     glyph_overrides: Mapping[str, Derivation] = field(default_factory=dict)
     glyph_specs: Mapping[str, Any] = field(default_factory=dict)
+    style: Style = field(default_factory=Style)
 
     @classmethod
-    def from_context(cls, ctx: DesignContext) -> Controls:
-        return cls(ctx, n_metrics(ctx), o_metrics(ctx))
+    def from_context(cls, ctx: DesignContext, *, style: Style | None = None) -> Controls:
+        chosen = style or DEFAULT_STYLE
+        effective = ctx if chosen == DEFAULT_STYLE else replace(ctx, style=chosen)
+        return cls(effective, n_metrics(ctx), o_metrics(ctx), style=chosen)
+
+    def with_style(self, **kwargs: str) -> Controls:
+        """Return a sheet with updated :class:`~typekernel.parts.style.Style` fields."""
+        return self.from_context(self.context, style=self.style.tuned(**kwargs))
 
     @property
     def H(self) -> HMetrics:
