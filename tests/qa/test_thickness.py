@@ -12,7 +12,10 @@ from typekernel.parts.primitives import vertical_stem
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.thickness import (
     HOOK_MIN_THIN_RATIO,
+    HOOK_MIN_THIN_RATIO_DISPLAY,
+    HOOK_MIN_THIN_RATIO_SOFT,
     THICKNESS_OUTLIER_FACTOR,
+    hook_min_thin_floor,
     max_local_thickness,
     measurement_outline,
     min_hook_thickness,
@@ -80,17 +83,34 @@ def test_thickness_outlier_factor_frozen() -> None:
     assert THICKNESS_OUTLIER_FACTOR == 1.15
 
 
-@pytest.mark.parametrize("char", ("f", "t", "g", "J"))
-def test_hook_root_thickness(char: str) -> None:
+def test_hook_min_thin_ratio_tiers_frozen() -> None:
+    assert HOOK_MIN_THIN_RATIO == 0.26
+    assert HOOK_MIN_THIN_RATIO_SOFT == 0.22
+    assert HOOK_MIN_THIN_RATIO_DISPLAY == 0.19
+
+
+@pytest.mark.parametrize("char", ("f", "t", "g", "J", "j"))
+def test_hook_root_thickness_humanist(char: str) -> None:
     ctx = DesignContext.humanist_sans()
     glyphs = Controls.from_context(ctx).build_all(char)
-    floor = ctx.thin * HOOK_MIN_THIN_RATIO
-    assert min_hook_thickness(glyphs[char], char, ctx) >= floor
+    glyph = glyphs[char]
+    if char == "j":
+        glyph = ComposedGlyph((glyph.solids[0],), (), glyph.advance, ctx)
+    floor = hook_min_thin_floor(ctx)
+    assert min_hook_thickness(glyph, char, ctx) >= floor
 
 
-def test_j_hook_root_thickness_on_body() -> None:
-    ctx = DesignContext.humanist_sans()
-    j = Controls.from_context(ctx).build_all("j")["j"]
+@pytest.mark.parametrize(
+    "preset",
+    ("code_clear", "geometric_sans", "open_print"),
+)
+def test_hook_root_thickness_roundness_tiers(preset: str) -> None:
+    ctx = getattr(DesignContext, preset)()
+    controls = Controls.from_context(ctx)
+    floor = hook_min_thin_floor(ctx)
+    for char in "ftgJ":
+        glyph = controls.build(char)
+        assert min_hook_thickness(glyph, char, ctx) >= floor
+    j = controls.build("j")
     body = ComposedGlyph((j.solids[0],), (), j.advance, ctx)
-    floor = ctx.thin * HOOK_MIN_THIN_RATIO
     assert min_hook_thickness(body, "j", ctx) >= floor

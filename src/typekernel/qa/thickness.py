@@ -15,21 +15,37 @@ from typekernel.parts.family import Controls
 REFERENCE_THICKNESS_CHARS = "noHO"
 THICKNESS_OUTLIER_FACTOR = 1.15
 LINT_THICKNESS_GRID = 16
-# Hook-root QA: minimum ``min_hook_thickness / thin`` on ``f t j g J`` (humanist_sans).
+# Hook-root QA: minimum ``min_hook_thickness / thin`` on ``f t j g J``.
 HOOK_MIN_THIN_RATIO = 0.26
+HOOK_MIN_THIN_RATIO_SOFT = 0.22
+HOOK_MIN_THIN_RATIO_DISPLAY = 0.19
 
 __all__ = [
     "HOOK_MIN_THIN_RATIO",
+    "HOOK_MIN_THIN_RATIO_DISPLAY",
+    "HOOK_MIN_THIN_RATIO_SOFT",
     "LINT_THICKNESS_GRID",
     "REFERENCE_THICKNESS_CHARS",
     "THICKNESS_OUTLIER_FACTOR",
     "control_max_thickness_ratio",
+    "hook_min_thin_floor",
     "max_local_thickness",
     "measurement_outline",
     "min_hook_thickness",
     "min_local_thickness",
     "thickness_ratio_to_stem",
 ]
+
+
+def hook_min_thin_floor(ctx: DesignContext) -> float:
+    """Minimum hook spring thickness for ``f t j g J`` (roundness-tiered)."""
+    if ctx.roundness >= 0.5:
+        ratio = HOOK_MIN_THIN_RATIO
+    elif ctx.roundness >= 0.35:
+        ratio = HOOK_MIN_THIN_RATIO_SOFT
+    else:
+        ratio = HOOK_MIN_THIN_RATIO_DISPLAY
+    return ctx.thin * ratio
 
 
 def control_max_thickness_ratio(controls: Controls) -> float:
@@ -158,15 +174,17 @@ def min_hook_thickness(
     xh = ctx.x_height
     hook_f = _hook_record(m, m.ascender, ctx)
     des = ctx.descender
+    cap = ctx.cap_height
     bands: dict[str, tuple[float, float]] = {
         # Shoulder spring above the crossbar (skip bar-end slivers below mid x-height).
         "f": (0.50 * xh, hook_f.join_y),
         # Baseline hook: lower stem spring only (exclude full-width stem higher up).
         "t": (0.04 * xh, 0.42 * xh),
-        # Descender hooks: spring band above the terminal (``j``: body solid only).
-        "j": (des * 0.98, des * 0.73),
+        # Descender hooks: spring band above the terminal ball (``j``: body solid only).
+        "j": (des * 0.82, des * 0.62),
         "g": (des * 0.91, des * 0.36),
-        "J": (des * 1.27, 0.0),
+        # Cap ``J``: bowl spring (not descender; terminal is a vertical cut).
+        "J": (cap * 0.32, cap * 0.46),
     }
     try:
         y_lo, y_hi = bands[char]
