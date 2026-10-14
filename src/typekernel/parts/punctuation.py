@@ -10,6 +10,7 @@ import math
 from dataclasses import replace
 
 from typekernel.geo.layout import union_bounds
+from typekernel.geo.contour import canonical_contour_start
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
@@ -615,7 +616,10 @@ def hash_from_n_o(
     th = t * horizontal_slant_compensation(c)
     h1 = horizontal_bar(c, inset, m.width - inset, y_lo, thickness=th)
     h2 = horizontal_bar(c, inset, m.width - inset, y_hi, thickness=th)
-    return _pack_union(c, m, v1, v2, h1, h2)
+    glyph = _pack_union(c, m, v1, v2, h1, h2)
+    solid = glyph.solids[0]
+    normed = Outline(tuple(canonical_contour_start(ct) for ct in solid.contours))
+    return replace(glyph, solids=(normed,))
 
 
 def percent_from_n_o(

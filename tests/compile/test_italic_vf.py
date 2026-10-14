@@ -49,6 +49,25 @@ def test_wght_ital_masters_interpolate() -> None:
     assert check_masters(masters) == []
 
 
+def test_wght_ital_masters_deep_check(tmp_path: Path) -> None:
+    from typekernel.compile import deep_check_masters, write_masters_designspace
+
+    base = DesignContext.code_clear()
+    reg = vf_upright_controls(Controls.from_context(base))
+    ital = italic_controls(reg)
+    bold = vf_upright_controls(
+        Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+    )
+    masters = [
+        Master({"wght": 400, "ital": 0}, _font(reg, "Regular")),
+        Master({"wght": 400, "ital": 1}, _font(ital, "Italic")),
+        Master({"wght": 700, "ital": 0}, _font(bold, "Bold", stem=120.0)),
+    ]
+    _, ufos = write_masters_designspace(masters, tmp_path)
+    errors, _ = deep_check_masters(ufos, [m.style_name for m in masters])
+    assert errors == []
+
+
 def test_wght_ital_vf_builds(tmp_path: Path) -> None:
     base = DesignContext.code_clear()
     reg = vf_upright_controls(Controls.from_context(base))

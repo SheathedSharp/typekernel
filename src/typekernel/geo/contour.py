@@ -149,6 +149,26 @@ def signed_area(contour: Contour) -> float:
         total += current.x * following.y - following.x * current.y
     return total / 2.0
 
+def canonical_contour_start(contour: Contour) -> Contour:
+    """Rotate a closed contour to start at the lowest-left on-curve point.
+
+    Stabilizes boolean-union outlines (e.g. ``#``) for master interpolation.
+    """
+    if not contour.closed or len(contour.segments) < 2:
+        return contour
+    segs = contour.segments
+    best = 0
+    best_key = (segs[0].points[0].y, segs[0].points[0].x)
+    for index, seg in enumerate(segs):
+        p = seg.points[0]
+        key = (p.y, p.x)
+        if key < best_key:
+            best, best_key = index, key
+    if best == 0:
+        return contour
+    return Contour(segs[best:] + segs[:best], closed=True)
+
+
 def reverse_contour(contour: Contour) -> Contour:
     """Return ``contour`` with segment order and handles reversed (flip winding)."""
     segs: list[LineSegment | CubicSegment] = []
