@@ -402,7 +402,11 @@ def r_from_n(
     """
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    outline, x_t = _r_outline(m, arm * r_arm_scale(c))
+    scaled = arm * r_arm_scale(c)
+    if _italic_topology(c):
+        outline, x_t = _r_branching_outline(m, scaled, c)
+    else:
+        outline, x_t = _r_outline(m, scaled)
     outline = apply_terminal_shear(c, outline)
     anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
@@ -459,6 +463,35 @@ def _r_outline(m: NMetrics, arm: float, bar: Bar | None = None) -> tuple[Outline
         y0, y1, _, right = bar
         for p in ((s.l1, y1), (s.l1 + right, y1), (s.l1 + right, y0), (s.l1, y0)):
             b.lineTo(*p)
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    return _ccw(b.build()), x_t
+
+
+def _r_branching_outline(
+    m: NMetrics, arm: float, ctx: DesignContext
+) -> tuple[Outline, float]:
+    """Italic ``r``: branching shoulder truncated at the terminal."""
+    branch_y = _italic_branch_y(m, m.x_height)
+    drop = m.x_height - branch_y
+    mm = m.tuned(
+        x_height=branch_y,
+        crown_y=m.crown_y - drop * 0.14,
+        leg_top=m.leg_top - drop * 0.2,
+        join_y=min(m.join_y, branch_y - m.stem * 0.32),
+        inner_crown=m.inner_crown - drop * 0.16,
+    )
+    s, outer_arm, inner_arm, x_t = _r_pieces(mm, arm)
+    b = PathBuilder()
+    b.moveTo(s.l0, 0.0)
+    b.lineTo(s.l0, m.x_height)
+    b.lineTo(s.l1, m.x_height)
+    b.lineTo(s.l1, branch_y)
+    _curve(b, s.outer[0])
+    _curve(b, outer_arm)
+    b.lineTo(*inner_arm[0])
+    _curve(b, inner_arm)
+    _curve(b, s.inner[1])
     b.lineTo(s.l1, 0.0)
     b.closePath()
     return _ccw(b.build()), x_t
@@ -729,7 +762,13 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     cx = m.width / 2.0
-    outline = mirror_x(_n_family_outline(m, left_top=m.x_height), at_x=cx)
+    if _italic_topology(c):
+        base = _n_branching_outline(m, stem_top=m.x_height)
+    else:
+        base = _n_family_outline(m, left_top=m.x_height)
+    outline = mirror_x(base, at_x=cx)
+    if _italic_topology(c):
+        outline = _ccw(outline)
     anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
     return _pack(c, m, anchors, outline)
 
