@@ -325,6 +325,16 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
     return bool(ctx.vf_compat_stem_segments)
 
 
+def _f_stem_floor(ctx: DesignContext) -> float:
+    if _italic_topology(ctx):
+        return ctx.descender * 0.78
+    return 0.0
+
+
+def _f_use_inline_crossbar(ctx: DesignContext) -> bool:
+    return _italic_topology(ctx) or _vf_compat_stem(ctx)
+
+
 def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     if stem_top > m.x_height + 1.0:
         return m.x_height + (stem_top - m.x_height) * 0.38
@@ -447,7 +457,13 @@ Bar = tuple[float, float, float, float]
 
 
 def _r_outline(
-    m: NMetrics, arm: float, bar: Bar | None = None, *, vf_compat: bool = False
+    m: NMetrics,
+    arm: float,
+    bar: Bar | None = None,
+    *,
+    vf_compat: bool = False,
+    stem_floor: float = 0.0,
+    hook_stem_knots: bool = False,
 ) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
@@ -459,13 +475,15 @@ def _r_outline(
         raise ValueError("crossbar must sit between the baseline and the shoulder crotch")
 
     b = PathBuilder()
-    b.moveTo(s.l0, 0.0)
-    if vf_compat:
+    b.moveTo(s.l0, stem_floor if hook_stem_knots else 0.0)
+    if hook_stem_knots or vf_compat:
         b.lineTo(s.l0, 0.0)
     if bar is not None:
         y0, y1, left, _ = bar
         for p in ((s.l0, y0), (s.l0 - left, y0), (s.l0 - left, y1), (s.l0, y1)):
             b.lineTo(*p)
+        if hook_stem_knots:
+            b.lineTo(s.l1, y1)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
     if vf_compat:
@@ -480,6 +498,10 @@ def _r_outline(
         for p in ((s.l1, y1), (s.l1 + right, y1), (s.l1 + right, y0), (s.l1, y0)):
             b.lineTo(*p)
     b.lineTo(s.l1, 0.0)
+    if hook_stem_knots:
+        b.lineTo(s.l0, 0.0)
+        if abs(stem_floor) < 1e-6:
+            b.lineTo(s.l0, 0.0)
     b.closePath()
     return _ccw(b.build()), x_t
 
@@ -586,9 +608,20 @@ def _hook_with_crossbar_outline(
     bar: Bar,
     *,
     blend: bool = True,
+    inline_crossbar: bool = False,
 ) -> tuple[Outline, float]:
     """Hook master + rounded crossbar (boolean union when pathops is available)."""
     y0, y1, left, right = bar
+    if inline_crossbar:
+        outline, x_t = _r_outline(
+            hook,
+            arm,
+            bar,
+            vf_compat=True,
+            stem_floor=_f_stem_floor(ctx),
+            hook_stem_knots=True,
+        )
+        return outline, x_t
     body, x_t = _r_outline(hook, arm, None)
     s = _shoulder(hook)
     fillet = min(ctx.join_radius * 1.1, (y1 - y0) * 0.42, n_m.stem * 0.32)
@@ -615,7 +648,16 @@ def f_from_n(
     m = _n_record(n_glyph)
     hook = _hook_record(m, m.ascender, c)
     bar = _crossbar(c, m, hook, m.x_height)
-    outline, _ = _hook_with_crossbar_outline(hook, m, c, arm, bar)
+    inline = _f_use_inline_crossbar(c)
+    outline, _ = _hook_with_crossbar_outline(
+        hook,
+        m,
+        c,
+        arm,
+        bar,
+        blend=not inline,
+        inline_crossbar=inline,
+    )
     outline = apply_terminal_shear(c, outline)
     anchors = {"bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)

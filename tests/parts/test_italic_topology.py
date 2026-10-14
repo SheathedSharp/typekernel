@@ -36,6 +36,17 @@ def test_italic_branching_n_lint_clean() -> None:
         assert not [i for i in issues if i.severity == "error"]
 
 
+def test_italic_f_reaches_descender_zone() -> None:
+    from typekernel.geo.outline import bounds
+
+    ctx = DesignContext.code_clear()
+    reg = Controls.from_context(ctx)
+    f_reg = reg.build_all("f")["f"]
+    f_ital = italic_design(reg).build_all("f")["f"]
+    assert bounds(f_reg.solids[0])[1] == 0.0
+    assert bounds(f_ital.solids[0])[1] < ctx.descender * 0.5
+
+
 def test_italic_a_bowl_narrower_before_slant() -> None:
     from typekernel.geo.outline import bounds
     from typekernel.parts.control import a_from_o, build_n, build_o
