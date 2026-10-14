@@ -250,6 +250,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - `$`：S 形加贯穿竖笔（现为两个小环 + 短竖笔，`:688`）。`#`：双竖加双横，可带倾角（现为 `_plus_outline`，`:589`）。`%`：两个**小环**加斜线，比例重做（现为两个点 + 细斜线，`:607`）。`@`：外环 + 内部小 a + 尾（现为环 + 点，`:671`）。
 
 #### TK-203 消除 keyhole 轮廓　〔S〕
+- **本轮**：三内置 preset 全字符 `R2_keyhole` 零报（`humanist_sans` / `code_clear` / `geometric_sans`）。
 - `_ring_outline_small`（`punctuation.py:632`）、`_equal_outline`（`:119`）改成「外轮廓 + 独立孔」，与 `o` 的处理一致。
 - **验收**：R2 在全部 98 字形零报。可与 TK-202 合并提交，但要在说明里分开列出。
 
@@ -377,7 +378,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - 见第 6 节。**这是程序级验收，不可省略。**
 - **本轮**：`docs/AGENT_TRIALS.md`、`qa/trial_protocol.py`（`voice_distance`、快照 JSON）、`examples/agent_trial/snapshot_presets.py`、`artifacts/trials/` gitignore。
 - **待续**：由 agent 按 brief 真改字形并填摘要表；L3 终验与人评。
-- **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`，`AGENT_TRIALS` 基线行已登记。
+- **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 
 ---
 
