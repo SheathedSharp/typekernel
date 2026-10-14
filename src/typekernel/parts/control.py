@@ -888,7 +888,7 @@ def dotless_j_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
     hook = _hook_record(m, height, c)
-    outline, _ = _r_outline(hook, 0.75)
+    outline, _ = _r_outline(hook, 0.75, hook_belly=_hook_belly_fillet(m.stem))
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     dot_y = m.x_height + m.stem * 0.55
