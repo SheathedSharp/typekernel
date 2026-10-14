@@ -54,6 +54,17 @@ def test_o_overshoots_cap_zone(ctx: DesignContext) -> None:
     assert y1 == pytest.approx(ctx.cap_height + ctx.overshoot, abs=0.5)
 
 
+def test_g_spur_ends_with_cubic_fillet(ctx: DesignContext) -> None:
+    """TK-206: inward bar turns into the bowl with a curve, not a sharp chamfer."""
+    g = Controls.from_context(ctx).build("G")
+    kinds = [s.kind for s in g.solids[0].contours[0].segments]
+    # Spur stack: horiz bar, vertical drop, cubic join, then bowl cubics resume.
+    assert kinds.count("cubic") >= 5
+    idx = kinds.index("line")
+    spur = kinds[idx : idx + 4]
+    assert spur == ["line", "line", "cubic", "line"]
+
+
 def test_tuned_n_stem_reaches_caps_unless_overridden(ctx: DesignContext) -> None:
     sheet = Controls.from_context(ctx).tuned_n(stem=120.0)
     assert sheet.H.stem == pytest.approx(120.0 * CAP_STEM_RATIO)

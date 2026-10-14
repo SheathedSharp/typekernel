@@ -23,6 +23,7 @@ from fontTools.misc.bezierTools import (
 from typekernel.geo.contour import reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
+from typekernel.geo.path_helpers import KAPPA
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
@@ -315,11 +316,18 @@ def G_from_O(
     for cubic in (top, q1, q2, lower):
         _curve(b, cubic)
     b.lineTo(x_bar, bar_top)
-    b.lineTo(x_bar, bar_bot)
     use = max(0.08, min(chamfer, bar_h * 0.45))
     if h.stem > 180.0:
         use = min(use, 0.32)
-    b.lineTo(x_bar + use, bar_bot - use)
+    b.lineTo(x_bar, bar_bot + use)
+    b.curveTo(
+        x_bar,
+        bar_bot,
+        x_bar + use * KAPPA,
+        bar_bot,
+        x_bar + use,
+        bar_bot - use * (1.0 - KAPPA),
+    )
     b.lineTo(*ilower[3])
     for cubic in (_rev(ilower), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)

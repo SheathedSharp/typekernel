@@ -36,6 +36,13 @@ def test_outer_plus_counters(figures, ch: str) -> None:
     assert all(signed_area(k) < 0 for k in rest)
 
 
+def test_three_top_reaches_overshoot(figures, ctx: DesignContext) -> None:
+    """TK-206: upper bowl keeps a rounded cap, not a flat shelf at cap height."""
+    three = figures["3"]
+    _, _, _, y1 = bounds(three.solids[0])
+    assert y1 > ctx.cap_height + ctx.overshoot * 0.35
+
+
 def test_lining_height(figures, ctx: DesignContext) -> None:
     for ch, g in figures.items():
         _, y0, _, y1 = union_bounds(list(g.solids))
