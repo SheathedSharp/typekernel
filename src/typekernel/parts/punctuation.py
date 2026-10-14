@@ -25,6 +25,7 @@ from typekernel.parts.control import (
     OMetrics,
     _ccw,
     _curve,
+    _cut,
     _n_record,
     _o_record,
     _pack,
@@ -857,8 +858,8 @@ def _dollar_stacked_outline(
 ) -> Outline:
     """Stacked S-coupled rings (``8`` topology) with two counters — one solid, VF-safe.
 
-    Top/bottom vertical stroke caps still need spline detours (light stems fail
-    ``test_outlines_are_simple`` if drawn as a separate solid or naive splice).
+    Baseline stroke cap: fixed line detours on the outer contour (``xl``–``xr`` at
+    ``y=0``). Top cap still open (ring-top chord splice overlaps at ``stem≈30``).
     """
     cap = m.x_height
     e = om.exponent
@@ -882,8 +883,13 @@ def _dollar_stacked_outline(
     _, u3b = splitCubicAtT(*u3, right.t2)
     u2a, _ = splitCubicAtT(*u2, left.t2)
     _, l1b = splitCubicAtT(*l1, left.t1)
+    sw = min(m.stem * 0.72, tv * 1.05)
+    xl, xr = cx - sw / 2.0, cx + sw / 2.0
+    l2_lo, _ = _cut(l2, xl, horizontal=False)
     b = PathBuilder()
-    b.moveTo(*l3[0])
+    b.moveTo(xl, 0.0)
+    b.lineTo(xr, 0.0)
+    b.lineTo(*l3[0])
     _curve(b, l3)
     _curve(b, l0a)
     _curve(b, (l0a[3], u3b[1], u3b[2], u3b[3]))
@@ -891,7 +897,8 @@ def _dollar_stacked_outline(
     _curve(b, u1)
     _curve(b, u2a)
     _curve(b, (u2a[3], l1b[1], l1b[2], l1b[3]))
-    _curve(b, l2)
+    _curve(b, l2_lo)
+    b.lineTo(xl, 0.0)
     b.closePath()
     for qx, qy, rx, ry in (
         (cx, cy_l, rx_l - th, ry_l - tv),
