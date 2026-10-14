@@ -303,8 +303,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-108。
 
 #### TK-304 端点系统　〔M〕
-- **做什么**：把 `terminal_style` 从 5 个字形扩展到所有「有开口端点」的字形（`a e c s r f t j y g k` 及对应大写），并增加类型：竖切、横切、角切（带角度）、外扩（flared）；`ball` 可借 `parts/terminals.ball_end`。
-- **验收**：TK-107 的 `terminal_style` 覆盖 xfail 转正（≥ 20 字形变化）；所有端点类型通过 lint 与字重阶梯。
+- **做什么**：`terminal_openings.py` 将 `terminal_style` 接到 `c e s r f t j g y k a` 与 `C G S J F T` 等（开口 closure + `terminals` 切/剪）；`ball` / `flared` 仍待扩展。
+- **验收**：TK-107 `terminal_style` xfail 已转正（≥20 字形）；默认 `vertical` 下 golden 哈希不变。字重阶梯与 `angled` 全族审计待续。
 
 #### TK-305 风格 DNA：离散拓扑选项　〔L〕
 - **做什么**：新增冻结数据类 `Style`（名称为草案），**只含少量高杠杆的离散选择**，由配方读取；默认值 = 现有行为。建议首批：

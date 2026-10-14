@@ -21,7 +21,7 @@ from fontTools.misc.bezierTools import splitCubic
 
 from typekernel.geo.contour import reverse_contour, signed_area
 from typekernel.geo.curves import superellipse_cubics
-from typekernel.geo.outline import Outline
+from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.path_helpers import KAPPA
 from typekernel.geo.point import Point
@@ -33,6 +33,12 @@ from typekernel.parts.primitives import (
     rounded_rect,
     tittle,
     vertical_stem,
+)
+from typekernel.parts.terminal_openings import (
+    apply_terminal_shear,
+    opening_closure,
+    r_arm_scale,
+    s_opening_factor,
 )
 from typekernel.parts.transforms import mirror_x, mirror_y, translate
 
@@ -345,7 +351,8 @@ def r_from_n(
     """
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    outline, x_t = _r_outline(m, arm)
+    outline, x_t = _r_outline(m, arm * r_arm_scale(c))
+    outline = apply_terminal_shear(c, outline)
     anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
 
@@ -508,6 +515,7 @@ def f_from_n(
     hook = _hook_record(m, m.ascender, c)
     bar = _crossbar(c, m, hook, m.x_height)
     outline, _ = _hook_with_crossbar_outline(hook, m, c, arm, bar)
+    outline = apply_terminal_shear(c, outline)
     anchors = {"bottom": (m.stem / 2.0, 0.0)}
     return _pack(c, m, anchors, outline)
 
@@ -532,8 +540,15 @@ def t_from_n(
     # sits at [top - xh, top - xh + tb] before the flip.
     bar = _t_crossbar_in_hook_space(c, m, hook, top)
     outline, x_t = _hook_with_crossbar_outline(hook, m, c, arm, bar, blend=False)
+    flipped = _ccw(mirror_y(outline, at_y=top / 2.0))
+    try:
+        _, min_y, max_x, _ = bounds(flipped)
+    except ValueError:
+        min_y, max_x = 0.0, m.stem
+    tip = (max_x, min_y + m.stem * 0.12)
+    outline = apply_terminal_shear(c, flipped, at=tip)
     anchors = {"bottom": (x_t / 2.0, 0.0)}
-    return _pack(c, m, anchors, _ccw(mirror_y(outline, at_y=top / 2.0)))
+    return _pack(c, m, anchors, outline)
 
 
 def j_from_n(
@@ -551,6 +566,8 @@ def j_from_n(
     outline = _finish_hook_letter(outline, c)
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
+    tip = (m.stem * 1.05, c.descender + m.stem * 0.28)
+    body = apply_terminal_shear(c, body, at=tip)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
     anchors = {
@@ -916,6 +933,7 @@ def a_from_o(
     o = _o_record(o_glyph)
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
     outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=join)
+    outline = apply_terminal_shear(c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92))
     anchors = {
         "top": (o.rx, o.x_height),
         "bottom": (o.rx, 0.0),
@@ -965,8 +983,7 @@ def c_from_o(
     o = _o_record(o_glyph)
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
     ap = c.aperture if aperture is None else aperture
-    closure = 0.55 if c.terminal_style == "vertical" else 0.42
-    x_t = _terminal_x(o, ap, closure)
+    x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
     top = _cut(q0, x_t, horizontal=False)[1]
     bot = _cut(q3, x_t, horizontal=False)[0]
     itop = _cut(i0, x_t, horizontal=False)[1]
@@ -1008,7 +1025,9 @@ def e_from_o(
     raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
     raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
     bar_bot, bar_top = cy + raise_ - bar_t / 2.0, cy + raise_ + bar_t / 2.0
-    x_t = _terminal_x(o, c.aperture if aperture is None else aperture, 0.45)
+    x_t = _terminal_x(
+        o, c.aperture if aperture is None else aperture, opening_closure(c, 0.45)
+    )
 
     below, right = _cut(q3, bar_bot, horizontal=True)
     lower = _cut(below, x_t, horizontal=False)[0]
@@ -1080,8 +1099,9 @@ def g_from_o(
         _curve(b, turned(outer_arm))
         _curve(b, turned(s.outer[0]))
 
-    outline = _bowl_stem_outline(
-        o, stem, stem_bottom=desc, stem_top=o.x_height, join=join, foot=foot
+    outline = apply_terminal_shear(
+        c,
+        _bowl_stem_outline(o, stem, stem_bottom=desc, stem_top=o.x_height, join=join, foot=foot),
     )
     return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
 
@@ -1126,8 +1146,9 @@ def s_from_o(
     li0, _, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
 
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
-    x_tu = cx + (rx_u - th) * (0.95 - 0.5 * ap)
-    x_tl = cx - (rx_l - th) * (0.95 - 0.5 * ap)
+    reach = s_opening_factor(c, ap)
+    x_tu = cx + (rx_u - th) * reach
+    x_tl = cx - (rx_l - th) * reach
     u_top = _cut(u0, x_tu, horizontal=False)[1]
     ui_top = _cut(ui0, x_tu, horizontal=False)[1]
     l_bot = _cut(l2, x_tl, horizontal=False)[1]

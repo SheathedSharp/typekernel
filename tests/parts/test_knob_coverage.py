@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
-
 from typekernel.parts import Controls, DesignContext
 
 
@@ -57,7 +55,6 @@ def test_contrast_moves_round_letters() -> None:
     assert not still_static, sorted(still_static)
 
 
-@pytest.mark.xfail(strict=True, reason="terminal_style should reach most terminals (M3)")
 def test_terminal_style_reaches_many_glyphs() -> None:
     base = DesignContext.humanist_sans()
     a = _build(base)

@@ -21,6 +21,7 @@ from typekernel.optics.stem import diagonal_compensation
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import _ccw, _n_record, _pack
+from typekernel.parts.terminal_openings import apply_terminal_shear
 
 __all__ = [
     "k_from_n",
@@ -296,7 +297,8 @@ def y_from_n(
         (w / 2.0, cy),
         (hw, xh),
     ]
-    return _pack(c, m, {"top": (w / 2.0, xh)}, _polygon(pts))
+    outline = apply_terminal_shear(c, _polygon(pts), at=(tail_r, desc + m.stem * 0.08))
+    return _pack(c, m, {"top": (w / 2.0, xh)}, outline)
 
 
 def w_from_n(
@@ -377,4 +379,5 @@ def k_from_n(
     w = 0.9 * m.width if width is None else width
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
-    return _pack(c, m, anchors, _polygon(pts))
+    outline = apply_terminal_shear(c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08))
+    return _pack(c, m, anchors, outline)

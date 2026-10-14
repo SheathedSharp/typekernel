@@ -44,6 +44,7 @@ from typekernel.parts.control import (
     s_from_o,
 )
 from typekernel.parts.diagonals import _hwidth, k_points, v_points, w_points, x_points, z_points
+from typekernel.parts.terminal_openings import apply_terminal_shear, opening_closure
 from typekernel.parts.weight_relief import min_bowl_stems
 
 __all__ = [
@@ -262,7 +263,8 @@ def F_from_H(
         (w_top, cap),
         (0.0, cap),
     ]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    outline = apply_terminal_shear(c, _polygon(pts), at=(w_top, cap - bt * 0.5))
+    return _pack(c, h, _cap_anchors(w, h), outline)
 
 
 def _o_rec(O: ComposedGlyph) -> OMetrics:
@@ -297,7 +299,7 @@ def G_from_O(
     h = _h_record(H) if H is not None else h_cap_metrics(c)
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o)
     cx, cy = o.rx, o.x_height / 2.0
-    x_t = _terminal_x(o, c.aperture, 0.55)
+    x_t = _terminal_x(o, c.aperture, opening_closure(c, 0.55))
     top = _cut(q0, x_t, horizontal=False)[1]
     itop = _cut(i0, x_t, horizontal=False)[1]
     bar_top = cy - 0.02 * o.x_height
@@ -664,6 +666,7 @@ def J_from_H(
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
     cx = w / 2.0
+    hook = hook * (opening_closure(c, 0.55) / 0.55)
     x_t = cx - hook * (w / 2.0 - t)
     outer = _cut(q2, x_t, horizontal=False)[1]
     inner = _cut(i2, x_t, horizontal=False)[1]
@@ -923,4 +926,5 @@ def T_from_H(
         (0.0, cap - bt),
         (s0, cap - bt),
     ]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    outline = apply_terminal_shear(c, _polygon(pts), at=(w, cap - bt * 0.5))
+    return _pack(c, h, _cap_anchors(w, h), outline)
