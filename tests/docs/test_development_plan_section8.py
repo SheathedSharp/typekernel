@@ -74,6 +74,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tests/parts/test_tk308_program_acceptance.py",
         ("test_tk308_stroke_spike_meets_program_acceptance",),
     ),
+    (
+        "tests/qa/test_trial_protocol.py",
+        ("test_snapshot_l3_voice_ok_rejects_stem_only_tweak",),
+    ),
 )
 
 
