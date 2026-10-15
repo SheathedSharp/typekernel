@@ -25,6 +25,23 @@ def _load_design():
     return module
 
 
+def test_slab_voice_masters_interpolate_on_vf_ladder() -> None:
+    from typekernel.font import Font, Master, check_masters
+    from typekernel.parts import DesignContext
+
+    design = _load_design()
+    ctx = DesignContext.slab_serif()
+    ladder = ((70.0, 300, False), (100.0, 400, False), (140.0, 600, False), (180.0, 700, True))
+    fonts = []
+    for stem, wght, relief in ladder:
+        controls = design._voice(stem, relief=relief)
+        font = Font.from_context(ctx, "Slab", f"W{wght}", weight_class=wght)
+        font.add_chars(controls.build_all())
+        fonts.append(font)
+    masters = [Master({"wght": float(w)}, f) for (_, w, _), f in zip(ladder, fonts, strict=True)]
+    assert check_masters(masters) == []
+
+
 def test_slab_preset_stems_order_light_regular_bold() -> None:
     design = _load_design()
     light = design.design_light()

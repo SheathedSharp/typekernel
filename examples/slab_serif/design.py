@@ -17,7 +17,8 @@ def baseline_controls() -> Controls:
 def _voice(stem: float, *, relief: bool) -> Controls:
     ctx = DesignContext.slab_serif().tuned(stem=stem)
     controls = Controls.from_context(ctx)
-    controls = controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.80))
+    # arm 0.75 keeps ``f`` segment count stable on the four-master VF ladder (0.80 drifts).
+    controls = controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.75))
     controls = controls.with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.56))
     if relief:
         controls = controls.with_stem_relief()

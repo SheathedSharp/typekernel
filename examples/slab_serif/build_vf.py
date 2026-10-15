@@ -10,12 +10,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from design import FAMILY_NAME, baseline_controls
+from design import FAMILY_NAME, _voice, baseline_controls
 
 from typekernel.compile import build_variable_font, reference_kern_classes
 from typekernel.font import Font, Master, check_masters
 from typekernel.optics.space import space_font
-from typekernel.parts import Controls, DesignContext, auto_class_kern, rhythm_from_control_glyphs
+from typekernel.parts import Controls, auto_class_kern, rhythm_from_control_glyphs
 from typekernel.qa.proof import proof_weight_ladder
 
 HERE = Path(__file__).resolve().parent
@@ -47,25 +47,19 @@ def master_font(
 
 
 def slab_masters(kern_classes: tuple) -> list[Master]:
-    """Same stems / topology as ``test_slab_serif_masters_on_vf_stable_charset``."""
+    """Same stems as VF charset test; ``_voice`` matches static ``build_family``."""
     ladder = (
-        (70.0, "Light", 300),
-        (100.0, "Regular", 400),
-        (140.0, "Semibold", 600),
-        (180.0, "Bold", 700),
+        (70.0, "Light", 300, False),
+        (100.0, "Regular", 400, False),
+        (140.0, "Semibold", 600, False),
+        (180.0, "Bold", 700, True),
     )
-    ctx = DesignContext.slab_serif()
     return [
         Master(
             {"wght": float(wght)},
-            master_font(
-                Controls.from_context(ctx.tuned(stem=stem)),
-                style,
-                wght,
-                kern_classes,
-            ),
+            master_font(_voice(stem, relief=relief), style, wght, kern_classes),
         )
-        for stem, style, wght in ladder
+        for stem, style, wght, relief in ladder
     ]
 
 
