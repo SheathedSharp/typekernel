@@ -7,9 +7,8 @@ import math
 from typekernel.geo.extrema import outline_oblique_compat_splits
 from typekernel.parts.compose import ComposedGlyph
 
-# Branching-arch italics (TK-403) diverge in segment topology after oblique splits.
-# ``e`` counter splits diverge under ``with_stem_relief`` (wght axis); arch letters
-# use TK-403 branching (``vf_compat_stem``) instead.
+# Branching-arch italics (TK-403) diverge after oblique splits; ``e`` counter topology
+# diverges across the wght axis when ``with_stem_relief()`` is used on bold masters.
 OBLIQUE_COMPAT_EXCLUDE = frozenset("efhmnru")
 
 __all__ = [

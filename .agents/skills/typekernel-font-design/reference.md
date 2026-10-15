@@ -70,7 +70,7 @@ VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladde
 
 - **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF use `vf_upright_controls(regular)` on upright masters (stem segment compat + bowl oblique pre-splits).
 - **Oblique**: `oblique_font` / `ObliqueTransform` — mechanical shear only; do not label as Italic.
-- **TK-402**: `parts/oblique_compat.py` pre-splits bowl cubics before slant for glyphs **not** in `OBLIQUE_COMPAT_EXCLUDE` (`efhmnru`: arch letters + `e` under `with_stem_relief`). Remaining italic glyphs may still warn R4.
+- **TK-402**: `parts/oblique_compat.py` pre-splits bowl cubics before slant for glyphs **not** in `OBLIQUE_COMPAT_EXCLUDE` (`efhmnru`). Remaining italic glyphs may still warn R4.
 
 ## Glyph derivation (today)
 
