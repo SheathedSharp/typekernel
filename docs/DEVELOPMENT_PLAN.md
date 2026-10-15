@@ -222,6 +222,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - 声明字符集必须来自 `FamilyBuildOptions.chars` / `controls.supported`，门禁不接受更小的字符集。
   - 新增 `tests/qa/test_gate_thresholds_locked.py`，断言所有阈值常量等于冻结值：改阈值必须显式改这个测试。
   - 保留现有句子门禁与 pair 门禁不变（`AGENT_SENTENCE` 不动）。
+- **本轮（部分）**：``test_preset_passes_family_gate`` 覆盖七内置 preset（``mono`` / ``display`` / ``paper_ink`` / ``open_print`` 与三 golden）。
 - **验收**：`collect_family_gate_failures(humanist_sans)` 零 error（TK-101/202 后已达成）；多母版 `check_family_gate` 同样零 error。
 - **依赖**：TK-101、TK-103。
 

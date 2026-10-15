@@ -16,10 +16,18 @@ def test_version_locked() -> None:
     assert FAMILY_GATE_VERSION == "1"
 
 
-@pytest.mark.parametrize(
-    "preset",
-    ("humanist_sans", "code_clear", "geometric_sans"),
+_PRESETS = (
+    "humanist_sans",
+    "geometric_sans",
+    "code_clear",
+    "mono",
+    "display",
+    "paper_ink",
+    "open_print",
 )
+
+
+@pytest.mark.parametrize("preset", _PRESETS)
 def test_preset_passes_family_gate(preset: str) -> None:
     failures = collect_family_gate_failures(
         Controls.from_context(getattr(DesignContext, preset)())
