@@ -563,6 +563,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/run_m5_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list`` / ``--with-linters``）；``test_run_m5_program_exit``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 默认含 ``test_agent_trial`` / ``test_agent_trial_reference`` / ``test_trial_protocol`` 烟测。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
+- **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：``approvals/README.md`` 补签字后维护步骤（更新 ``_PENDING_HUMAN_GATES``，全签后改写 §8 人审测试）。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
 - **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
@@ -630,7 +631,7 @@ M5：TK-501（贯穿）→ TK-502
   1. 温暖的人文主义 UI 无衬线（Regular + Bold）。
   2. 编辑排版用的 slab 衬线（Regular + Bold；若 D2 为不做，则改为「几何感无衬线，单层 a/g」）。
   3. 编程等宽、端点带明显外扩，要求有符号集（ASCII 全部标点）。
-- **每次试验记录**：使用的 API（是否用了 `tuned_glyph`/`Style`/`with_glyph`）、轮次、lint/identity 错误数、`voice_distance`、字重阶梯结果、是否换句子/改阈值（**一旦发现作弊，该次试验作废**）、人对 contact sheet 的评分（1–5，维度：可读、统一、独特、符号完整）。
+- **每次试验记录**：使用的 API（是否用了 `tuned_glyph`/`Style`/`with_glyph`）、轮次、lint/identity 错误数、`voice_distance`、`topology_fraction`、`program_pass_ok`、`cheating_flags`、字重阶梯 R8；`snapshot.json` 由 `snapshot_design.py` 写出、`validate_snapshot.py` 复核（详见 `AGENT_TRIALS.md`）。是否换句子/改阈值或非空 `cheating_flags`（**一旦发现作弊，该次试验作废**）、人对 contact sheet 的评分（1–5，维度：可读、统一、独特、符号完整）。
 - **成功标准**（初值，待首次基线后校准）：
   - 终验试验中三个 brief 均通过 `check_family_gate` 且 lint/identity 零错误；
   - 至少 2/3 的 brief `voice_distance` ≥ L3 阈值；
@@ -733,6 +734,7 @@ M5：TK-501（贯穿）→ TK-502
 | B-13 | `3` | 平顶「Ʒ」形 | 视觉确认，根因未查 | `figures.py:389` | 视觉 |
 | B-14 | `G` | spur 生硬 | 视觉确认，根因未查 | `caps.py:278` | 视觉 |
 | B-15 | `s` | 偏生硬（可读） | 视觉确认；低优先 | `control.py:1037` | 视觉 |
+| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 仍为视觉/低优先；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
 | B-18 | `terminal_style` | 只影响 `c C ( ) ?` | 已确认 | 多处 | TK-107 |
