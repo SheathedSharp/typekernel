@@ -759,9 +759,23 @@ def K_from_H(
 ) -> ComposedGlyph:
     """``K``: the ``H`` stem with arm and leg meeting at the stem; the arm reaches cap height."""
     h, c = _h_record(H), ctx or H.context
-    w = width * h.width
+    s = c.stem
+    w_frac = width
+    vertex = 0.42
+    if s <= 72.0:
+        w_frac += 0.07
+    elif s < 80.0:
+        w_frac += 0.07 * max(0.0, (80.0 - s) / 50.0)
+    if 100.0 <= s <= 118.0:
+        w_frac += 0.038
+        vertex = 0.44
+    if 142.0 <= s <= 158.0:
+        w_frac += 0.024
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.042
+    w = w_frac * h.width
     cap = h.cap_height
-    return _diag_cap(H, ctx, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=0.42))
+    return _diag_cap(H, c, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex))
 
 
 def A_from_H(
