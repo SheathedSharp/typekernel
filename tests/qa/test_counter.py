@@ -63,6 +63,52 @@ def test_cap_stem_letters_pass_counter_floor_across_ladder(char: str) -> None:
             assert gap >= counter_gap_floor(stem)
 
 
+def test_cap_v_passes_counter_floor_across_ladder() -> None:
+    """TK-207: ``V`` ladder widen bands clear apex pinch."""
+    from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
+
+    presets = (
+        "humanist_sans",
+        "geometric_sans",
+        "code_clear",
+        "paper_ink",
+        "open_print",
+        "display",
+        "mono",
+    )
+    for preset in presets:
+        for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
+            ctx = getattr(DesignContext, preset)().tuned(stem=stem)
+            controls = Controls.from_context(ctx)
+            if stem >= STEM_RELIEF_ONSET:
+                controls = controls.with_stem_relief()
+            gap = min_counter_gap(controls.build("V"))
+            assert gap >= counter_gap_floor(stem)
+
+
+def test_cap_w_passes_counter_floor_across_ladder() -> None:
+    """TK-207: ``W`` ladder width bands clear center pinch."""
+    from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
+
+    presets = (
+        "humanist_sans",
+        "geometric_sans",
+        "code_clear",
+        "paper_ink",
+        "open_print",
+        "display",
+        "mono",
+    )
+    for preset in presets:
+        for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
+            ctx = getattr(DesignContext, preset)().tuned(stem=stem)
+            controls = Controls.from_context(ctx)
+            if stem >= STEM_RELIEF_ONSET:
+                controls = controls.with_stem_relief()
+            gap = min_counter_gap(controls.build("W"))
+            assert gap >= counter_gap_floor(stem)
+
+
 def test_cap_x_passes_counter_floor_across_ladder() -> None:
     """TK-207: ``X`` mid-ladder slight widen for cross stroke pinch."""
     from typekernel.parts.weight_relief import STEM_RELIEF_ONSET

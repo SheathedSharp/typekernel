@@ -714,7 +714,16 @@ def V_from_H(
 ) -> ComposedGlyph:
     """``V``: the ``v`` construction at cap height with the cap stem."""
     h, c = _h_record(H), ctx or H.context
-    w = width * h.width
+    w_frac = width
+    s = c.stem
+    if s <= 72.0 and (
+        0.95 <= c.contrast < 1.0
+        or (c.contrast >= 1.0 and c.roundness < 0.26)
+    ):
+        w_frac += 0.02
+    if 142.0 <= s <= 158.0:
+        w_frac += 0.04
+    w = w_frac * h.width
     bump = c.sharp_overshoot
     return _diag_cap(
         H, ctx, w, v_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
@@ -726,7 +735,16 @@ def W_from_H(
 ) -> ComposedGlyph:
     """``W``: the ``w`` construction at cap height (four lighter diagonals)."""
     h, c = _h_record(H), ctx or H.context
-    w = width * h.width
+    w_frac = width
+    s = c.stem
+    if s <= 72.0:
+        if c.contrast < 0.85:
+            w_frac += 0.02
+        elif 0.86 <= c.contrast <= 0.94 and c.aperture < 0.68:
+            w_frac -= 0.02
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.02
+    w = w_frac * h.width
     bump = c.sharp_overshoot
     return _diag_cap(
         H,
