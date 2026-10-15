@@ -477,7 +477,35 @@ def k_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     w = 0.9 * m.width if width is None else width
-    pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex)
+    vertex_eff = vertex
+    if width is None:
+        s, scale = c.stem, 0.9
+        if s <= 72.0:
+            scale += 0.07
+        elif s < 80.0:
+            scale += 0.07 * max(0.0, (80.0 - s) / 50.0)
+        if s <= 50.0:
+            scale += 0.32
+            vertex_eff = max(vertex_eff, 0.44)
+        if 65.0 <= s <= 75.0:
+            scale += 0.028
+            if c.aperture >= 0.68:
+                scale += 0.065
+            if c.contrast >= 1.0 and c.roundness < 0.26:
+                scale += 0.04
+        if 100.0 <= s <= 118.0:
+            scale += 0.062
+            vertex_eff = max(vertex_eff, 0.44)
+        if 142.0 <= s <= 158.0:
+            scale += 0.036
+        if 168.0 <= s <= 192.0:
+            scale += 0.042
+        if s >= 175.0:
+            scale += 0.02
+        if s >= 198.0:
+            scale += 0.012
+        w = m.width * scale
+    pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
     outline = apply_terminal_shear(c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08))
     return _pack(c, m, anchors, outline)
