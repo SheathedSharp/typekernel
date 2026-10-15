@@ -168,7 +168,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review
 ```
 
-仅衬线或仅斜体：`--only serif` / `--only italic`。打开输出目录内 `REVIEW_CHECKLIST.md` 所列 PNG/TTF；满意后由**人**写入 `approvals/serif-slab-voice.json`、`serif-bracketed-voice.json` 等（见 `approvals/README.md`）；**不要**为通过 gate 改 `AGENT_SENTENCE`。
+仅衬线或仅斜体：`--only serif` / `--only italic`。打开输出目录内 `REVIEW_CHECKLIST.md` 所列 PNG/TTF（斜体含 `italic_family/proof.png` 四母版 ``AGENT_SENTENCE`` 与 `proof_vf.png` 字重阶梯）；也可单独跑 `examples/italic_family/build_italic_vf.py --out …`。满意后由**人**写入 `approvals/serif-slab-voice.json`、`serif-bracketed-voice.json`、`italic-vf-construct.json` 等（见 `approvals/README.md`）；**不要**为通过 gate 改 `AGENT_SENTENCE`。
 
 ## 人审
 
