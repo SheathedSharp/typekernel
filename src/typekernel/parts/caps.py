@@ -407,6 +407,52 @@ def E_from_H(
     )
 
 
+def _f_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    w_top, w_mid = w, w * 0.9
+    mid = h.bar_y - 0.03 * cap
+    m0, m1 = mid - bt / 2.0, mid + bt / 2.0
+    if ctx.style.serif != "slab":
+        return [
+            (0.0, 0.0),
+            (t, 0.0),
+            (t, m0),
+            (w_mid, m0),
+            (w_mid, m1),
+            (t, m1),
+            (t, cap - bt),
+            (w_top, cap - bt),
+            (w_top, cap),
+            (0.0, cap),
+        ]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (t, 0.0),
+        (t, m0),
+        (w_mid, m0),
+        (w_mid, m1),
+        (t, m1),
+        (t, cap - bt),
+        (w_top, cap - bt),
+        (w_top, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def F_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -416,25 +462,21 @@ def F_from_H(
     """``F``: the ``E`` without its foot; the middle arm sits a little lower."""
     c = ctx or H.context
     h = _h_record(H)
-    t, cap, bt = h.stem, h.cap_height, h.bar
     w = width * h.width
-    w_top, w_mid = w, w * 0.9
-    mid = h.bar_y - 0.03 * cap
-    m0, m1 = mid - bt / 2.0, mid + bt / 2.0
-    pts = [
-        (0.0, 0.0),
-        (t, 0.0),
-        (t, m0),
-        (w_mid, m0),
-        (w_mid, m1),
-        (t, m1),
-        (t, cap - bt),
-        (w_top, cap - bt),
-        (w_top, cap),
-        (0.0, cap),
-    ]
-    outline = _cap_f_t_outline(c, pts, w_top, cap, bt)
-    return _pack(c, h, _cap_anchors(w, h), outline)
+    w_top = w
+    baked = c.style.serif == "slab"
+    pts = _f_outline_points(h, c, width=width)
+    outline = (
+        _polygon(pts)
+        if baked
+        else _cap_f_t_outline(c, pts, w_top, h.cap_height, h.bar)
+    )
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        outline,
+    )
 
 
 def _cap_f_t_outline(
