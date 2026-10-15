@@ -1003,6 +1003,38 @@ def W_from_H(
     )
 
 
+def _x_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Slab feet on the lower-left and upper-right outer corners of cap ``X``."""
+    cap = h.cap_height
+    w = base[6][0]
+    hw = base[3][0]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length * 0.42, hw * 0.28, h.stem * 0.32)
+    th = min(thick * 0.65, cap * 0.05, h.stem * 0.12)
+    return [
+        base[0],
+        base[1],
+        (-l, -th),
+        (hw + l, -th),
+        (hw + l, 0.0),
+        base[3],
+        base[4],
+        base[5],
+        base[6],
+        base[7],
+        base[8],
+        (w + l, cap),
+        (w + l, cap + th),
+        (w - hw - l, cap + th),
+        (w - hw - l, cap),
+        base[9],
+        base[10],
+        base[11],
+    ]
+
+
 def X_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.92
 ) -> ComposedGlyph:
@@ -1012,7 +1044,15 @@ def X_from_H(
     if 100.0 <= c.stem <= 118.0:
         w_frac += 0.011
     w = w_frac * h.width
-    return _diag_cap(H, ctx, w, x_points(h.stem, h.cap_height, w, c.contrast))
+    base = x_points(h.stem, h.cap_height, w, c.contrast)
+    baked = c.style.serif == "slab"
+    pts = _x_cap_slab_points(h, c, base) if baked else base
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
+    )
 
 
 def _z_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
