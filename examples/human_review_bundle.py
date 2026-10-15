@@ -66,7 +66,18 @@ write_approval(
 
 Judge: construct slant vs mechanical oblique, branching ``n``/``h``, bold italic counters.
 
-Pending gate name suggestion: ``italic-vf-construct`` → ``approvals/italic-vf-construct.json`` (same ``write_approval`` pattern).
+```python
+write_approval(
+    "approvals/italic-vf-construct.json",
+    gate="italic-vf-construct",
+    approved=True,  # only after your review
+    approver="YOUR_NAME",
+    date="YYYY-MM-DD",
+    notes="Reviewed italic_family proof.png / proof_vf.png under artifacts/human-review/…",
+    scope="examples/italic_family build_italic_vf wght×ital",
+    test_evidence={{"pytest": "tests/examples/test_italic_family.py"}},
+)
+```
 
 **Never** change ``AGENT_SENTENCE`` or L3 thresholds to pass gate.
 """

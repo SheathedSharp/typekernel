@@ -8,6 +8,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+_BUNDLE_SOURCE = ROOT / "examples" / "human_review_bundle.py"
+
+
+def test_human_review_bundle_source_documents_pending_gates() -> None:
+    text = _BUNDLE_SOURCE.read_text(encoding="utf-8")
+    assert "serif-slab-voice" in text
+    assert "serif-bracketed-voice" in text
+    assert "italic-vf-construct" in text
+    assert "proof_vf.png" in text
 
 
 def test_human_review_bundle_serif_only(tmp_path: Path) -> None:

@@ -91,6 +91,15 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
     italic = load_approval(root / "italic-vf-construct.json")
     assert "proof.png" in italic["notes"]
     assert "proof_vf.png" in italic["notes"]
+    repo = root.parent
+    for name in (
+        "serif-slab-voice.json",
+        "serif-bracketed-voice.json",
+        "italic-vf-construct.json",
+    ):
+        evidence = load_approval(root / name).get("test_evidence", [])
+        for rel in evidence:
+            assert (repo / rel).is_file(), f"{name} missing test_evidence {rel!r}"
 
 
 def test_write_approval_does_not_force_true(tmp_path: Path) -> None:
