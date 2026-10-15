@@ -427,6 +427,19 @@ def _f_stem_floor(ctx: DesignContext) -> float:
     return 0.0
 
 
+def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float] | None:
+    """Left-stem foot slab ``(length, thickness)`` for hook letters, or ``None``."""
+    if ctx.style.serif != "slab":
+        return None
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    xh = ctx.x_height
+    l = min(length * 0.42, stem * 0.48)
+    th = min(thick * 0.65, xh * 0.05, stem * 0.18)
+    return l, th
+
+
 def _f_use_inline_crossbar(ctx: DesignContext) -> bool:
     return _italic_topology(ctx) or _vf_compat_stem(ctx)
 
@@ -616,6 +629,7 @@ def _r_outline(
     stem_floor: float = 0.0,
     hook_stem_knots: bool = False,
     hook_belly: float = 0.0,
+    slab_foot: tuple[float, float] | None = None,
 ) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
@@ -637,6 +651,13 @@ def _r_outline(
         if hook_stem_knots:
             b.lineTo(s.l1, y1)
     b.lineTo(s.l0, m.x_height)
+    if slab_foot is not None:
+        foot_l, foot_th = slab_foot
+        base_y = m.x_height
+        b.lineTo(s.l0 - foot_l, base_y)
+        b.lineTo(s.l0 - foot_l, base_y + foot_th)
+        b.lineTo(s.l1, base_y + foot_th)
+        b.lineTo(s.l1, base_y)
     b.lineTo(s.l1, m.x_height)
     if vf_compat:
         b.lineTo(s.l1, m.x_height)
@@ -796,6 +817,7 @@ def _hook_with_crossbar_outline(
     blend: bool = True,
     inline_crossbar: bool = False,
     hook_belly: float = 0.0,
+    slab_foot: tuple[float, float] | None = None,
 ) -> tuple[Outline, float]:
     """Hook master + crossbar as fixed stem detours (no boolean union)."""
     del n_m
@@ -807,6 +829,7 @@ def _hook_with_crossbar_outline(
         stem_floor=_f_stem_floor(ctx) if inline_crossbar else 0.0,
         hook_stem_knots=inline_crossbar,
         hook_belly=hook_belly,
+        slab_foot=slab_foot,
     )
     if blend and not inline_crossbar:
         outline = _finish_hook_letter(outline, ctx)
@@ -873,7 +896,14 @@ def t_from_n(
     belly_scale = 0.06 + 0.94 * min(1.0, max(0.0, (t_w - 0.68) / 0.32))
     belly = _hook_belly_fillet(m.stem) * belly_scale
     outline, _x_t = _hook_with_crossbar_outline(
-        hook, m, c, arm, bar, blend=False, hook_belly=belly
+        hook,
+        m,
+        c,
+        arm,
+        bar,
+        blend=False,
+        hook_belly=belly,
+        slab_foot=_hook_slab_stem_foot(c, m.stem),
     )
     flipped = _ccw(mirror_y(outline, at_y=top / 2.0))
     try:
