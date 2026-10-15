@@ -62,3 +62,11 @@ def test_italic_r4_warn_count_drops_on_compat_charset() -> None:
     report = lint_controls(ital)
     r4 = {i.glyph for i in report.issues if i.rule == "R4_extrema"}
     assert r4 <= set(reg.supported) - compat
+
+
+def test_italic_r4_warns_only_on_oblique_compat_exclude() -> None:
+    """Arch / relief-sensitive glyphs stay on plain slant until TK-402 follow-up."""
+    ital = italic_design(Controls.from_context(DesignContext.code_clear()))
+    r4 = {i.glyph for i in lint_controls(ital).issues if i.rule == "R4_extrema"}
+    assert r4 <= OBLIQUE_COMPAT_EXCLUDE
+    assert r4 == frozenset("ehmnu")

@@ -139,6 +139,19 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
+## 衬线 voice 校样（TK-306 人审）
+
+自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）。人审在本地跑示例脚本看 PNG：
+
+```bash
+cd examples/slab_serif && PYTHONPATH=../../src python build_family.py --out /tmp/slab
+cd examples/bracketed_serif && PYTHONPATH=../../src python build_family.py --out /tmp/bracket
+cd examples/slab_serif && PYTHONPATH=../../src python build_vf.py --out /tmp/slab-vf
+cd examples/bracketed_serif && PYTHONPATH=../../src python build_vf.py --out /tmp/bracket-vf
+```
+
+检查各目录下的 `proof.png`、`proof_brief.png`（静态三档）与 `proof_vf.png`（VF 阶梯）。满意后写入 `approvals/*.json`（见下节）；**不要**为通过 gate 改 `AGENT_SENTENCE`。
+
 ## 人审
 
 数字门槛通过之后，视觉接受必须由人写入 `approvals/*.json`（`typekernel.qa.gates.write_approval`）。gate 与 `design_review` 都不会自动批准。没有这份记录，就还不是被接受的试作。

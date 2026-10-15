@@ -421,7 +421,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/slab_serif/build_vf.py`` 四档 ``wght`` VF（与稳定字符集同 stem 阶梯）+ ``proof_vf.png``；``test_slab_serif_build_vf_script``；VF 与 ``build_family`` 共用 ``_voice``（``f`` arm 0.75）。
 - **本轮（部分）**：大写 stem 锚点按字形跨度（``dual``/``left``/``none``）与 ``M``/``N``/``T``/``U`` 真实 stem 位；``bracketed`` 对角大写禁用假 stem 布尔；``f``/``t``/``j`` 与 ``b``/``d``/``p``/``q`` 钩脚/碗 stem 脚避免 VF 段数漂移；``test_bracketed_serif_masters_on_vf_stable_charset`` 全 ``supported`` 四档母版。
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
-- **待续**：**人审签字**（slab/bracketed 自动化验收已齐）；``bracketed`` 钩形/对角真托架形（部分仍借用 slab 矩形内嵌）；``primitives.serif_bracket`` 楔形/外角 fillet 实验在布尔并集后 G1 恶化（153>120），已回退 ``rounded_rect``。
+- **本轮（部分）**：``agent-recipes`` 补衬线 ``build_family`` / ``build_vf`` 人审 PNG 命令。
+- **待续**：**人审签字**（`approvals/*.json`）；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。
