@@ -741,7 +741,10 @@ def X_from_H(
 ) -> ComposedGlyph:
     """``X``: two compensated diagonals crossing at mid cap height."""
     h, c = _h_record(H), ctx or H.context
-    w = width * h.width
+    w_frac = width
+    if 100.0 <= c.stem <= 118.0:
+        w_frac += 0.011
+    w = w_frac * h.width
     return _diag_cap(H, ctx, w, x_points(h.stem, h.cap_height, w, c.contrast))
 
 
@@ -842,8 +845,11 @@ def Y_from_H(
     """``Y``: two compensated arms meeting on the ``H`` stem at ``junction`` × cap."""
     c = ctx or H.context
     h = _h_record(H)
+    junction_eff = junction
+    if 142.0 <= c.stem <= 158.0:
+        junction_eff = max(junction_eff, 0.45)
     w, cap, t = width * h.width, h.cap_height, h.stem
-    yj = junction * cap
+    yj = junction_eff * cap
     hw = _hwidth(t, c.contrast, w / 2.0 - t / 2.0, cap - yj)
     s0, s1 = (w - t) / 2.0, (w + t) / 2.0
     # left arm outer edge: (0, cap) → (w/2 - hw/2, yj); inner edge shifted by hw
