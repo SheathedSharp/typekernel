@@ -451,6 +451,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 ``J`` ``slab``/``bracketed`` 右 stem 顶脚内嵌（同 ``U`` 右半）；``test_bracketed_cap_j_*``；golden ``J``（``slab`` + ``bracketed``）。
 - **本轮（部分）**：小写 ``e`` ``bracketed`` 下开口 cubic 托架（``e_from_o`` + ``_opening_bottom_bracketed_detour``）；``test_bracketed_e_*``；golden ``e``。
 - **本轮（部分）**：小写 ``s``/大写 ``S`` ``bracketed`` 上下开口 cubic 托架（``s_from_o``）；``test_bracketed_s_*``；golden ``s``/``S``。
+- **本轮（部分）**：小写 ``e`` ``slab`` 下开口内嵌（``e_from_o`` + ``_opening_bottom_slab_detour``）；``test_slab_e_opening_changes_outline``；golden ``slab_serif`` ``e``。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
