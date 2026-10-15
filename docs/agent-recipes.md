@@ -139,6 +139,26 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
+## 骨架构造 spike（TK-308，非默认管线）
+
+**不要**用 `geo.stroke.expand` / `trace_letter` 做字重轴或替代 `Controls` 主路径。仅当在 `parts` 里试验新拓扑、或像 `zayju_letter` 那样手绘后再挂回 `with_glyph` 时，可选用骨架 + 对比笔：
+
+```python
+from typekernel.geo.stroke import CubicBezier, Pen, expand_cubic
+from typekernel.parts import DesignContext, Skeleton, Stroke, trace_letter
+
+seg = CubicBezier.line((40.0, 0.0), (40.0, 400.0))
+skel = Skeleton.of(
+    Stroke.from_beziers("stem", (seg,), thickness=80.0, chord_budget=0.35),
+)
+glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="butt")
+```
+
+- 折线：`Stroke.from_points(...)`（默认）。
+- 三次中线：`Stroke.from_beziers` 或 plan dict 的 `beziers` 键（四控制点列表）；`chord_budget` 传给 `expand_cubic`。
+- 单段开放 + `butt` cap：`expand_cubic` 会走偏移轨道 cubic 拟合，读 `CenterlineExpandReport.max_offset_fit_error`（见 `tests/geo/test_stroke_expand.py`）。
+- 多段 / 圆角 cap / 闭合环：仍先弦高折线化再 expand；报告里的 `max_chord_error` 是中线近似成本。
+
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
 自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/examples/test_italic_family.py`（真斜体 VF）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：

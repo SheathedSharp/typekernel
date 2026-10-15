@@ -110,7 +110,7 @@
 3. **`italic_controls` 不是斜体** 【实测+代码】
    实现是把 `n` 字腔与 `o` 碗宽放大 3.5%、`contrast` 降 4%（`parts/italic.py`）。母版**没有任何倾斜**，渲染出来是略宽的直立体。但文档把它当作「斜体是另一套母版」的实现推荐给 agent（`AGENT_GOAL.md` 第 16、41 行，SKILL 第 170 行「Italic axis: `italic_controls(regular_sheet)` per italic master」）。`AGENT_GOAL.md` 第 93 行同时承认「真斜体母版仍未完成」，所以文档自相矛盾，agent 照做会得到一个直立的「斜体」，与项目红线「Oblique ≠ Italic」的精神冲突。
 4. **「字重 delta」只是关于 `stem` 的线性启发式**（`parts/weight_relief.py`），只调 `n/o` 的字腔与碗宽；`examples/agent_family` 里 Light/Bold 与 Regular 的差别就是一个 `stem` 数字加 `with_stem_relief()`。【代码】
-5. **`skeleton`/pen 路径有结构限制**：`geo/stroke.py` 的 `Centerline` 只支持折线，笔扩展对曲线中线没有原生支持；`skeleton_recipes.skel_*` 现在反过来委托给 `Controls`。【代码】
+5. **`skeleton`/pen 路径**：折线 `Centerline` 仍是默认；TK-308 spike 增加 `CubicCenterline` / `Stroke.beziers` + 单段偏移 cubic 拟合，**未**替代 `Controls` 主路径；`skeleton_recipes.skel_*` 仍委托 `Controls`。【代码】
 
 ### 2.6 对我早先汇报的三处更正
 
@@ -480,6 +480,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：SKILL Step 3 补 ``Style`` 指针（与 ``agent-recipes`` / ``reference`` 对齐）。
 - **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
+- **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**

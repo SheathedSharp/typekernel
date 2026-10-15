@@ -66,6 +66,19 @@ L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family p
 
 VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladders (see `tests/parts/test_style_gate.py`). Serif voices need sentence gate + L3 distance tests.
 
+## Construction spike — skeleton + pen (TK-308)
+
+Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contrast pen for experiments or hand-traced strokes before `with_glyph`.
+
+| API | Role |
+| --- | --- |
+| `Stroke.from_points` | Polyline midline (default) |
+| `Stroke.from_beziers` | Cubic midline → `expand_cubic` |
+| `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers` + `chord_budget` |
+| `expand_cubic` | Returns `(Outline, CenterlineExpandReport)` — `max_offset_fit_error` on single-segment butt cap |
+
+Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike.
+
 ## Italic & oblique (M4)
 
 - **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF prefer `vf_italic_pair(regular, style=ItalicStyle(...))` (matched oblique pre-split angle) or `vf_upright_controls(regular, oblique_split_deg=…)` + `italic_design(upright, …)`.
