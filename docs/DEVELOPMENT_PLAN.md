@@ -346,7 +346,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-303 字形规格记录与 `Controls.tuned_glyph` 〔M〕★ 优先
 - **目的**：补上缺失的「中间层」——介于全局浮点（太浅）和手写 `PathBuilder`（太深）之间。
-- **进展**：`glyph_specs.py` + `Controls.tuned_glyph` 覆盖 `f t j a s e` 与 cap **A–Z 除 H/I/Q**（`H`/`I` 无独立旋钮；`Q` 尾形未暴露）；`design_review` 记 `spec`；全 `supported` 默认哈希回归。
+- **进展**：`glyph_specs.py` + `Controls.tuned_glyph` 覆盖 `f t j a s e` 与 cap **A–Z 除 H/I**（控制母形 / 单竖无旋钮）；`design_review` 记 `spec`；全 `supported` 默认哈希回归。
 - **本轮（部分）**：``SSpec.top_scale`` 与 ``s_from_o`` 对齐；``build_all`` 按字形表路由 ``glyph_overrides``；``test_tuned_glyph_defaults_match_stock_derivation`` 参数化覆盖 ``f``/``t``/``j``/``a``/``e``/``s``。
 - **本轮（部分）**：``KSpec``（``width``/``vertex``）+ ``tuned_glyph("K")``；``K_from_H`` 暴露 ``vertex`` 参数；``test_k_width_monotone_opens_outline``；默认 master 哈希未变。
 - **本轮（部分）**：``VSpec``/``WSpec``/``XSpec``/``MSpec``/``NSpec`` + ``tuned_glyph`` 路由；默认哈希与单调性测试（``V`` width）。
@@ -355,6 +355,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``CapESpec``/``CapFSpec`` + ``tuned_glyph``；``E`` width 单调性测试。
 - **本轮（部分）**：``DSpec``/``PSpec``（需 ``O`` 指数）+ ``D`` width 单调性测试。
 - **本轮（部分）**：``BSpec``/``USpec``/``CapJSpec``/``CapCSpec``/``CapSSpec``；``C_from_O``/``S_from_O`` 暴露默认等价参数；``B``/``U``/``S`` 单调性测试。
+- **本轮（部分）**：``QSpec``（``tail_reach``/``tail_drop``）+ ``Q_from_O`` 参数；``Q`` 尾长单调性测试。
 - **做什么**：为弱字及其近亲定义**带类型、带文档的规格记录**，字段是设计师会谈论的量，默认值等于当前行为：
   | 记录 | 字段示例 |
   | --- | --- |

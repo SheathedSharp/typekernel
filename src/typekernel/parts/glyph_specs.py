@@ -19,6 +19,7 @@ from typekernel.parts.caps import (
     M_from_H,
     N_from_H,
     P_from_H,
+    Q_from_O,
     R_from_H,
     S_from_O,
     T_from_H,
@@ -61,6 +62,7 @@ __all__ = [
     "MSpec",
     "NSpec",
     "PSpec",
+    "QSpec",
     "RSpec",
     "SSpec",
     "TSpec",
@@ -241,6 +243,14 @@ class PSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class QSpec:
+    """``Q``: diagonal tail reach (× ``O`` radius) and drop (× x-height)."""
+
+    tail_reach: float = 1.0
+    tail_drop: float = 0.1
+
+
+@dataclass(frozen=True, slots=True)
 class VSpec:
     """``V``: cap width fraction."""
 
@@ -314,6 +324,7 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "M": MSpec,
     "N": NSpec,
     "P": PSpec,
+    "Q": QSpec,
     "R": RSpec,
     "S": CapSSpec,
     "U": USpec,
@@ -420,6 +431,14 @@ def build_from_spec(
             width=spec.width,
             straight=spec.straight,
             bowl=spec.bowl,
+        )
+    if ch == "Q" and isinstance(spec, QSpec):
+        return Q_from_O(
+            o_glyph,
+            n_glyph,
+            ctx,
+            tail_reach=spec.tail_reach,
+            tail_drop=spec.tail_drop,
         )
     if ch == "V" and isinstance(spec, VSpec):
         return V_from_H(n_glyph, ctx, width=spec.width)

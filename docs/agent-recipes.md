@@ -70,6 +70,7 @@ controls = (
 | `F` | `CapFSpec` | `width` (0.82) |
 | `G` | `GSpec` | `bar_reach` (0.1) |
 | `P` | `PSpec` | `width`, `straight`, `bowl`（默认同 `R` 碗区，无 `leg_at`） |
+| `Q` | `QSpec` | `tail_reach` (1.0), `tail_drop` (0.1) |
 | `K` | `KSpec` | `width` (0.92), `vertex` (0.42) |
 | `R` | `RSpec` | `width`, `straight`, `bowl`, `leg_at` |
 | `Y` | `YSpec` | `width` (0.98), `junction` (0.42) |

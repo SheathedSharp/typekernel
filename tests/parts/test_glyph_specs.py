@@ -84,6 +84,13 @@ def test_u_width_monotone_opens_outline() -> None:
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
+def test_q_tail_reach_monotone_moves_tip() -> None:
+    ctx = DesignContext.humanist_sans()
+    short = Controls.from_context(ctx).tuned_glyph("Q", tail_reach=0.92).build("Q")
+    long = Controls.from_context(ctx).tuned_glyph("Q", tail_reach=1.08).build("Q")
+    assert composed_glyph_hash(short) != composed_glyph_hash(long)
+
+
 def test_cap_s_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
     narrow = Controls.from_context(ctx).tuned_glyph("S", width=0.78).build("S")

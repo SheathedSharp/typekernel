@@ -351,12 +351,18 @@ def Q_from_O(
     O: ComposedGlyph,
     H: ComposedGlyph | None = None,
     ctx: DesignContext | None = None,
+    *,
+    tail_reach: float = 1.0,
+    tail_drop: float = 0.1,
 ) -> ComposedGlyph:
     """``Q``: the ``O`` with a compensated diagonal tail from its lower right.
 
     The tail's two edges are intersected with the bowl's lower-right outer
     quarter and spliced in, so the outer contour grows the tail and the
     counter stays the ``O``'s — no overlap, no boolean, fixed topology.
+
+    ``tail_reach`` × ``O`` radius sets how far the tail tip sits to the right of
+    centre; ``tail_drop`` × x-height sets depth below the baseline overshoot.
     """
     c = ctx or O.context
     o = _o_rec(O)
@@ -366,7 +372,7 @@ def Q_from_O(
     # tail axis: from inside the wall (centreline, -45°) out past the bottom right
     k = math.cos(math.radians(45.0))
     start = (cx + (o.rx - o.thickness_v / 2.0) * k, cy - (o.ry - o.thickness_h / 2.0) * k)
-    end = (cx + 1.0 * o.rx, -o.overshoot - 0.1 * o.x_height)
+    end = (cx + tail_reach * o.rx, -o.overshoot - tail_drop * o.x_height)
     hw = _hwidth(h.stem * 0.95, c.contrast, end[0] - start[0], start[1] - end[1])
     hits: list[float] = []
     for side in (-0.5, 0.5):
