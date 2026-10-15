@@ -29,6 +29,7 @@ pytest -q tests/docs/test_development_plan_section8.py
 pytest -q tests/examples/test_agent_trial_reference.py
 pytest -q tests/qa/test_m3_exit.py
 pytest -q tests/examples/test_human_review_bundle.py
+pytest -q tests/examples/test_weight_ladder_sheet.py
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
 pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance
 pytest -q tests/qa/test_originality.py tests/qa/test_sentence_gate.py
@@ -44,6 +45,8 @@ pytest -q tests/parts/test_italic_program_acceptance.py
 | Bracketed | `{out}/bracketed_serif/proof.png`, `proof_brief.png` | `{out}/bracketed_serif_vf/proof_vf.png` | `{out}/weight_ladder_bracketed_serif.png` |
 
 Judge: serif feet/caps, counters at bold, brief sentence legibility, VF interpolation (no kinks).
+
+Other presets (TK-207): ``PYTHONPATH=src python examples/weight_ladder_sheet.py --preset humanist_sans --out artifacts/specimens/weight_ladder.png``
 
 After **you** accept visually, record decisions (agent must not set ``approved: true`` without you):
 

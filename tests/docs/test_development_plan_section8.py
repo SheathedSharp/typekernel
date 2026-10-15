@@ -169,6 +169,7 @@ def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     assert "validate_trial_snapshot" in text
     assert "validate_snapshot.py" in text
     assert "require-human-scores" in text
+    assert "program-snapshot-only" in text
     assert "AGENT_TRIALS.md" in text
 
 

@@ -35,10 +35,21 @@ CI: `tests/examples/test_agent_trial_reference.py`, `tests/qa/test_m3_exit.py` (
 | 2 | Lint / identity errors (`metrics_ok`) |
 | 3 | `family_gate` failures |
 | 4 | `weight_ladder_r8_failures` > 0 |
-| 5 | Snapshot record inconsistent (e.g. forged `l3_voice_ok` or `program_pass_ok`) |
+| 5 | Snapshot record inconsistent (forged `l3_voice_ok` / `program_pass_ok`, or other `validate_trial_snapshot_record` problems) |
 | 6 | Honest design but `l3_voice_ok` false |
 | 7 | Non-empty `cheating_flags` (e.g. auto `stem_only_or_scale_voice` for stem-only scaling) |
 | 8 | Program pass but incomplete `human_review_scores` (`validate_snapshot.py --require-human-scores`, final archive only) |
+
+Re-audit saved JSON:
+
+```bash
+PYTHONPATH=src python examples/agent_trial/validate_snapshot.py path/to/brief-N/snapshot.json
+PYTHONPATH=src python examples/agent_trial/validate_snapshot.py --recursive artifacts/trials/<run>/
+# Program phase (agent must not pre-fill human scores): --program-snapshot-only → exit 5 if human_review_scores present
+# Final archive after you scored 1–5 in JSON: --require-human-scores → exit 8 if any dimension missing
+```
+
+`--require-human-scores` and `--program-snapshot-only` are mutually exclusive. Program writers (`snapshot_design.py`, etc.) never emit `human_review_scores`.
 
 Full final-trial checklist: `docs/AGENT_TRIALS.md` §终验流程. Library program bar: `examples/run_m5_program_exit.py`.
 

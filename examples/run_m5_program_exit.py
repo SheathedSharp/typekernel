@@ -25,6 +25,7 @@ SECTION8 = "tests/docs/test_development_plan_section8.py"
 _TRIAL_SMOKE = (
     "tests/examples/test_agent_trial.py",
     "tests/examples/test_agent_trial_reference.py",
+    "tests/examples/test_weight_ladder_sheet.py",
     "tests/qa/test_trial_protocol.py",
 )
 
