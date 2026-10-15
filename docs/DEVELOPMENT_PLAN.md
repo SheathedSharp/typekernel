@@ -487,6 +487,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
 - **本轮（部分）**：``test_skeleton`` 闭合 cubic stroke 烟测（``trace_letter`` → 环带实体）。
 - **本轮（部分）**：``Stroke.offset_fit_budget`` 透传 ``expand_cubic``；多段开放折线化与 ``expand`` 包围盒回归。
+- **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``cubic_centerline_to_polyline`` 与多段开放路径说明。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
