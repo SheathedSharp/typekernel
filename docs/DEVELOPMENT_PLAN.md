@@ -321,6 +321,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``y_from_n`` 字重阶梯加宽（含 contrast 分段）；``y`` 纳入 ``COUNTER_PINCH_CHARSET``；``test_y_passes_counter_floor_across_ladder``；golden ``y``（``humanist_sans``/``display``）。
 - **本轮（部分）**：``v_from_n`` 字重阶梯加宽（对齐 cap ``V`` + 小写 ~70/150 band）；``v`` 纳入 charset；``test_v_passes_counter_floor_across_ladder``；golden ``v``（``humanist_sans`` 等）。
 - **本轮（部分）**：``w_from_n`` 阶梯加宽（对齐 cap ``W``，小写不做 mid-contrast 收窄）；``w`` 纳入 charset；``test_w_passes_counter_floor_across_ladder``。
+- **本轮（部分）**：``x_from_n`` 阶梯加宽（对齐 cap ``X`` + ~70 band）；``x`` 纳入 charset；``test_x_passes_counter_floor_across_ladder``。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

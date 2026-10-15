@@ -429,6 +429,21 @@ def x_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     w = 0.95 * m.width if width is None else width
+    if width is None:
+        s, scale = c.stem, 0.95
+        if 100.0 <= s <= 118.0:
+            scale += 0.014
+        if 65.0 <= s <= 75.0:
+            scale += 0.078
+            if c.aperture >= 0.68:
+                scale += 0.038
+            if c.contrast >= 1.0 and c.roundness < 0.26:
+                scale += 0.062
+        if 142.0 <= s <= 158.0:
+            scale += 0.026
+        if s >= 168.0:
+            scale += 0.022
+        w = m.width * scale
     pts = x_points(m.stem, m.x_height, w, c.contrast)
     return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
 
