@@ -473,6 +473,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_bracketed_n_shoulder_cap_paths_self_intersect`` 固化 bracketed ``n`` 全宽/托架肩口顶内嵌仍 R3（``stem_L_t`` 暂保留布尔）。
 - **本轮（部分）**：``bracketed`` ``m``/``r`` 左肩口顶衬线内嵌（复用 ``inline_shoulder_left_cap_slab_path`` 段数 + ``inline_left_top``）；golden ``m``/``r``（``bracketed_serif``）。
 - **本轮（部分）**：``bracketed`` ``n`` 左肩口顶衬线内嵌（同 ``m``/``r`` 左缘配方，非全宽顶）；``test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor``；golden ``n``；``bracketed`` 仅 ``h`` 仍 ``stem_R_t`` 布尔。
+- **本轮（部分）**：``bracketed`` ``h`` ``stem_R_t``：未布尔前即 R3，``stem_R_t`` union 才清零；右腿 ``x_height`` 顶 cap（slab 同款）仍 R3；``test_bracketed_h_*`` 固化；全 supported 仅 ``h`` 依赖布尔顶衬线。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
