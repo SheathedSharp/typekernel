@@ -44,3 +44,12 @@ PYTHONPATH=src python examples/agent_trial/snapshot_serif_voices.py --out artifa
 ```
 
 CI 覆盖：`test_serif_voice_trial_snapshots_meet_l3`（`tests/qa/test_trial_protocol.py`）。
+
+brief-1 **改字**参考（`Style` + `tuned_glyph`，非 preset 快照）：
+
+```bash
+PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
+  --brief brief-1 --out artifacts/trials/warm-humanist-ref
+```
+
+设计稿：`examples/agent_trial/design_warm_humanist.py`。CI：`test_agent_trial_reference.py`（gate + R8 + `voice_distance` 下限；L3 终验仍须人评）。
