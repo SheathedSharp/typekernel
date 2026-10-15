@@ -92,6 +92,10 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
     assert "proof.png" in italic["notes"]
     assert "proof_vf.png" in italic["notes"]
     repo = root.parent
+    _shared_program_evidence = (
+        "tests/docs/test_development_plan_section8.py",
+        "tests/examples/test_human_review_bundle.py",
+    )
     for name in (
         "serif-slab-voice.json",
         "serif-bracketed-voice.json",
@@ -100,6 +104,14 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
         evidence = load_approval(root / name).get("test_evidence", [])
         for rel in evidence:
             assert (repo / rel).is_file(), f"{name} missing test_evidence {rel!r}"
+        for rel in _shared_program_evidence:
+            assert rel in evidence, f"{name} must list {rel!r} for M5 sign-off"
+    for serif_name in ("serif-slab-voice.json", "serif-bracketed-voice.json"):
+        serif_evidence = load_approval(root / serif_name)["test_evidence"]
+        assert "tests/parts/test_serifs.py" in serif_evidence
+        assert "tests/qa/test_m3_exit.py" in serif_evidence
+    italic_evidence = load_approval(root / "italic-vf-construct.json")["test_evidence"]
+    assert "tests/parts/test_italic_program_acceptance.py" in italic_evidence
 
 
 def test_write_approval_does_not_force_true(tmp_path: Path) -> None:
