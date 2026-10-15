@@ -64,6 +64,9 @@ controls = (
 | `K` | `KSpec` | `width` (0.92), `vertex` (0.42) |
 | `R` | `RSpec` | `width`, `straight`, `bowl`, `leg_at` |
 | `Y` | `YSpec` | `width` (0.98), `junction` (0.42) |
+| `L` | `LSpec` | `width` (0.78) |
+| `T` | `CapTSpec` | `width` (0.92) |
+| `Z` | `ZSpec` | `width` (0.88) |
 | `V` `W` `X` `M` `N` | `VSpec` … `NSpec` | 以 `width` 为主；`M` 另有 `apex` (0.35) |
 
 `design_review` 的 `notes` 会列出 `spec f: {...}`。

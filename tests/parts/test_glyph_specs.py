@@ -70,6 +70,13 @@ def test_k_width_monotone_opens_outline() -> None:
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
+def test_cap_t_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("T", width=0.84).build("T")
+    wide = Controls.from_context(ctx).tuned_glyph("T", width=1.0).build("T")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
 def test_v_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
     narrow = Controls.from_context(ctx).tuned_glyph("V", width=0.88).build("V")

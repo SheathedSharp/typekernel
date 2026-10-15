@@ -9,13 +9,16 @@ from typekernel.parts.caps import (
     A_from_H,
     G_from_O,
     K_from_H,
+    L_from_H,
     M_from_H,
     N_from_H,
     R_from_H,
+    T_from_H,
     V_from_H,
     W_from_H,
     X_from_H,
     Y_from_H,
+    Z_from_H,
 )
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
@@ -32,11 +35,13 @@ __all__ = [
     "WEAK_GLYPH_SPECS",
     "ASpec",
     "CapASpec",
+    "CapTSpec",
     "ESpec",
     "FSpec",
     "GSpec",
     "JSpec",
     "KSpec",
+    "LSpec",
     "MSpec",
     "NSpec",
     "RSpec",
@@ -46,6 +51,7 @@ __all__ = [
     "WSpec",
     "XSpec",
     "YSpec",
+    "ZSpec",
     "build_from_spec",
     "merge_spec",
     "spec_fields",
@@ -109,6 +115,13 @@ class CapASpec:
 
 
 @dataclass(frozen=True, slots=True)
+class CapTSpec:
+    """``T``: top bar width fraction (centred on the ``H`` stem)."""
+
+    width: float = 0.92
+
+
+@dataclass(frozen=True, slots=True)
 class GSpec:
     """``G``: inward crossbar reach past the cap ``O`` centre."""
 
@@ -121,6 +134,13 @@ class KSpec:
 
     width: float = 0.92
     vertex: float = 0.42
+
+
+@dataclass(frozen=True, slots=True)
+class LSpec:
+    """``L``: foot width fraction."""
+
+    width: float = 0.78
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +197,13 @@ class YSpec:
     junction: float = 0.42
 
 
+@dataclass(frozen=True, slots=True)
+class ZSpec:
+    """``Z``: cap width fraction (top/foot bars + diagonal)."""
+
+    width: float = 0.88
+
+
 WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "f": FSpec,
     "t": TSpec,
@@ -187,13 +214,16 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "A": CapASpec,
     "G": GSpec,
     "K": KSpec,
+    "L": LSpec,
     "M": MSpec,
     "N": NSpec,
     "R": RSpec,
     "V": VSpec,
     "W": WSpec,
     "X": XSpec,
+    "T": CapTSpec,
     "Y": YSpec,
+    "Z": ZSpec,
 }
 
 
@@ -246,6 +276,8 @@ def build_from_spec(
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
     if ch == "K" and isinstance(spec, KSpec):
         return K_from_H(n_glyph, ctx, width=spec.width, vertex=spec.vertex)
+    if ch == "L" and isinstance(spec, LSpec):
+        return L_from_H(n_glyph, ctx, width=spec.width)
     if ch == "M" and isinstance(spec, MSpec):
         return M_from_H(n_glyph, ctx, width=spec.width, apex=spec.apex)
     if ch == "N" and isinstance(spec, NSpec):
@@ -266,6 +298,10 @@ def build_from_spec(
             bowl=spec.bowl,
             leg_at=spec.leg_at,
         )
+    if ch == "T" and isinstance(spec, CapTSpec):
+        return T_from_H(n_glyph, ctx, width=spec.width)
     if ch == "Y" and isinstance(spec, YSpec):
         return Y_from_H(n_glyph, ctx, width=spec.width, junction=spec.junction)
+    if ch == "Z" and isinstance(spec, ZSpec):
+        return Z_from_H(n_glyph, ctx, width=spec.width)
     raise KeyError(f"no builder for spec {ch!r}")
