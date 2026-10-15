@@ -49,23 +49,38 @@ def test_bracketed_serif_changes_n_outline() -> None:
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
-def test_bracketed_b_inline_foot_extends_left_of_plain_stem() -> None:
+def test_bracketed_bowl_glyphs_inline_foot_extends_left_of_plain_stem() -> None:
     """Inline bowl foot serifs must project past the stem (TK-306 bracketed)."""
     from typekernel.optics.space import ink_intervals_at_y
-    from typekernel.parts import b_from_o, build_n, build_o
+    from typekernel.parts import (
+        b_from_o,
+        build_n,
+        build_o,
+        d_from_o,
+        p_from_o,
+        q_from_o,
+    )
 
     stem = 100.0
-    y_probe = 0.0
     ctx_plain = DesignContext.code_clear().tuned(stem=stem)
     ctx_br = DesignContext.bracketed_serif().tuned(stem=stem)
+    builders = {
+        "b": b_from_o,
+        "d": d_from_o,
+        "p": p_from_o,
+        "q": q_from_o,
+    }
 
-    def left_ink(ctx: DesignContext) -> float:
-        glyph = b_from_o(build_o(ctx), build_n(ctx))
+    def left_ink(ctx: DesignContext, letter: str, y_probe: float) -> float:
+        o, n = build_o(ctx), build_n(ctx)
+        glyph = builders[letter](o, n)
         intervals = ink_intervals_at_y(list(glyph.solids), y_probe)
         assert intervals
         return intervals[0][0]
 
-    assert left_ink(ctx_br) < left_ink(ctx_plain) - 8.0
+    for letter in builders:
+        y_probe = 0.0 if letter in "bd" else ctx_br.descender + 5.0
+        assert left_ink(ctx_br, letter, y_probe) < left_ink(ctx_plain, letter, y_probe) - 8.0
 
 
 def test_bracketed_serif_lint_clean_on_full_supported() -> None:
