@@ -293,6 +293,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`COUNTER_PINCH_CHARSET` 阶梯 R8 回归含 `stem=200`（`tests/qa/test_weight_ladder.py`）；三 golden preset × 阶梯；`family_gate` 三 preset 回归；`weight_ladder_sheet` 可写 PNG 且清理 UFO 临时目录；`.gitignore` 忽略 `_ladder_tmp`。
 - **本轮（部分）**：`$` 纳入 `COUNTER_PINCH_CHARSET`（腰接双环后字重阶梯 R8 零报）。
 - **本轮（部分）**：扩展 `COUNTER_PINCH_CHARSET`（`2`/`7`、`s`/`S`/`c`、大写 `CDEFOPQSTUZ`、`#`/`%`/`?`）；三 preset × 阶梯 R8 仍零报。
+- **本轮（部分）**：``min_counter_gap`` 在 ``y0<0`` 时将采样带下限抬至 ``0.12×y1``，避免 ``p``/``q`` descender 竖缝误报；``test_descender_letters_skip_baseline_stem_pinch``。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

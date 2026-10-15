@@ -29,6 +29,9 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
         return best
     y_lo = y0 + 0.22 * height
     y_hi = y0 + 0.78 * height
+    # ``p``/``q``/``g`` descenders: ignore stem–counter slivers below the x-height band.
+    if y0 < 0.0:
+        y_lo = max(y_lo, 0.12 * y1)
     solids = list(glyph.solids)
     for iy in range(grid):
         y = y_lo + (iy + 0.5) / grid * (y_hi - y_lo)
