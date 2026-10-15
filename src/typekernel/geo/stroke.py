@@ -528,6 +528,50 @@ def _stitched_offset_rail(
     return poly
 
 
+def _stitched_offset_rail_closed(
+    centerline: CubicCenterline,
+    pen: Pen,
+    *,
+    left_side: bool,
+    join: JoinStyle,
+    miter_limit: float,
+    samples: int,
+) -> list[tuple[float, float]]:
+    """Closed centerline: offset rail with joins at every segment knot."""
+    segs = centerline.segments
+    n = len(segs)
+    if n == 0:
+        return []
+    if n == 1:
+        return _sample_offset_rail(segs[0], pen, samples, left_side=left_side)
+    poly: list[tuple[float, float]] = []
+    for i, seg in enumerate(segs):
+        rail = _sample_offset_rail(seg, pen, samples, left_side=left_side)
+        prev = (i - 1) % n
+        vertex = seg.p0
+        t_in = _unit(*_cubic_deriv_eval(segs[prev], 1.0))
+        t_out = _unit(*_cubic_deriv_eval(seg, 0.0))
+        join_pts = _join_tokens_to_polyline(
+            _side_join(
+                vertex,
+                t_in,
+                t_out,
+                pen,
+                left_side=left_side,
+                join=join,
+                miter_limit=miter_limit,
+            ),
+            left_side=left_side,
+        )
+        for p in join_pts:
+            if not poly or poly[-1] != p:
+                poly.append(p)
+        for p in rail[1:-1]:
+            if not poly or poly[-1] != p:
+                poly.append(p)
+    return poly
+
+
 def _open_centerline_end_tangents(
     centerline: CubicCenterline,
 ) -> tuple[
@@ -624,37 +668,43 @@ def _expand_closed_cubic_offset(
     *,
     offset_fit_budget: float,
     samples: int = 17,
+    join: JoinStyle = "miter",
+    miter_limit: float = 4.0,
 ) -> tuple[Outline, float]:
-    """Closed cubic midline → annulus (outer + hole) via per-segment rail fits."""
-    outer_chains: list[list[CubicBezier]] = []
-    inner_chains: list[list[CubicBezier]] = []
-    max_err = 0.0
-    for seg in centerline.segments:
-        left = _sample_offset_rail(seg, pen, samples, left_side=True)
-        right = _sample_offset_rail(seg, pen, samples, left_side=False)
-        oc, err_o = _fit_offset_rail_piecewise(right, offset_fit_budget)
-        ic, err_i = _fit_offset_rail_piecewise(left, offset_fit_budget)
-        max_err = max(max_err, err_o, err_i)
-        outer_chains.append(oc)
-        inner_chains.append(ic)
+    """Closed cubic midline → annulus via stitched offset rails + cubic fits."""
+    outer_poly = _stitched_offset_rail_closed(
+        centerline,
+        pen,
+        left_side=False,
+        join=join,
+        miter_limit=miter_limit,
+        samples=samples,
+    )
+    inner_poly = _stitched_offset_rail_closed(
+        centerline,
+        pen,
+        left_side=True,
+        join=join,
+        miter_limit=miter_limit,
+        samples=samples,
+    )
+    outer_chain, err_o = _fit_offset_rail_piecewise(outer_poly, offset_fit_budget)
+    inner_chain, err_i = _fit_offset_rail_piecewise(inner_poly, offset_fit_budget)
+    max_err = max(err_o, err_i)
     b = PathBuilder()
-    start = outer_chains[0][0].p0
-    b.moveTo(start[0], start[1])
-    for chain in outer_chains:
-        _append_cubic_chain(b, chain)
+    b.moveTo(outer_chain[0].p0[0], outer_chain[0].p0[1])
+    _append_cubic_chain(b, outer_chain)
     b.closePath()
-    inner_start = inner_chains[0][0].p0
-    b.moveTo(inner_start[0], inner_start[1])
-    for chain in reversed(inner_chains):
-        for seg_r in reversed(chain):
-            b.curveTo(
-                seg_r.p2[0],
-                seg_r.p2[1],
-                seg_r.p1[0],
-                seg_r.p1[1],
-                seg_r.p0[0],
-                seg_r.p0[1],
-            )
+    b.moveTo(inner_chain[0].p0[0], inner_chain[0].p0[1])
+    for seg_r in reversed(inner_chain):
+        b.curveTo(
+            seg_r.p2[0],
+            seg_r.p2[1],
+            seg_r.p1[0],
+            seg_r.p1[1],
+            seg_r.p0[0],
+            seg_r.p0[1],
+        )
     b.closePath()
     return b.build(), max_err
 
@@ -732,6 +782,8 @@ def expand_cubic(
                 centerline,
                 pen,
                 offset_fit_budget=offset_fit_budget,
+                join=join,
+                miter_limit=miter_limit,
             )
             return outline, CenterlineExpandReport(
                 max_chord_error=0.0,
