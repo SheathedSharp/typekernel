@@ -242,6 +242,18 @@ def test_slab_h_right_leg_cap_inlined_without_boolean_serif() -> None:
     assert composed_glyph_hash(h) == composed_glyph_hash(apply_glyph_serifs(h))
 
 
+def test_bracketed_h_from_n_right_leg_cap_inlined_without_boolean_serif() -> None:
+    from typekernel.parts.control import h_from_n
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    ctx = DesignContext.bracketed_serif()
+    n = Controls.from_context(ctx).control_glyphs()[0]
+    h = h_from_n(n, ctx)
+    assert not [i for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"]
+    assert "stem_R_t" not in {a.name for a in h.anchors}
+    assert composed_glyph_hash(h) == composed_glyph_hash(apply_glyph_serifs(h))
+
+
 def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
@@ -322,7 +334,7 @@ def test_slab_apply_glyph_serifs_is_noop_on_supported() -> None:
 
 
 def test_bracketed_n_shoulder_cap_paths_self_intersect() -> None:
-    """Full/bracketed shoulder caps at ``x_height`` still need boolean ``stem_L_t``."""
+    """Full-width bracketed cap at ``x_height`` R3; shipped ``n`` uses left-face shoulder cap."""
     from typekernel.geo.path_builder import PathBuilder
     from typekernel.parts.compose import GlyphAssembler
     from typekernel.parts.control import (
