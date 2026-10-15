@@ -211,6 +211,47 @@ def _cap_stem_serif_anchors_enabled(
     return not (baked or diagonal)
 
 
+def _h_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
+    t, w = h.stem, h.width
+    y0 = h.bar_y - h.bar / 2.0
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    gap = max(w - 2.0 * t, t)
+    l = min(length, t * 0.48, gap * 0.32)
+    th = min(thick, y0 * 0.36, t * 0.18, gap * 0.14)
+    return l, th, bracket_r
+
+
+def _write_h_bracketed_outer(b: PathBuilder, h: HMetrics, ctx: DesignContext) -> None:
+    """Bracketed ``H``: dual-stem inline serifs with cubic fillets (VF-stable)."""
+    t, w, cap = h.stem, h.width, h.cap_height
+    y0, y1 = h.bar_y - h.bar / 2.0, h.bar_y + h.bar / 2.0
+    l, th, bracket_r = _h_cap_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(t, 0.0)
+    b.lineTo(t, y0)
+    b.lineTo(w - t, y0)
+    b.lineTo(w - t, 0.0)
+    b.lineTo(w - t - l, -th)
+    _finish_baseline_foot_pad(b, w - t - l, w + l, th, bracket_r, bracketed=True)
+    b.lineTo(w, 0.0)
+    b.lineTo(w, cap)
+    b.lineTo(w + l, cap)
+    _append_upward_cap_foot_pad(b, w - t - l, w + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(w - t, cap)
+    b.lineTo(w - t, y1)
+    b.lineTo(t, y1)
+    b.lineTo(t, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
     """Single CCW outer for ``H``; bakes slab serifs when ``style.serif`` is set."""
     t, w, cap = h.stem, h.width, h.cap_height
@@ -230,12 +271,7 @@ def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
             (t, cap),
             (0.0, cap),
         ]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    gap = max(w - 2.0 * t, t)
-    l = min(length, t * 0.48, gap * 0.32)
-    th = min(thick, y0 * 0.36, t * 0.18, gap * 0.14)
+    l, th, _ = _h_cap_foot_dims(h, ctx)
     return [
         (-l, -th),
         (t + l, -th),
@@ -295,6 +331,16 @@ def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyp
     """Control ``H``: two cap stems and a crossbar, one contour."""
     h = metrics or h_cap_metrics(ctx)
     baked = ctx.style.serif == "slab"
+    if ctx.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_h_bracketed_outer(b, h, ctx)
+        outline = _ccw(b.build())
+        return _pack(
+            ctx,
+            h,
+            _cap_anchors(h.width, h, stem_serif_anchors=False),
+            outline,
+        )
     outline = _polygon(_h_outline_points(h, ctx))
     return _pack(
         ctx,
