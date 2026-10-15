@@ -7,6 +7,7 @@ Example::
     PYTHONPATH=src python examples/run_m5_program_exit.py
     PYTHONPATH=src python examples/run_m5_program_exit.py --gate slab
     PYTHONPATH=src python examples/run_m5_program_exit.py --list
+    PYTHONPATH=src python examples/run_m5_program_exit.py --with-linters
 """
 
 from __future__ import annotations
@@ -37,7 +38,8 @@ def _evidence_paths(gate: str) -> tuple[str, ...]:
             paths.extend(load_approval(ROOT / rel)["test_evidence"])
         return tuple(dict.fromkeys(paths))
     rel = _GATE_FILES[gate]
-    return (SECTION8, *load_approval(ROOT / rel)["test_evidence"])
+    merged = (SECTION8, *load_approval(ROOT / rel)["test_evidence"])
+    return tuple(dict.fromkeys(merged))
 
 
 def _pytest_argv(paths: tuple[str, ...]) -> list[str]:
@@ -57,6 +59,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="print pytest paths and exit without running",
     )
+    parser.add_argument(
+        "--with-linters",
+        action="store_true",
+        help="after pytest, run ruff check src tests and mypy -p typekernel (DEVELOPMENT_PLAN §8.1)",
+    )
     args = parser.parse_args(argv)
     paths = _evidence_paths(args.gate)
     if args.list:
@@ -64,7 +71,19 @@ def main(argv: list[str] | None = None) -> int:
             print(p)
         return 0
     proc = subprocess.run(_pytest_argv(paths), cwd=ROOT, check=False)
-    return int(proc.returncode)
+    if proc.returncode != 0:
+        return int(proc.returncode)
+    if not args.with_linters:
+        return 0
+    ruff = subprocess.run(["ruff", "check", "src", "tests"], cwd=ROOT, check=False)
+    if ruff.returncode != 0:
+        return int(ruff.returncode)
+    mypy = subprocess.run(
+        [sys.executable, "-m", "mypy", "-p", "typekernel"],
+        cwd=ROOT,
+        check=False,
+    )
+    return int(mypy.returncode)
 
 
 if __name__ == "__main__":

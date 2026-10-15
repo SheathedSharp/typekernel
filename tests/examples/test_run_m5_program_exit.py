@@ -29,6 +29,16 @@ def test_run_m5_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert "tests/docs/test_development_plan_section8.py" in lines
     assert "tests/parts/test_serifs.py" in lines
     assert "tests/parts/test_italic_program_acceptance.py" in lines
+    for rel in lines:
+        path = ROOT / rel.split("::")[0]
+        assert path.is_file(), rel
+
+
+def test_run_m5_program_exit_slab_list_has_no_duplicate_section8() -> None:
+    proc = _run("--gate", "slab", "--list")
+    assert proc.returncode == 0
+    lines = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
+    assert lines.count("tests/docs/test_development_plan_section8.py") == 1
 
 
 def test_run_m5_program_exit_section8_only() -> None:

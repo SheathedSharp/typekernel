@@ -131,6 +131,7 @@ def test_section8_skill_documents_m5_exit_workflow() -> None:
         ROOT / ".agents/skills/typekernel-font-design/SKILL.md"
     ).read_text(encoding="utf-8")
     assert "human_review_bundle" in text
+    assert "run_m5_program_exit" in text
     assert "test_development_plan_section8" in text
     assert "test_m3_exit" in text
 
