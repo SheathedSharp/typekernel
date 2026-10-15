@@ -201,7 +201,7 @@ def _cap_anchors(
 
 
 def _cap_serif_inlined(c: DesignContext) -> bool:
-    """Serif feet drawn in the cap outline (slab geometry; bracketed borrows for VF/L3)."""
+    """Serif feet baked into the outline (slab rectangles; bracketed cubic where implemented)."""
     return c.style.serif in ("slab", "bracketed")
 
 
