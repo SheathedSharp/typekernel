@@ -205,6 +205,7 @@ def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data["program_pass_ok"] is True
     assert data["cheating_flags"] == []
+    assert "human_review_scores" not in data
     assert not validate_trial_snapshot_record(data)
 
 

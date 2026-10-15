@@ -157,6 +157,7 @@ def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
     assert "TK-502" in text
     assert "validate_trial_snapshot" in text
     assert "trial_snapshot_exit_code" in text
+    assert "require-human-scores" in text
     assert "run_m5_program_exit" in text
 
 
@@ -165,6 +166,7 @@ def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     assert "trial_snapshot_exit_code" in text
     assert "validate_trial_snapshot" in text
     assert "validate_snapshot.py" in text
+    assert "require-human-scores" in text
     assert "AGENT_TRIALS.md" in text
 
 
