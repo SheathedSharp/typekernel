@@ -90,7 +90,7 @@ classes = auto_side_kern_classes(spaced, ctx)
 kern = auto_class_kern(spaced, classes, target=rhythm)
 ```
 
-**VF**: compute `kern_classes` once from the **regular** spaced set; reuse for every master (`examples/italic_family/build_italic_vf.py`).
+**VF**: compute `kern_classes` once from the **regular** spaced set; reuse for every master. Italic axis: `vf_italic_pair(regular)` per weight (`examples/italic_family/build_italic_vf.py`).
 
 **6 — Font + features (prefer helper)**  
 ```python

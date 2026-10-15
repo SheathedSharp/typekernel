@@ -6,6 +6,7 @@ and VF segment compatibility (stem + bowl oblique pre-splits, TK-404).
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from typekernel.compile import build_variable_font
@@ -45,6 +46,15 @@ def master_font(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=OUT_DIR,
+        help="Output directory for VF binaries",
+    )
+    args = parser.parse_args()
+    out_dir = args.out
     base = DesignContext.code_clear()
     reg, ital = vf_italic_pair(Controls.from_context(base))
     ref_drawn = reg.build_all()
@@ -63,7 +73,7 @@ def main() -> None:
             master_font(bold_ital, "Bold Italic", 700, kern_classes),
         ),
     ]
-    result = build_variable_font(masters, OUT_DIR, formats=("ttf",))
+    result = build_variable_font(masters, out_dir, formats=("ttf",))
     for fmt, path in result.binaries.items():
         print(f"{fmt}: {path}")
 
