@@ -13,11 +13,11 @@
 ## 每次试验必须记录
 
 - 使用的 API：`tuned_glyph` / `with_glyph` / `with_stem_relief` / `Style`（`parts.style.Style`）
-- 轮次、lint/identity 错误数、`voice_distance`、字重阶梯 R8 失败数
-- 是否换过关句或改阈值（**有则试验作废**）
+- 轮次、lint/identity 错误数、`voice_distance`、`topology_fraction`、`program_pass_ok`、`cheating_flags`、字重阶梯 R8 失败数（见 `snapshot.json`）
+- 是否换过关句或改阈值（**有则试验作废**；非空 `cheating_flags` 同上）
 - 人对 contact sheet 评分（1–5）：可读、统一、独特、符号完整
 
-程序快照：`typekernel.qa.trial_protocol.snapshot_trial` → JSON。
+程序快照：`snapshot_design.py` → `typekernel.qa.trial_protocol.snapshot_trial` JSON；复核：`validate_snapshot.py`（`--recursive` 对整次 run 目录）。
 
 ## 基线 / 终验目录
 
@@ -34,7 +34,7 @@
 
 与「参考试作」不同：终验必须由**执行试验的 agent/人**从对应 brief 的 preset 出发改字，不得只跑库内 `design_*.py` 并声称完成。
 
-**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py` 校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。
+**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + TK-502 试验烟测 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py` 校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。
 
 1. **固定 brief**（上表三行，文案不改）。
 2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。
