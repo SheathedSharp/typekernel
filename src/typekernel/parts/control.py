@@ -1886,6 +1886,12 @@ def e_from_o(
     b.moveTo(*right[0])
     for cubic in (right, q0, q1, q2, lower):
         _curve(b, cubic)
+    if c.style.serif == "bracketed":
+        from typekernel.parts.serifs import serif_metrics
+
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+        _, _, bracket_r = serif_metrics(c)
+        _opening_bottom_bracketed_detour(b, lower[3], slab_l, slab_th, bracket_r)
     b.lineTo(*ilower[3])
     _curve(b, _rev(ilower))
     _curve(b, _rev(iwall))
