@@ -16,6 +16,7 @@ _PRESET_FACTORIES = {
     "code_clear": DesignContext.code_clear,
     "display": DesignContext.display,
     "open_print": DesignContext.open_print,
+    "slab_serif": DesignContext.slab_serif,
 }
 
 
