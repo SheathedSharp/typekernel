@@ -980,12 +980,20 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    cx = m.width / 2.0
+    xh = m.x_height
+    # Lift inner crown like ``m`` so heavy weights keep shoulder crotch open (TK-204/207).
+    um = m.tuned(
+        inner_crown=min(
+            max(m.inner_crown, xh),
+            m.crown_y - m.stem * 0.06,
+        ),
+    )
+    cx = um.width / 2.0
     if _italic_topology(c):
-        outline = _u_branching_outline(m, c, stem_top=m.x_height)
+        outline = _u_branching_outline(um, c, stem_top=xh)
     else:
-        outline = _u_family_outline(m, c, vf_compat=_vf_compat_stem(c))
-    anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
+        outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
+    anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
     return _pack(c, m, anchors, outline)
 
 

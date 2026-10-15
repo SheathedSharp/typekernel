@@ -271,6 +271,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：低 roundness（``<0.35``）``u`` 左 baseline toe：G1 cubic + shelf（12 段）；高 roundness 仍 11 段镜像；golden ``u``（``code_clear`` / ``geometric_sans``）更新。
 - **本轮（部分）**：``_bowl_stem_outline`` 将碗顶接点 x 对齐 stem 面（修复镜像 ``b`` even-odd 细缝）；``test_b_outer_ink_continuous_across_stem_bowl_join``；golden ``b``/``d``/``p``/``q``（及 ``a``/``g`` 连带）三 preset。
 - **本轮（部分）**：碗底接点 x 同样对齐 stem 面；``test_p_outer_ink_continuous_across_stem_bowl_join``。
+- **本轮（部分）**：``u_from_n`` 构建轮廓时抬高 ``inner_crown``（与 ``m`` 同上限），重字重肩拱 crotch 过 R8；golden ``u`` 五 preset 更新。
 
 #### TK-205 钩类字形 `t j f g J`　〔M〕
 - 共同现象：钩根与横笔细如发丝（`t_from_n :492`、`j_from_n :516`、`f_from_n :476`、`g_from_o :987`、`J_from_H caps.py:635`）。涉及 `_hook_record`（`:404`）、`_finish_hook_letter`（`:432`，`blend_corners` 半径 `max(5, join_radius*2)`）。**根因为假设**，先量局部厚度。
@@ -300,6 +301,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``min_counter_gap`` 在 ``y0<0`` 时将采样带下限抬至 ``0.12×y1``，避免 ``p``/``q`` descender 竖缝误报；``test_descender_letters_skip_baseline_stem_pinch``。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
+- **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 
