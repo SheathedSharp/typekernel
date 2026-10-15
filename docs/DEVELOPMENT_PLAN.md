@@ -420,7 +420,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/slab_serif/build_vf.py`` 四档 ``wght`` VF（与稳定字符集同 stem 阶梯）+ ``proof_vf.png``；``test_slab_serif_build_vf_script``；VF 与 ``build_family`` 共用 ``_voice``（``f`` arm 0.75）。
 - **本轮（部分）**：大写 stem 锚点按字形跨度（``dual``/``left``/``none``）与 ``M``/``N``/``T``/``U`` 真实 stem 位；``bracketed`` 对角大写禁用假 stem 布尔；``f``/``t``/``j`` 与 ``b``/``d``/``p``/``q`` 钩脚/碗 stem 脚避免 VF 段数漂移；``test_bracketed_serif_masters_on_vf_stable_charset`` 全 ``supported`` 四档母版。
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
-- **待续**：**人审签字**（slab/bracketed 自动化验收已齐）；``bracketed`` 钩形/对角真托架形（部分仍借用 slab 矩形内嵌）。
+- **待续**：**人审签字**（slab/bracketed 自动化验收已齐）；``bracketed`` 钩形/对角真托架形（部分仍借用 slab 矩形内嵌）；``primitives.serif_bracket`` 楔形/外角 fillet 实验在布尔并集后 G1 恶化（153>120），已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。
@@ -445,7 +445,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-401～404 真斜体母版　〔M〕
 - **TK-401**：`italic_design(regular, ItalicStyle)`；`italic_controls` 弃用并 `DeprecationWarning`；`DesignContext.italic_slant_deg` 在 `build_all` 施加构造倾角；TK-002 xfail 已转正。
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
-- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；极值点重平衡待续（须与 VF 段数兼容）。
+- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``geo/extrema.py``（三次轴极值切分工具 + 单测）；倾斜后自动切分会破坏 ``wght×ital`` 与直立母版段数对齐，须改为**绘制时**极值落点（待续）。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。
