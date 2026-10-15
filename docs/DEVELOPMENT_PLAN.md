@@ -591,6 +591,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent_trial/README`` 补 ``validate_snapshot`` 旗标与退出码 5/8 分工；``run_m5_program_exit --gate all`` 含 ``test_weight_ladder_sheet``；``human_review_bundle`` 清单补 TK-207 CLI 指针。
 - **本轮（部分）**：``README`` / ``reference.md`` 补 ``weight_ladder_sheet.py``；``test_section8_readme_points_at_plan_and_review_bundle`` 固化。
 - **本轮（部分）**：SKILL ``reference.md`` 补 TK-104 CLI；``run_m5_program_exit`` 含 ``test_contact_sheet_full_charset_width_at_most_1600``。
+- **本轮（部分）**：``examples/_design_presets.py`` 共享 built-in preset 表（``contact_sheet`` / ``diff_overlay`` / ``weight_ladder_sheet``）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
