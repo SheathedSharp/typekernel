@@ -301,8 +301,14 @@ class Controls:
         ]
         if missing:
             raise KeyError(f"no related form for {missing}; have {self.supported!r}")
-        related = {**RELATED_FORMS, **self.glyph_overrides}
-        cap_forms_merged = {**cap_forms, **self.glyph_overrides}
+        related = {
+            **RELATED_FORMS,
+            **{k: v for k, v in self.glyph_overrides.items() if k in RELATED_FORMS},
+        }
+        cap_forms_merged = {
+            **cap_forms,
+            **{k: v for k, v in self.glyph_overrides.items() if k in cap_forms},
+        }
         out: dict[str, ComposedGlyph] = {}
         for forms, draw in (
             (related, self.control_glyphs),
