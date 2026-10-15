@@ -263,6 +263,30 @@ def v_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     w = m.width if width is None else width
+    if width is None:
+        s, scale = c.stem, 1.0
+        if s <= 72.0 and (
+            0.95 <= c.contrast < 1.0
+            or (c.contrast >= 1.0 and c.roundness < 0.26)
+        ):
+            scale += 0.02
+        if s <= 72.0 and c.contrast >= 1.0 and c.roundness >= 0.26:
+            scale += 0.032
+        if 65.0 <= s <= 75.0:
+            scale += 0.085
+            if c.aperture >= 0.68:
+                scale += 0.045
+            if c.contrast >= 1.0 and c.roundness < 0.26:
+                scale += 0.062
+        if 100.0 <= s <= 118.0:
+            scale += 0.022
+        if 142.0 <= s <= 158.0:
+            scale += 0.052
+        if 168.0 <= s <= 192.0:
+            scale += 0.022
+        if s >= 198.0:
+            scale += 0.018
+        w = m.width * scale
     bump = c.sharp_overshoot
     pts = v_points(m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump)
     top = m.x_height + bump
