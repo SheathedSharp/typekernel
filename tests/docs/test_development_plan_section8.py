@@ -51,6 +51,13 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tests/parts/test_italic_program_acceptance.py",
         ("test_italic_vf_meets_tk402_program_acceptance_on_humanist",),
     ),
+    (
+        "tests/qa/test_m3_exit.py",
+        (
+            "test_m3_three_l3_voices_slab_bracketed_and_reference_sans",
+            "test_m3_serif_pair_differs_from_warm_humanist_reference",
+        ),
+    ),
 )
 
 
@@ -107,6 +114,13 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
     assert "test_development_plan_section8" in text
+
+
+def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
+    text = (ROOT / "docs/AGENT_GOAL.md").read_text(encoding="utf-8")
+    assert "human_review_bundle" in text
+    assert "test_development_plan_section8" in text
+    assert "test_serif_voice_meets_tk306_program_acceptance" in text
 
 
 def test_section8_approvals_readme_documents_review_workflow() -> None:

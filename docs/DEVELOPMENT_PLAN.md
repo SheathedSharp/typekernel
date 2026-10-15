@@ -491,6 +491,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   在 `AGENT_GOAL.md` 新增 **L3「独特声音」**：最近邻 `voice_distance` ≥ 阈值（待校准，初值建议 0.35）**且** lint+identity 全过**且**经人审。
 - **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
 - **本轮（部分）**：``l3_voice_criteria_met``（距离 + ``family_gate`` + lint）；``trial_protocol`` 再导出；``test_l3_voice_criteria_met_for_serif_presets`` / ``test_l3_voice_criteria_not_met_for_unchanged_sans_preset`` / ``test_l3_voice_criteria_met_when_style_adds_slab_serif``；TK-306 ``slab``/``bracketed`` 衬线 preset 达 L3、未改 sans preset 不达标。
+- **本轮（部分）**：``tests/qa/test_m3_exit.py`` 锁定 M3「≥3 种 L3 voice」（``slab``/``bracketed`` + brief-1 参考试作）且两两 ``voice_distance`` 非零。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
 - **验收**：当前 7 个 preset 两两**拓扑**距离为 0（形状距离 > 0）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
 
