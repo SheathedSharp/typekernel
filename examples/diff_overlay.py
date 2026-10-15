@@ -1,0 +1,67 @@
+"""Write a TK-104 trial-vs-baseline diff overlay PNG (local artifacts only)."""
+
+from __future__ import annotations
+
+import argparse
+from collections.abc import Callable
+from pathlib import Path
+
+from typekernel.parts import Controls, DesignContext
+from typekernel.qa.sheet import diff_overlay, review_index
+
+_PRESETS: dict[str, Callable[[], DesignContext]] = {
+    "humanist_sans": DesignContext.humanist_sans,
+    "code_clear": DesignContext.code_clear,
+    "geometric_sans": DesignContext.geometric_sans,
+    "mono": DesignContext.mono,
+    "display": DesignContext.display,
+    "paper_ink": DesignContext.paper_ink,
+    "open_print": DesignContext.open_print,
+    "slab_serif": DesignContext.slab_serif,
+    "bracketed_serif": DesignContext.bracketed_serif,
+}
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--trial-preset",
+        choices=sorted(_PRESETS),
+        required=True,
+        help="trial voice (red)",
+    )
+    parser.add_argument(
+        "--baseline-preset",
+        choices=sorted(_PRESETS),
+        required=True,
+        help="comparison voice (blue)",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path("artifacts/specimens/diff_overlay.png"),
+        help="output PNG path (parent dirs created)",
+    )
+    parser.add_argument(
+        "--chars",
+        default="mutj&#!$",
+        help="glyphs to compare side by side",
+    )
+    parser.add_argument(
+        "--index",
+        action="store_true",
+        help="also write index.json beside the PNG",
+    )
+    args = parser.parse_args(argv)
+    trial = Controls.from_context(_PRESETS[args.trial_preset]())
+    baseline = Controls.from_context(_PRESETS[args.baseline_preset]())
+    path = diff_overlay(trial, baseline, args.out, chars=args.chars)
+    print(path)
+    if args.index:
+        index = review_index(path.parent, {"diff_overlay": path})
+        print(index)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

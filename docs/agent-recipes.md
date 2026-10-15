@@ -122,6 +122,21 @@ _report, failures = check_sentence_gate(controls, baseline=baseline_controls())
 
 固定 pair：`Ta` `To` `fi` `fl` `rn` `011`。光学间距 ≤ 0 算撞字。这组 **不** 证明字偶已经好看；间距仍是库内专项（见 AGENT_GOAL「库内仍未完成」）。
 
+## 全字符校样与叠图（TK-104）
+
+`design_review` 会在 `out/review/` 写 `contact.png` 与相对 baseline 的 `diff_overlay.png`。也可单独生成到 `artifacts/specimens/`：
+
+```bash
+PYTHONPATH=src python examples/contact_sheet.py \
+  --preset humanist_sans --out artifacts/specimens/contact.png
+
+PYTHONPATH=src python examples/diff_overlay.py \
+  --trial-preset slab_serif --baseline-preset humanist_sans \
+  --out artifacts/specimens/slab_vs_humanist.png
+```
+
+可选 `--index` 在同目录写 `index.json`；`--chars` 缩小子集加快迭代。
+
 ## 字重阶梯校样（TK-207）
 
 R8 自动化已覆盖全部 `supported` 字符；人审时用阶梯 PNG 看字腔是否塌：

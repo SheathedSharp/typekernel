@@ -26,6 +26,8 @@ _TRIAL_SMOKE = (
     "tests/examples/test_agent_trial.py",
     "tests/examples/test_agent_trial_reference.py",
     "tests/examples/test_weight_ladder_sheet.py",
+    "tests/examples/test_contact_sheet.py",
+    "tests/examples/test_diff_overlay.py",
     "tests/qa/test_trial_protocol.py",
 )
 
