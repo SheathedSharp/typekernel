@@ -10,6 +10,7 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.qa.originality import (
     BUILTIN_PRESET_FACTORIES,
     L3_VOICE_DISTANCE_THRESHOLD,
+    l3_voice_criteria_met,
     nearest_voice_distance,
     originality_report,
     topology_signature,
@@ -55,6 +56,21 @@ def test_slab_serif_meets_l3_voice_distance() -> None:
 def test_bracketed_serif_meets_l3_voice_distance() -> None:
     controls = Controls.from_context(DesignContext.bracketed_serif())
     assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
+
+
+@pytest.mark.parametrize(
+    "factory",
+    (DesignContext.slab_serif, DesignContext.bracketed_serif),
+)
+def test_l3_voice_criteria_met_for_serif_presets(factory) -> None:
+    controls = Controls.from_context(factory())
+    assert l3_voice_criteria_met(controls)
+
+
+def test_l3_voice_criteria_not_met_for_unchanged_sans_preset() -> None:
+    controls = Controls.from_context(DesignContext.humanist_sans())
+    assert nearest_voice_distance(controls) < L3_VOICE_DISTANCE_THRESHOLD
+    assert not l3_voice_criteria_met(controls)
 
 
 def test_tuned_glyph_raises_nearest_distance() -> None:

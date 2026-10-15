@@ -14,6 +14,7 @@ from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.originality import (
     L3_VOICE_DISTANCE_THRESHOLD,
+    l3_voice_criteria_met,
     nearest_voice_distance,
 )
 
@@ -25,6 +26,7 @@ __all__ = [
     "TrialBrief",
     "TrialSnapshot",
     "controls_at_ladder_stem",
+    "l3_voice_criteria_met",
     "snapshot_trial",
     "voice_distance",
     "weight_ladder_r8_failures",

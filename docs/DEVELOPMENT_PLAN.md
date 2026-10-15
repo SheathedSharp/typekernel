@@ -472,7 +472,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``bracketed`` ``n`` 左 stem 改 shelf 脚（单轮廓无 R3，为肩口顶衬线内嵌铺路）；``test_bracketed_n_pre_serif_outline_lint_clean`` / ``test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors``；golden ``n``（``bracketed_serif``）。``bracketed`` ``h``/``m``/``r`` 顶衬线仍布尔。
 - **本轮（部分）**：``test_bracketed_n_shoulder_cap_paths_self_intersect`` 固化 bracketed ``n`` 全宽/托架肩口顶内嵌仍 R3（``stem_L_t`` 暂保留布尔）。
 - **本轮（部分）**：``bracketed`` ``m``/``r`` 左肩口顶衬线内嵌（复用 ``inline_shoulder_left_cap_slab_path`` 段数 + ``inline_left_top``）；golden ``m``/``r``（``bracketed_serif``）。
-- **本轮（部分）**：``bracketed`` ``n`` 左肩口顶衬线内嵌（同 ``m``/``r`` 左缘配方，非全宽顶）；``test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor``；golden ``n``；``bracketed`` 仅 ``h`` 仍 ``stem_R_t`` 布尔。
+- **本轮（部分）**：``bracketed`` ``n`` 左肩口顶衬线内嵌（同 ``m``/``r`` 左缘配方，非全宽顶）；``test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor``；golden ``n``。
 - **本轮（部分）**：``bracketed`` ``h`` ``stem_R_t``：未布尔前即 R3，``stem_R_t`` union 才清零；右腿 ``x_height`` 顶 cap（slab 同款）仍 R3；``test_bracketed_h_*`` 固化；全 supported 仅 ``h`` 依赖布尔顶衬线。
 - **本轮（部分）**：``bracketed`` ``h`` 升部/右腿顶衬线内嵌（``inline_stem_cap_serif_path_slab_rect`` + shelf 脚 + 右腿 ``x_height`` 切分顶 cap，省略 ``stem_R_t``；阶梯 stem≤110 升部 cap 减厚保 R8）；``test_bracketed_apply_glyph_serifs_is_noop_on_supported`` / ``test_bracketed_h_pre_serif_outline_lint_clean``；golden ``h``（``bracketed_serif``）。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
@@ -488,6 +488,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - `originality_report(controls)`：对所有内置 preset 取最近邻距离。
   在 `AGENT_GOAL.md` 新增 **L3「独特声音」**：最近邻 `voice_distance` ≥ 阈值（待校准，初值建议 0.35）**且** lint+identity 全过**且**经人审。
 - **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
+- **本轮（部分）**：``l3_voice_criteria_met``（距离 + ``family_gate`` + lint）；``trial_protocol`` 再导出；``test_l3_voice_criteria_met_for_serif_presets`` / ``test_l3_voice_criteria_not_met_for_unchanged_sans_preset``；TK-306 ``slab``/``bracketed`` 衬线 preset 达 L3、未改 sans preset 不达标。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
 - **验收**：当前 7 个 preset 两两**拓扑**距离为 0（形状距离 > 0）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
 
