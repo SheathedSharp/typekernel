@@ -18,6 +18,7 @@ from typekernel.qa.trial_protocol import (
     controls_at_ladder_stem,
     snapshot_trial,
     trial_snapshot_exit_code,
+    human_review_scores_complete,
     trial_snapshot_json_exit_code,
     validate_trial_snapshot,
     validate_trial_snapshot_json,
@@ -80,6 +81,25 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     assert snap.weight_ladder_r8_failures == 0
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.l3_voice_ok
+
+
+def test_trial_snapshot_json_exit_code_8_when_human_scores_required_but_missing() -> None:
+    payload = {
+        "cheating_flags": [],
+        "family_gate_ok": True,
+        "identity_error_count": 0,
+        "l3_voice_ok": True,
+        "lint_error_count": 0,
+        "program_pass_ok": True,
+        "topology_fraction": 0.2,
+        "voice_distance": L3_VOICE_DISTANCE_THRESHOLD + 0.1,
+        "weight_ladder_r8_failures": 0,
+    }
+    assert trial_snapshot_json_exit_code(payload, ()) == 0
+    assert trial_snapshot_json_exit_code(payload, (), require_human_scores=True) == 8
+    payload["human_review_scores"] = {key: 4 for key in HUMAN_REVIEW_SCORE_KEYS}
+    assert human_review_scores_complete(payload)
+    assert trial_snapshot_json_exit_code(payload, (), require_human_scores=True) == 0
 
 
 def test_validate_trial_snapshot_record_accepts_human_review_scores() -> None:

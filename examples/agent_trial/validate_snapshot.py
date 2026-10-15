@@ -39,6 +39,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="when a path is a directory, validate every snapshot.json beneath it",
     )
+    parser.add_argument(
+        "--require-human-scores",
+        action="store_true",
+        help="after program pass, require complete human_review_scores (exit 8 if missing)",
+    )
     args = parser.parse_args(argv)
     paths = _collect_snapshot_paths(tuple(args.snapshots), recursive=args.recursive)
     worst = 0
@@ -51,7 +56,11 @@ def main(argv: list[str] | None = None) -> int:
         problems = validate_trial_snapshot_record(data)
         for msg in problems:
             print(f"{path}: validate: {msg}", flush=True)
-        code = trial_snapshot_json_exit_code(data, problems)
+        code = trial_snapshot_json_exit_code(
+            data,
+            problems,
+            require_human_scores=args.require_human_scores,
+        )
         if code != 0:
             print(f"{path}: exit {code}", flush=True)
         worst = max(worst, code)

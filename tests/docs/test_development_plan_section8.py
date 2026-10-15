@@ -93,6 +93,7 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "test_snapshot_presets_script_writes_gate_baseline",
             "test_validate_snapshot_recursive_on_reference_trials",
+            "test_validate_snapshot_require_human_scores_exit_8_without_scores",
             "test_validate_snapshot_script_on_reference_trial",
         ),
     ),

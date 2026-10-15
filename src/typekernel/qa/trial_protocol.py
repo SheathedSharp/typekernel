@@ -32,6 +32,7 @@ __all__ = [
     "TrialBrief",
     "TrialSnapshot",
     "controls_at_ladder_stem",
+    "human_review_scores_complete",
     "l3_voice_criteria_met",
     "read_trial_snapshot_json",
     "snapshot_trial",
@@ -239,6 +240,18 @@ def _human_review_score_problems(scores: object) -> list[str]:
     return problems
 
 
+def human_review_scores_complete(data: Mapping[str, object]) -> bool:
+    """True when all four human score dimensions are present and in 1–5."""
+    scores = data.get("human_review_scores")
+    if not isinstance(scores, dict):
+        return False
+    for key in HUMAN_REVIEW_SCORE_KEYS:
+        val = scores.get(key)
+        if isinstance(val, bool) or not isinstance(val, int) or not 1 <= val <= 5:
+            return False
+    return True
+
+
 def _record_program_pass_ok(data: Mapping[str, object]) -> bool:
     lint_ok = _snapshot_int(data.get("lint_error_count"), 1) == 0
     identity_ok = _snapshot_int(data.get("identity_error_count"), 1) == 0
@@ -302,6 +315,8 @@ def validate_trial_snapshot_json(path: Path | str) -> tuple[str, ...]:
 def trial_snapshot_json_exit_code(
     data: Mapping[str, object],
     problems: tuple[str, ...] = (),
+    *,
+    require_human_scores: bool = False,
 ) -> int:
     """Exit codes for a JSON snapshot record (same semantics as ``trial_snapshot_exit_code``)."""
     metrics_ok = (
@@ -321,6 +336,8 @@ def trial_snapshot_json_exit_code(
         return 7
     if not _record_program_pass_ok(data):
         return 6
+    if require_human_scores and not human_review_scores_complete(data):
+        return 8
     return 0
 
 

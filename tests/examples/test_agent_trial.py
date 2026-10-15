@@ -103,6 +103,38 @@ def test_validate_snapshot_recursive_on_reference_trials(tmp_path: Path) -> None
     assert proc.returncode == 0, proc.stderr or proc.stdout
 
 
+def test_validate_snapshot_require_human_scores_exit_8_without_scores(tmp_path: Path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "snapshot_design.py",
+            "--brief",
+            "brief-1",
+            "--design",
+            "design_warm_humanist.py",
+            "--out",
+            str(tmp_path),
+        ],
+        cwd=TRIAL,
+        check=True,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "validate_snapshot.py",
+            "--require-human-scores",
+            str(tmp_path / "snapshot.json"),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 8, proc.stderr or proc.stdout
+
+
 def test_validate_snapshot_script_on_reference_trial(tmp_path: Path) -> None:
     subprocess.run(
         [
