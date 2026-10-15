@@ -7,7 +7,15 @@ import math
 import pytest
 
 from typekernel.geo.outline import bounds
-from typekernel.geo.stroke import Centerline, Pen, expand
+from typekernel.geo.stroke import (
+    Centerline,
+    CubicBezier,
+    CubicCenterline,
+    Pen,
+    expand,
+    expand_cubic,
+    flatten_cubic_centerline,
+)
 from typekernel.optics.stem import measure_oriented_stem, measure_vertical_stem
 
 
@@ -95,6 +103,43 @@ def test_closed_centerline_is_annulus() -> None:
     assert max_x == pytest.approx(100.0, abs=0.5)
     assert min_y == pytest.approx(20.0, abs=0.5)
     assert max_y == pytest.approx(100.0, abs=0.5)
+
+
+def test_flatten_cubic_line_is_two_points() -> None:
+    seg = CubicBezier.line((10.0, 20.0), (110.0, 20.0))
+    cl = CubicCenterline.from_beziers([seg])
+    poly, report = flatten_cubic_centerline(cl, chord_budget=0.5)
+    assert poly.points == ((10.0, 20.0), (110.0, 20.0))
+    assert report.max_chord_error == 0.0
+    assert report.cubic_segment_count == 1
+
+
+def test_expand_cubic_line_matches_polyline_expand() -> None:
+    seg = CubicBezier.line((0.0, 0.0), (200.0, 0.0))
+    cl = CubicCenterline.from_beziers([seg])
+    pen = Pen(thickness=80.0)
+    cubic_outline, report = expand_cubic(cl, pen, cap="butt", chord_budget=0.25)
+    line_outline = expand([(0.0, 0.0), (200.0, 0.0)], pen, cap="butt")
+    assert report.max_chord_error == 0.0
+    bb_c = bounds(cubic_outline)
+    bb_l = bounds(line_outline)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_l[i], abs=0.5)
+
+
+def test_expand_cubic_curved_centerline_within_chord_budget() -> None:
+    k = 0.5522847498 * 100.0
+    seg = CubicBezier((0.0, 0.0), (0.0, k), (100.0 - k, 100.0), (100.0, 100.0))
+    cl = CubicCenterline.from_beziers([seg])
+    budget = 0.4
+    outline, report = expand_cubic(cl, Pen(40.0), cap="butt", chord_budget=budget)
+    assert report.max_chord_error <= budget
+    assert report.cubic_segment_count == 1
+    assert report.polyline_vertex_count >= 2
+    assert outline.contour_count == 1
+    bb = bounds(outline)
+    assert bb[2] - bb[0] > 80.0
+    assert bb[3] - bb[1] > 80.0
 
 
 def test_expand_rejects_bad_styles() -> None:

@@ -445,6 +445,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-308 曲线感知的笔偏移（可选 spike，默认不做）　〔L〕
 - 给 `Centerline` 增加三次曲线中线，笔偏移输出三次曲线并附误差报告（类似现有 `ConversionReport` 的诚实原则）。**只作构造手段，不作字重机制，不进入默认管线。**
 - 仅在决策 D3 选择「做」时执行。
+- **本轮（部分）**：``geo.stroke.CubicCenterline`` / ``CubicBezier``；``flatten_cubic_centerline`` + ``expand_cubic`` + ``CenterlineExpandReport``（弦高误差预算）；``tests/geo/test_stroke_expand.py`` 合成夹具。**待续**：真笔偏移曲线拟合（非弦高折线近似）、``Skeleton`` 直接消费三次中线。
 
 ### M4 真斜体
 

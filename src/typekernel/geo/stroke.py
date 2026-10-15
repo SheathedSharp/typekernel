@@ -8,7 +8,9 @@ Agent-facing entry points:
 
 - :class:`Pen` — circular (``contrast=1``) or elliptical contrast pen
 - :class:`Centerline` — open or closed polyline skeleton
+- :class:`CubicCenterline` — cubic Bézier midline (TK-308 spike)
 - :func:`expand` — offset the centerline by the pen with join/cap options
+- :func:`expand_cubic` — flatten a cubic midline, expand, and report chord error
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from typing import Literal
 
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
+from typekernel.geo.segment import CubicSegment
 
 JoinStyle = Literal["miter", "round", "bevel"]
 CapStyle = Literal["butt", "round", "square"]
@@ -30,6 +33,19 @@ ArcTok = tuple[str, float, float, float, float, float, float]
 Token = PointTok | ArcTok
 
 _EPS = 1e-9
+
+__all__ = [
+    "CapStyle",
+    "Centerline",
+    "CenterlineExpandReport",
+    "CubicBezier",
+    "CubicCenterline",
+    "JoinStyle",
+    "Pen",
+    "expand",
+    "expand_cubic",
+    "flatten_cubic_centerline",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,6 +116,176 @@ class Centerline:
         closed: bool = False,
     ) -> Centerline:
         return cls(tuple((float(x), float(y)) for x, y in points), closed=closed)
+
+
+@dataclass(frozen=True, slots=True)
+class CubicBezier:
+    """Single cubic Bézier segment (``p0`` → ``p3``, handles ``p1`` / ``p2``)."""
+
+    p0: tuple[float, float]
+    p1: tuple[float, float]
+    p2: tuple[float, float]
+    p3: tuple[float, float]
+
+    @classmethod
+    def line(
+        cls,
+        a: tuple[float, float],
+        b: tuple[float, float],
+    ) -> CubicBezier:
+        return cls(a, a, b, b)
+
+
+@dataclass(frozen=True, slots=True)
+class CubicCenterline:
+    """Cubic midline path (construction only; not wired into default glyph pipeline)."""
+
+    segments: tuple[CubicBezier, ...]
+    closed: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.segments:
+            raise ValueError("cubic centerline needs at least one segment")
+
+    @classmethod
+    def from_beziers(
+        cls,
+        segments: Sequence[CubicBezier],
+        *,
+        closed: bool = False,
+    ) -> CubicCenterline:
+        return cls(tuple(segments), closed=closed)
+
+
+@dataclass(frozen=True, slots=True)
+class CenterlineExpandReport:
+    """Honest cost of expanding a cubic midline via flattening + polyline offset.
+
+    The offset of a cubic under an elliptical pen is generally not cubic; this
+    report records how closely the **centerline** was approximated before the
+    existing polyline expand runs. Round joins/caps still emit cubics on output.
+    """
+
+    max_chord_error: float
+    cubic_segment_count: int
+    polyline_vertex_count: int
+    outline_cubic_segment_count: int
+    chord_budget: float
+
+
+def _mid(
+    a: tuple[float, float], b: tuple[float, float]
+) -> tuple[float, float]:
+    return ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
+
+
+def _point_line_distance(
+    p: tuple[float, float],
+    a: tuple[float, float],
+    b: tuple[float, float],
+) -> float:
+    ax, ay = a
+    bx, by = b
+    px, py = p
+    dx, dy = bx - ax, by - ay
+    ln2 = dx * dx + dy * dy
+    if ln2 < _EPS:
+        return math.hypot(px - ax, py - ay)
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / ln2))
+    qx = ax + t * dx
+    qy = ay + t * dy
+    return math.hypot(px - qx, py - qy)
+
+
+def _split_cubic(seg: CubicBezier) -> tuple[CubicBezier, CubicBezier]:
+    p0, p1, p2, p3 = seg.p0, seg.p1, seg.p2, seg.p3
+    m01 = _mid(p0, p1)
+    m12 = _mid(p1, p2)
+    m23 = _mid(p2, p3)
+    m012 = _mid(m01, m12)
+    m123 = _mid(m12, m23)
+    m = _mid(m012, m123)
+    return CubicBezier(p0, m01, m012, m), CubicBezier(m, m123, m23, p3)
+
+
+def _flatten_cubic_segment(
+    seg: CubicBezier,
+    budget: float,
+    pts: list[tuple[float, float]],
+    max_err: list[float],
+) -> None:
+    d1 = _point_line_distance(seg.p1, seg.p0, seg.p3)
+    d2 = _point_line_distance(seg.p2, seg.p0, seg.p3)
+    err = max(d1, d2)
+    if err <= budget:
+        if not pts or pts[-1] != seg.p0:
+            pts.append(seg.p0)
+        if pts[-1] != seg.p3:
+            pts.append(seg.p3)
+        max_err[0] = max(max_err[0], err)
+        return
+    left, right = _split_cubic(seg)
+    _flatten_cubic_segment(left, budget, pts, max_err)
+    _flatten_cubic_segment(right, budget, pts, max_err)
+
+
+def flatten_cubic_centerline(
+    centerline: CubicCenterline,
+    chord_budget: float = 0.35,
+) -> tuple[Centerline, CenterlineExpandReport]:
+    """Approximate a cubic midline as a polyline within ``chord_budget``."""
+    if chord_budget <= 0:
+        raise ValueError(f"chord_budget must be positive, got {chord_budget!r}")
+    pts: list[tuple[float, float]] = []
+    max_err = [0.0]
+    for seg in centerline.segments:
+        _flatten_cubic_segment(seg, chord_budget, pts, max_err)
+    if centerline.closed and pts and pts[0] != pts[-1]:
+        pts.append(pts[0])
+    poly = Centerline(tuple(pts), closed=centerline.closed)
+    return poly, CenterlineExpandReport(
+        max_chord_error=max_err[0],
+        cubic_segment_count=len(centerline.segments),
+        polyline_vertex_count=len(pts),
+        outline_cubic_segment_count=0,
+        chord_budget=chord_budget,
+    )
+
+
+def _outline_cubic_segment_count(outline: Outline) -> int:
+    return sum(
+        1
+        for contour in outline.contours
+        for segment in contour.segments
+        if isinstance(segment, CubicSegment)
+    )
+
+
+def expand_cubic(
+    centerline: CubicCenterline,
+    pen: Pen,
+    *,
+    chord_budget: float = 0.35,
+    join: JoinStyle = "miter",
+    cap: CapStyle = "butt",
+    miter_limit: float = 4.0,
+) -> tuple[Outline, CenterlineExpandReport]:
+    """Expand a cubic midline; output includes cubics at round joins/caps."""
+    poly, report = flatten_cubic_centerline(centerline, chord_budget)
+    outline = expand(
+        poly,
+        pen,
+        join=join,
+        cap=cap,
+        miter_limit=miter_limit,
+    )
+    return outline, CenterlineExpandReport(
+        max_chord_error=report.max_chord_error,
+        cubic_segment_count=report.cubic_segment_count,
+        polyline_vertex_count=report.polyline_vertex_count,
+        outline_cubic_segment_count=_outline_cubic_segment_count(outline),
+        chord_budget=chord_budget,
+    )
 
 
 def expand(
