@@ -247,6 +247,49 @@ def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     assert "stem_L_t" in {a.name for a in bracket.anchors}
 
 
+def test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3() -> None:
+    """``h`` right-leg top serif cannot reuse ``m``'s shoulder split without R3 (TK-306)."""
+    from typekernel.geo.path_builder import PathBuilder
+    from typekernel.parts.compose import GlyphAssembler
+    from typekernel.parts.control import (
+        _ccw,
+        _curve,
+        _n_begin_left_stem,
+        _n_inline_left_stem_cap,
+        _n_inline_right_stem_foot,
+        _shoulder,
+        _split,
+        n_metrics,
+    )
+    from typekernel.qa.lint import lint_glyph
+
+    ctx = DesignContext.slab_serif()
+    m = n_metrics(ctx)
+    s = _shoulder(m)
+    xh = m.x_height
+    b = PathBuilder()
+    _n_begin_left_stem(b, s.l0, s.l1, m.ascender, ctx, m.stem, shelf_foot=False)
+    b.lineTo(s.l1, m.ascender)
+    _n_inline_left_stem_cap(b, s.l0, s.l1, m.ascender, ctx, m.stem)
+    b.lineTo(s.l1, xh)
+    _curve(b, s.outer[0])
+    split_outer = _split(s.outer[1], xh, horizontal=True)
+    assert split_outer is not None
+    _curve(b, split_outer[0])
+    _curve(b, split_outer[1])
+    b.lineTo(s.r1, 0.0)
+    _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
+    b.lineTo(s.r0, 0.0)
+    b.lineTo(s.r0, m.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    g = GlyphAssembler(ctx).with_design(m).add(_ccw(b.build())).build()
+    rules = {i.rule for i in lint_glyph(g, ctx, glyph_name="h") if i.severity == "error"}
+    assert "R3_self_intersect" in rules
+
+
 def test_slab_only_n_and_h_still_use_boolean_top_stem_serifs() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
