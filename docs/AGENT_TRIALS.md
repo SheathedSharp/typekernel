@@ -15,7 +15,7 @@
 - 使用的 API：`tuned_glyph` / `with_glyph` / `with_stem_relief` / `Style`（`parts.style.Style`）
 - 轮次、lint/identity 错误数、`voice_distance`、`topology_fraction`、`program_pass_ok`、`cheating_flags`、字重阶梯 R8 失败数（见 `snapshot.json`）
 - 是否换过关句或改阈值（**有则试验作废**；非空 `cheating_flags` 同上）
-- 人对 contact sheet 评分（1–5）：可读、统一、独特、符号完整
+- 人对 contact sheet 评分（1–5）：可读、统一、独特、符号完整（可选手写进 `snapshot.json` 的 `human_review_scores`：`readable` / `unified` / `unique` / `charset_complete`，须为整数 1–5；亦写入本文件摘要表）
 
 程序快照：`snapshot_design.py` → `typekernel.qa.trial_protocol.snapshot_trial` JSON；复核：`validate_snapshot.py`（`--recursive` 对整次 run 目录）。
 

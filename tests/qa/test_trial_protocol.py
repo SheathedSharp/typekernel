@@ -12,6 +12,7 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
+    HUMAN_REVIEW_SCORE_KEYS,
     L3_VOICE_DISTANCE_THRESHOLD,
     WEIGHT_LADDER_STEMS,
     controls_at_ladder_stem,
@@ -79,6 +80,35 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     assert snap.weight_ladder_r8_failures == 0
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.l3_voice_ok
+
+
+def test_validate_trial_snapshot_record_accepts_human_review_scores() -> None:
+    scores = {key: 4 for key in HUMAN_REVIEW_SCORE_KEYS}
+    problems = validate_trial_snapshot_record(
+        {
+            "cheating_flags": [],
+            "family_gate_ok": True,
+            "human_review_scores": scores,
+            "identity_error_count": 0,
+            "l3_voice_ok": True,
+            "lint_error_count": 0,
+            "program_pass_ok": True,
+            "topology_fraction": 0.2,
+            "voice_distance": L3_VOICE_DISTANCE_THRESHOLD + 0.1,
+            "weight_ladder_r8_failures": 0,
+        }
+    )
+    assert not problems
+
+
+def test_validate_trial_snapshot_record_rejects_invalid_human_review_scores() -> None:
+    problems = validate_trial_snapshot_record(
+        {
+            "human_review_scores": {"readable": 6},
+        }
+    )
+    assert problems
+    assert any("readable" in p for p in problems)
 
 
 def test_validate_trial_snapshot_record_rejects_forged_program_pass_ok() -> None:

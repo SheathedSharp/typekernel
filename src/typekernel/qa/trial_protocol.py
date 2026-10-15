@@ -22,8 +22,12 @@ from typekernel.qa.originality import (
 
 WEIGHT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
+# Optional final-trial human scores (1–5); does not affect program_pass_ok.
+HUMAN_REVIEW_SCORE_KEYS = ("readable", "unified", "unique", "charset_complete")
+
 __all__ = [
     "FIXED_TRIAL_BRIEFS",
+    "HUMAN_REVIEW_SCORE_KEYS",
     "L3_VOICE_DISTANCE_THRESHOLD",
     "TrialBrief",
     "TrialSnapshot",
@@ -218,6 +222,23 @@ def _snapshot_int(value: object, default: int = 0) -> int:
     return default
 
 
+def _human_review_score_problems(scores: object) -> list[str]:
+    if scores is None:
+        return []
+    if not isinstance(scores, dict):
+        return ["human_review_scores must be a JSON object"]
+    problems: list[str] = []
+    for key, val in scores.items():
+        if key not in HUMAN_REVIEW_SCORE_KEYS:
+            problems.append(f"human_review_scores has unknown key {key!r}")
+            continue
+        if isinstance(val, bool) or not isinstance(val, int):
+            problems.append(f"human_review_scores.{key} must be an integer 1-5")
+        elif not 1 <= val <= 5:
+            problems.append(f"human_review_scores.{key} must be 1-5")
+    return problems
+
+
 def _record_program_pass_ok(data: Mapping[str, object]) -> bool:
     lint_ok = _snapshot_int(data.get("lint_error_count"), 1) == 0
     identity_ok = _snapshot_int(data.get("identity_error_count"), 1) == 0
@@ -250,6 +271,7 @@ def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...
         recorded = bool(data.get("program_pass_ok"))
         if recorded != _record_program_pass_ok(data):
             problems.append("program_pass_ok does not match other snapshot fields")
+    problems.extend(_human_review_score_problems(data.get("human_review_scores")))
     return tuple(problems)
 
 

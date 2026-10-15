@@ -81,6 +81,7 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology",
             "test_validate_trial_snapshot_record_rejects_forged_program_pass_ok",
             "test_stem_only_tweak_records_cheating_flag_and_exit_code_7",
+            "test_validate_trial_snapshot_record_accepts_human_review_scores",
         ),
     ),
     (

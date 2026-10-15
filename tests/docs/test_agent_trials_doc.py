@@ -13,6 +13,7 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "program_pass_ok" in text
     assert "cheating_flags" in text
     assert "topology_fraction" in text
+    assert "human_review_scores" in text
     assert "human_review_bundle" in text
     assert "brief-1" in text
     assert "tk502_reference_metrics" in text or "reference_metrics" in text
