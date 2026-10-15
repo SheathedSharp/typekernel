@@ -24,9 +24,12 @@ _CHECKLIST = """# Human review checklist (do not commit this folder)
 ## Automated gates (run from repo root)
 
 ```bash
+pytest -q tests/docs/test_development_plan_section8.py
+pytest -q tests/qa/test_m3_exit.py
+pytest -q tests/examples/test_human_review_bundle.py
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
 pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance
-pytest -q tests/qa/test_sentence_gate.py -k serif
+pytest -q tests/qa/test_originality.py tests/qa/test_sentence_gate.py
 pytest -q tests/examples/test_italic_family.py
 pytest -q tests/parts/test_italic_program_acceptance.py
 ```
@@ -55,9 +58,12 @@ write_approval(
     scope="DesignContext.slab_serif + examples/slab_serif",
     test_evidence=[
         "tests/examples/test_slab_serif.py",
+        "tests/examples/test_human_review_bundle.py",
         "tests/parts/test_serifs.py",
+        "tests/qa/test_m3_exit.py",
         "tests/qa/test_originality.py",
         "tests/qa/test_sentence_gate.py",
+        "tests/docs/test_development_plan_section8.py",
     ],
 )
 # Repeat for approvals/serif-bracketed-voice.json (gate serif-bracketed-voice)
@@ -83,11 +89,13 @@ write_approval(
     notes="Reviewed italic_family proof.png / proof_vf.png under artifacts/human-review/…",
     scope="examples/italic_family build_italic_vf wght×ital",
     test_evidence=[
+        "tests/examples/test_human_review_bundle.py",
         "tests/examples/test_italic_family.py",
         "tests/parts/test_italic_program_acceptance.py",
         "tests/parts/test_italic_controls.py",
         "tests/parts/test_italic_topology.py",
         "tests/parts/test_oblique_compat.py",
+        "tests/docs/test_development_plan_section8.py",
     ],
 )
 ```

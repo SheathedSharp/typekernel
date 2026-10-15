@@ -558,6 +558,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` / ``README.md`` 补 §8、程序验收 pytest 与 ``human_review_bundle`` 指针；``test_section8_skill_reference_documents_m5_workflow`` / ``test_section8_readme_points_at_plan_and_review_bundle``。
 - **本轮（部分）**：``approvals/README.md`` 补 bundle 命令与签字前程序验收指针；``test_section8_approvals_readme_documents_review_workflow``。
 - **本轮（部分）**：待签 ``approvals/serif-*`` / ``italic-vf-construct`` 的 ``test_evidence`` 对齐 §8 / ``human_review_bundle`` / M3 退出测试；``test_repo_pending_human_review_templates`` 固化路径存在。
+- **本轮（部分）**：``human_review_bundle`` ``REVIEW_CHECKLIST`` 与 ``approvals/*.json`` ``test_evidence`` 同步；``test_human_review_bundle_checklist_matches_approval_test_evidence``。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
 - **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -9,6 +10,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 _BUNDLE_SOURCE = ROOT / "examples" / "human_review_bundle.py"
+_PENDING_GATES = (
+    "serif-slab-voice.json",
+    "serif-bracketed-voice.json",
+    "italic-vf-construct.json",
+)
 
 
 def test_human_review_bundle_source_documents_pending_gates() -> None:
@@ -19,6 +25,25 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "proof_vf.png" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_italic_program_acceptance.py" in text
+    assert "test_development_plan_section8.py" in text
+    assert "test_m3_exit.py" in text
+
+
+def test_human_review_bundle_checklist_matches_approval_test_evidence() -> None:
+    """REVIEW_CHECKLIST write_approval examples stay aligned with approvals/*.json."""
+    text = _BUNDLE_SOURCE.read_text(encoding="utf-8")
+    for name in _PENDING_GATES:
+        evidence = load_approval_evidence(ROOT / "approvals" / name)
+        for rel in evidence:
+            assert rel in text, f"{name} test_evidence {rel!r} missing from human_review_bundle.py"
+
+
+def load_approval_evidence(path: Path) -> list[str]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    raw = data.get("test_evidence", [])
+    if isinstance(raw, list):
+        return [str(x) for x in raw]
+    raise TypeError(f"expected list test_evidence in {path.name}")
 
 
 def test_human_review_bundle_serif_only(tmp_path: Path) -> None:
