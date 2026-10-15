@@ -396,13 +396,15 @@ def three_from_O(
     *,
     waist: float = 0.55,
     top_scale: float = 0.9,
+    top_apex: float = 1.06,
     waist_end: float = 0.15,
     aperture: float | None = None,
 ) -> ComposedGlyph:
     """``3``: two stacked arcs opening left, sharing a waist stroke that ends in a cut.
 
-    The upper arc is ``top_scale`` × narrower; the waist ends ``waist_end``
-    × the radius left of centre. One contour.
+    The upper arc is ``top_scale`` × narrower; ``top_apex`` scales the upper
+    ellipse height so the cap stays rounded rather than a flat shelf. The waist
+    ends ``waist_end`` × the radius left of centre. One contour.
     """
     c = ctx or O.context
     o = _o_rec(O)
@@ -413,7 +415,7 @@ def three_from_O(
     ym = waist * cap
     tv = min(bar, 0.25 * cap)
     ry_l = (ym + tv / 2.0 + os_) / 2.0
-    ry_u = (cap + os_ - (ym - tv / 2.0)) / 2.0
+    ry_u = (cap + os_ - (ym - tv / 2.0)) / 2.0 * top_apex
     tv = min(tv, 0.6 * min(ry_l, ry_u))
     th = min(t, 0.6 * rx_u)
     cy_l, cy_u = ry_l - os_, cap + os_ - ry_u
