@@ -8,8 +8,34 @@ import subprocess
 import sys
 from pathlib import Path
 
+from typekernel.qa.trial_protocol import (
+    trial_snapshot_json_exit_code,
+    validate_trial_snapshot_record,
+)
+
 ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
+
+
+def test_snapshot_presets_script_writes_gate_baseline(tmp_path: Path) -> None:
+    proc = subprocess.run(
+        [sys.executable, "snapshot_presets.py", "--out", str(tmp_path)],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    for brief_id in ("brief-1", "brief-2", "brief-3"):
+        data = json.loads((tmp_path / brief_id / "snapshot.json").read_text(encoding="utf-8"))
+        assert data["family_gate_ok"] is True
+        assert data["cheating_flags"] == []
+        assert data["program_pass_ok"] is False
+        assert data["l3_voice_ok"] is False
+        problems = validate_trial_snapshot_record(data)
+        assert not problems
+        assert trial_snapshot_json_exit_code(data, problems) == 6
 
 
 def test_snapshot_serif_voices_script(tmp_path: Path) -> None:
@@ -28,6 +54,23 @@ def test_snapshot_serif_voices_script(tmp_path: Path) -> None:
         data = json.loads(snap.read_text(encoding="utf-8"))
         assert data["family_gate_ok"] is True
         assert data["l3_voice_ok"] is True
+        assert data["program_pass_ok"] is True
+        problems = validate_trial_snapshot_record(data)
+        assert not problems
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "validate_snapshot.py",
+            str(tmp_path / "slab_serif"),
+            str(tmp_path / "bracketed_serif"),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
 
 
 def test_validate_snapshot_script_on_reference_trial(tmp_path: Path) -> None:

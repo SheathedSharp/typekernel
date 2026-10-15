@@ -89,7 +89,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "tests/examples/test_agent_trial.py",
-        ("test_validate_snapshot_script_on_reference_trial",),
+        (
+            "test_snapshot_presets_script_writes_gate_baseline",
+            "test_validate_snapshot_script_on_reference_trial",
+        ),
     ),
 )
 
@@ -192,6 +195,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     text = (ROOT / "docs/AGENT_GOAL.md").read_text(encoding="utf-8")
     assert "human_review_bundle" in text
     assert "run_m5_program_exit" in text
+    assert "validate_snapshot.py" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
 
 
