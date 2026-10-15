@@ -68,7 +68,7 @@ build_font(font, "out/")                          # MySans-Regular.ufo / .otf / 
 
 ![variable family proof](docs/images/variable-family-proof.png)
 
-**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_m5_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)（`examples/agent_trial/snapshot_design.py` 写快照、`validate_snapshot.py` 复核 JSON）。合成 O 样品：
+**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_m5_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)；字重阶梯 PNG（TK-207）[`examples/weight_ladder_sheet.py`](examples/weight_ladder_sheet.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)（`examples/agent_trial/snapshot_design.py` 写快照、`validate_snapshot.py` 复核 JSON）。合成 O 样品：
 
 ![合成 O 样品](docs/images/synthetic-O.png)
 

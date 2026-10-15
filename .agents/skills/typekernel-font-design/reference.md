@@ -121,6 +121,7 @@ Fails if:
 - `snapshot_trial` → `weight_ladder_r8_failures` uses full trial `Controls` on `WEIGHT_LADDER_STEMS` (30–200) via `controls_at_ladder_stem`.
 - Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} [--variant slab] --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). End-to-end checklist: `docs/AGENT_TRIALS.md` §终验流程.
 - Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py` (serif VF proofs + italic `proof.png` / `proof_vf.png` from `build_italic_vf.py`).
+- TK-207 weight ladder (local `artifacts/specimens/`): `examples/weight_ladder_sheet.py --preset humanist_sans --out …`.
 - Program acceptance (before human `approvals/`): `PYTHONPATH=src python examples/run_m5_program_exit.py` (`--gate slab|bracketed|italic|all`, `--with-linters`); or `pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`, `tests/parts/test_italic_program_acceptance.py`, `tests/docs/test_development_plan_section8.py`.
 
 ## Tests

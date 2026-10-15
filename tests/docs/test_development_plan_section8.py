@@ -188,6 +188,7 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
+    assert "weight_ladder_sheet.py" in text
     assert "run_m5_program_exit.py" in text
     assert "validate_snapshot.py" in text
     assert "test_development_plan_section8" in text
