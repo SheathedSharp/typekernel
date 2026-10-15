@@ -112,6 +112,20 @@ def test_at_sign_inner_bowl_has_counter() -> None:
     assert len(glyph.holes) == 2
 
 
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_at_sign_interpolates_across_stems(preset: str) -> None:
+    base = getattr(DesignContext, preset)()
+    stems = (50.0, base.stem, 140.0)
+    outlines = [
+        Glyph.from_composed("@", Controls.from_context(base.tuned(stem=s)).build("@")).outline
+        for s in stems
+    ]
+    assert check_interpolatable(outlines) == []
+
+
 def test_sentence_chars_in_supported() -> None:
     controls = Controls.from_context(DesignContext.code_clear())
     supported = controls.supported

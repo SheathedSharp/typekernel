@@ -831,7 +831,7 @@ def at_sign_from_n_o(
     hole_r = om.rx * scale - om.thickness_v * scale
     heavy = max(0.0, (c.stem - 110.0) / 110.0)
     dx = hole_r * 0.35
-    belly_rx = hole_r * (0.34 - heavy * 0.06)
+    belly_rx = hole_r * (0.34 - heavy * 0.10)
     belly_ry = belly_rx * 0.85
     belly_cy = cy
     tv = min(om.thickness_v * scale * 0.65, belly_rx * 0.38)
