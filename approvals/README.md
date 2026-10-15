@@ -47,4 +47,12 @@ These ship with ``approved: false`` until a human updates them after review:
 - `serif-slab-voice.json` / `serif-bracketed-voice.json` — `--only serif` (slab/bracketed `proof.png`, VF `proof_vf.png`, weight ladder PNGs)
 - `italic-vf-construct.json` — `--only italic` (review `proof.png`, `proof_vf.png`, VF `.ttf` under `italic_family/`)
 
+Generate local proofs (does not write this folder):
+
+```bash
+PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review
+```
+
+Before signing, run the `test_evidence` paths on each JSON file and the programmatic checks in `REVIEW_CHECKLIST.md` (for example `tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance` and `tests/parts/test_italic_program_acceptance.py`). See `tests/docs/test_development_plan_section8.py` for `DEVELOPMENT_PLAN` §8 hooks.
+
 Agents must not flip ``approved`` to ``true`` without explicit human instruction.

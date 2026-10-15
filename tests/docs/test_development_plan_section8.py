@@ -109,6 +109,13 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     assert "test_development_plan_section8" in text
 
 
+def test_section8_approvals_readme_documents_review_workflow() -> None:
+    text = (ROOT / "approvals/README.md").read_text(encoding="utf-8")
+    assert "human_review_bundle" in text
+    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_development_plan_section8" in text
+
+
 def test_section8_regression_test_hooks_present() -> None:
     """§8.4–§8.5 / TK-306–402: named acceptance tests stay in the tree."""
     for rel, test_names in _SECTION8_REGRESSION_TESTS:
