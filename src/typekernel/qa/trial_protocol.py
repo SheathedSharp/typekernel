@@ -203,6 +203,28 @@ def _snapshot_float(value: object, default: float = 0.0) -> float:
     return default
 
 
+def _snapshot_int(value: object, default: int = 0) -> int:
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        return int(value)
+    return default
+
+
+def _record_program_pass_ok(data: Mapping[str, object]) -> bool:
+    lint_ok = _snapshot_int(data.get("lint_error_count"), 1) == 0
+    identity_ok = _snapshot_int(data.get("identity_error_count"), 1) == 0
+    gate_ok = bool(data.get("family_gate_ok"))
+    r8_ok = _snapshot_int(data.get("weight_ladder_r8_failures"), 1) == 0
+    l3_ok = bool(data.get("l3_voice_ok"))
+    flags = data.get("cheating_flags")
+    return lint_ok and identity_ok and gate_ok and r8_ok and l3_ok and not flags
+
+
 def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...]:
     """Program checks on a written snapshot JSON (TK-502 final validation review)."""
     problems: list[str] = []
@@ -221,18 +243,21 @@ def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...
         problems.append(
             "voice_distance and topology_fraction pass but l3_voice_ok is false (gate/lint?)"
         )
+    if "program_pass_ok" in data:
+        recorded = bool(data.get("program_pass_ok"))
+        if recorded != _record_program_pass_ok(data):
+            problems.append("program_pass_ok does not match other snapshot fields")
     return tuple(problems)
 
 
 def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
     """Validate a :class:`TrialSnapshot` before claiming TK-502 program pass."""
-    return validate_trial_snapshot_record(
-        {
-            "voice_distance": snapshot.voice_distance,
-            "topology_fraction": snapshot.topology_fraction,
-            "l3_voice_ok": snapshot.l3_voice_ok,
-        }
-    )
+    payload = asdict(snapshot)
+    payload["family_gate_ok"] = snapshot.family_gate_ok
+    payload["metrics_ok"] = snapshot.metrics_ok
+    payload["program_pass_ok"] = snapshot.program_pass_ok
+    payload["l3_voice_ok"] = snapshot.l3_voice_ok
+    return validate_trial_snapshot_record(payload)
 
 
 def trial_snapshot_exit_code(
@@ -250,7 +275,7 @@ def trial_snapshot_exit_code(
         return 5
     if snapshot.cheating_flags:
         return 7
-    if not snapshot.l3_voice_ok:
+    if not snapshot.program_pass_ok:
         return 6
     return 0
 

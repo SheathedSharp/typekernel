@@ -76,6 +76,24 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     assert snap.l3_voice_ok
 
 
+def test_validate_trial_snapshot_record_rejects_forged_program_pass_ok() -> None:
+    problems = validate_trial_snapshot_record(
+        {
+            "cheating_flags": [],
+            "family_gate_ok": True,
+            "identity_error_count": 0,
+            "l3_voice_ok": False,
+            "lint_error_count": 0,
+            "program_pass_ok": True,
+            "topology_fraction": 0.2,
+            "voice_distance": L3_VOICE_DISTANCE_THRESHOLD + 0.1,
+            "weight_ladder_r8_failures": 0,
+        }
+    )
+    assert problems
+    assert any("program_pass_ok" in p for p in problems)
+
+
 def test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology() -> None:
     """TK-307: high voice_distance alone must not imply l3_voice_ok in JSON."""
     problems = validate_trial_snapshot_record(

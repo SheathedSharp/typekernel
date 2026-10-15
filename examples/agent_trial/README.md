@@ -30,11 +30,11 @@ CI: `tests/examples/test_agent_trial_reference.py`, `tests/qa/test_m3_exit.py` (
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Program pass (`metrics_ok`, gate, R8 ladder, `l3_voice_ok`, empty `cheating_flags`) |
+| 0 | Program pass (`program_pass_ok` true; same as `metrics_ok` + gate + R8 + `l3_voice_ok` + empty `cheating_flags`) |
 | 2 | Lint / identity errors (`metrics_ok`) |
 | 3 | `family_gate` failures |
 | 4 | `weight_ladder_r8_failures` > 0 |
-| 5 | Snapshot record inconsistent (e.g. forged `l3_voice_ok` with `topology_fraction` too low) |
+| 5 | Snapshot record inconsistent (e.g. forged `l3_voice_ok` or `program_pass_ok`) |
 | 6 | Honest design but `l3_voice_ok` false |
 | 7 | Non-empty `cheating_flags` (e.g. auto `stem_only_or_scale_voice` for stem-only scaling) |
 
