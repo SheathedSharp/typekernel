@@ -109,6 +109,15 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     assert "test_development_plan_section8" in text
 
 
+def test_section8_skill_documents_m5_exit_workflow() -> None:
+    text = (
+        ROOT / ".agents/skills/typekernel-font-design/SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "human_review_bundle" in text
+    assert "test_development_plan_section8" in text
+    assert "test_m3_exit" in text
+
+
 def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "DEVELOPMENT_PLAN.md" in text
