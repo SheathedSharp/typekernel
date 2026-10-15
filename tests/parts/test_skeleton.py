@@ -38,6 +38,24 @@ def test_stroke_rejects_short_polyline() -> None:
         Stroke.from_points("x", [(0.0, 0.0)])
 
 
+def test_stroke_allows_zero_offset_fit_budget() -> None:
+    stroke = Stroke.from_beziers(
+        "seg",
+        (CubicBezier.line((0.0, 0.0), (120.0, 0.0)),),
+        offset_fit_budget=0.0,
+    )
+    assert stroke.offset_fit_budget == 0.0
+
+
+def test_stroke_rejects_negative_offset_fit_budget() -> None:
+    with pytest.raises(ValueError, match="offset_fit_budget"):
+        Stroke.from_beziers(
+            "seg",
+            (CubicBezier.line((0.0, 0.0), (10.0, 0.0)),),
+            offset_fit_budget=-0.1,
+        )
+
+
 def test_skeleton_rejects_duplicate_names() -> None:
     a = Stroke.from_points("stem", [(0.0, 0.0), (0.0, 100.0)])
     b = Stroke.from_points("stem", [(50.0, 0.0), (50.0, 100.0)])
@@ -210,6 +228,28 @@ def test_trace_letter_closed_ring_has_counter() -> None:
     bb = bounds(body)
     assert bb[2] - bb[0] > 150
     assert bb[3] - bb[1] > 150
+
+
+@pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for closed subtract")
+def test_trace_letter_closed_cubic_ring_has_counter() -> None:
+    ctx = DesignContext.geometric_sans().tuned(stem=40.0)
+    ring = (
+        CubicBezier.line((30.0, 30.0), (90.0, 30.0)),
+        CubicBezier.line((90.0, 30.0), (90.0, 90.0)),
+        CubicBezier.line((90.0, 90.0), (30.0, 90.0)),
+        CubicBezier.line((30.0, 90.0), (30.0, 30.0)),
+    )
+    skel = Skeleton.of(
+        Stroke.from_beziers("ring", ring, thickness=20.0, closed=True),
+    )
+    glyph = trace_letter(skel, ctx, union=True, blend=False, ease=False, join="miter")
+    n_contours = sum(len(s.contours) for s in glyph.solids) + sum(
+        len(h.contours) for h in glyph.holes
+    )
+    assert n_contours >= 2
+    bb = bounds(glyph.solids[0])
+    assert bb[2] - bb[0] > 40.0
+    assert bb[3] - bb[1] > 40.0
 
 
 @pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for union+blend")

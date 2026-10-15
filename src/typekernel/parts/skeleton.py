@@ -73,7 +73,7 @@ class Stroke:
         points: Polyline vertices in design units (endpoints when ``beziers`` set).
         beziers: Optional cubic midline; uses :func:`~typekernel.geo.stroke.expand_cubic`.
         chord_budget: Flatten budget for cubic strokes (design units).
-        offset_fit_budget: Rail cubic fit budget when ``expand_cubic`` uses offset path.
+        offset_fit_budget: Rail cubic fit budget; ``0`` forces chord flatten + ``expand``.
         closed: Closed centerline → annular ribbon (outer + hole).
         thickness / contrast / angle_deg: Pen overrides; ``None`` uses context.
         join / cap: Per-stroke styles; ``None`` inherits :func:`trace_letter` defaults.
@@ -110,8 +110,8 @@ class Stroke:
             raise ValueError(f"stroke {self.name!r} needs at least two points")
         if self.chord_budget <= 0:
             raise ValueError(f"stroke {self.name!r} chord_budget must be positive")
-        if self.offset_fit_budget <= 0:
-            raise ValueError(f"stroke {self.name!r} offset_fit_budget must be positive")
+        if self.offset_fit_budget < 0:
+            raise ValueError(f"stroke {self.name!r} offset_fit_budget must be >= 0")
         if self.closed and (self.start is not None or self.end is not None):
             # Closed ribbons have no free ends.
             object.__setattr__(self, "start", None)
