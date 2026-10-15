@@ -50,6 +50,10 @@ brief-1 **改字**参考（`Style` + `tuned_glyph`，非 preset 快照）：
 ```bash
 PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
   --brief brief-1 --out artifacts/trials/warm-humanist-ref
+
+# Regular + Bold OTF + proof (brief-1 要求两档字重)
+PYTHONPATH=src python examples/agent_trial/build_brief1_reference.py \
+  --out artifacts/trials/warm-humanist-family
 ```
 
 设计稿：`design_warm_humanist.py`（brief-1）、`design_editorial_geometric.py`（brief-2）、`design_coding_clear.py`（brief-3）——均达 L3 距离 + gate/R8。CI：`test_agent_trial_reference.py`；**人审**与终验摘要表仍须填写。
