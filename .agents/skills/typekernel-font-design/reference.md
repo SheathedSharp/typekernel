@@ -50,6 +50,28 @@ Typed knobs in `parts/glyph_specs.py` (defaults match stock derivations):
 
 L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family polish and review notes.
 
+## Style DNA (`parts/style.py`)
+
+`Controls.from_context(ctx, style=Style(...))` or `controls.with_style(...)`. Defaults match pre-305 presets (golden hashes unchanged).
+
+| Field | Default | Non-default | Main effect |
+| --- | --- | --- | --- |
+| `a_form` | `single` | `double` | two-storey `a` |
+| `g_form` | `single` | `double` | two-storey `g` |
+| `l_tail` | `none` | `tailed` | `l` tail hook |
+| `y_tail` | `straight` | `curved` | `y` lower-right curve |
+| `i_dot` | `round` | `square` / `diamond` | `i` `j` dot |
+| `t_cut` | `flat` | `slanted` | `t` foot (independent of `terminal_style`) |
+| `serif` | `none` | `slab` / `bracketed` | stem serifs; presets `slab_serif()` / `bracketed_serif()` |
+
+VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladders (see `tests/parts/test_style_gate.py`). Serif voices need sentence gate + L3 distance tests.
+
+## Italic & oblique (M4)
+
+- **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF use `vf_upright_controls(regular)` on upright masters (stem segment compat + bowl oblique pre-splits).
+- **Oblique**: `oblique_font` / `ObliqueTransform` — mechanical shear only; do not label as Italic.
+- **TK-402**: `parts/oblique_compat.py` pre-splits bowl cubics before slant for glyphs **not** in `OBLIQUE_COMPAT_EXCLUDE` (`efhmnru`: arch letters + `e` under `with_stem_relief`). Remaining italic glyphs may still warn R4.
+
 ## Glyph derivation (today)
 
 - Lowercase: mostly `n` / `o` families (`RELATED_FORMS` in `parts/family.py`).
