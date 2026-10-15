@@ -406,25 +406,42 @@ def _expand_closed_cubic_offset(
     return b.build(), max_err
 
 
-def _expand_open_single_cubic_offset(
-    seg: CubicBezier,
+def _expand_open_cubic_offset(
+    centerline: CubicCenterline,
     pen: Pen,
     *,
     offset_fit_budget: float,
     samples: int = 17,
 ) -> tuple[Outline, float]:
-    """Offset a single open cubic midline; sides are cubic chains + butt caps."""
-    left = _sample_offset_rail(seg, pen, samples, left_side=True)
-    right = _sample_offset_rail(seg, pen, samples, left_side=False)
-    left_chain, err_l = _fit_offset_rail(left, offset_fit_budget)
-    right_chain, err_r = _fit_offset_rail(right, offset_fit_budget)
-    max_err = max(err_l, err_r)
+    """Open cubic midline; per-segment offset rails + butt caps at ends."""
+    left_chains: list[list[CubicBezier]] = []
+    right_chains: list[list[CubicBezier]] = []
+    max_err = 0.0
+    for seg in centerline.segments:
+        left = _sample_offset_rail(seg, pen, samples, left_side=True)
+        right = _sample_offset_rail(seg, pen, samples, left_side=False)
+        lc, err_l = _fit_offset_rail(left, offset_fit_budget)
+        rc, err_r = _fit_offset_rail(right, offset_fit_budget)
+        max_err = max(max_err, err_l, err_r)
+        left_chains.append(lc)
+        right_chains.append(rc)
     b = PathBuilder()
-    b.moveTo(left[0][0], left[0][1])
-    _append_cubic_chain(b, left_chain)
-    b.lineTo(right[-1][0], right[-1][1])
-    for seg_r in reversed(right_chain):
-        b.curveTo(seg_r.p2[0], seg_r.p2[1], seg_r.p1[0], seg_r.p1[1], seg_r.p0[0], seg_r.p0[1])
+    start_left = left_chains[0][0].p0
+    b.moveTo(start_left[0], start_left[1])
+    for chain in left_chains:
+        _append_cubic_chain(b, chain)
+    end_right = right_chains[-1][-1].p3
+    b.lineTo(end_right[0], end_right[1])
+    for chain in reversed(right_chains):
+        for seg_r in reversed(chain):
+            b.curveTo(
+                seg_r.p2[0],
+                seg_r.p2[1],
+                seg_r.p1[0],
+                seg_r.p1[1],
+                seg_r.p0[0],
+                seg_r.p0[1],
+            )
     b.closePath()
     return b.build(), max_err
 
@@ -442,12 +459,12 @@ def expand_cubic(
     """Expand a cubic midline; output includes cubics at round joins/caps."""
     if join == "miter" and offset_fit_budget > 0:
         if (
-            len(centerline.segments) == 1
-            and not centerline.closed
+            not centerline.closed
             and cap == "butt"
+            and len(centerline.segments) == 1
         ):
-            outline, fit_err = _expand_open_single_cubic_offset(
-                centerline.segments[0],
+            outline, fit_err = _expand_open_cubic_offset(
+                centerline,
                 pen,
                 offset_fit_budget=offset_fit_budget,
             )

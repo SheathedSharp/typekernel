@@ -45,6 +45,37 @@ def test_skeleton_rejects_duplicate_names() -> None:
         Skeleton.of(a, b)
 
 
+def test_closed_cubic_stroke_expand_splits_annulus() -> None:
+    from typekernel.geo.stroke import CubicBezier
+    from typekernel.parts.skeleton import _expand_stroke
+
+    square = (
+        CubicBezier.line((30.0, 30.0), (90.0, 30.0)),
+        CubicBezier.line((90.0, 30.0), (90.0, 90.0)),
+        CubicBezier.line((90.0, 90.0), (30.0, 90.0)),
+        CubicBezier.line((30.0, 90.0), (30.0, 30.0)),
+    )
+    stroke = Stroke.from_beziers(
+        "ring",
+        square,
+        closed=True,
+        thickness=20.0,
+        chord_budget=0.35,
+    )
+    ctx = DesignContext.geometric_sans()
+    solids, holes = _expand_stroke(
+        stroke,
+        ctx,
+        default_join="miter",
+        default_cap="butt",
+        miter_limit=4.0,
+    )
+    assert len(solids) == 1 and len(holes) == 1
+    bb = bounds(solids[0])
+    assert bb[0] == pytest.approx(20.0, abs=2.0)
+    assert bb[2] == pytest.approx(100.0, abs=2.0)
+
+
 def test_trace_letter_cubic_stroke_matches_polyline_stem() -> None:
     ctx = DesignContext.geometric_sans().tuned(stem=80.0, contrast=1.0)
     poly = trace_letter(

@@ -449,7 +449,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``Stroke.beziers`` / ``from_beziers`` + ``Skeleton.from_mapping`` 的 ``beziers`` 键；``trace_letter`` 走 ``expand_cubic``。
 - **本轮（部分）**：单段开放 cubic + butt cap 走偏移轨道 cubic 链拟合（``max_offset_fit_error`` / ``offset_fit_budget``）；多段/圆角仍折线化。
 - **本轮（部分）**：闭合 cubic 中线（多段）偏移轨道拟合 → 双轮廓环（``_expand_closed_cubic_offset``）。
-- **待续**：段间 C1 接缝、圆角 cap/join、更高阶椭圆笔拟合。
+- **待续**：多段开放 cubic 拐角 miter、段间 C1、圆角 cap/join、更高阶椭圆笔拟合。
 
 ### M4 真斜体
 
@@ -482,6 +482,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
+- **本轮（部分）**：``test_skeleton`` 闭合 cubic stroke 烟测（``trace_letter`` → 环带实体）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
