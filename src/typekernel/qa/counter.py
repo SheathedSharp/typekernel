@@ -8,7 +8,7 @@ from typekernel.parts.compose import ComposedGlyph
 
 # B-16 bowl letters, round figures, and punctuation rings (not ``h``/``k`` stem slivers).
 COUNTER_PINCH_CHARSET = frozenset(
-    "0236789#%?@acemnos$CDEFOPQSTUZ"
+    "0236789#%?&@acemnos$CDEFOPQSTUZ"
 )
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]

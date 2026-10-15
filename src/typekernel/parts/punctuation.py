@@ -786,17 +786,20 @@ def ampersand_from_n_o(
     m = _n_record(n)
     om = _o_record(o)
     cx = m.width / 2.0
-    thick_v = om.thickness_v * 0.9
-    thick_h = om.thickness_h * 0.9
     rx_u = om.rx * 0.46
     cy_u = c.x_height + (c.cap_height - c.x_height) * 0.58
     ry_u = (c.cap_height - cy_u) + om.ry * 0.22
+    wall_cap = 0.36
+    thick_v = min(om.thickness_v * 0.9, rx_u * wall_cap, ry_u * wall_cap)
+    thick_h = min(om.thickness_h * 0.9, ry_u * wall_cap, rx_u * wall_cap * 0.9)
     outer_u, hole_u = bowl(
         c, cx - rx_u * 0.28, cy_u, rx=rx_u, ry=ry_u, thickness_v=thick_v, thickness_h=thick_h
     )
     rx_l = om.rx * 0.46
     cy_l = c.x_height * 0.36
     ry_l = om.ry * 0.48
+    thick_l_v = min(om.thickness_v * 0.9, rx_l * wall_cap, ry_l * wall_cap)
+    thick_l_h = min(om.thickness_h * 0.9, ry_l * wall_cap, rx_l * wall_cap * 0.9)
     outer_l, hole_l = _ampersand_lower_with_tail(
         c,
         m,
@@ -804,8 +807,8 @@ def ampersand_from_n_o(
         rx_l=rx_l,
         cy_l=cy_l,
         ry_l=ry_l,
-        thick_v=thick_v,
-        thick_h=thick_h,
+        thick_v=thick_l_v,
+        thick_h=thick_l_h,
     )
     return _pack_holes(c, m, outer_u, outer_l, holes=(hole_u, hole_l))
 
