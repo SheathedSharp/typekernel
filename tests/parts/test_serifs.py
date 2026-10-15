@@ -227,6 +227,20 @@ def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
         assert "stem_R_t" in names
 
 
+def test_serif_n_family_inlined_feet_omit_bottom_stem_anchors() -> None:
+    """Inlined foot serifs must not leave boolean ``stem_*_b`` sites on these glyphs."""
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        ctx = factory()
+        for ch in "nmru":
+            names = {a.name for a in Controls.from_context(ctx).build(ch).anchors}
+            assert "stem_L_b" not in names
+            assert "stem_M_b" not in names
+            assert "stem_R_b" not in names
+        r_names = {a.name for a in Controls.from_context(ctx).build("r").anchors}
+        assert "stem_L_b" not in r_names
+        assert "stem_R_b" not in r_names
+
+
 def test_bracketed_nh_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
