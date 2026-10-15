@@ -1024,6 +1024,30 @@ def Z_from_H(
     return _diag_cap(H, ctx, w, z_points(h.stem, h.bar, h.cap_height, w, c.contrast))
 
 
+def _k_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Bake left-stem slab feet/caps onto cap ``k_points`` outline."""
+    t, cap = h.stem, h.cap_height
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2)
+    middle = base[1:10]
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        *middle,
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def K_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1049,8 +1073,14 @@ def K_from_H(
         w_frac += 0.042
     w = w_frac * h.width
     cap = h.cap_height
-    return _diag_cap(
-        H, c, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex_eff)
+    base = k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex_eff)
+    baked = c.style.serif == "slab"
+    pts = _k_cap_slab_points(h, c, base) if baked else base
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
     )
 
 
