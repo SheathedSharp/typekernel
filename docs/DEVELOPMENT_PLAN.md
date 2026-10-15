@@ -452,7 +452,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：单段开放 cubic + butt cap 走偏移轨道 cubic 链拟合（``max_offset_fit_error`` / ``offset_fit_budget``）；多段/圆角仍折线化。
 - **本轮（部分）**：闭合 cubic 中线（多段）偏移轨道拟合 → 双轮廓环（``_expand_closed_cubic_offset``）。
 - **本轮（部分）**：``cubic_centerline_to_polyline``（弦高折线 → ``expand``）；多段开放 ``expand_cubic`` 与该路径等价（``test_cubic_centerline_to_polyline_*``）。
-- **待续**：多段开放偏移轨 cubic 拟合（非仅中线折线化）；段间 C1、圆角 cap/join。
+- **本轮（部分）**：多段开放 + ``butt`` 走拼接偏移轨采样 + miter + cubic 拟合（``_expand_open_multi_cubic_offset``）；``CubicBezier.line`` 端点切线修正。
+- **待续**：偏移拟合误差在尖角处仍偏大（诚实报告 ``max_offset_fit_error``）；圆角 cap/join；``offset_fit_budget=0`` 仍走弦高折线。
 
 ### M4 真斜体
 

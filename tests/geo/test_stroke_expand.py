@@ -183,7 +183,9 @@ def test_expand_cubic_open_multi_segment_matches_polyline_helper() -> None:
     cl = CubicCenterline.from_beziers(segs)
     pen = Pen(thickness=40.0)
     budget = 0.05
-    cubic_outline, _ = expand_cubic(cl, pen, cap="butt", chord_budget=budget)
+    cubic_outline, _ = expand_cubic(
+        cl, pen, cap="butt", chord_budget=budget, offset_fit_budget=0.0
+    )
     poly_outline = expand(cubic_centerline_to_polyline(cl, budget), pen, cap="butt")
     bb_c = bounds(cubic_outline)
     bb_p = bounds(poly_outline)
@@ -198,10 +200,30 @@ def test_expand_cubic_multi_segment_open_uses_chord_flatten() -> None:
     )
     cl = CubicCenterline.from_beziers(segs)
     pen = Pen(thickness=40.0)
-    _, report = expand_cubic(cl, pen, cap="butt", chord_budget=0.25)
+    _, report = expand_cubic(
+        cl, pen, cap="butt", chord_budget=0.25, offset_fit_budget=0.0
+    )
     assert report.max_chord_error <= 0.25
     assert report.polyline_vertex_count >= 3
     assert report.max_offset_fit_error == 0.0
+
+
+def test_expand_cubic_multi_segment_open_offset_rail_fit() -> None:
+    segs = (
+        CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
+        CubicBezier.line((100.0, 0.0), (100.0, 100.0)),
+    )
+    cl = CubicCenterline.from_beziers(segs)
+    pen = Pen(thickness=40.0)
+    outline, report = expand_cubic(cl, pen, cap="butt")
+    assert report.max_chord_error == 0.0
+    assert report.max_offset_fit_error > 0.0
+    assert report.outline_cubic_segment_count >= 2
+    poly_outline = expand([(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)], pen, cap="butt")
+    bb_c = bounds(outline)
+    bb_p = bounds(poly_outline)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_p[i], abs=0.5)
 
 
 def test_expand_cubic_line_matches_polyline_expand() -> None:

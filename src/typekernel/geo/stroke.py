@@ -134,7 +134,15 @@ class CubicBezier:
         a: tuple[float, float],
         b: tuple[float, float],
     ) -> CubicBezier:
-        return cls(a, a, b, b)
+        ax, ay = a
+        bx, by = b
+        dx, dy = bx - ax, by - ay
+        return cls(
+            a,
+            (ax + dx / 3.0, ay + dy / 3.0),
+            (ax + 2.0 * dx / 3.0, ay + 2.0 * dy / 3.0),
+            b,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -375,6 +383,132 @@ def _append_cubic_chain(b: PathBuilder, chain: list[CubicBezier]) -> None:
         b.curveTo(seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1], seg.p3[0], seg.p3[1])
 
 
+def _join_tokens_to_polyline(
+    tokens: list[Token],
+    *,
+    left_side: bool,
+) -> list[tuple[float, float]]:
+    """Flatten join/cap tokens to points (arcs are sampled)."""
+    pts: list[tuple[float, float]] = []
+    for tok in tokens:
+        if len(tok) == 7 and tok[0] == "arc":
+            cx, cy = tok[1], tok[2]
+            ax, ay, bx, by = tok[3], tok[4], tok[5], tok[6]
+            ang0 = math.atan2(ay - cy, ax - cx)
+            ang1 = math.atan2(by - cy, bx - cx)
+            r = (math.hypot(ax - cx, ay - cy) + math.hypot(bx - cx, by - cy)) / 2.0
+            da = ang1 - ang0
+            while da <= -math.pi:
+                da += 2 * math.pi
+            while da > math.pi:
+                da -= 2 * math.pi
+            if left_side and da < 0:
+                da += 2 * math.pi
+            elif not left_side and da > 0:
+                da -= 2 * math.pi
+            steps = max(4, math.ceil(abs(da) / (math.pi / 8)))
+            for s in range(steps + 1):
+                t = ang0 + da * s / steps
+                p = (cx + r * math.cos(t), cy + r * math.sin(t))
+                if not pts or pts[-1] != p:
+                    pts.append(p)
+            continue
+        p = (float(tok[0]), float(tok[1]))
+        if not pts or pts[-1] != p:
+            pts.append(p)
+    return pts
+
+
+def _stitched_offset_rail(
+    centerline: CubicCenterline,
+    pen: Pen,
+    *,
+    left_side: bool,
+    join: JoinStyle,
+    miter_limit: float,
+    samples: int,
+) -> list[tuple[float, float]]:
+    """Sample per-segment offset rails with miter joins at segment knots."""
+    segs = centerline.segments
+    if not segs:
+        return []
+    poly: list[tuple[float, float]] = []
+    for i, seg in enumerate(segs):
+        rail = _sample_offset_rail(seg, pen, samples, left_side=left_side)
+        if i == 0:
+            chunk = rail if len(segs) == 1 else rail[:-1]
+        else:
+            vertex = seg.p0
+            t_in = _unit(*_cubic_deriv_eval(segs[i - 1], 1.0))
+            t_out = _unit(*_cubic_deriv_eval(seg, 0.0))
+            join_pts = _join_tokens_to_polyline(
+                _side_join(
+                    vertex,
+                    t_in,
+                    t_out,
+                    pen,
+                    left_side=left_side,
+                    join=join,
+                    miter_limit=miter_limit,
+                ),
+                left_side=left_side,
+            )
+            for p in join_pts:
+                if not poly or poly[-1] != p:
+                    poly.append(p)
+            chunk = rail[1:-1] if i < len(segs) - 1 else rail[1:]
+        for p in chunk:
+            if not poly or poly[-1] != p:
+                poly.append(p)
+    return poly
+
+
+def _expand_open_multi_cubic_offset(
+    centerline: CubicCenterline,
+    pen: Pen,
+    *,
+    offset_fit_budget: float,
+    samples: int = 17,
+    join: JoinStyle = "miter",
+    miter_limit: float = 4.0,
+) -> tuple[Outline, float]:
+    """Open multi-segment cubic midline with mitered offset rails as cubics."""
+    left_poly = _stitched_offset_rail(
+        centerline,
+        pen,
+        left_side=True,
+        join=join,
+        miter_limit=miter_limit,
+        samples=samples,
+    )
+    right_poly = _stitched_offset_rail(
+        centerline,
+        pen,
+        left_side=False,
+        join=join,
+        miter_limit=miter_limit,
+        samples=samples,
+    )
+    left_chain, err_l = _fit_offset_rail(left_poly, offset_fit_budget)
+    right_chain, err_r = _fit_offset_rail(right_poly, offset_fit_budget)
+    max_err = max(err_l, err_r)
+    b = PathBuilder()
+    b.moveTo(left_chain[0].p0[0], left_chain[0].p0[1])
+    _append_cubic_chain(b, left_chain)
+    b.lineTo(right_poly[-1][0], right_poly[-1][1])
+    for seg_r in reversed(right_chain):
+        b.curveTo(
+            seg_r.p2[0],
+            seg_r.p2[1],
+            seg_r.p1[0],
+            seg_r.p1[1],
+            seg_r.p0[0],
+            seg_r.p0[1],
+        )
+    b.closePath()
+    return b.build(), max_err
+
+
 def _expand_closed_cubic_offset(
     centerline: CubicCenterline,
     pen: Pen,
@@ -459,19 +593,26 @@ def expand_cubic(
 ) -> tuple[Outline, CenterlineExpandReport]:
     """Expand a cubic midline; output includes cubics at round joins/caps."""
     if join == "miter" and offset_fit_budget > 0:
-        if (
-            not centerline.closed
-            and cap == "butt"
-            and len(centerline.segments) == 1
-        ):
-            outline, fit_err = _expand_open_cubic_offset(
-                centerline,
-                pen,
-                offset_fit_budget=offset_fit_budget,
-            )
+        if not centerline.closed and cap == "butt":
+            if len(centerline.segments) == 1:
+                outline, fit_err = _expand_open_cubic_offset(
+                    centerline,
+                    pen,
+                    offset_fit_budget=offset_fit_budget,
+                )
+                seg_count = 1
+            else:
+                outline, fit_err = _expand_open_multi_cubic_offset(
+                    centerline,
+                    pen,
+                    offset_fit_budget=offset_fit_budget,
+                    join=join,
+                    miter_limit=miter_limit,
+                )
+                seg_count = len(centerline.segments)
             return outline, CenterlineExpandReport(
                 max_chord_error=0.0,
-                cubic_segment_count=1,
+                cubic_segment_count=seg_count,
                 polyline_vertex_count=0,
                 outline_cubic_segment_count=_outline_cubic_segment_count(outline),
                 chord_budget=chord_budget,
