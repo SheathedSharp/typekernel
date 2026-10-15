@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -13,6 +13,7 @@ from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.originality import (
+    L3_MIN_TOPOLOGY_FRACTION,
     L3_VOICE_DISTANCE_THRESHOLD,
     l3_voice_criteria_met,
     nearest_voice_distance,
@@ -29,6 +30,8 @@ __all__ = [
     "controls_at_ladder_stem",
     "l3_voice_criteria_met",
     "snapshot_trial",
+    "validate_trial_snapshot",
+    "validate_trial_snapshot_record",
     "voice_distance",
     "weight_ladder_r8_failures",
     "write_trial_snapshot",
@@ -164,6 +167,50 @@ def snapshot_trial(
         glyph_spec_chars=tuple(sorted(controls.glyph_specs)),
         cheating_flags=tuple(cheating_flags),
         l3_voice_ok=l3_voice_criteria_met(controls),
+    )
+
+
+def _snapshot_float(value: object, default: float = 0.0) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        return float(value)
+    return default
+
+
+def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...]:
+    """Program checks on a written snapshot JSON (TK-502 final validation review)."""
+    problems: list[str] = []
+    flags = data.get("cheating_flags")
+    if flags:
+        problems.append("cheating_flags must be empty")
+    voice_distance_val = _snapshot_float(data.get("voice_distance"), 0.0)
+    topology = _snapshot_float(data.get("topology_fraction"), 0.0)
+    l3_ok = bool(data.get("l3_voice_ok"))
+    if l3_ok and voice_distance_val < L3_VOICE_DISTANCE_THRESHOLD:
+        problems.append("l3_voice_ok but voice_distance below L3_VOICE_DISTANCE_THRESHOLD")
+    if l3_ok and topology < L3_MIN_TOPOLOGY_FRACTION:
+        problems.append("l3_voice_ok but topology_fraction below L3_MIN_TOPOLOGY_FRACTION")
+    if (
+        not l3_ok
+        and voice_distance_val >= L3_VOICE_DISTANCE_THRESHOLD
+        and topology >= L3_MIN_TOPOLOGY_FRACTION
+    ):
+        problems.append(
+            "voice_distance and topology_fraction pass but l3_voice_ok is false (gate/lint?)"
+        )
+    return tuple(problems)
+
+
+def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
+    """Validate a :class:`TrialSnapshot` before claiming TK-502 program pass."""
+    return validate_trial_snapshot_record(
+        {
+            "cheating_flags": snapshot.cheating_flags,
+            "voice_distance": snapshot.voice_distance,
+            "topology_fraction": snapshot.topology_fraction,
+            "l3_voice_ok": snapshot.l3_voice_ok,
+        }
     )
 
 

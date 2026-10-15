@@ -76,7 +76,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "tests/qa/test_trial_protocol.py",
-        ("test_snapshot_l3_voice_ok_rejects_stem_only_tweak",),
+        (
+            "test_snapshot_l3_voice_ok_rejects_stem_only_tweak",
+            "test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology",
+        ),
     ),
 )
 

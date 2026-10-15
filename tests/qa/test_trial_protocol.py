@@ -8,12 +8,15 @@ from pathlib import Path
 import pytest
 
 from typekernel.parts import Controls, DesignContext
+from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     L3_VOICE_DISTANCE_THRESHOLD,
     WEIGHT_LADDER_STEMS,
     controls_at_ladder_stem,
     snapshot_trial,
+    validate_trial_snapshot,
+    validate_trial_snapshot_record,
     voice_distance,
     weight_ladder_r8_failures,
     write_trial_snapshot,
@@ -69,6 +72,41 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     assert snap.weight_ladder_r8_failures == 0
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.l3_voice_ok
+
+
+def test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology() -> None:
+    """TK-307: high voice_distance alone must not imply l3_voice_ok in JSON."""
+    problems = validate_trial_snapshot_record(
+        {
+            "cheating_flags": (),
+            "voice_distance": L3_VOICE_DISTANCE_THRESHOLD + 0.1,
+            "topology_fraction": 0.0,
+            "l3_voice_ok": True,
+        }
+    )
+    assert problems
+    assert any("topology_fraction" in p for p in problems)
+
+
+def test_validate_trial_snapshot_accepts_honest_stem_only_tweak() -> None:
+    ctx = DesignContext.humanist_sans()
+    tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
+    snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0])
+    assert not snap.l3_voice_ok
+    assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
+    assert not validate_trial_snapshot(snap)
+
+
+def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:
+    spec = importlib.util.spec_from_file_location(
+        "warm",
+        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    snap = snapshot_trial(mod.controls(), brief=FIXED_TRIAL_BRIEFS[0])
+    assert not validate_trial_snapshot(snap)
 
 
 def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:

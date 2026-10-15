@@ -11,6 +11,7 @@ from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     TrialBrief,
     snapshot_trial,
+    validate_trial_snapshot,
     write_trial_snapshot,
 )
 
@@ -60,6 +61,9 @@ def main(argv: list[str] | None = None) -> int:
         apis_used=APIS_USED,
     )
     args.out.mkdir(parents=True, exist_ok=True)
+    problems = validate_trial_snapshot(snap)
+    for msg in problems:
+        print(f"validate: {msg}", flush=True)
     path = write_trial_snapshot(args.out / "snapshot.json", snap)
     print(path)
     if not snap.metrics_ok:
@@ -68,6 +72,10 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     if snap.weight_ladder_r8_failures:
         return 4
+    if problems:
+        return 5
+    if not snap.l3_voice_ok:
+        return 6
     return 0
 
 
