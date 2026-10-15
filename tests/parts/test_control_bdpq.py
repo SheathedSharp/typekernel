@@ -77,6 +77,13 @@ def test_b_outer_ink_continuous_across_stem_bowl_join(ctx: DesignContext) -> Non
     assert len(ink_intervals_at_y([outer], y)) == 1
 
 
+def test_p_outer_ink_continuous_across_stem_bowl_join(ctx: DesignContext) -> None:
+    o, n = build_o(ctx), build_n(ctx)
+    outer = Outline((p_from_o(o, n).solids[0].contours[0],))
+    y = ctx.descender + 30.0
+    assert len(ink_intervals_at_y([outer], y)) == 1
+
+
 def test_b_mirrors_d(ctx: DesignContext) -> None:
     o, n = build_o(ctx), build_n(ctx)
     b, d = b_from_o(o, n), d_from_o(o, n)

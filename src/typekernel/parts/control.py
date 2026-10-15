@@ -1159,7 +1159,11 @@ def _bowl_stem_outline(
     _curve(b, top_join)
     _curve(b, q1)
     _curve(b, q2)
-    _curve(b, bot_cut[0])
+    bot_join = bot_cut[0]
+    p_end = bot_join[3]
+    if abs(p_end[0] - s_l) > 1e-9:
+        bot_join = (bot_join[0], bot_join[1], bot_join[2], (s_l, p_end[1]))
+    _curve(b, bot_join)
     if foot is None:
         b.lineTo(s_l, stem_bottom)
     else:
