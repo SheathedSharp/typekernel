@@ -126,6 +126,21 @@ def test_trace_letter_cubic_stroke_matches_polyline_stem() -> None:
         assert bb_p[i] == pytest.approx(bb_c[i], abs=1.0)
 
 
+def test_from_mapping_accepts_zero_offset_fit_budget() -> None:
+    skel = Skeleton.from_mapping(
+        {
+            "seg": {
+                "beziers": [
+                    [(0.0, 0.0), (33.0, 0.0), (67.0, 0.0), (100.0, 0.0)],
+                ],
+                "offset_fit_budget": 0.0,
+                "thickness": 20.0,
+            },
+        }
+    )
+    assert skel.strokes[0].offset_fit_budget == 0.0
+
+
 def test_from_mapping_accepts_cubic_beziers() -> None:
     skel = Skeleton.from_mapping(
         {
@@ -250,6 +265,38 @@ def test_trace_letter_closed_cubic_ring_has_counter() -> None:
     bb = bounds(glyph.solids[0])
     assert bb[2] - bb[0] > 40.0
     assert bb[3] - bb[1] > 40.0
+
+
+@pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for closed subtract")
+def test_trace_letter_closed_cubic_ring_matches_polyline_ring() -> None:
+    ctx = DesignContext.geometric_sans().tuned(stem=40.0)
+    square = (
+        (30.0, 30.0),
+        (90.0, 30.0),
+        (90.0, 90.0),
+        (30.0, 90.0),
+    )
+    ring = tuple(
+        CubicBezier.line(square[i], square[(i + 1) % len(square)]) for i in range(len(square))
+    )
+    poly_skel = Skeleton.from_polylines(
+        {"ring": square},
+        closed=["ring"],
+        thickness=20.0,
+    )
+    cubic_skel = Skeleton.of(
+        Stroke.from_beziers("ring", ring, thickness=20.0, closed=True),
+    )
+    poly_glyph = trace_letter(
+        poly_skel, ctx, union=True, blend=False, ease=False, join="miter"
+    )
+    cubic_glyph = trace_letter(
+        cubic_skel, ctx, union=True, blend=False, ease=False, join="miter"
+    )
+    bb_p = bounds(poly_glyph.solids[0])
+    bb_c = bounds(cubic_glyph.solids[0])
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_p[i], abs=3.0)
 
 
 @pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for union+blend")

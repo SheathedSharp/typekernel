@@ -155,7 +155,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 ```
 
 - 折线：`Stroke.from_points(...)`（默认）。
-- 三次中线：`Stroke.from_beziers` 或 plan dict 的 `beziers` 键（四控制点列表）；`chord_budget` / `offset_fit_budget` 传给 `expand_cubic`。
+- 三次中线：`Stroke.from_beziers` 或 plan dict 的 `beziers` 键（四控制点列表）；`chord_budget` / `offset_fit_budget` 传给 `expand_cubic`（``offset_fit_budget: 0`` 在 dict 里合法，强制折线化路径）。
 - 单段开放 + `butt` cap：`expand_cubic` 会走偏移轨道 cubic 拟合，读 `CenterlineExpandReport.max_offset_fit_error`（见 `tests/geo/test_stroke_expand.py`）。
 - 多段开放：默认走拼接偏移轨 cubic 拟合（``butt``/``round``/``square`` cap；``miter``/``round``/``bevel`` join）；``offset_fit_budget=0`` 时与 ``cubic_centerline_to_polyline`` + ``expand`` 等价。报告里的 `max_chord_error` / `max_offset_fit_error` 分别对应中线与偏移轨近似成本。
 - 闭合环：多段偏移轨 cubic 拟合（``_expand_closed_cubic_offset``）；勿与字重轴混用。
