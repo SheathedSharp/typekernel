@@ -35,7 +35,7 @@
 | **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`tuned_glyph` 或 `with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset。 |
 | **L1 单 style 可读** | 仍是一个字重 | L0，且固定 pair/word（`Ta` `To` `fi` `fl` `rn` `011`）**无撞字**（光学间距 ≤ 0 即失败）。pair 检查已经做进 `check_sentence_gate`。 |
 | **L2 字族** | `examples/agent_family/` 或自建 `examples/<family>/build_*.py` | Regular + Light/Bold（或 VF），每个字重独立 `Controls`。Bold 用 `with_stem_relief()`。`compose_font_from_controls` + 各母版共用 `reference_kern_classes`。 |
-| **L3 独特声音** | 与 L2 同级或在其之上 | 相对**最近**内置 preset 的 `nearest_voice_distance` ≥ **0.35**（`qa.originality.L3_VOICE_DISTANCE_THRESHOLD`，锁定测试）。`check_family_gate` 与 lint **零错误**。差异须来自 `Style`（待 TK-305）、`tuned_glyph` / `with_glyph` 等**有记录的** API，而不是无拓扑的纯缩放或噪声。**人审**（`approvals/*.json`）仍为必选项。 |
+| **L3 独特声音** | 与 L2 同级或在其之上 | 相对**最近**内置 preset 的 `nearest_voice_distance` ≥ **0.35**（`qa.originality.L3_VOICE_DISTANCE_THRESHOLD`，锁定测试）。`check_family_gate` 与 lint **零错误**。差异须来自 `Style`（`parts.style.Style`：`a_form` / `g_form` / `l_tail` / `y_tail` / `i_dot` / `t_cut` / `serif`，见 [agent-recipes.md](agent-recipes.md)）、`tuned_glyph` / `with_glyph` 等**有记录的** API，而不是无拓扑的纯缩放或噪声。**人审**（`approvals/*.json`）仍为必选项。 |
 
 字族级还要同时满足：
 

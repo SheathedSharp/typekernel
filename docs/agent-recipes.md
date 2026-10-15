@@ -25,6 +25,8 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 
 在 preset 之上用 `Controls.from_context(ctx, style=Style(...))` 或 `controls.with_style(...)`。默认值与未传 `style` 相同，**不会**改变 golden preset 哈希。
 
+默认（与 `Style()` / `DEFAULT_STYLE` 一致）：`a_form=single`，`g_form=single`，`l_tail=none`，`y_tail=straight`，`i_dot=round`，`t_cut=flat`，`serif=none`。
+
 | 字段 | 非默认取值 | 主要影响 |
 | --- | --- | --- |
 | `i_dot` | `square` / `diamond` | `i` `j` 点形 |
