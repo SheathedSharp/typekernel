@@ -293,7 +293,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``3`` 上环 ``ry_u`` 乘 ``top_apex=1.06``（顶仍对齐 cap+overshoot，减少平顶）；golden ``3`` 三 preset 更新。
 - **本轮（部分）**：``s_from_o`` 默认 ``top_scale`` 0.92→0.90（上环再收）；golden ``s``/``S`` 三 preset 更新。
 - **本轮（部分）**：``one_from_H`` 顶旗随字重缩小，重 stem 肩区字腔满足 R8（见 TK-207 ``1``）。
-- **本轮（部分）**：``five_from_O`` 按 ``DesignContext.stem`` 加宽下碗、略收环笔画与开口；``test_five_stem_relief_opens_bowl_counter_midweights``；golden ``5`` 五 preset；极轻/极黑 preset 仍待 R8 后再进 charset。
+- **本轮（部分）**：``five_from_O`` 按 ``DesignContext.stem`` 加宽下碗、略收环笔画与开口；极轻（``stem<44``）/极黑（``stem≥199``）再收 ``stroke_scale``；``test_five_stem_relief_opens_bowl_counter_midweights`` 覆盖七 preset × ``30…200``；golden ``5`` 五 preset。
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 
@@ -308,7 +308,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
 - **本轮（部分）**： lining ``4`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
 - **本轮（部分）**：``one_from_H`` 重字重缩小顶旗 ``fw``/``fv``（``stem_weight_fraction``）；``1`` 纳入 ``COUNTER_PINCH_CHARSET``；``test_one_heavy_stem_flag_relief_opens_pinch``（默认 master 哈希未变）。
-- **本轮（部分）**：大写 ``H``/``J`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；``K``/``5``/``M``/``N`` 等仍待几何或误报审计）。
+- **本轮（部分）**：大写 ``H``/``J`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；``K``/``M``/``N`` 等仍待几何或误报审计）。
+- **本轮（部分）**： lining ``5`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

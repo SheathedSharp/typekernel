@@ -479,6 +479,10 @@ def five_from_O(
     ry = (bowl_eff * cap + os_) / 2.0
     cy = ry - os_
     stroke_scale = (1.0 - 0.13 * relief) * (0.972 + 0.008 * relief)
+    if c.stem < 44.0:
+        stroke_scale *= 1.0 - 0.036 * max(0.0, (44.0 - c.stem) / 14.0)
+    if c.stem >= 199.0:
+        stroke_scale *= 0.84
     tv = min(bar, 0.6 * ry) * stroke_scale
     th = min(t, 0.6 * rx) * stroke_scale
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e)

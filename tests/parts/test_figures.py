@@ -69,9 +69,18 @@ def test_three_interpolates_across_weight_ladder() -> None:
 
 
 def test_five_stem_relief_opens_bowl_counter_midweights() -> None:
-    """TK-206: ``5`` bowl ring thins with stem so mid-ladder R8 headroom improves."""
-    for preset in ("humanist_sans", "geometric_sans", "open_print"):
-        for stem in (70.0, 110.0, 150.0):
+    """TK-206/207: ``5`` bowl ring thins with stem so ladder R8 stays above floor."""
+    presets = (
+        "humanist_sans",
+        "geometric_sans",
+        "code_clear",
+        "paper_ink",
+        "open_print",
+        "display",
+        "mono",
+    )
+    for preset in presets:
+        for stem in (30.0, 70.0, 110.0, 150.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
             controls = Controls.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
