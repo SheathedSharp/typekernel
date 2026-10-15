@@ -1295,6 +1295,8 @@ def m_from_n(
         _curve(b, s2.outer[0])
     _curve(b, s2.outer[1])
     b.lineTo(s2.r1, 0.0)
+    if _stem_serif_inlined(c):
+        _n_inline_right_stem_foot(b, s2.r1, c, mm.stem)
     b.lineTo(s2.r0, 0.0)
     b.lineTo(s2.r0, mm.join_y)
     isplit2 = _split(s2.inner[0], xh, horizontal=True)
@@ -1311,6 +1313,10 @@ def m_from_n(
         _curve(b, s2.inner[1])
     b.lineTo(s2.l1, 0.0)
     b.lineTo(s1.r0, 0.0)
+    if _stem_serif_inlined(c):
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        inline_stem_foot_serif_path(b, s1.r0, 0.0, c, mm.stem)
     b.lineTo(s1.r0, mm.join_y)
     _curve(b, s1.inner[0])
     if isplit1 is not None:
@@ -1324,14 +1330,14 @@ def m_from_n(
     anchors: dict[str, Pt] = {
         "top": (cx, xh),
         "bottom": (cx, 0.0),
-        "stem_M_b": ((s1.r0 + s2.l1) / 2.0, 0.0),
-        "stem_R_b": (s2.r1 - half, 0.0),
     }
     if _stem_serif_inlined(c):
         anchors["stem_L_t"] = (s1.l0 + half, xh)
     else:
         anchors["stem_L_b"] = (s1.l0 + half, 0.0)
         anchors["stem_L_t"] = (s1.l0 + half, xh)
+        anchors["stem_M_b"] = ((s1.r0 + s2.l1) / 2.0, 0.0)
+        anchors["stem_R_b"] = (s2.r1 - half, 0.0)
     return _pack(c, m, anchors, _ccw(b.build()))
 
 
