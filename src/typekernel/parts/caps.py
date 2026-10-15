@@ -495,11 +495,7 @@ def _e_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
             (w_top, cap),
             (0.0, cap),
         ]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length, t * 0.5)
-    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    l, th, _ = _l_cap_foot_dims(h, ctx)
     return [
         (-l, -th),
         (t + l, -th),
@@ -524,6 +520,34 @@ def _e_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
     ]
 
 
+def _write_e_bracketed_outer(
+    b: PathBuilder, h: HMetrics, ctx: DesignContext, *, width: float
+) -> None:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    w_top, w_mid, w_bot = w * 0.97, w * 0.88, w
+    m0, m1 = h.bar_y - bt / 2.0, h.bar_y + bt / 2.0
+    l, th, bracket_r = _l_cap_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(w_bot, 0.0)
+    b.lineTo(w_bot, bt)
+    b.lineTo(t, bt)
+    b.lineTo(t, m0)
+    b.lineTo(w_mid, m0)
+    b.lineTo(w_mid, m1)
+    b.lineTo(t, m1)
+    b.lineTo(t, cap - bt)
+    b.lineTo(w_top, cap - bt)
+    b.lineTo(w_top, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def E_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -534,14 +558,16 @@ def E_from_H(
     c = ctx or H.context
     h = _h_record(H)
     w = width * h.width
-    baked = c.style.serif == "slab"
-    outline = _polygon(_e_outline_points(h, c, width=width))
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
-        outline,
+    inlined = c.style.serif in ("slab", "bracketed")
+    anchors = _cap_anchors(
+        w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"
     )
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_e_bracketed_outer(b, h, c, width=width)
+        return _pack(c, h, anchors, _ccw(b.build()))
+    outline = _polygon(_e_outline_points(h, c, width=width))
+    return _pack(c, h, anchors, outline)
 
 
 def _f_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
@@ -563,11 +589,7 @@ def _f_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
             (w_top, cap),
             (0.0, cap),
         ]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length, t * 0.5)
-    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    l, th, _ = _l_cap_foot_dims(h, ctx)
     return [
         (-l, -th),
         (t + l, -th),
@@ -590,6 +612,33 @@ def _f_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
     ]
 
 
+def _write_f_bracketed_outer(
+    b: PathBuilder, h: HMetrics, ctx: DesignContext, *, width: float
+) -> None:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    w_top, w_mid = w, w * 0.9
+    mid = h.bar_y - 0.03 * cap
+    m0, m1 = mid - bt / 2.0, mid + bt / 2.0
+    l, th, bracket_r = _l_cap_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(t, 0.0)
+    b.lineTo(t, m0)
+    b.lineTo(w_mid, m0)
+    b.lineTo(w_mid, m1)
+    b.lineTo(t, m1)
+    b.lineTo(t, cap - bt)
+    b.lineTo(w_top, cap - bt)
+    b.lineTo(w_top, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def F_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -601,19 +650,22 @@ def F_from_H(
     h = _h_record(H)
     w = width * h.width
     w_top = w
-    baked = c.style.serif == "slab"
-    pts = _f_outline_points(h, c, width=width)
-    outline = (
-        _polygon(pts)
-        if baked
-        else _cap_f_t_outline(c, pts, w_top, h.cap_height, h.bar)
+    inlined = c.style.serif in ("slab", "bracketed")
+    anchors = _cap_anchors(
+        w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"
     )
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
-        outline,
-    )
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_f_bracketed_outer(b, h, c, width=width)
+        outline = _ccw(b.build())
+    else:
+        pts = _f_outline_points(h, c, width=width)
+        outline = (
+            _polygon(pts)
+            if c.style.serif == "slab"
+            else _cap_f_t_outline(c, pts, w_top, h.cap_height, h.bar)
+        )
+    return _pack(c, h, anchors, outline)
 
 
 def _cap_f_t_outline(
@@ -2279,11 +2331,7 @@ def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
             (0.0, cap - bt),
             (s0, cap - bt),
         ]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length, t * 0.5)
-    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    l, th, _ = _l_cap_foot_dims(h, ctx)
     return [
         (s0 - l, -th),
         (s1 + l, -th),
@@ -2304,6 +2352,29 @@ def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[
     ]
 
 
+def _write_t_bracketed_outer(
+    b: PathBuilder, h: HMetrics, ctx: DesignContext, *, width: float
+) -> None:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
+    l, th, bracket_r = _l_cap_foot_dims(h, ctx)
+    b.moveTo(s0 - l, -th)
+    _finish_baseline_foot_pad(b, s0 - l, s1 + l, th, bracket_r, bracketed=True)
+    b.lineTo(s1, 0.0)
+    b.lineTo(s1, cap - bt)
+    b.lineTo(w, cap - bt)
+    b.lineTo(w, cap)
+    b.lineTo(s1 + l, cap)
+    _append_upward_cap_foot_pad(b, s0 - l, s1 + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, cap - bt)
+    b.lineTo(s0, cap - bt)
+    b.lineTo(s0, 0.0)
+    b.lineTo(s0 - l, 0.0)
+    b.closePath()
+
+
 def T_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -2314,19 +2385,24 @@ def T_from_H(
     c = ctx or H.context
     h = _h_record(H)
     w = width * h.width
-    baked = c.style.serif == "slab"
-    pts = _t_outline_points(h, c, width=width)
-    outline = (
-        _polygon(pts)
-        if baked
-        else _cap_f_t_outline(c, pts, w, h.cap_height, h.bar)
-    )
+    inlined = c.style.serif in ("slab", "bracketed")
     cx = w / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, h.cap_height),
         "bottom": (cx, 0.0),
     }
-    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+    if _cap_stem_serif_anchors_enabled(c, baked=inlined):
         anchors["stem_M_b"] = (cx, 0.0)
         anchors["stem_M_t"] = (cx, h.cap_height)
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_t_bracketed_outer(b, h, c, width=width)
+        outline = _ccw(b.build())
+    else:
+        pts = _t_outline_points(h, c, width=width)
+        outline = (
+            _polygon(pts)
+            if c.style.serif == "slab"
+            else _cap_f_t_outline(c, pts, w, h.cap_height, h.bar)
+        )
     return _pack(c, h, anchors, outline)
