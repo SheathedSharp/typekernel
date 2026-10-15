@@ -11,19 +11,12 @@ from typekernel.parts.glyph_specs import FSpec, TSpec, merge_spec
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 
-def test_tuned_glyph_defaults_match_stock_derivation() -> None:
-    ctx = DesignContext.code_clear()
-    base = Controls.from_context(ctx).build_all("ft")
-    tuned = Controls.from_context(ctx).tuned_glyph("f").tuned_glyph("t").build_all("ft")
-    for ch in "ft":
-        assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
-
-
-def test_s_tuned_glyph_defaults_match_stock() -> None:
+@pytest.mark.parametrize("ch", ("f", "t", "j", "a", "e", "s"))
+def test_tuned_glyph_defaults_match_stock_derivation(ch: str) -> None:
     ctx = DesignContext.humanist_sans()
-    base = Controls.from_context(ctx).build_all("s")
-    tuned = Controls.from_context(ctx).tuned_glyph("s").build_all("s")
-    assert composed_glyph_hash(base["s"]) == composed_glyph_hash(tuned["s"])
+    base = Controls.from_context(ctx).build(ch)
+    tuned = Controls.from_context(ctx).tuned_glyph(ch).build(ch)
+    assert composed_glyph_hash(base) == composed_glyph_hash(tuned)
 
 
 def test_cap_glyph_specs_default_match_stock() -> None:
