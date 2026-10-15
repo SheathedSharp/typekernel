@@ -19,6 +19,13 @@ def test_tuned_glyph_defaults_match_stock_derivation() -> None:
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
 
 
+def test_s_tuned_glyph_defaults_match_stock() -> None:
+    ctx = DesignContext.humanist_sans()
+    base = Controls.from_context(ctx).build_all("s")
+    tuned = Controls.from_context(ctx).tuned_glyph("s").build_all("s")
+    assert composed_glyph_hash(base["s"]) == composed_glyph_hash(tuned["s"])
+
+
 def test_cap_glyph_specs_default_match_stock() -> None:
     ctx = DesignContext.humanist_sans()
     base = Controls.from_context(ctx).build_all("GRY")

@@ -76,7 +76,7 @@ class SSpec:
     """``s``: spine position and bowl widths."""
 
     width: float = 0.82
-    top_scale: float = 0.94
+    top_scale: float = 0.90
     spine: float = 0.50
     aperture: float | None = None
 
