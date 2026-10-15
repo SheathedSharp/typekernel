@@ -22,6 +22,11 @@ from typekernel.qa.gates import load_approval
 
 ROOT = Path(__file__).resolve().parents[1]
 SECTION8 = "tests/docs/test_development_plan_section8.py"
+_TRIAL_SMOKE = (
+    "tests/examples/test_agent_trial.py",
+    "tests/examples/test_agent_trial_reference.py",
+    "tests/qa/test_trial_protocol.py",
+)
 
 _GATE_FILES = {
     "slab": "approvals/serif-slab-voice.json",
@@ -34,7 +39,7 @@ def _evidence_paths(gate: str) -> tuple[str, ...]:
     if gate == "section8":
         return (SECTION8,)
     if gate == "all":
-        paths: list[str] = [SECTION8]
+        paths: list[str] = [SECTION8, *_TRIAL_SMOKE]
         for rel in _GATE_FILES.values():
             paths.extend(load_approval(ROOT / rel)["test_evidence"])
         return tuple(dict.fromkeys(paths))

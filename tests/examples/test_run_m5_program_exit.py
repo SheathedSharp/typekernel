@@ -27,6 +27,8 @@ def test_run_m5_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
     lines = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
     assert "tests/docs/test_development_plan_section8.py" in lines
+    assert "tests/examples/test_agent_trial.py" in lines
+    assert "tests/qa/test_trial_protocol.py" in lines
     assert "tests/parts/test_serifs.py" in lines
     assert "tests/parts/test_italic_program_acceptance.py" in lines
     for rel in lines:

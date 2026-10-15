@@ -117,7 +117,7 @@ Fails if:
 
 - Baselines: `examples/agent_trial/snapshot_presets.py`, `snapshot_serif_voices.py`.
 - Reference edits (L3 + gate/R8): `design_warm_humanist.py`, `design_editorial_geometric.py`, `design_editorial_slab.py` / `design_editorial_bracketed.py` (brief-2 `--variant slab|bracketed`), `design_coding_clear.py` — each exports `controls()`, `design_bold()`, `baseline_controls()`.
-- Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py` (includes `brief-2-slab/`). Both run `validate_trial_snapshot` then exit via `trial_snapshot_exit_code` (0 ok; 2 metrics; 3 gate; 4 R8 ladder; 5 inconsistent JSON fields; 6 not L3; 7 `cheating_flags` e.g. stem-only scale). Audit saved JSON: `validate_snapshot.py path/to/snapshot.json`.
+- Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py` (includes `brief-2-slab/`). Both run `validate_trial_snapshot` then exit via `trial_snapshot_exit_code` (0 ok; 2 metrics; 3 gate; 4 R8 ladder; 5 inconsistent JSON fields; 6 not L3; 7 `cheating_flags` e.g. stem-only scale). Audit saved JSON: `validate_snapshot.py path/to/snapshot.json` or `validate_snapshot.py --recursive artifacts/trials/<run>/`.
 - `snapshot_trial` → `weight_ladder_r8_failures` uses full trial `Controls` on `WEIGHT_LADDER_STEMS` (30–200) via `controls_at_ladder_stem`.
 - Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} [--variant slab] --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). End-to-end checklist: `docs/AGENT_TRIALS.md` §终验流程.
 - Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py` (serif VF proofs + italic `proof.png` / `proof_vf.png` from `build_italic_vf.py`).
