@@ -885,20 +885,49 @@ def U_from_H(
     w = max(width * h.width, min_bowl_stems(t) * t)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
+    baked = c.style.serif == "slab"
 
     b = PathBuilder()
-    b.moveTo(0.0, cap)
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        l = min(length, t * 0.48)
+        th = min(thick, cap * 0.1, t * 0.18)
+        b.moveTo(-l, cap + th)
+        b.lineTo(t + l, cap + th)
+        b.lineTo(t + l, cap)
+        b.lineTo(0.0, cap)
+    else:
+        b.moveTo(0.0, cap)
     b.lineTo(0.0, y_s)
     _curve(b, q2)
     _curve(b, q3)
-    b.lineTo(w, cap)
-    b.lineTo(w - t, cap)
+    if baked:
+        b.lineTo(w, cap)
+        b.lineTo(w + l, cap)
+        b.lineTo(w + l, cap + th)
+        b.lineTo(w - t - l, cap + th)
+        b.lineTo(w - t - l, cap)
+        b.lineTo(w - t, cap)
+    else:
+        b.lineTo(w, cap)
+        b.lineTo(w - t, cap)
     b.lineTo(w - t, y_s)
     _curve(b, _rev(i3))
     _curve(b, _rev(i2))
     b.lineTo(t, cap)
+    if baked:
+        b.lineTo(t + l, cap)
+        b.lineTo(t + l, cap + th)
+        b.lineTo(-l, cap + th)
     b.closePath()
-    return _pack(c, h, _cap_anchors(w, h), _ccw(b.build()))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _ccw(b.build()),
+    )
 
 
 def J_from_H(
