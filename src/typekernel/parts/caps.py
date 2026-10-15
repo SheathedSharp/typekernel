@@ -1218,6 +1218,45 @@ def A_from_H(
     return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
 
 
+def _y_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Slab feet on the ``Y`` stem and caps on the upper outer arms."""
+    cap = h.cap_height
+    s0 = base[2][0]
+    s1 = base[3][0]
+    t = s1 - s0
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    y_side = base[2][1]
+    l = min(length * 0.42, t * 0.48, h.stem * 0.32)
+    th = min(thick * 0.65, cap * 0.05, y_side * 0.2, t * 0.18)
+    w = base[5][0]
+    hw = base[8][0]
+    return [
+        (-l, -th),
+        (s1 + l, -th),
+        (s1 + l, 0.0),
+        base[3],
+        base[4],
+        base[5],
+        (w + l, cap),
+        (w + l, cap + th),
+        (w - hw - l, cap + th),
+        (w - hw - l, cap),
+        base[6],
+        base[7],
+        base[8],
+        (hw + l, cap),
+        (hw + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        base[0],
+        base[1],
+        (s0 - l, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def Y_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1241,7 +1280,7 @@ def Y_from_H(
     y_crotch = cap - (w / 2.0 - hw) * (cap - yj) / run
     if not (0.0 < y_side < cap and yj < y_crotch < cap):
         raise ValueError("Y arms do not fit this width; widen it or thin the stem")
-    pts = [
+    base = [
         (0.0, cap),
         (s0, y_side),
         (s0, 0.0),
@@ -1252,7 +1291,14 @@ def Y_from_H(
         (w / 2.0, y_crotch),
         (hw, cap),
     ]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    baked = c.style.serif == "slab"
+    pts = _y_cap_slab_points(h, c, base) if baked else base
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
+    )
 
 
 def _m_cap_outline_points(
