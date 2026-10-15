@@ -60,6 +60,8 @@ controls = (
 | `e` | `ESpec` | `bar_raise` (0.25), `aperture` (None) |
 | `s` | `SSpec` | `width`, `top_scale`, `spine`, `aperture` |
 | `A` | `CapASpec` | `width` (1.02), `apex` (0.35), `bar` (0.28) |
+| `E` | `CapESpec` | `width` (0.84) |
+| `F` | `CapFSpec` | `width` (0.82) |
 | `G` | `GSpec` | `bar_reach` (0.1) |
 | `K` | `KSpec` | `width` (0.92), `vertex` (0.42) |
 | `R` | `RSpec` | `width`, `straight`, `bowl`, `leg_at` |

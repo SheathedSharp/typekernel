@@ -7,6 +7,8 @@ from typing import Any
 
 from typekernel.parts.caps import (
     A_from_H,
+    E_from_H,
+    F_from_H,
     G_from_O,
     K_from_H,
     L_from_H,
@@ -35,6 +37,8 @@ __all__ = [
     "WEAK_GLYPH_SPECS",
     "ASpec",
     "CapASpec",
+    "CapESpec",
+    "CapFSpec",
     "CapTSpec",
     "ESpec",
     "FSpec",
@@ -119,6 +123,20 @@ class CapTSpec:
     """``T``: top bar width fraction (centred on the ``H`` stem)."""
 
     width: float = 0.92
+
+
+@dataclass(frozen=True, slots=True)
+class CapESpec:
+    """``E``: arm reach width fraction (foot is the longest arm)."""
+
+    width: float = 0.84
+
+
+@dataclass(frozen=True, slots=True)
+class CapFSpec:
+    """``F``: top and middle arm width fraction."""
+
+    width: float = 0.82
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +230,8 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "e": ESpec,
     "s": SSpec,
     "A": CapASpec,
+    "E": CapESpec,
+    "F": CapFSpec,
     "G": GSpec,
     "K": KSpec,
     "L": LSpec,
@@ -272,6 +292,10 @@ def build_from_spec(
         return A_from_H(
             n_glyph, ctx, width=spec.width, apex=spec.apex, bar=spec.bar
         )
+    if ch == "E" and isinstance(spec, CapESpec):
+        return E_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "F" and isinstance(spec, CapFSpec):
+        return F_from_H(n_glyph, ctx, width=spec.width)
     if ch == "G" and isinstance(spec, GSpec):
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
     if ch == "K" and isinstance(spec, KSpec):

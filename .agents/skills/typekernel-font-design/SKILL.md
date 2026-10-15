@@ -76,7 +76,7 @@ Record: family name, target style (geometric sans / humanist / mono / …), axes
 Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `paper_ink()`, `mono()`. Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset.
 
 **3 — Controls**  
-`Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps include `A`/`G`/`K`/`L`/`R`/`T`/`Y`/`V`/`W`/`X`/`Z`/`M`/`N` specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
+`Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps include `A`/`E`/`F`/`G`/`K`/`L`/`R`/`T`/`Y`/`V`/`W`/`X`/`Z`/`M`/`N` specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
 
 **4 — Build glyphs**  
 `drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
