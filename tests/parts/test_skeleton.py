@@ -141,6 +141,24 @@ def test_from_mapping_accepts_zero_offset_fit_budget() -> None:
     assert skel.strokes[0].offset_fit_budget == 0.0
 
 
+def test_from_mapping_beziers_join_and_cap() -> None:
+    skel = Skeleton.from_mapping(
+        {
+            "stem": {
+                "beziers": [
+                    [(40.0, 0.0), (40.0, 133.0), (40.0, 267.0), (40.0, 400.0)],
+                ],
+                "thickness": 80.0,
+                "join": "miter",
+                "cap": "butt",
+            },
+        }
+    )
+    stroke = skel.strokes[0]
+    assert stroke.join == "miter"
+    assert stroke.cap == "butt"
+
+
 def test_from_mapping_accepts_cubic_beziers() -> None:
     skel = Skeleton.from_mapping(
         {

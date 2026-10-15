@@ -74,7 +74,7 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 | --- | --- |
 | `Stroke.from_points` | Polyline midline (default) |
 | `Stroke.from_beziers` | Cubic midline → `expand_cubic` |
-| `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers`, `chord_budget`, `offset_fit_budget` |
+| `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers`, `chord_budget`, `offset_fit_budget`, `join`, `cap` |
 | `cubic_centerline_to_polyline` | Chord-budget flatten → chain to `expand` (open multi-segment path) |
 | `expand_cubic` | `(Outline, CenterlineExpandReport)`; open path uses offset-rail cubics when `offset_fit_budget>0` (butt/round/square cap; miter/round/bevel join). Set `offset_fit_budget=0` to flatten midline + `expand`. |
 
