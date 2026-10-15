@@ -10,10 +10,12 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.parts.style import Style
 from typekernel.qa.originality import (
     BUILTIN_PRESET_FACTORIES,
+    L3_MIN_TOPOLOGY_FRACTION,
     L3_VOICE_DISTANCE_THRESHOLD,
     l3_voice_criteria_met,
     nearest_voice_distance,
     originality_report,
+    topology_fraction_vs_nearest_presets,
     topology_signature,
     voice_distance,
 )
@@ -23,6 +25,7 @@ _PROBE_CHARSET = "noace"
 
 def test_l3_threshold_frozen() -> None:
     assert L3_VOICE_DISTANCE_THRESHOLD == 0.35
+    assert L3_MIN_TOPOLOGY_FRACTION == 0.05
 
 
 @pytest.mark.parametrize("name", tuple(BUILTIN_PRESET_FACTORIES))
@@ -88,6 +91,22 @@ def test_tuned_glyph_raises_nearest_distance() -> None:
     base = Controls.from_context(DesignContext.humanist_sans())
     tuned = base.tuned_glyph("f", arm=0.55).tuned_glyph("t", arm=0.45)
     assert nearest_voice_distance(tuned) > nearest_voice_distance(base)
+
+
+def test_l3_rejects_context_only_stem_tweak() -> None:
+    """TK-307: pure ``DesignContext`` scaling must not satisfy L3."""
+    ctx = DesignContext.humanist_sans()
+    tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
+    assert nearest_voice_distance(tweaked) >= L3_VOICE_DISTANCE_THRESHOLD
+    assert topology_fraction_vs_nearest_presets(tweaked) == 0.0
+    assert not l3_voice_criteria_met(tweaked)
+
+
+def test_slab_serif_preset_has_nearest_builtin_neighbor() -> None:
+    controls = Controls.from_context(DesignContext.slab_serif())
+    report = originality_report(controls)
+    assert report.nearest_preset
+    assert report.nearest_distance == 1.0
 
 
 def test_topology_signature_differs_o_and_e() -> None:

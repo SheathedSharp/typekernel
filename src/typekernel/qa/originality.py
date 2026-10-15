@@ -16,6 +16,8 @@ from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.lint import lint_controls
 
 L3_VOICE_DISTANCE_THRESHOLD = 0.35
+# L3 must diverge in letter topology, not only normalized shape (TK-307 anti-cheat).
+L3_MIN_TOPOLOGY_FRACTION = 0.05
 
 BUILTIN_PRESET_FACTORIES: dict[str, Callable[[], DesignContext]] = {
     "code_clear": DesignContext.code_clear,
@@ -29,12 +31,14 @@ BUILTIN_PRESET_FACTORIES: dict[str, Callable[[], DesignContext]] = {
 
 __all__ = [
     "BUILTIN_PRESET_FACTORIES",
+    "L3_MIN_TOPOLOGY_FRACTION",
     "L3_VOICE_DISTANCE_THRESHOLD",
     "OriginalityReport",
     "TopologySignature",
     "nearest_voice_distance",
     "normalized_shape_signature",
     "originality_report",
+    "topology_fraction_vs_nearest_presets",
     "topology_signature",
     "voice_distance",
 ]
@@ -143,7 +147,7 @@ def originality_report(controls: Controls, charset: str | None = None) -> Origin
     """Compare ``controls`` against every built-in preset; return the nearest."""
     by_preset: dict[str, VoiceDistance] = {}
     nearest_name = ""
-    nearest = 1.0
+    nearest = float("inf")
     for name, factory in BUILTIN_PRESET_FACTORIES.items():
         ref = Controls.from_context(factory())
         dist = voice_distance(controls, ref, charset)
@@ -154,6 +158,19 @@ def originality_report(controls: Controls, charset: str | None = None) -> Origin
     return OriginalityReport(nearest_name, nearest, by_preset)
 
 
+def topology_fraction_vs_nearest_presets(
+    controls: Controls,
+    charset: str | None = None,
+) -> float:
+    """Topology divergence from the closest built-in preset (or max if tied)."""
+    report = originality_report(controls, charset)
+    if not report.by_preset:
+        return 0.0
+    if report.nearest_preset:
+        return report.by_preset[report.nearest_preset].topology_fraction
+    return max(vd.topology_fraction for vd in report.by_preset.values())
+
+
 def nearest_voice_distance(controls: Controls, charset: str | None = None) -> float:
     """Combined distance to the closest preset (used by agent trials / L3)."""
     return originality_report(controls, charset).nearest_distance
@@ -162,6 +179,8 @@ def nearest_voice_distance(controls: Controls, charset: str | None = None) -> fl
 def l3_voice_criteria_met(controls: Controls) -> bool:
     """L3 voice distance plus lint/identity gate (human review still required)."""
     if nearest_voice_distance(controls) < L3_VOICE_DISTANCE_THRESHOLD:
+        return False
+    if topology_fraction_vs_nearest_presets(controls) < L3_MIN_TOPOLOGY_FRACTION:
         return False
     if collect_family_gate_failures(controls):
         return False
