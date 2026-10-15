@@ -160,6 +160,10 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 - 多段开放：默认走拼接偏移轨 cubic 拟合（``butt``/``round``/``square`` cap；``miter``/``round``/``bevel`` join）；``offset_fit_budget=0`` 时与 ``cubic_centerline_to_polyline`` + ``expand`` 等价。报告里的 `max_chord_error` / `max_offset_fit_error` 分别对应中线与偏移轨近似成本。
 - 闭合环：多段偏移轨 cubic 拟合（``_expand_closed_cubic_offset``）；勿与字重轴混用。
 
+## 扩展拉丁（TK-208，可选）
+
+默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_tk208_extended_latin.py`。
+
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
 自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：

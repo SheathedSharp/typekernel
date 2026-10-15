@@ -7,7 +7,23 @@ from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.control import build_n, build_o, dotless_i_from_n, dotless_j_from_n
 from typekernel.parts.marks import CASE_MARK_BUILDERS, MARK_BUILDERS, MARK_UNICODE
 
-__all__ = ["COMPOSITE_LATIN", "add_composite_latin", "add_marks"]
+__all__ = [
+    "COMPOSITE_LATIN",
+    "EXTENDED_LATIN_OUTLINE_CHARS",
+    "add_composite_latin",
+    "add_marks",
+    "composite_latin_charset",
+]
+
+# TK-208: outline letters are opt-in via ``FamilyBuildOptions.extended_latin``;
+# precomposed accents are registered when that option is non-empty (see
+# ``compose_font_from_controls``), not in ``Controls.supported``.
+EXTENDED_LATIN_OUTLINE_CHARS = "æøÆØ"
+
+
+def composite_latin_charset() -> str:
+    """All precomposed characters in :data:`COMPOSITE_LATIN` (stable order)."""
+    return "".join(dict.fromkeys(char for char, *_ in COMPOSITE_LATIN))
 
 # (character, base glyph name or char, mark glyph name, base anchor, mark anchor)
 COMPOSITE_LATIN: tuple[tuple[str, str, str, str, str], ...] = (

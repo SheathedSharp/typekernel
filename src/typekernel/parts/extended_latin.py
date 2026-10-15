@@ -7,7 +7,7 @@ from dataclasses import replace
 from typekernel.geo.outline import Outline
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.control import _n_record, _o_record, _pack, a_from_o, e_from_o
+from typekernel.parts.control import _ccw, _n_record, _o_record, _pack, a_from_o, e_from_o
 from typekernel.parts.punctuation import _diagonal_slash
 
 __all__ = [
@@ -37,7 +37,7 @@ def oslash_from_o(
     """Lowercase ``ø``: ``o`` bowl plus a compensated slash."""
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
-    slash = _diagonal_slash(c, _n_record(_n), back=False)
+    slash = _ccw(_diagonal_slash(c, _n_record(_n), back=False))
     return replace(o_glyph, solids=(*o_glyph.solids, slash), design=o)
 
 
@@ -50,7 +50,7 @@ def Oslash_from_O(
     c = ctx or O_glyph.context
     from typekernel.parts.control import build_n, n_metrics
 
-    slash = _diagonal_slash(c, _n_record(build_n(c, n_metrics(c))), back=False)
+    slash = _ccw(_diagonal_slash(c, _n_record(build_n(c, n_metrics(c))), back=False))
     return replace(O_glyph, solids=(*O_glyph.solids, slash))
 
 
