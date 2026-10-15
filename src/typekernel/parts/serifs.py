@@ -19,6 +19,7 @@ __all__ = [
     "apply_glyph_serifs",
     "bracketed_stem_foot_dims",
     "inline_hook_cap_serif_path",
+    "inline_stem_cap_serif_path",
     "inline_stem_foot_serif_path",
     "inline_stem_foot_serif_path_right",
     "serif_metrics",
@@ -219,6 +220,48 @@ def inline_stem_foot_serif_path_right(
         bracket_r=bracket_r,
     )
     b.lineTo(x_stem_right, y_base)
+
+
+def inline_stem_cap_serif_path(
+    b: PathBuilder,
+    x_stem_left: float,
+    x_stem_right: float,
+    y_cap: float,
+    ctx: DesignContext,
+    stem_width: float,
+) -> None:
+    """Left-stem cap serif; current point must be ``(x_stem_right, y_cap)``."""
+    from typekernel.parts.caps import HMetrics, _append_upward_cap_foot_pad, _i_cap_foot_dims
+
+    h = HMetrics(
+        stem=stem_width,
+        bar=stem_width * ctx.contrast * 0.92,
+        cap_height=y_cap,
+        width=stem_width,
+        bar_y=y_cap * 0.52,
+        overshoot=0.0,
+    )
+    l, th, bracket_r = _i_cap_foot_dims(h, ctx)
+    if ctx.style.serif == "slab":
+        length, thick, _ = serif_metrics(ctx)
+        l = min(length, stem_width * 0.5)
+        th = min(thick, y_cap * 0.1, stem_width * 0.2)
+        xl = x_stem_left - l
+        b.lineTo(xl, y_cap)
+        b.lineTo(xl, y_cap + th)
+        b.lineTo(x_stem_right, y_cap + th)
+        b.lineTo(x_stem_right, y_cap)
+        return
+    _append_upward_cap_foot_pad(
+        b,
+        x_stem_left - l,
+        x_stem_right,
+        y_cap,
+        th,
+        bracket_r,
+        bracketed=True,
+    )
+    b.lineTo(x_stem_right, y_cap)
 
 
 def inline_hook_cap_serif_path(

@@ -215,6 +215,16 @@ def test_serif_u_has_no_spurious_left_foot_anchor() -> None:
         names = {a.name for a in g.anchors}
         assert "stem_L_b" not in names
         assert "stem_R_b" not in names
+        assert "stem_L_t" not in names
+        assert "stem_R_t" not in names
+
+
+def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        g = Controls.from_context(factory()).build("h")
+        names = {a.name for a in g.anchors}
+        assert "stem_L_t" not in names
+        assert "stem_R_t" in names
 
 
 def test_bracketed_nh_masters_interpolate_on_weight_ladder() -> None:

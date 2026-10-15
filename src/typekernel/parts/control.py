@@ -488,6 +488,25 @@ def _n_inline_right_stem_foot(
     inline_stem_foot_serif_path_right(b, x_stem_right, 0.0, ctx, stem)
 
 
+def _n_inline_left_stem_cap(
+    b: PathBuilder,
+    x_stem_left: float,
+    x_stem_right: float,
+    y_cap: float,
+    ctx: DesignContext,
+    stem: float,
+) -> None:
+    if not _stem_serif_inlined(ctx):
+        return
+    from typekernel.parts.serifs import inline_stem_cap_serif_path
+
+    inline_stem_cap_serif_path(b, x_stem_left, x_stem_right, y_cap, ctx, stem)
+
+
+def _n_ascender_left_stem_cap(y_cap: float, m: NMetrics) -> bool:
+    return y_cap > m.x_height + 0.5
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
@@ -507,10 +526,13 @@ def _n_family_outline(
         _n_begin_left_stem(
             b, s.l0, s.l1, left_top, ctx, m.stem, shelf_foot=shelf_left_foot
         )
+        b.lineTo(s.l1, left_top)
+        if _n_ascender_left_stem_cap(left_top, m):
+            _n_inline_left_stem_cap(b, s.l0, s.l1, left_top, ctx, m.stem)
     else:
         b.moveTo(s.l0, 0.0)
         b.lineTo(s.l0, left_top)
-    b.lineTo(s.l1, left_top)
+        b.lineTo(s.l1, left_top)
     if left_top > m.x_height + 0.5:
         # h: down the right face of the ascender stem to the shoulder spring
         b.lineTo(s.l1, m.x_height)
@@ -664,10 +686,13 @@ def _n_branching_outline(
         _n_begin_left_stem(
             b, l0, l1, stem_top, ctx, m.stem, shelf_foot=shelf_left_foot
         )
+        b.lineTo(l1, stem_top)
+        if _n_ascender_left_stem_cap(stem_top, m):
+            _n_inline_left_stem_cap(b, l0, l1, stem_top, ctx, m.stem)
     else:
         b.moveTo(l0, 0.0)
         b.lineTo(l0, stem_top)
-    b.lineTo(l1, stem_top)
+        b.lineTo(l1, stem_top)
     b.lineTo(l1, branch_y)
     _curve(b, s.outer[0])
     _curve(b, s.outer[1])
@@ -690,9 +715,11 @@ def _n_stem_serif_anchors(
     right_top: float | None = None,
     left_foot: bool = True,
     right_foot: bool = True,
+    left_cap: bool = True,
     ctx: DesignContext | None = None,
     inline_left_foot: bool = False,
     inline_right_foot: bool = False,
+    inline_left_top: bool = False,
 ) -> dict[str, Pt]:
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
@@ -701,7 +728,10 @@ def _n_stem_serif_anchors(
         inline_left_foot and ctx is not None and _stem_serif_inlined(ctx)
     ):
         anchors["stem_L_b"] = (half, 0.0)
-    anchors["stem_L_t"] = (half, left_top)
+    if left_cap and not (
+        inline_left_top and ctx is not None and _stem_serif_inlined(ctx)
+    ):
+        anchors["stem_L_t"] = (half, left_top)
     if right_foot and not (
         inline_right_foot and ctx is not None and _stem_serif_inlined(ctx)
     ):
@@ -765,6 +795,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             ctx=ctx,
             inline_left_foot=_stem_serif_inlined(ctx),
             inline_right_foot=_stem_serif_inlined(ctx),
+            inline_left_top=_stem_serif_inlined(ctx),
         ),
     }
     if _italic_topology(ctx):
@@ -1382,6 +1413,7 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             left_top=xh,
             right_top=None,
             left_foot=False,
+            left_cap=False,
             ctx=c,
             inline_right_foot=_stem_serif_inlined(c),
         ),
