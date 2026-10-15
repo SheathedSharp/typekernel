@@ -226,6 +226,40 @@ def test_expand_cubic_multi_segment_open_offset_rail_fit() -> None:
         assert bb_c[i] == pytest.approx(bb_p[i], abs=0.5)
 
 
+def test_expand_cubic_open_line_round_cap_matches_polyline_bbox() -> None:
+    seg = CubicBezier.line((0.0, 0.0), (200.0, 0.0))
+    cl = CubicCenterline.from_beziers([seg])
+    pen = Pen(thickness=80.0)
+    cubic_outline, report = expand_cubic(cl, pen, cap="round")
+    line_outline = expand([(0.0, 0.0), (200.0, 0.0)], pen, cap="round")
+    assert report.max_chord_error == 0.0
+    assert report.outline_cubic_segment_count >= 2
+    bb_c = bounds(cubic_outline)
+    bb_l = bounds(line_outline)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_l[i], abs=1.0)
+
+
+def test_expand_cubic_open_l_shape_round_join_bbox() -> None:
+    segs = (
+        CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
+        CubicBezier.line((100.0, 0.0), (100.0, 100.0)),
+    )
+    cl = CubicCenterline.from_beziers(segs)
+    pen = Pen(thickness=40.0)
+    cubic_outline, _ = expand_cubic(cl, pen, cap="butt", join="round")
+    poly_outline = expand(
+        [(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)],
+        pen,
+        cap="butt",
+        join="round",
+    )
+    bb_c = bounds(cubic_outline)
+    bb_p = bounds(poly_outline)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_p[i], abs=1.5)
+
+
 def test_expand_cubic_line_matches_polyline_expand() -> None:
     seg = CubicBezier.line((0.0, 0.0), (200.0, 0.0))
     cl = CubicCenterline.from_beziers([seg])
