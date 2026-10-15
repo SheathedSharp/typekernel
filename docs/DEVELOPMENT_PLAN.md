@@ -475,6 +475,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
 - **本轮**：`docs/AGENT_TRIALS.md`、`qa/trial_protocol.py`（`voice_distance`、快照 JSON）、`examples/agent_trial/snapshot_presets.py`、`artifacts/trials/` gitignore。
+- **本轮（部分）**：``snapshot_serif_voices.py`` + ``AGENT_TRIALS`` brief-2/衬线基线说明；``test_serif_voice_trial_snapshots_meet_l3``。
 - **待续**：由 agent 按 brief 真改字形并填摘要表；L3 终验与人评。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 
