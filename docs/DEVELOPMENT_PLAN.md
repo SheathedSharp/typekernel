@@ -436,7 +436,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 ``V`` 内嵌脚底托架圆角（``_v_cap_bracketed_outline``，``slab`` 仍折线）；``test_bracketed_cap_v_*``；golden ``V``。
 - **本轮（部分）**：大写 ``W``/``X`` 内嵌脚底/顶脚托架圆角（``_append_baseline_foot_pad`` / ``_append_upward_cap_foot_pad``）；``test_bracketed_cap_w_and_x_*``；golden ``W``/``X``。
 - **本轮（部分）**：大写 ``A`` 双竖脚内嵌托架圆角（``_write_a_cap_bracketed_outer`` / ``_finish_baseline_foot_pad``）；``test_bracketed_cap_a_*``；golden ``A``。
-- **待续**：人设 ``approved: true`` 签字；``Y`` 等仍仅 ``slab`` 内嵌脚（``bracketed`` 走锚点）；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
+- **本轮（部分）**：大写 ``Y`` ``bracketed`` 内嵌脚/臂顶托架圆角（``_y_cap_bracketed_outline``）；修正 ``_y_cap_foot_dims`` 的 ``y_side`` 索引（``slab``/``bracketed`` 脚厚）；``test_bracketed_cap_y_*``；golden ``Y``（``slab`` + ``bracketed``）。
+- **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。

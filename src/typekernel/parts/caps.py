@@ -1751,20 +1751,27 @@ def A_from_H(
     )
 
 
-def _y_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
-    """Slab feet on the ``Y`` stem and caps on the upper outer arms."""
+def _y_cap_foot_dims(
+    h: HMetrics, ctx: DesignContext, base: list[Pt]
+) -> tuple[float, float, float, float, float, float, float, float]:
     cap = h.cap_height
     s0 = base[2][0]
     s1 = base[3][0]
     t = s1 - s0
     from typekernel.parts.serifs import serif_metrics
 
-    length, thick, _ = serif_metrics(ctx)
-    y_side = base[2][1]
+    length, thick, bracket_r = serif_metrics(ctx)
+    y_side = base[1][1]
     l = min(length * 0.42, t * 0.48, h.stem * 0.32)
     th = min(thick * 0.65, cap * 0.05, y_side * 0.2, t * 0.18)
     w = base[5][0]
     hw = base[8][0]
+    return l, th, bracket_r, s0, s1, w, hw, cap
+
+
+def _y_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Slab feet on the ``Y`` stem and caps on the upper outer arms."""
+    l, th, _, s0, s1, w, hw, cap = _y_cap_foot_dims(h, ctx, base)
     return [
         (-l, -th),
         (s1 + l, -th),
@@ -1788,6 +1795,29 @@ def _y_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[
         (s0 - l, 0.0),
         (-l, 0.0),
     ]
+
+
+def _y_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> Outline:
+    l, th, bracket_r, s0, s1, w, hw, cap = _y_cap_foot_dims(h, ctx, base)
+    b = PathBuilder()
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, s1 + l, th, bracket_r, bracketed=True)
+    b.lineTo(*base[3])
+    b.lineTo(*base[4])
+    b.lineTo(*base[5])
+    b.lineTo(w + l, cap)
+    _append_upward_cap_foot_pad(b, w - hw - l, w + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(*base[6])
+    b.lineTo(*base[7])
+    b.lineTo(*base[8])
+    b.lineTo(hw + l, cap)
+    _append_upward_cap_foot_pad(b, -l, hw + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(*base[0])
+    b.lineTo(*base[1])
+    b.lineTo(s0 - l, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+    return _ccw(b.build())
 
 
 def Y_from_H(
@@ -1824,14 +1854,17 @@ def Y_from_H(
         (w / 2.0, y_crotch),
         (hw, cap),
     ]
-    baked = c.style.serif == "slab"
-    pts = _y_cap_slab_points(h, c, base) if baked else base
-    return _pack(
-        c,
+    baked = _cap_serif_inlined(c)
+    anchors = _cap_anchors(
+        w,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
-        _polygon(pts),
+        stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
+    if baked and c.style.serif == "bracketed":
+        outline = _y_cap_bracketed_outline(h, c, base)
+        return _pack(c, h, anchors, outline)
+    pts = _y_cap_slab_points(h, c, base) if baked else base
+    return _pack(c, h, anchors, _polygon(pts))
 
 
 def _m_cap_outline_points(
