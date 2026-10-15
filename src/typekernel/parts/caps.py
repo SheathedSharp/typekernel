@@ -1375,9 +1375,21 @@ def J_from_H(
     outer = _cut(q2, x_t, horizontal=False)[1]
     inner = _cut(i2, x_t, horizontal=False)[1]
 
+    inlined = _cap_serif_inlined(c)
+    l, th, bracket_r = _h_cap_foot_dims(h, c) if inlined else (0.0, 0.0, 0.0)
     b = PathBuilder()
-    b.moveTo(w, cap)
-    b.lineTo(w - t, cap)
+    if c.style.serif == "bracketed":
+        b.moveTo(w + l, cap)
+        _append_upward_cap_foot_pad(b, w - t - l, w + l, cap, th, bracket_r, bracketed=True)
+        b.lineTo(w - t, cap)
+    elif inlined:
+        b.moveTo(w + l, cap + th)
+        b.lineTo(w - t - l, cap + th)
+        b.lineTo(w - t - l, cap)
+        b.lineTo(w - t, cap)
+    else:
+        b.moveTo(w, cap)
+        b.lineTo(w - t, cap)
     b.lineTo(w - t, y_s)
     _curve(b, _rev(i3))
     _curve(b, _rev(inner))
@@ -1393,8 +1405,17 @@ def J_from_H(
     )
     _curve(b, outer)
     _curve(b, q3)
+    if inlined:
+        b.lineTo(w + l, cap)
+        if c.style.serif == "slab":
+            b.lineTo(w + l, cap + th)
+            b.lineTo(w - t - l, cap + th)
     b.closePath()
-    return _pack(c, h, {"top": (w - t / 2.0, cap), "bottom": (cx, 0.0)}, _ccw(b.build()))
+    half = w - t / 2.0
+    anchors: dict[str, Pt] = {"top": (half, cap), "bottom": (cx, 0.0)}
+    if _cap_stem_serif_anchors_enabled(c, baked=inlined):
+        anchors["stem_R_t"] = (half, cap)
+    return _pack(c, h, anchors, _ccw(b.build()))
 
 
 def _diag_cap(
