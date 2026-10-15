@@ -71,3 +71,23 @@ def test_terminal_style_angled_reaches_open_stroke_glyphs() -> None:
     changed = _shape_changed(a, b)
     assert len(changed) >= 20
     assert {"F", "T", "k"}.issubset(set(changed))
+
+
+def test_terminal_style_ball_reaches_open_stroke_glyphs() -> None:
+    """TK-304: ball terminals on open strokes and cap bar ends."""
+    base = DesignContext.humanist_sans()
+    a = _build(base)
+    b = _build(replace(base, terminal_style="ball"))
+    changed = _shape_changed(a, b)
+    assert len(changed) >= 20
+    assert {"F", "T", "e"}.issubset(set(changed))
+
+
+def test_terminal_style_flared_reaches_open_stroke_glyphs() -> None:
+    """TK-304: flared terminals widen open stroke ends."""
+    base = DesignContext.humanist_sans()
+    a = _build(base)
+    b = _build(replace(base, terminal_style="flared"))
+    changed = _shape_changed(a, b)
+    assert len(changed) >= 20
+    assert {"F", "T", "c"}.issubset(set(changed))

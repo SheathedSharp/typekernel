@@ -63,7 +63,9 @@ class DesignContext:
     sidebearing_ratio: float = 0.10
     aperture: float = 0.55
     sharp_overshoot: float = 0.0
-    terminal_style: Literal["vertical", "horizontal", "angled"] = "vertical"
+    terminal_style: Literal[
+        "vertical", "horizontal", "angled", "ball", "flared"
+    ] = "vertical"
     italic_slant_deg: float = 0.0
     vf_compat_stem_segments: bool = False
     stress: float = 0.0

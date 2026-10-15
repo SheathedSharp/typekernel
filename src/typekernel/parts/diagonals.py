@@ -356,7 +356,25 @@ def y_from_n(
             (w / 2.0, cy),
             (hw, xh),
         ]
-    outline = apply_terminal_shear(c, _polygon(pts), at=(tail_r, desc + m.stem * 0.08))
+    tip_y = desc + m.stem * (0.02 if c.terminal_style == "ball" else 0.08)
+    tip_x = tail_r + (hw * 0.32 if c.terminal_style == "ball" else 0.0)
+    poly = _polygon(pts)
+    if c.terminal_style == "ball" and m.stem <= 45.0:
+        outline = poly
+    else:
+        ball_r = None
+        if c.terminal_style == "ball":
+            if m.stem <= 90.0:
+                ball_r = m.stem * 0.13
+            elif m.stem <= 130.0:
+                ball_r = m.stem * 0.15
+            elif m.stem <= 170.0:
+                ball_r = m.stem * 0.17
+            else:
+                ball_r = m.stem * 0.24
+        outline = apply_terminal_shear(
+            c, poly, at=(tip_x, tip_y), ball_radius=ball_r
+        )
     return _pack(c, m, {"top": (w / 2.0, xh)}, outline)
 
 
@@ -505,12 +523,31 @@ def k_from_n(
         if s >= 198.0:
             scale += 0.012
         w = m.width * scale
-    if c.terminal_style == "angled" and width is None:
+    if c.terminal_style in ("angled", "flared", "ball") and width is None:
         w *= 1.026
         if m.stem <= 75.0:
             w *= 1.004
+        if c.terminal_style == "ball":
+            w *= 1.012
+        if c.terminal_style == "flared":
+            if m.stem <= 40.0:
+                w *= 1.118
+                if c.aperture >= 0.62:
+                    w *= 1.042
+            elif m.stem <= 80.0:
+                w *= 1.028
+            if 65.0 <= m.stem <= 75.0:
+                w *= 1.032
+            if 140.0 <= m.stem <= 160.0:
+                w *= 1.02
+        if c.terminal_style == "ball":
+            if 100.0 <= m.stem <= 120.0:
+                w *= 1.028
+            if 140.0 <= m.stem <= 160.0:
+                w *= 1.016
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
+    tip = (w - m.stem * 0.15, m.x_height * 0.08)
     if c.terminal_style == "angled":
         outline = apply_terminal_shear(
             c,
@@ -520,8 +557,22 @@ def k_from_n(
             inward="+",
             band=m.stem * 0.26,
         )
-    else:
+    elif c.terminal_style == "flared":
+        if m.stem <= 45.0:
+            outline = _polygon(pts)
+        else:
+            outline = apply_terminal_shear(
+                c,
+                _polygon(pts),
+                at=(w - m.stem * 0.20, m.x_height * 0.09),
+                along="x",
+                inward="+",
+                band=m.stem * 0.30,
+            )
+    elif c.terminal_style == "ball":
         outline = apply_terminal_shear(
-            c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08)
+            c, _polygon(pts), at=tip, ball_radius=m.stem * 0.28
         )
+    else:
+        outline = apply_terminal_shear(c, _polygon(pts), at=tip)
     return _pack(c, m, anchors, outline)

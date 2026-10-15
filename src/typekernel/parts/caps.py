@@ -264,21 +264,28 @@ def F_from_H(
         (w_top, cap),
         (0.0, cap),
     ]
-    if c.terminal_style == "horizontal":
-        outline = apply_terminal_shear(
-            c, _polygon(pts), at=(w_top, cap - bt * 0.5), prefer_flat=True
-        )
-    elif c.terminal_style == "angled":
-        outline = apply_terminal_shear(
-            c,
-            _polygon(pts),
-            at=(w_top, cap - bt * 0.5),
-            along="x",
-            inward="-",
-        )
-    else:
-        outline = _polygon(pts)
+    outline = _cap_f_t_outline(c, pts, w_top, cap, bt)
     return _pack(c, h, _cap_anchors(w, h), outline)
+
+
+def _cap_f_t_outline(
+    c: DesignContext,
+    pts: list[tuple[float, float]],
+    w_top: float,
+    cap: float,
+    bt: float,
+) -> Outline:
+    tip = (w_top, cap - bt * 0.5)
+    poly = _polygon(pts)
+    if c.terminal_style == "vertical":
+        return poly
+    if c.terminal_style == "horizontal":
+        return apply_terminal_shear(c, poly, at=tip, prefer_flat=True)
+    if c.terminal_style == "angled":
+        return apply_terminal_shear(c, poly, at=tip, along="x", inward="-")
+    if c.terminal_style == "flared":
+        return apply_terminal_shear(c, poly, at=tip, along="x", inward="-")
+    return apply_terminal_shear(c, poly, at=tip)
 
 
 def _o_rec(O: ComposedGlyph) -> OMetrics:
@@ -1043,18 +1050,5 @@ def T_from_H(
         (0.0, cap - bt),
         (s0, cap - bt),
     ]
-    if c.terminal_style == "horizontal":
-        outline = apply_terminal_shear(
-            c, _polygon(pts), at=(w, cap - bt * 0.5), prefer_flat=True
-        )
-    elif c.terminal_style == "angled":
-        outline = apply_terminal_shear(
-            c,
-            _polygon(pts),
-            at=(w, cap - bt * 0.5),
-            along="x",
-            inward="-",
-        )
-    else:
-        outline = _polygon(pts)
+    outline = _cap_f_t_outline(c, pts, w, cap, bt)
     return _pack(c, h, _cap_anchors(w, h), outline)
