@@ -911,7 +911,15 @@ def N_from_H(
     """``N``: two ``H`` stems joined by a diagonal from top left to bottom right."""
     c = ctx or H.context
     h = _h_record(H)
-    w, cap, t = width * h.width, h.cap_height, h.stem
+    s = c.stem
+    w_frac = width
+    if 100.0 <= s <= 118.0 and 0.95 <= c.contrast < 1.0:
+        w_frac += 0.02
+    if 142.0 <= s <= 158.0:
+        w_frac += 0.022
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.035
+    w, cap, t = w_frac * h.width, h.cap_height, h.stem
     hw = _hwidth(t, c.contrast, w - 2.0 * t, cap)
     for _ in range(8):
         hw = _hwidth(t, c.contrast, w - 2.0 * t + hw, cap)
