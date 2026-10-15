@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+
 import pytest
 
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     L3_VOICE_DISTANCE_THRESHOLD,
+    controls_at_ladder_stem,
     snapshot_trial,
     voice_distance,
+    weight_ladder_r8_failures,
     write_trial_snapshot,
 )
+
+_ROOT = Path(__file__).resolve().parents[2]
+_SLAB_TRIAL = _ROOT / "examples" / "agent_trial" / "design_editorial_slab.py"
 
 _PRESET_FACTORIES = {
     "humanist_sans": DesignContext.humanist_sans,
@@ -67,6 +75,20 @@ def test_voice_distance_increases_with_tuned_glyph() -> None:
     tuned = base.tuned_glyph("f", arm=0.55).tuned_glyph("t", arm=0.45)
     assert voice_distance(tuned) > voice_distance(base)
     assert voice_distance(tuned) > 0.0
+
+
+def test_weight_ladder_r8_uses_glyph_overrides_not_context_only() -> None:
+    """Ladder R8 must match the trial sheet (``with_glyph`` / ``tuned_glyph``)."""
+    spec = importlib.util.spec_from_file_location("slab_trial", _SLAB_TRIAL)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    sheet: Controls = mod.controls()
+    assert weight_ladder_r8_failures(sheet) == 0
+    bare = Controls.from_context(sheet.context)
+    assert weight_ladder_r8_failures(bare) == 0
+    at_70 = controls_at_ladder_stem(sheet, 70.0)
+    assert "f" in at_70.glyph_overrides
 
 
 def test_snapshot_records_glyph_specs(tmp_path) -> None:

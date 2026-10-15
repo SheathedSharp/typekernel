@@ -42,7 +42,7 @@ def _voice(stem: float, *, relief: bool) -> Controls:
         .with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.56))
         .tuned_glyph("s", top_scale=0.85)
         .tuned_glyph("e", bar_raise=0.34)
-        .tuned_glyph("K", width=1.05)
+        .tuned_glyph("K", width=1.03)
     )
     return sheet.with_stem_relief() if relief else sheet
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 from typekernel.parts import Controls, DesignContext
@@ -24,6 +24,7 @@ __all__ = [
     "L3_VOICE_DISTANCE_THRESHOLD",
     "TrialBrief",
     "TrialSnapshot",
+    "controls_at_ladder_stem",
     "snapshot_trial",
     "voice_distance",
     "weight_ladder_r8_failures",
@@ -95,13 +96,30 @@ def voice_distance(controls: Controls) -> float:
     return nearest_voice_distance(controls)
 
 
-def weight_ladder_r8_failures(ctx: DesignContext) -> int:
+def controls_at_ladder_stem(template: Controls, stem: float) -> Controls:
+    """Rebuild ``template`` at another stem (keeps ``Style``, specs, overrides)."""
+    ctx = template.context.tuned(stem=stem)
+    sheet = Controls.from_context(ctx, style=template.style)
+    sheet = replace(
+        sheet,
+        glyph_specs=dict(template.glyph_specs),
+        glyph_overrides=dict(template.glyph_overrides),
+    )
+    if stem >= STEM_RELIEF_ONSET:
+        sheet = sheet.with_stem_relief()
+    return sheet
+
+
+def weight_ladder_r8_failures(controls: Controls | DesignContext) -> int:
     """Count ladder stems where R8 fails on the counter-pinch charset."""
+    template = (
+        controls
+        if isinstance(controls, Controls)
+        else Controls.from_context(controls)
+    )
     failures = 0
     for stem in WEIGHT_LADDER_STEMS:
-        sheet = Controls.from_context(ctx.tuned(stem=stem))
-        if stem >= STEM_RELIEF_ONSET:
-            sheet = sheet.with_stem_relief()
+        sheet = controls_at_ladder_stem(template, stem)
         report = lint_controls(sheet, counter_min=True)
         if any(i.rule == "R8_counter_min" for i in report.issues):
             failures += 1
@@ -140,7 +158,7 @@ def snapshot_trial(
         lint_error_count=len(lint_report.errors),
         identity_error_count=len(identity_report.errors),
         voice_distance=voice_distance(controls),
-        weight_ladder_r8_failures=weight_ladder_r8_failures(controls.context),
+        weight_ladder_r8_failures=weight_ladder_r8_failures(controls),
         glyph_spec_chars=tuple(sorted(controls.glyph_specs)),
         cheating_flags=tuple(cheating_flags),
     )
