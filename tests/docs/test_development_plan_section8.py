@@ -61,7 +61,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "tests/qa/test_originality.py",
-        ("test_l3_rejects_context_only_stem_tweak",),
+        (
+            "test_l3_rejects_context_only_stem_tweak",
+            "test_tk307_serif_voices_far_from_every_builtin_preset",
+        ),
     ),
     (
         "tests/parts/test_tk208_extended_latin.py",

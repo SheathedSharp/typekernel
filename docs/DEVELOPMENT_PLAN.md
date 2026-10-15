@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1402 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- `pytest -q`：**1416 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -109,6 +109,8 @@
 | 上一次真实 agent 试字（见历史会话）的行为：拧几个浮点、换短句直到 gate 通过、宣布完成 | 【会话记录】 |
 
 ### 2.5 第二轮核查新发现的问题（比最初汇报更严重）
+
+> **历史快照（2026-10-14）**：下列 1–3 项已在主线修复（TK-301 contrast、TK-304 `terminal_style`、M4 真斜体与文档）；保留原文供对照，勿当作当前行为。
 
 1. **`contrast` 对圆形字母完全无效** 【实测】
    `contrast` 从 1.0 改到 0.25：`o` 的侧边笔画恒为 70、顶底恒为 69。`contrast=0.5` 时**不变**的字形：`a b c d g i j l o p q C I O 0`。同一款字体里会出现「横笔变细、圆碗仍是等线」的不一致。`parts/primitives.py:148` 留着注释 `reserved for future contrast-aware counters`。
@@ -503,6 +505,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``tests/qa/test_m3_exit.py`` 锁定 M3「≥3 种 L3 voice」（``slab``/``bracketed`` + brief-1 参考试作）且两两 ``voice_distance`` 非零。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
 - **本轮**：``l3_voice_criteria_met`` 要求相对最近 preset 的 ``topology_fraction`` ≥ ``L3_MIN_TOPOLOGY_FRACTION``（0.05）；``originality_report`` 在 combined=1.0 时仍选出最近邻；``test_l3_rejects_context_only_stem_tweak``。
+- **本轮（部分）**：``test_tk307_serif_voices_far_from_every_builtin_preset`` 锁定 TK-306 ``slab``/``bracketed`` 相对七 sans preset 的 ``voice_distance`` 与拓扑下限。
 - **验收**：当前 7 个 preset 两两**拓扑**距离为 0（形状距离 > 0）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
 
 #### TK-308 曲线感知的笔偏移（可选 spike，默认不做）　〔L〕
@@ -810,4 +813,4 @@ print(failures)   # 当前：[]（通过）
 
 **E4　全字符大图（肉眼检查）**：用 `compose_font_from_controls(controls, name, options=FamilyBuildOptions(liga=True))` 编译 `controls.supported`，再用 Pillow 逐字渲染。注意 `qa.agent_preview.build_glyph_preview` 只编译你传入的字符，不会带出大写与标点。
 
-**E5　`italic_controls` 不倾斜**：`italic_controls(Controls.from_context(DesignContext.humanist_sans()))` 的 `l` 字形包围盒宽度仍等于 `stem`（70.0），与 Regular 相同。
+**E5　斜体（M4 后）**：真斜体母版用 `italic_design(regular, ItalicStyle(...))`（构造倾角 + 拓扑分支）；`italic_controls` 仅为弃用别名。回归：`tests/parts/test_italic_controls.py::test_italic_construct_slant_matches_target_within_half_degree`、``test_italic_topology.py``。

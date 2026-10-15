@@ -109,6 +109,23 @@ def test_slab_serif_preset_has_nearest_builtin_neighbor() -> None:
     assert report.nearest_distance == 1.0
 
 
+@pytest.mark.parametrize("preset_name", tuple(BUILTIN_PRESET_FACTORIES))
+@pytest.mark.parametrize(
+    "serif_factory",
+    (DesignContext.slab_serif, DesignContext.bracketed_serif),
+)
+def test_tk307_serif_voices_far_from_every_builtin_preset(
+    preset_name: str,
+    serif_factory,
+) -> None:
+    """TK-307: TK-306 voices must diverge from all seven sans presets."""
+    voice = Controls.from_context(serif_factory())
+    ref = Controls.from_context(BUILTIN_PRESET_FACTORIES[preset_name]())
+    dist = voice_distance(voice, ref)
+    assert dist.combined >= L3_VOICE_DISTANCE_THRESHOLD
+    assert dist.topology_fraction >= L3_MIN_TOPOLOGY_FRACTION
+
+
 def test_topology_signature_differs_o_and_e() -> None:
     o = Controls.from_context(DesignContext.geometric_sans()).build_all("o")["o"]
     e = Controls.from_context(DesignContext.geometric_sans()).build_all("e")["e"]
