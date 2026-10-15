@@ -26,6 +26,22 @@ def test_code_clear_passes_agent_sentence_gate() -> None:
     assert report.g1_join_error_count - report.terminal_count <= 105
 
 
+def test_slab_serif_passes_agent_sentence_gate() -> None:
+    """TK-306: slab voice must stay within locked non-terminal G1 budget."""
+    controls = Controls.from_context(DesignContext.slab_serif())
+    report, failures = check_sentence_gate(controls, text=AGENT_SENTENCE)
+    assert failures == (), failures
+    assert report.g1_join_error_count - report.terminal_count <= 118
+
+
+def test_bracketed_serif_passes_agent_sentence_gate() -> None:
+    """TK-306: bracketed voice must stay within locked non-terminal G1 budget."""
+    controls = Controls.from_context(DesignContext.bracketed_serif())
+    report, failures = check_sentence_gate(controls, text=AGENT_SENTENCE)
+    assert failures == (), failures
+    assert report.g1_join_error_count - report.terminal_count <= 118
+
+
 def test_swapped_proof_sentence_fails() -> None:
     controls = Controls.from_context(DesignContext.code_clear())
     report, failures = check_sentence_gate(controls, text="Hi.")
