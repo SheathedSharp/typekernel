@@ -11,6 +11,7 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     L3_VOICE_DISTANCE_THRESHOLD,
+    WEIGHT_LADDER_STEMS,
     controls_at_ladder_stem,
     snapshot_trial,
     voice_distance,
@@ -26,6 +27,10 @@ _PRESET_FACTORIES = {
     "geometric_sans": DesignContext.geometric_sans,
     "code_clear": DesignContext.code_clear,
 }
+
+
+def test_weight_ladder_stems_include_black_master() -> None:
+    assert WEIGHT_LADDER_STEMS[-1] == 200.0
 
 
 def test_fixed_briefs_are_three_and_unique() -> None:

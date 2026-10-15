@@ -17,7 +17,7 @@ from typekernel.qa.originality import (
     nearest_voice_distance,
 )
 
-WEIGHT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0)
+WEIGHT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
 __all__ = [
     "FIXED_TRIAL_BRIEFS",

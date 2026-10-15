@@ -8,8 +8,9 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.thickness import hook_min_thin_floor, min_hook_thickness
+from typekernel.qa.trial_protocol import WEIGHT_LADDER_STEMS
 
-_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
+_LADDER_STEMS = WEIGHT_LADDER_STEMS
 _HOOK_CHARS = ("f", "t", "g", "J", "j")
 
 

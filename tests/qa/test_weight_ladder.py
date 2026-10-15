@@ -9,13 +9,14 @@ import pytest
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.lint import lint_controls
+from typekernel.qa.trial_protocol import WEIGHT_LADDER_STEMS
 
 pytestmark = pytest.mark.skipif(
     importlib.util.find_spec("pathops") is None,
     reason="lint needs skia-pathops",
 )
 
-_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
+_LADDER_STEMS = WEIGHT_LADDER_STEMS
 
 
 @pytest.mark.parametrize(
