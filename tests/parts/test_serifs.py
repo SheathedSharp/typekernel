@@ -170,6 +170,36 @@ def test_bracketed_s_masters_interpolate_on_weight_ladder() -> None:
         assert check_masters(masters) == []
 
 
+def test_opening_glyph_masters_interpolate_on_weight_ladder() -> None:
+    """TK-306: inline opening serifs keep VF topology on c/e/s and derived glyphs."""
+    charset = "cCeEsSGQ()?"
+    stems = (70.0, 100.0, 140.0, 180.0)
+    wghts = (300.0, 400.0, 600.0, 700.0)
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        ctx = factory()
+        ref = {
+            ch: len(
+                Controls.from_context(ctx.tuned(stem=stems[0]))
+                .build(ch)
+                .solids[0]
+                .contours[0]
+                .segments
+            )
+            for ch in charset
+        }
+        fonts = []
+        for stem, wght in zip(stems, wghts, strict=True):
+            controls = Controls.from_context(ctx.tuned(stem=stem))
+            font = Font.from_context(ctx, "Serif", f"W{int(wght)}", weight_class=int(wght))
+            for ch in charset:
+                g = controls.build(ch)
+                assert len(g.solids[0].contours[0].segments) == ref[ch]
+                font.add_char(ch, g)
+            fonts.append(font)
+        masters = [Master({"wght": wght}, font) for wght, font in zip(wghts, fonts, strict=True)]
+        assert check_masters(masters) == []
+
+
 def test_bracketed_e_opening_uses_cubic_bracket_fillet() -> None:
     sans = Controls.from_context(DesignContext.humanist_sans())
     bracket = Controls.from_context(DesignContext.bracketed_serif())
