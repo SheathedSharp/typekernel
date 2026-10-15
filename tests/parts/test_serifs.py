@@ -227,6 +227,16 @@ def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
         assert "stem_R_t" in names
 
 
+def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    slab = Controls.from_context(DesignContext.slab_serif()).build("m")
+    assert "stem_L_t" not in {a.name for a in slab.anchors}
+    assert composed_glyph_hash(slab) == composed_glyph_hash(apply_glyph_serifs(slab))
+    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("m")
+    assert "stem_L_t" in {a.name for a in bracket.anchors}
+
+
 def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 

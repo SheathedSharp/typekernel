@@ -1327,6 +1327,7 @@ def m_from_n(
 
         inline_stem_foot_serif_path(b, s1.l0, 0.0, c, mm.stem)
         b.lineTo(s1.l0, xh)
+        _n_inline_shoulder_left_cap_slab(b, s1.l0, xh, c, mm.stem)
     else:
         b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
@@ -1382,7 +1383,8 @@ def m_from_n(
         "bottom": (cx, 0.0),
     }
     if _stem_serif_inlined(c):
-        anchors["stem_L_t"] = (s1.l0 + half, xh)
+        if c.style.serif != "slab":
+            anchors["stem_L_t"] = (s1.l0 + half, xh)
     else:
         anchors["stem_L_b"] = (s1.l0 + half, 0.0)
         anchors["stem_L_t"] = (s1.l0 + half, xh)
