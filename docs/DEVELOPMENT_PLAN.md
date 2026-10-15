@@ -411,7 +411,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``bracketed_serif()`` preset；``test_bracketed_serif_lint_clean_on_full_supported`` + ``n`` 四母版 ``check_masters``；cap ``H`` 仅 ``slab`` 内嵌（``bracketed`` 仍走锚点布尔）。
 - **本轮（部分）**：``examples/slab_serif`` 产出 ``proof.png`` / ``proof_brief.png`` + ``tests/examples/test_slab_serif.py`` 构建烟测。
 - **本轮（部分）**：修正 ``_bracket_serif`` 脚/顶垂直向；扩展 ``l``/``f``/``t``/``j``/``k`` 与 ``bracketed`` 下 ``b``/``d``/``p``/``q`` 脚锚点；``test_bracketed_serif_meets_l3_voice_distance``。
-- **本轮（部分）**：cap ``F``/``T`` 内嵌 slab；``test_slab_f_masters`` / ``test_slab_t_masters`` + ``test_slab_serif_masters_on_vf_stable_charset``（全 supported 减锚点大写/j/t）。
+- **本轮（部分）**：cap ``F``/``T``/``N`` 内嵌 slab；对应 ``check_masters`` + ``test_slab_serif_masters_on_vf_stable_charset``（全 supported 减锚点大写/j/t）。
 - **待续**：人审签字；其余大写 slab 内嵌或 VF 示例；``j``/``t`` 阶梯段数。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`serif="slab"` 构建全 98 字形 lint 零错误，并在 ≥ 3 个字重通过；人审；对应 preset（如 `slab_serif()`）与示例。

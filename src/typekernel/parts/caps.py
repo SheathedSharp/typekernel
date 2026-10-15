@@ -1201,6 +1201,64 @@ def M_from_H(
     return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
 
 
+def _n_cap_outline_points(
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    y_left: float,
+    y_right: float,
+) -> list[Pt]:
+    t, cap = h.stem, h.cap_height
+    if ctx.style.serif != "slab":
+        return [
+            (0.0, 0.0),
+            (t, 0.0),
+            (t, y_left),
+            (w - t, 0.0),
+            (w, 0.0),
+            (w, cap),
+            (w - t, cap),
+            (w - t, y_right),
+            (t, cap),
+            (0.0, cap),
+        ]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    gap = max(w - 2.0 * t, t)
+    l = min(length, t * 0.48, gap * 0.32)
+    th = min(thick, cap * 0.1, t * 0.18, gap * 0.14)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (t, 0.0),
+        (t, y_left),
+        (w - t, 0.0),
+        (w - t - l, 0.0),
+        (w - t - l, -th),
+        (w + l, -th),
+        (w + l, 0.0),
+        (w, 0.0),
+        (w, cap),
+        (w + l, cap),
+        (w + l, cap + th),
+        (w - t - l, cap + th),
+        (w - t - l, cap),
+        (w - t, cap),
+        (w - t, y_right),
+        (t, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def N_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.0
 ) -> ComposedGlyph:
@@ -1224,19 +1282,14 @@ def N_from_H(
     y_right = -slope * hw
     if not (0.0 < y_right < cap and 0.0 < y_left < cap):
         raise ValueError("N diagonal does not fit this width; widen it or thin the stem")
-    pts = [
-        (0.0, 0.0),
-        (t, 0.0),
-        (t, y_left),
-        (w - t, 0.0),
-        (w, 0.0),
-        (w, cap),
-        (w - t, cap),
-        (w - t, y_right),
-        (t, cap),
-        (0.0, cap),
-    ]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    baked = c.style.serif == "slab"
+    pts = _n_cap_outline_points(h, c, w=w, y_left=y_left, y_right=y_right)
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
+    )
 
 
 def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
