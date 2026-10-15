@@ -8,6 +8,7 @@ import pytest
 
 from typekernel.geo.joins import classify_joins
 from typekernel.geo.outline import bounds
+from typekernel.geo.stroke import CubicBezier
 from typekernel.optics.stem import measure_oriented_stem, measure_vertical_stem
 from typekernel.parts import (
     DesignContext,
@@ -42,6 +43,61 @@ def test_skeleton_rejects_duplicate_names() -> None:
     b = Stroke.from_points("stem", [(50.0, 0.0), (50.0, 100.0)])
     with pytest.raises(ValueError, match="duplicate"):
         Skeleton.of(a, b)
+
+
+def test_trace_letter_cubic_stroke_matches_polyline_stem() -> None:
+    ctx = DesignContext.geometric_sans().tuned(stem=80.0, contrast=1.0)
+    poly = trace_letter(
+        Skeleton.of(
+            Stroke.from_points("stem", [(40.0, 0.0), (40.0, 400.0)], thickness=80.0)
+        ),
+        ctx,
+        union=False,
+        blend=False,
+        ease=False,
+        cap="butt",
+    )
+    cubic = trace_letter(
+        Skeleton.of(
+            Stroke.from_beziers(
+                "stem",
+                (CubicBezier.line((40.0, 0.0), (40.0, 400.0)),),
+                thickness=80.0,
+            )
+        ),
+        ctx,
+        union=False,
+        blend=False,
+        ease=False,
+        cap="butt",
+    )
+    bb_p = bounds(poly.solids[0])
+    bb_c = bounds(cubic.solids[0])
+    for i in range(4):
+        assert bb_p[i] == pytest.approx(bb_c[i], abs=1.0)
+
+
+def test_from_mapping_accepts_cubic_beziers() -> None:
+    skel = Skeleton.from_mapping(
+        {
+            "arc": {
+                "beziers": [
+                    [
+                        (0.0, 0.0),
+                        (0.0, 55.0),
+                        (45.0, 100.0),
+                        (100.0, 100.0),
+                    ],
+                ],
+                "thickness": 30.0,
+                "chord_budget": 0.3,
+            },
+        }
+    )
+    assert skel.strokes[0].beziers is not None
+    assert skel.strokes[0].chord_budget == 0.3
+    glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, blend=False)
+    assert glyph.solids
 
 
 def test_from_mapping_accepts_points_and_dict() -> None:

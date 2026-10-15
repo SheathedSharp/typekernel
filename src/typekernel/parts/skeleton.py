@@ -16,7 +16,15 @@ from typing import Any, Literal
 
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import Outline
-from typekernel.geo.stroke import CapStyle, Centerline, JoinStyle, expand
+from typekernel.geo.stroke import (
+    CapStyle,
+    Centerline,
+    CubicBezier,
+    CubicCenterline,
+    JoinStyle,
+    expand,
+    expand_cubic,
+)
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.pen import pen_from_context
@@ -62,7 +70,9 @@ class Stroke:
 
     Attributes:
         name: Unique id within the skeleton (``\"stem\"``, ``\"bar\"``, …).
-        points: Polyline vertices in design units.
+        points: Polyline vertices in design units (endpoints when ``beziers`` set).
+        beziers: Optional cubic midline; uses :func:`~typekernel.geo.stroke.expand_cubic`.
+        chord_budget: Flatten budget for cubic strokes (design units).
         closed: Closed centerline → annular ribbon (outer + hole).
         thickness / contrast / angle_deg: Pen overrides; ``None`` uses context.
         join / cap: Per-stroke styles; ``None`` inherits :func:`trace_letter` defaults.
@@ -71,6 +81,8 @@ class Stroke:
 
     name: str
     points: tuple[tuple[float, float], ...]
+    beziers: tuple[CubicBezier, ...] | None = None
+    chord_budget: float = 0.35
     closed: bool = False
     thickness: float | None = None
     contrast: float | None = None
@@ -83,8 +95,19 @@ class Stroke:
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("stroke name must be non-empty")
-        if len(self.points) < 2:
+        if self.beziers is not None:
+            if not self.beziers:
+                raise ValueError(f"stroke {self.name!r} needs at least one cubic segment")
+            if len(self.points) < 2:
+                object.__setattr__(
+                    self,
+                    "points",
+                    (self.beziers[0].p0, self.beziers[-1].p3),
+                )
+        elif len(self.points) < 2:
             raise ValueError(f"stroke {self.name!r} needs at least two points")
+        if self.chord_budget <= 0:
+            raise ValueError(f"stroke {self.name!r} chord_budget must be positive")
         if self.closed and (self.start is not None or self.end is not None):
             # Closed ribbons have no free ends.
             object.__setattr__(self, "start", None)
@@ -104,10 +127,48 @@ class Stroke:
         cap: CapStyle | None = None,
         start: EndTreatment | TerminalKind | None = None,
         end: EndTreatment | TerminalKind | None = None,
+        beziers: tuple[CubicBezier, ...] | None = None,
+        chord_budget: float = 0.35,
     ) -> Stroke:
         return cls(
             name=name,
             points=tuple((float(x), float(y)) for x, y in points),
+            beziers=beziers,
+            chord_budget=chord_budget,
+            closed=closed,
+            thickness=thickness,
+            contrast=contrast,
+            angle_deg=angle_deg,
+            join=join,
+            cap=cap,
+            start=start,
+            end=end,
+        )
+
+    @classmethod
+    def from_beziers(
+        cls,
+        name: str,
+        segments: Sequence[CubicBezier],
+        *,
+        closed: bool = False,
+        chord_budget: float = 0.35,
+        thickness: float | None = None,
+        contrast: float | None = None,
+        angle_deg: float = 0.0,
+        join: JoinStyle | None = None,
+        cap: CapStyle | None = None,
+        start: EndTreatment | TerminalKind | None = None,
+        end: EndTreatment | TerminalKind | None = None,
+    ) -> Stroke:
+        segs = tuple(segments)
+        if not segs:
+            raise ValueError(f"stroke {name!r} needs at least one cubic segment")
+        return cls(
+            name=name,
+            points=(segs[0].p0, segs[-1].p3),
+            beziers=segs,
+            chord_budget=chord_budget,
             closed=closed,
             thickness=thickness,
             contrast=contrast,
@@ -184,7 +245,8 @@ class Skeleton:
 
         Each value is either a point sequence or a dict with keys::
 
-            points, closed, thickness, contrast, angle_deg, join, cap, start, end
+            points, closed, thickness, contrast, angle_deg, join, cap, start, end,
+            beziers, chord_budget
         """
         if not data:
             raise ValueError("skeleton mapping is empty")
@@ -192,8 +254,35 @@ class Skeleton:
         for name, raw in data.items():
             if isinstance(raw, Mapping):
                 pts = raw.get("points")
+                raw_bez = raw.get("beziers")
+                if raw_bez is not None:
+                    beziers = tuple(
+                        CubicBezier(
+                            tuple(raw_seg[0]),
+                            tuple(raw_seg[1]),
+                            tuple(raw_seg[2]),
+                            tuple(raw_seg[3]),
+                        )
+                        for raw_seg in raw_bez
+                    )
+                    strokes.append(
+                        Stroke.from_beziers(
+                            str(name),
+                            beziers,
+                            closed=bool(raw.get("closed", False)),
+                            chord_budget=float(raw.get("chord_budget", 0.35)),
+                            thickness=raw.get("thickness"),
+                            contrast=raw.get("contrast"),
+                            angle_deg=float(raw.get("angle_deg", 0.0)),
+                            join=raw.get("join"),
+                            cap=raw.get("cap"),
+                            start=raw.get("start"),
+                            end=raw.get("end"),
+                        )
+                    )
+                    continue
                 if pts is None:
-                    raise ValueError(f"stroke {name!r} dict needs 'points'")
+                    raise ValueError(f"stroke {name!r} dict needs 'points' or 'beziers'")
                 strokes.append(
                     Stroke.from_points(
                         str(name),
@@ -206,6 +295,7 @@ class Skeleton:
                         cap=raw.get("cap"),
                         start=raw.get("start"),
                         end=raw.get("end"),
+                        chord_budget=float(raw.get("chord_budget", 0.35)),
                     )
                 )
             else:
@@ -299,10 +389,21 @@ def _expand_stroke(
         contrast=stroke.contrast,
         angle_deg=stroke.angle_deg,
     )
-    cl = Centerline.from_points(stroke.points, closed=stroke.closed)
     join = stroke.join if stroke.join is not None else default_join
     cap = stroke.cap if stroke.cap is not None else default_cap
-    outline = expand(cl, pen, join=join, cap=cap, miter_limit=miter_limit)
+    if stroke.beziers is not None:
+        cubic = CubicCenterline.from_beziers(stroke.beziers, closed=stroke.closed)
+        outline, _ = expand_cubic(
+            cubic,
+            pen,
+            chord_budget=stroke.chord_budget,
+            join=join,
+            cap=cap,
+            miter_limit=miter_limit,
+        )
+    else:
+        cl = Centerline.from_points(stroke.points, closed=stroke.closed)
+        outline = expand(cl, pen, join=join, cap=cap, miter_limit=miter_limit)
     if stroke.closed:
         return _split_closed_ribbon(outline)
 
