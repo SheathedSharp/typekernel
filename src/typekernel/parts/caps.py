@@ -2084,6 +2084,56 @@ def Y_from_H(
     return _pack(c, h, anchors, _polygon(pts))
 
 
+def _m_cap_foot_dims(
+    h: HMetrics, ctx: DesignContext, *, w: float, bx: float
+) -> tuple[float, float, float]:
+    t, cap = h.stem, h.cap_height
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    gap = max(w - 2.0 * t, t)
+    l = min(length, t * 0.48, gap * 0.32, max(bx - t, t) * 0.42)
+    th = min(thick, cap * 0.1, t * 0.18, gap * 0.14)
+    return l, th, bracket_r
+
+
+def _write_m_bracketed_outer(
+    b: PathBuilder,
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    y_low: float,
+    y_v: float,
+    bx: float,
+) -> None:
+    t, cap = h.stem, h.cap_height
+    l, th, bracket_r = _m_cap_foot_dims(h, ctx, w=w, bx=bx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(t, 0.0)
+    b.lineTo(t, y_low)
+    b.lineTo(bx, 0.0)
+    b.lineTo(w - bx, 0.0)
+    b.lineTo(w - t, y_low)
+    b.lineTo(w - t, 0.0)
+    b.lineTo(w - t - l, -th)
+    _finish_baseline_foot_pad(b, w - t - l, w + l, th, bracket_r, bracketed=True)
+    b.lineTo(w, 0.0)
+    b.lineTo(w, cap)
+    b.lineTo(w + l, cap)
+    _append_upward_cap_foot_pad(b, w - t - l, w + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(w - t, cap)
+    b.lineTo(w / 2.0, y_v)
+    b.lineTo(t, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def _m_cap_outline_points(
     h: HMetrics,
     ctx: DesignContext,
@@ -2110,12 +2160,7 @@ def _m_cap_outline_points(
             (t, cap),
             (0.0, cap),
         ]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    gap = max(w - 2.0 * t, t)
-    l = min(length, t * 0.48, gap * 0.32, max(bx - t, t) * 0.42)
-    th = min(thick, cap * 0.1, t * 0.18, gap * 0.14)
+    l, th, _ = _m_cap_foot_dims(h, ctx, w=w, bx=bx)
     return [
         (-l, -th),
         (t + l, -th),
@@ -2179,6 +2224,8 @@ def M_from_H(
     if c.style.serif in ("slab", "bracketed"):
         if s <= 78.0:
             w_frac += 0.06
+            if c.style.serif == "bracketed" and s <= 72.0:
+                w_frac += 0.05
         if 100.0 <= s <= 118.0:
             w_frac += 0.05
         if 138.0 <= s <= 162.0:
@@ -2197,14 +2244,13 @@ def M_from_H(
     y_v = slope * (f / 2.0 - hw)
     if not (0.0 < y_low < cap and 0.0 < y_v < cap and hw > f / 2.0):
         raise ValueError("M strokes do not fit this width; widen it or thin the stem")
-    baked = c.style.serif == "slab"
-    pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
+    inlined = c.style.serif in ("slab", "bracketed")
     half = t / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, cap),
         "bottom": (w / 2.0, 0.0),
     }
-    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+    if _cap_stem_serif_anchors_enabled(c, baked=inlined):
         anchors.update(
             {
                 "stem_L_b": (half, 0.0),
@@ -2213,6 +2259,13 @@ def M_from_H(
                 "stem_R_t": (w - half, cap),
             }
         )
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_m_bracketed_outer(
+            b, h, c, w=w, y_low=y_low, y_v=y_v, bx=bx
+        )
+        return _pack(c, h, anchors, _ccw(b.build()))
+    pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
     return _pack(c, h, anchors, _polygon(pts))
 
 
