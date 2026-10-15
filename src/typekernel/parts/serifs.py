@@ -19,6 +19,7 @@ __all__ = [
     "apply_glyph_serifs",
     "bracketed_stem_foot_dims",
     "inline_hook_cap_serif_path",
+    "inline_shoulder_left_cap_slab_path",
     "inline_stem_cap_serif_path",
     "inline_stem_foot_serif_path",
     "inline_stem_foot_serif_path_right",
@@ -220,6 +221,24 @@ def inline_stem_foot_serif_path_right(
         bracket_r=bracket_r,
     )
     b.lineTo(x_stem_right, y_base)
+
+
+def inline_shoulder_left_cap_slab_path(
+    b: PathBuilder,
+    x_stem_left: float,
+    y_cap: float,
+    ctx: DesignContext,
+    stem_width: float,
+) -> None:
+    """Slab cap on the left face only; current point ``(x_stem_left, y_cap)``."""
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, stem_width * 0.5)
+    th = min(thick, y_cap * 0.1, stem_width * 0.2)
+    xl = x_stem_left - l
+    b.lineTo(xl, y_cap)
+    b.lineTo(xl, y_cap + th)
+    b.lineTo(x_stem_left, y_cap + th)
+    b.lineTo(x_stem_left, y_cap)
 
 
 def inline_stem_cap_serif_path(

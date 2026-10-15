@@ -503,6 +503,20 @@ def _n_inline_left_stem_cap(
     inline_stem_cap_serif_path(b, x_stem_left, x_stem_right, y_cap, ctx, stem)
 
 
+def _n_inline_shoulder_left_cap_slab(
+    b: PathBuilder,
+    x_stem_left: float,
+    y_cap: float,
+    ctx: DesignContext,
+    stem: float,
+) -> None:
+    if ctx.style.serif != "slab":
+        return
+    from typekernel.parts.serifs import inline_shoulder_left_cap_slab_path
+
+    inline_shoulder_left_cap_slab_path(b, x_stem_left, y_cap, ctx, stem)
+
+
 def _n_ascender_left_stem_cap(y_cap: float, m: NMetrics) -> bool:
     return y_cap > m.x_height + 0.5
 
@@ -845,6 +859,7 @@ def r_from_n(
             right_foot=False,
             ctx=c,
             inline_left_foot=_stem_serif_inlined(c),
+            inline_left_top=c.style.serif == "slab",
         ),
     }
     return _pack(c, m, anchors, outline)
@@ -916,6 +931,7 @@ def _r_outline(
 
         inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
         b.lineTo(s.l0, m.x_height)
+        _n_inline_shoulder_left_cap_slab(b, s.l0, m.x_height, ctx, m.stem)
     else:
         b.lineTo(s.l0, m.x_height)
     if slab_foot is not None:
