@@ -42,6 +42,7 @@ __all__ = [
     "CubicCenterline",
     "JoinStyle",
     "Pen",
+    "cubic_centerline_to_polyline",
     "expand",
     "expand_cubic",
     "flatten_cubic_centerline",
@@ -229,6 +230,15 @@ def _flatten_cubic_segment(
     left, right = _split_cubic(seg)
     _flatten_cubic_segment(left, budget, pts, max_err)
     _flatten_cubic_segment(right, budget, pts, max_err)
+
+
+def cubic_centerline_to_polyline(
+    centerline: CubicCenterline,
+    chord_budget: float = 0.35,
+) -> Centerline:
+    """Polyline approximation of a cubic midline (for chaining to :func:`expand`)."""
+    poly, _ = flatten_cubic_centerline(centerline, chord_budget)
+    return poly
 
 
 def flatten_cubic_centerline(

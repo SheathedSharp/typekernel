@@ -12,6 +12,7 @@ from typekernel.geo.stroke import (
     CubicBezier,
     CubicCenterline,
     Pen,
+    cubic_centerline_to_polyline,
     expand,
     expand_cubic,
     flatten_cubic_centerline,
@@ -130,6 +131,15 @@ def test_expand_cubic_closed_square_annulus() -> None:
     assert max_y == pytest.approx(100.0, abs=1.5)
 
 
+def test_cubic_centerline_to_polyline_matches_flatten() -> None:
+    seg = CubicBezier.line((0.0, 0.0), (50.0, 0.0))
+    cl = CubicCenterline.from_beziers([seg])
+    poly = cubic_centerline_to_polyline(cl, chord_budget=0.5)
+    flat, _ = flatten_cubic_centerline(cl, chord_budget=0.5)
+    assert poly.points == flat.points
+    assert poly.closed == flat.closed
+
+
 def test_flatten_cubic_line_is_two_points() -> None:
     seg = CubicBezier.line((10.0, 20.0), (110.0, 20.0))
     cl = CubicCenterline.from_beziers([seg])
@@ -137,6 +147,17 @@ def test_flatten_cubic_line_is_two_points() -> None:
     assert poly.points == ((10.0, 20.0), (110.0, 20.0))
     assert report.max_chord_error == 0.0
     assert report.cubic_segment_count == 1
+
+
+def test_cubic_centerline_to_polyline_l_shape() -> None:
+    segs = (
+        CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
+        CubicBezier.line((100.0, 0.0), (100.0, 100.0)),
+    )
+    poly = cubic_centerline_to_polyline(CubicCenterline.from_beziers(segs), chord_budget=0.1)
+    assert len(poly.points) >= 3
+    assert poly.points[0] == (0.0, 0.0)
+    assert poly.points[-1] == (100.0, 100.0)
 
 
 def test_expand_cubic_multi_segment_matches_polyline_bbox() -> None:
