@@ -179,7 +179,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-101 字形体检 `qa/lint.py`　〔M〕
 - **本轮（部分）**：R1 对「单 solid 多轮廓」按外轮廓 CCW 判定，内环负面积不再误报；`_pack` / `_pack_holes` 与标点镜像统一 solid CCW、孔 CW，`humanist_sans` 全字符 R1 error 清零。
-- **本轮（部分）**：R4 ``extrema``（warn）用 ``geo.extrema.cubic_has_off_node_axis_extrema``；合成夹具 + 七 preset 回归仍绿（约 20 字/ preset 为 warn，待 TK-402 绘制时重平衡）。
+- **本轮（部分）**：R4 ``extrema``（warn）用 ``geo.extrema.cubic_has_off_node_axis_extrema``；合成夹具 + 七 preset 直立回归仍绿；七 preset ``italic_design`` R4 清零（``test_italic_design_clears_r4_on_builtin_presets``，TK-402）。
 - **做什么**：新增 `lint_glyph(glyph, ctx)` 与 `lint_controls(controls, chars=None) -> LintReport`；`LintIssue(glyph, rule, severity, detail)`。规则：
   | 规则 | 检查 | 严重度 |
   | --- | --- | --- |
@@ -447,7 +447,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-401～404 真斜体母版　〔M〕
 - **TK-401**：`italic_design(regular, ItalicStyle)`；`italic_controls` 弃用并 `DeprecationWarning`；`DesignContext.italic_slant_deg` 在 `build_all` 施加构造倾角；TK-002 xfail 已转正。
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
-- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；斜体 ``code_clear`` R4 清零。
+- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；七内置 preset 斜体 R4 清零（见 TK-101 回归）。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。
