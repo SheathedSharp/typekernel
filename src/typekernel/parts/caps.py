@@ -1261,6 +1261,32 @@ def K_from_H(
     )
 
 
+def _a_cap_slab_outer(
+    h: HMetrics, ctx: DesignContext, hw: float, w: float, base: list[Pt]
+) -> list[Pt]:
+    """Slab feet on the two baseline stems of cap ``A`` (apex stays sharp)."""
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    t = h.stem
+    l = min(length * 0.42, hw * 0.55, t * 0.48)
+    th = min(thick * 0.65, h.cap_height * 0.05, t * 0.18)
+    return [
+        (-l, -th),
+        (hw + l, -th),
+        (hw + l, 0.0),
+        base[2],
+        base[3],
+        (w - hw - l, -th),
+        (w + l, -th),
+        (w + l, 0.0),
+        base[5],
+        base[6],
+        base[7],
+        (-l, 0.0),
+    ]
+
+
 def A_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1293,26 +1319,32 @@ def A_from_H(
     def right(y: float) -> float:
         return w - hw - a * y / cap
 
+    baked = c.style.serif == "slab"
+    base_outer = [
+        (0.0, 0.0),
+        (hw, 0.0),
+        (left(y0), y0),
+        (right(y0), y0),
+        (w - hw, 0.0),
+        (w, 0.0),
+        ((w + f) / 2.0, peak),
+        ((w - f) / 2.0, peak),
+    ]
+    outer_pts = _a_cap_slab_outer(h, c, hw, w, base_outer) if baked else base_outer
     b = PathBuilder()
-    for i, p in enumerate(
-        [
-            (0.0, 0.0),
-            (hw, 0.0),
-            (left(y0), y0),
-            (right(y0), y0),
-            (w - hw, 0.0),
-            (w, 0.0),
-            ((w + f) / 2.0, peak),
-            ((w - f) / 2.0, peak),
-        ]
-    ):
+    for i, p in enumerate(outer_pts):
         (b.moveTo if i == 0 else b.lineTo)(*p)
     b.closePath()
     b.moveTo(left(y1), y1)
     b.lineTo(w / 2.0, crotch)
     b.lineTo(right(y1), y1)
     b.closePath()
-    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _with_counters(b),
+    )
 
 
 def _y_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
