@@ -60,9 +60,11 @@ controls = (
 | `e` | `ESpec` | `bar_raise` (0.25), `aperture` (None) |
 | `s` | `SSpec` | `width`, `top_scale`, `spine`, `aperture` |
 | `A` | `CapASpec` | `width` (1.02), `apex` (0.35), `bar` (0.28) |
+| `D` | `DSpec` | `width` (1.05), `straight` (0.4) |
 | `E` | `CapESpec` | `width` (0.84) |
 | `F` | `CapFSpec` | `width` (0.82) |
 | `G` | `GSpec` | `bar_reach` (0.1) |
+| `P` | `PSpec` | `width`, `straight`, `bowl`（默认同 `R` 碗区，无 `leg_at`） |
 | `K` | `KSpec` | `width` (0.92), `vertex` (0.42) |
 | `R` | `RSpec` | `width`, `straight`, `bowl`, `leg_at` |
 | `Y` | `YSpec` | `width` (0.98), `junction` (0.42) |

@@ -7,6 +7,7 @@ from typing import Any
 
 from typekernel.parts.caps import (
     A_from_H,
+    D_from_H,
     E_from_H,
     F_from_H,
     G_from_O,
@@ -14,6 +15,7 @@ from typekernel.parts.caps import (
     L_from_H,
     M_from_H,
     N_from_H,
+    P_from_H,
     R_from_H,
     T_from_H,
     V_from_H,
@@ -40,6 +42,7 @@ __all__ = [
     "CapESpec",
     "CapFSpec",
     "CapTSpec",
+    "DSpec",
     "ESpec",
     "FSpec",
     "GSpec",
@@ -48,6 +51,7 @@ __all__ = [
     "LSpec",
     "MSpec",
     "NSpec",
+    "PSpec",
     "RSpec",
     "SSpec",
     "TSpec",
@@ -140,6 +144,14 @@ class CapFSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class DSpec:
+    """``D``: cap width and where the flat top turns into the bowl."""
+
+    width: float = 1.05
+    straight: float = 0.4
+
+
+@dataclass(frozen=True, slots=True)
 class GSpec:
     """``G``: inward crossbar reach past the cap ``O`` centre."""
 
@@ -174,6 +186,15 @@ class NSpec:
     """``N``: cap width fraction."""
 
     width: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class PSpec:
+    """``P``: bowl width, flat shoulder run, and bowl vertical centre."""
+
+    width: float = 0.9
+    straight: float = 0.45
+    bowl: float = 0.47
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,6 +251,7 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "e": ESpec,
     "s": SSpec,
     "A": CapASpec,
+    "D": DSpec,
     "E": CapESpec,
     "F": CapFSpec,
     "G": GSpec,
@@ -237,6 +259,7 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "L": LSpec,
     "M": MSpec,
     "N": NSpec,
+    "P": PSpec,
     "R": RSpec,
     "V": VSpec,
     "W": WSpec,
@@ -292,6 +315,10 @@ def build_from_spec(
         return A_from_H(
             n_glyph, ctx, width=spec.width, apex=spec.apex, bar=spec.bar
         )
+    if ch == "D" and isinstance(spec, DSpec):
+        return D_from_H(
+            n_glyph, o_glyph, ctx, width=spec.width, straight=spec.straight
+        )
     if ch == "E" and isinstance(spec, CapESpec):
         return E_from_H(n_glyph, ctx, width=spec.width)
     if ch == "F" and isinstance(spec, CapFSpec):
@@ -306,6 +333,15 @@ def build_from_spec(
         return M_from_H(n_glyph, ctx, width=spec.width, apex=spec.apex)
     if ch == "N" and isinstance(spec, NSpec):
         return N_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "P" and isinstance(spec, PSpec):
+        return P_from_H(
+            n_glyph,
+            o_glyph,
+            ctx,
+            width=spec.width,
+            straight=spec.straight,
+            bowl=spec.bowl,
+        )
     if ch == "V" and isinstance(spec, VSpec):
         return V_from_H(n_glyph, ctx, width=spec.width)
     if ch == "W" and isinstance(spec, WSpec):
