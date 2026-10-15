@@ -26,9 +26,26 @@ _PRESETS = (
     "open_print",
 )
 
+# DEVELOPMENT_PLAN §8.3: main sans presets + TK-306 serif voices.
+_SECTION8_GATE_PRESETS = (
+    "humanist_sans",
+    "geometric_sans",
+    "code_clear",
+    "slab_serif",
+    "bracketed_serif",
+)
+
 
 @pytest.mark.parametrize("preset", _PRESETS)
 def test_preset_passes_family_gate(preset: str) -> None:
+    failures = collect_family_gate_failures(
+        Controls.from_context(getattr(DesignContext, preset)())
+    )
+    assert not failures, failures
+
+
+@pytest.mark.parametrize("preset", _SECTION8_GATE_PRESETS)
+def test_section8_family_gate_on_main_and_serif_voices(preset: str) -> None:
     failures = collect_family_gate_failures(
         Controls.from_context(getattr(DesignContext, preset)())
     )

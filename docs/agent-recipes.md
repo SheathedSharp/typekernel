@@ -162,7 +162,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
-自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/examples/test_italic_family.py`（真斜体 VF）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
+自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
 
 ```bash
 PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review

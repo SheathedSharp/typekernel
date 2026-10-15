@@ -546,6 +546,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``Stroke.offset_fit_budget`` 透传 ``expand_cubic``；多段开放折线化与 ``expand`` 包围盒回归。
 - **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``cubic_centerline_to_polyline`` 与多段开放路径说明。
 - **本轮（部分）**：``agent-recipes`` / ``reference`` 对齐 TK-402 斜体 ``proof.png`` / ``proof_vf.png`` 与人审 gate 名。
+- **本轮（部分）**：``test_section8_family_gate_on_main_and_serif_voices`` 固化 §8.3 主 preset + TK-306 衬线 voice；``agent-recipes`` 补程序验收 pytest 指针。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
