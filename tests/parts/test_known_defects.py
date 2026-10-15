@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from typekernel.geo.outline import bounds
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.identity import check_identity_glyph
@@ -74,16 +76,29 @@ def test_b14_g_spur_cubic_join() -> None:
     assert spur == ["line", "line", "cubic", "line"]
 
 
-def test_b15_s_spine_ink_is_continuous_band() -> None:
+@pytest.mark.parametrize(
+    "preset",
+    (
+        "humanist_sans",
+        "code_clear",
+        "geometric_sans",
+        "mono",
+        "display",
+        "slab_serif",
+        "bracketed_serif",
+    ),
+)
+def test_b15_s_spine_ink_is_continuous_band(preset: str) -> None:
     """TK-206 / B-15: spine crossing stays one solid band (not a pinched waist)."""
     from typekernel.optics.space import ink_intervals_at_y
 
-    s = _glyph("s")
-    y = 0.5 * _CTX.x_height
+    ctx = getattr(DesignContext, preset)()
+    s = Controls.from_context(ctx).build("s")
+    y = 0.5 * ctx.x_height
     intervals = ink_intervals_at_y(list(s.solids), y)
     assert len(intervals) == 1
     width = intervals[0][1] - intervals[0][0]
-    assert width >= _CTX.stem * 0.8
+    assert width >= ctx.stem * 0.8
 
 
 def test_b09_m_thickness_band() -> None:

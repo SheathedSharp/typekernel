@@ -302,6 +302,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
 - **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-15 仍视觉低优先。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band``（腰区单段墨迹 + 最小宽度）；附录 B 登记更新。
+- **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band`` 参数化七 preset（含衬线 voice）。
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试。
 - **本轮（部分）**：`s_from_o` 默认 `top_scale` 0.94→0.92，上环略收；golden `s`/`S` 三 preset 更新。
 - **本轮（部分）**：``G`` spur κ 圆角随 cap stem 略增（重字重仍 ``use≤0.34`` 防自交）；``test_g_outer_segment_count_fixed_across_stems`` / VF 阶梯回归；golden ``G`` 三 preset 更新。
@@ -595,6 +596,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：SKILL ``reference.md`` 补 TK-104 CLI；``run_m5_program_exit`` 含 ``test_contact_sheet_full_charset_width_at_most_1600``。
 - **本轮（部分）**：``examples/_design_presets.py`` 共享 built-in preset 表（``contact_sheet`` / ``diff_overlay`` / ``weight_ladder_sheet``）。
 - **本轮（部分）**：``AGENT_GOAL`` / ``SKILL`` M5 段补 TK-104 校样 CLI；``run_m5_program_exit`` 含 ``test_diff_overlay_writes``。
+- **本轮（部分）**：``AGENT_TRIALS`` 发布前程序条补 TK-104/207 校样 CLI；``test_agent_trials_doc`` 固化。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
