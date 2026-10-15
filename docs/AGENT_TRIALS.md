@@ -30,6 +30,22 @@
 | 参考试作（程序） | 2026-10-15 | 库维护者 | pass | pass | pass | `design_*.py`；`voice_distance` ≈ 0.54 / 0.54 / 0.53；`tests/fixtures/tk502_reference_metrics.json` + `test_reference_metrics_match_committed_fixture` |
 | 终验 | _待填_ | | | | | M5 TK-502：须独立 agent 跑 brief + **人评**（1–5） |
 
+## 终验流程（TK-502，程序侧）
+
+与「参考试作」不同：终验必须由**执行试验的 agent/人**从对应 brief 的 preset 出发改字，不得只跑库内 `design_*.py` 并声称完成。
+
+1. **固定 brief**（上表三行，文案不改）。
+2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。
+3. **每个 brief**：
+   - 实现 `controls()`（Regular）并记录 API（`Style` / `tuned_glyph` / `with_glyph` / `with_stem_relief`）。
+   - `PYTHONPATH=src python examples/agent_trial/snapshot_design.py --brief brief-N --design <你的模块.py> --out <dir>/brief-N`
+   - 检查 JSON：`family_gate_ok`、`metrics_ok`、`l3_voice_ok`、`weight_ladder_r8_failures==0`（阶梯 stem 与 TK-207 一致，含 **200**，且含试作上的改字）。
+   - 可选：`build_reference_family.py` 同 brief 产出 OTF + `proof.png`（**不得**改 `AGENT_SENTENCE`）。
+4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；视觉接受另写 `approvals/*.json`（见 `examples/human_review_bundle.py`）。
+5. **作废条件**：改过关句、改 L3/ gate 阈值、或 `cheating_flags` 非空。
+
+库维护者回归：`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）。
+
 ## 跑预设基线快照（库维护者）
 
 ```bash

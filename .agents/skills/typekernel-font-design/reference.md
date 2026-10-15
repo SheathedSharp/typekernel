@@ -102,9 +102,11 @@ Fails if:
 ## Agent trials (M5 / TK-502)
 
 - Baselines: `examples/agent_trial/snapshot_presets.py`, `snapshot_serif_voices.py`.
-- Reference edits (L3 + gate/R8): `design_warm_humanist.py`, `design_editorial_geometric.py`, `design_coding_clear.py` — each exports `controls()`, `design_bold()`, `baseline_controls()`.
-- Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py`.
-- Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). Protocol: `docs/AGENT_TRIALS.md`.
+- Reference edits (L3 + gate/R8): `design_warm_humanist.py`, `design_editorial_geometric.py`, `design_editorial_slab.py` (brief-2 `--variant slab`), `design_coding_clear.py` — each exports `controls()`, `design_bold()`, `baseline_controls()`.
+- Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py` (includes `brief-2-slab/`).
+- `snapshot_trial` → `weight_ladder_r8_failures` uses full trial `Controls` on `WEIGHT_LADDER_STEMS` (30–200) via `controls_at_ladder_stem`.
+- Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} [--variant slab] --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). End-to-end checklist: `docs/AGENT_TRIALS.md` §终验流程.
+- Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py`.
 
 ## Tests
 

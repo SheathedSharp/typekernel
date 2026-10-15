@@ -474,7 +474,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。
 - **本轮（部分）**：SKILL Step 3 补 ``Style`` 指针（与 ``agent-recipes`` / ``reference`` 对齐）。
 - **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
-- **待续**：L3 试作与人评（TK-502）。
+- **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
@@ -485,6 +485,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：brief-2 衬线参考试作 ``design_editorial_slab.py``（``build_reference_family --variant slab``）；``snapshot_reference_trials`` 含 ``brief-2-slab``。
 - **本轮（部分）**：``weight_ladder_r8_failures`` / ``snapshot_trial`` 在字重阶梯上保留 trial ``Controls`` 的 ``Style``、``tuned_glyph``、``with_glyph``（``controls_at_ladder_stem``）。
 - **本轮（部分）**：``WEIGHT_LADDER_STEMS`` 与 TK-207 对齐（含 stem 200）；``test_weight_ladder_stems_match_tk207_regression``。
+- **本轮（部分）**：``AGENT_TRIALS.md`` §终验流程（程序侧步骤、作废条件）；``tk502_reference_metrics`` 含 ``brief-2-slab``；SKILL/reference 同步。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 

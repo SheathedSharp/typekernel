@@ -28,6 +28,13 @@ _REFERENCE_TRIALS = (
     ("brief-3", TRIAL / "design_coding_clear.py"),
 )
 
+_METRICS_DESIGNS: dict[str, tuple[str, Path]] = {
+    "brief-1": ("brief-1", TRIAL / "design_warm_humanist.py"),
+    "brief-2": ("brief-2", TRIAL / "design_editorial_geometric.py"),
+    "brief-2-slab": ("brief-2", TRIAL / "design_editorial_slab.py"),
+    "brief-3": ("brief-3", TRIAL / "design_coding_clear.py"),
+}
+
 
 def _load_controls(path: Path) -> Controls:
     spec = importlib.util.spec_from_file_location(path.stem, path)
@@ -56,10 +63,11 @@ def _assert_reference_trial(brief_id: str, design_path: Path) -> None:
 def test_reference_metrics_match_committed_fixture() -> None:
     """TK-502: documented voice_distance / gate metrics stay aligned with design_*.py."""
     expected = json.loads(_METRICS_FIXTURE.read_text(encoding="utf-8"))
-    for brief_id, design_path in _REFERENCE_TRIALS:
+    assert set(expected) == set(_METRICS_DESIGNS)
+    for fixture_id, (brief_id, design_path) in _METRICS_DESIGNS.items():
         brief = next(b for b in FIXED_TRIAL_BRIEFS if b.id == brief_id)
         snap = snapshot_trial(_load_controls(design_path), brief=brief, round=1)
-        row = expected[brief_id]
+        row = expected[fixture_id]
         assert snap.family_gate_ok == row["family_gate_ok"]
         assert snap.l3_voice_ok == row["l3_voice_ok"]
         assert snap.weight_ladder_r8_failures == row["weight_ladder_r8_failures"]
