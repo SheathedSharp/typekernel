@@ -218,6 +218,13 @@ class DesignContext:
         )
 
     @classmethod
+    def bracketed_serif(cls) -> DesignContext:
+        """Humanist proportions with bracketed stem serifs (TK-306)."""
+        from typekernel.parts.style import Style
+
+        return replace(cls.humanist_sans(), style=Style(serif="bracketed"))
+
+    @classmethod
     def slab_serif(cls) -> DesignContext:
         """Editorial slab: sturdy stems with rectangular serifs (TK-306)."""
         from typekernel.parts.style import Style

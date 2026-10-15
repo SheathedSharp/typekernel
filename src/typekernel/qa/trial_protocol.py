@@ -51,7 +51,7 @@ FIXED_TRIAL_BRIEFS: tuple[TrialBrief, ...] = (
         "brief-2",
         "Editorial geometric sans (single-storey a/g; slab deferred per D2)",
         "geometric_sans",
-        notes="Slab serif brief swaps to geometric sans until TK-306 lands.",
+        notes="Editorial brief may use slab_serif() or bracketed_serif() presets (TK-306).",
     ),
     TrialBrief(
         "brief-3",

@@ -176,7 +176,7 @@ def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
     """Single CCW outer for ``H``; bakes slab serifs when ``style.serif`` is set."""
     t, w, cap = h.stem, h.width, h.cap_height
     y0, y1 = h.bar_y - h.bar / 2.0, h.bar_y + h.bar / 2.0
-    if ctx.style.serif == "none":
+    if ctx.style.serif != "slab":
         return [
             (0.0, 0.0),
             (t, 0.0),
@@ -232,7 +232,7 @@ def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
 def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyph:
     """Control ``H``: two cap stems and a crossbar, one contour."""
     h = metrics or h_cap_metrics(ctx)
-    baked = ctx.style.serif != "none"
+    baked = ctx.style.serif == "slab"
     outline = _polygon(_h_outline_points(h, ctx))
     return _pack(
         ctx,
