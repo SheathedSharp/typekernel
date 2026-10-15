@@ -41,7 +41,7 @@ def test_slab_serif_build_vf_script(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         check=False,
-        env={**dict(**__import__("os").environ), "PYTHONPATH": str(ROOT / "src")},
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert (tmp_path / "TypekernelSlab-VF.ttf").is_file()
