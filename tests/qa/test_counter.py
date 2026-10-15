@@ -39,6 +39,30 @@ def test_cap_k_ignores_stem_diagonal_micro_slivers() -> None:
     assert gap >= counter_gap_floor(ctx.stem)
 
 
+@pytest.mark.parametrize("char", ("f", "h", "i", "j", "l", "r", "t", "z"))
+def test_stem_lowercase_pass_counter_floor_across_ladder(char: str) -> None:
+    """TK-207: stem / single-stroke lowercase already clear R8 on the weight ladder."""
+    from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
+
+    presets = (
+        "humanist_sans",
+        "geometric_sans",
+        "code_clear",
+        "paper_ink",
+        "open_print",
+        "display",
+        "mono",
+    )
+    for preset in presets:
+        for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
+            ctx = getattr(DesignContext, preset)().tuned(stem=stem)
+            controls = Controls.from_context(ctx)
+            if stem >= STEM_RELIEF_ONSET:
+                controls = controls.with_stem_relief()
+            gap = min_counter_gap(controls.build(char))
+            assert gap >= counter_gap_floor(stem)
+
+
 @pytest.mark.parametrize("char", ("G", "I", "L"))
 def test_cap_stem_letters_pass_counter_floor_across_ladder(char: str) -> None:
     """TK-207: straight cap stems already clear R8 on the weight ladder."""

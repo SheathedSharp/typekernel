@@ -7,9 +7,9 @@ from typekernel.geo.outline import Outline, bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts.compose import ComposedGlyph
 
-# B-16 bowl letters, round figures, and punctuation rings (``h`` stem-only still out).
+# B-16 bowl letters, round figures, punctuation rings, and stem/diagonal lowercase.
 COUNTER_PINCH_CHARSET = frozenset(
-    "0123456789#%?&@acemnosu$bdgpqkvywxABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789#%?&@acemnosu$bdgpqkvywxfhijlrtzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]
