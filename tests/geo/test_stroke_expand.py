@@ -105,6 +105,31 @@ def test_closed_centerline_is_annulus() -> None:
     assert max_y == pytest.approx(100.0, abs=0.5)
 
 
+def _square_cubic_centerline() -> CubicCenterline:
+    return CubicCenterline.from_beziers(
+        (
+            CubicBezier.line((30.0, 30.0), (90.0, 30.0)),
+            CubicBezier.line((90.0, 30.0), (90.0, 90.0)),
+            CubicBezier.line((90.0, 90.0), (30.0, 90.0)),
+            CubicBezier.line((30.0, 90.0), (30.0, 30.0)),
+        ),
+        closed=True,
+    )
+
+
+def test_expand_cubic_closed_square_annulus() -> None:
+    cl = _square_cubic_centerline()
+    ring, report = expand_cubic(cl, Pen(thickness=20.0), offset_fit_budget=1.0)
+    assert report.max_chord_error == 0.0
+    assert report.max_offset_fit_error <= 1.0
+    assert ring.contour_count == 2
+    min_x, min_y, max_x, max_y = bounds(ring)
+    assert min_x == pytest.approx(20.0, abs=1.5)
+    assert max_x == pytest.approx(100.0, abs=1.5)
+    assert min_y == pytest.approx(20.0, abs=1.5)
+    assert max_y == pytest.approx(100.0, abs=1.5)
+
+
 def test_flatten_cubic_line_is_two_points() -> None:
     seg = CubicBezier.line((10.0, 20.0), (110.0, 20.0))
     cl = CubicCenterline.from_beziers([seg])

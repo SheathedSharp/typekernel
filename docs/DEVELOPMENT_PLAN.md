@@ -448,7 +448,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``geo.stroke.CubicCenterline`` / ``CubicBezier``；``flatten_cubic_centerline`` + ``expand_cubic`` + ``CenterlineExpandReport``（弦高误差预算）；``tests/geo/test_stroke_expand.py`` 合成夹具。
 - **本轮（部分）**：``Stroke.beziers`` / ``from_beziers`` + ``Skeleton.from_mapping`` 的 ``beziers`` 键；``trace_letter`` 走 ``expand_cubic``。
 - **本轮（部分）**：单段开放 cubic + butt cap 走偏移轨道 cubic 链拟合（``max_offset_fit_error`` / ``offset_fit_budget``）；多段/圆角仍折线化。
-- **待续**：椭圆笔偏移的更高阶拟合与闭合中线。
+- **本轮（部分）**：闭合 cubic 中线（多段）偏移轨道拟合 → 双轮廓环（``_expand_closed_cubic_offset``）。
+- **待续**：段间 C1 接缝、圆角 cap/join、更高阶椭圆笔拟合。
 
 ### M4 真斜体
 

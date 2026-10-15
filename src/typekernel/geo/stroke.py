@@ -365,6 +365,47 @@ def _append_cubic_chain(b: PathBuilder, chain: list[CubicBezier]) -> None:
         b.curveTo(seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1], seg.p3[0], seg.p3[1])
 
 
+def _expand_closed_cubic_offset(
+    centerline: CubicCenterline,
+    pen: Pen,
+    *,
+    offset_fit_budget: float,
+    samples: int = 17,
+) -> tuple[Outline, float]:
+    """Closed cubic midline → annulus (outer + hole) via per-segment rail fits."""
+    outer_chains: list[list[CubicBezier]] = []
+    inner_chains: list[list[CubicBezier]] = []
+    max_err = 0.0
+    for seg in centerline.segments:
+        left = _sample_offset_rail(seg, pen, samples, left_side=True)
+        right = _sample_offset_rail(seg, pen, samples, left_side=False)
+        oc, err_o = _fit_offset_rail(right, offset_fit_budget)
+        ic, err_i = _fit_offset_rail(left, offset_fit_budget)
+        max_err = max(max_err, err_o, err_i)
+        outer_chains.append(oc)
+        inner_chains.append(ic)
+    b = PathBuilder()
+    start = outer_chains[0][0].p0
+    b.moveTo(start[0], start[1])
+    for chain in outer_chains:
+        _append_cubic_chain(b, chain)
+    b.closePath()
+    inner_start = inner_chains[0][0].p0
+    b.moveTo(inner_start[0], inner_start[1])
+    for chain in reversed(inner_chains):
+        for seg_r in reversed(chain):
+            b.curveTo(
+                seg_r.p2[0],
+                seg_r.p2[1],
+                seg_r.p1[0],
+                seg_r.p1[1],
+                seg_r.p0[0],
+                seg_r.p0[1],
+            )
+    b.closePath()
+    return b.build(), max_err
+
+
 def _expand_open_single_cubic_offset(
     seg: CubicBezier,
     pen: Pen,
@@ -399,26 +440,39 @@ def expand_cubic(
     miter_limit: float = 4.0,
 ) -> tuple[Outline, CenterlineExpandReport]:
     """Expand a cubic midline; output includes cubics at round joins/caps."""
-    if (
-        len(centerline.segments) == 1
-        and not centerline.closed
-        and cap == "butt"
-        and join == "miter"
-        and offset_fit_budget > 0
-    ):
-        outline, fit_err = _expand_open_single_cubic_offset(
-            centerline.segments[0],
-            pen,
-            offset_fit_budget=offset_fit_budget,
-        )
-        return outline, CenterlineExpandReport(
-            max_chord_error=0.0,
-            cubic_segment_count=1,
-            polyline_vertex_count=0,
-            outline_cubic_segment_count=_outline_cubic_segment_count(outline),
-            chord_budget=chord_budget,
-            max_offset_fit_error=fit_err,
-        )
+    if join == "miter" and offset_fit_budget > 0:
+        if (
+            len(centerline.segments) == 1
+            and not centerline.closed
+            and cap == "butt"
+        ):
+            outline, fit_err = _expand_open_single_cubic_offset(
+                centerline.segments[0],
+                pen,
+                offset_fit_budget=offset_fit_budget,
+            )
+            return outline, CenterlineExpandReport(
+                max_chord_error=0.0,
+                cubic_segment_count=1,
+                polyline_vertex_count=0,
+                outline_cubic_segment_count=_outline_cubic_segment_count(outline),
+                chord_budget=chord_budget,
+                max_offset_fit_error=fit_err,
+            )
+        if centerline.closed:
+            outline, fit_err = _expand_closed_cubic_offset(
+                centerline,
+                pen,
+                offset_fit_budget=offset_fit_budget,
+            )
+            return outline, CenterlineExpandReport(
+                max_chord_error=0.0,
+                cubic_segment_count=len(centerline.segments),
+                polyline_vertex_count=0,
+                outline_cubic_segment_count=_outline_cubic_segment_count(outline),
+                chord_budget=chord_budget,
+                max_offset_fit_error=fit_err,
+            )
 
     poly, report = flatten_cubic_centerline(centerline, chord_budget)
     outline = expand(
