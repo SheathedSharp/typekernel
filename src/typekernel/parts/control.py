@@ -2127,10 +2127,19 @@ def s_from_o(
     li_bot = _cut(li2, x_tl, horizontal=False)[1]
 
     b = PathBuilder()
-    b.moveTo(*u_top[0])
+    if c.style.serif == "bracketed":
+        from typekernel.parts.serifs import serif_metrics
+
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+        _, _, bracket_r = serif_metrics(c)
+        _opening_top_bracketed_move(b, u_top[0], slab_l, slab_th, bracket_r)
+    else:
+        b.moveTo(*u_top[0])
     for cubic in (u_top, u1, u2, _rev(li0), _rev(li3), _rev(li_bot)):
         _curve(b, cubic)
     b.lineTo(*l_bot[0])
+    if c.style.serif == "bracketed":
+        _opening_bottom_bracketed_detour(b, l_bot[0], slab_l, slab_th, bracket_r)
     for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
         _curve(b, cubic)
     b.closePath()
