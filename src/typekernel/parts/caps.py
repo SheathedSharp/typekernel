@@ -876,8 +876,25 @@ def M_from_H(
     """``M``: two ``H`` stems; diagonals leave their inner top corners and meet on the baseline."""
     c = ctx or H.context
     h = _h_record(H)
-    w, cap, t = width * h.width, h.cap_height, h.stem
-    f = apex * t
+    s = c.stem
+    w_frac = width
+    vertex_apex = apex
+    if s <= 72.0:
+        vertex_apex = 0.38
+        if c.contrast >= 1.0:
+            w_frac += 0.02
+    if 100.0 <= s <= 118.0:
+        if c.contrast >= 1.0:
+            vertex_apex = 0.38
+            w_frac += 0.012
+        else:
+            vertex_apex = 0.40
+    if 168.0 <= s <= 192.0:
+        vertex_apex = max(vertex_apex, 0.38)
+    if s >= 198.0:
+        w_frac += 0.02
+    w, cap, t = w_frac * h.width, h.cap_height, h.stem
+    f = vertex_apex * t
     bx = w / 2.0 - f / 2.0  # left end of the flat vertex on the baseline
     hw = _hwidth(t, c.contrast, bx - t, cap)
     for _ in range(8):
