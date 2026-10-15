@@ -521,16 +521,24 @@ def _n_ascender_left_stem_cap(y_cap: float, m: NMetrics) -> bool:
     return y_cap > m.x_height + 0.5
 
 
-def _n_slab_h_ascender(
-    ctx: DesignContext | None, left_top: float, m: NMetrics
-) -> bool:
-    """Slab ``h``: ascender stem + shelf left foot (avoids pad-foot R3 pre-serif)."""
+def _n_slab_inlined(ctx: DesignContext | None) -> bool:
     return (
         ctx is not None
         and ctx.style.serif == "slab"
         and _stem_serif_inlined(ctx)
-        and left_top > m.x_height + 0.5
     )
+
+
+def _n_slab_right_leg_top_cap(ctx: DesignContext | None) -> bool:
+    """Slab ``n``/``h``: inline right-leg top serif (unblocks inlined right foot)."""
+    return _n_slab_inlined(ctx)
+
+
+def _n_slab_n_left_shoulder_cap(
+    ctx: DesignContext | None, left_top: float, m: NMetrics
+) -> bool:
+    """Slab ``n``: full-width left stem cap at ``x_height`` (``stem_L_t``)."""
+    return _n_slab_inlined(ctx) and abs(left_top - m.x_height) < 0.5
 
 
 def _n_family_outline(
@@ -564,8 +572,12 @@ def _n_family_outline(
         b.lineTo(s.l1, m.x_height)
     elif vf_compat:
         b.lineTo(s.l1, left_top)
+    if _n_slab_n_left_shoulder_cap(ctx, left_top, m):
+        slab_ctx = ctx
+        assert slab_ctx is not None
+        _n_inline_left_stem_cap(b, s.l0, s.l1, m.x_height, slab_ctx, m.stem)
     _curve(b, s.outer[0])
-    if _n_slab_h_ascender(ctx, left_top, m):
+    if _n_slab_right_leg_top_cap(ctx):
         slab_ctx = ctx
         assert slab_ctx is not None
         split_outer = _split(s.outer[1], m.x_height, horizontal=True)
@@ -812,13 +824,21 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             ctx=ctx,
             inline_left_foot=_stem_serif_inlined(ctx),
             inline_right_foot=_stem_serif_inlined(ctx),
+            inline_left_top=ctx.style.serif == "slab",
         ),
     }
+    slab_n = ctx.style.serif == "slab"
     if _italic_topology(ctx):
-        outline = _n_branching_outline(m, stem_top=m.x_height, ctx=ctx)
+        outline = _n_branching_outline(
+            m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=slab_n
+        )
     else:
         outline = _n_family_outline(
-            m, left_top=m.x_height, vf_compat=_vf_compat_stem(ctx), ctx=ctx
+            m,
+            left_top=m.x_height,
+            vf_compat=_vf_compat_stem(ctx),
+            ctx=ctx,
+            shelf_left_foot=slab_n,
         )
     return _pack(ctx, m, anchors, outline)
 

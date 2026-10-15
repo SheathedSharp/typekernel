@@ -305,7 +305,7 @@ def test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3() -> None:
     assert "R3_self_intersect" in rules
 
 
-def test_slab_only_n_and_h_still_use_boolean_top_stem_serifs() -> None:
+def test_slab_apply_glyph_serifs_is_noop_on_supported() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.slab_serif()
@@ -316,7 +316,18 @@ def test_slab_only_n_and_h_still_use_boolean_top_stem_serifs() -> None:
         if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
             stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
             changed.append((ch, stems))
-    assert changed == [("n", ["stem_L_t"])]
+    assert changed == []
+
+
+def test_slab_n_left_shoulder_cap_inlined_without_boolean_serif() -> None:
+    from typekernel.parts.control import build_n, n_metrics
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    ctx = DesignContext.slab_serif()
+    n = build_n(ctx, n_metrics(ctx))
+    assert not [i for i in lint_glyph(n, ctx, glyph_name="n") if i.severity == "error"]
+    assert "stem_L_t" not in {a.name for a in n.anchors}
+    assert composed_glyph_hash(n) == composed_glyph_hash(apply_glyph_serifs(n))
 
 
 def test_serif_n_family_inlined_feet_omit_bottom_stem_anchors() -> None:

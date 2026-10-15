@@ -464,10 +464,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``m`` 中/右 stem 脚底内嵌（``s1.r0`` shelf + ``s2.r1`` 右 shelf）；省略 ``stem_M_b``/``stem_R_b``；golden ``m``（``slab`` + ``bracketed``）。
 - **本轮（部分）**：``u`` 去掉碗侧误挂的 ``stem_L_b``（``left_foot=False``）；``test_serif_u_has_no_spurious_left_foot_anchor``；golden ``u``（``slab`` + ``bracketed``）。
 - **本轮（部分）**：``h`` 升部左 stem 顶衬线内嵌（``inline_stem_cap_serif_path``，仅 ``y > x_height``；``n`` 肩口仍 ``stem_L_t`` 布尔）；``left_cap``/``u`` ``left_cap=False``；``test_serif_h_ascender_cap_inlined_skips_boolean_serif``；golden ``h``/``u``。
-- **本轮（部分）**：``test_serif_n_family_inlined_feet_omit_bottom_stem_anchors`` 固化 ``n``/``m``/``r``/``u`` 脚底内嵌后无 ``stem_*_b``；``n`` 肩口顶衬线内嵌仍因 R3 未合入。
+- **本轮（部分）**：``test_serif_n_family_inlined_feet_omit_bottom_stem_anchors`` 固化 ``n``/``m``/``r``/``u`` 脚底内嵌后无 ``stem_*_b``；``n`` ``slab`` 肩口顶衬线内嵌（shelf 脚 + 左右 ``x_height`` 顶 cap）；``test_slab_n_left_shoulder_cap_inlined_without_boolean_serif``；golden ``n``。
 - **本轮（部分）**：``r`` ``slab`` 左肩口顶衬线内嵌（``inline_shoulder_left_cap_slab_path`` + ``inline_left_top``）；``test_slab_r_shoulder_cap_inlined_skips_left_top_anchor``；golden ``r``（``slab_serif``）。
 - **本轮（部分）**：``m`` ``slab`` 左肩口顶衬线内嵌（同 ``r`` 左缘配方）；``test_slab_m_shoulder_cap_inlined_skips_left_top_anchor``；golden ``m``（``slab_serif``）。
-- **本轮（部分）**：``test_slab_only_n_and_h_still_use_boolean_top_stem_serifs`` 锁定 slab 仅 ``n``/``h`` 仍走 ``stem_L_t``/``stem_R_t`` 布尔顶衬线。
+- **本轮（部分）**：``test_slab_apply_glyph_serifs_is_noop_on_supported`` 锁定 slab 全 ``supported`` 不再依赖 stem 布尔衬线。
 - **本轮（部分）**：``h`` ``stem_R_t`` 内嵌：全宽 pad 左脚在未布尔前即 R3，需 ``shelf_left_foot`` + ``x_height`` 切 ``outer[1]`` + ``inline_stem_cap_serif_path``；``test_slab_h_right_leg_cap_inlined_without_boolean_serif``；golden ``h``（``slab_serif``）；``test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3`` 保留（无 shelf 时切分仍 R3）。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
