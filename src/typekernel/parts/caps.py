@@ -1040,6 +1040,39 @@ def V_from_H(
     )
 
 
+def _w_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Slab feet on the two outer ``W`` apex flats (bottom only)."""
+    a1l = base[1][0]
+    a1r = base[2][0]
+    ww = base[6][0]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length * 0.35, a1l * 0.28, h.stem * 0.28)
+    th = min(thick * 0.55, h.cap_height * 0.04, h.stem * 0.1)
+    return [
+        base[0],
+        base[1],
+        (a1l - l, -th),
+        (a1r + l, -th),
+        (a1r + l, 0.0),
+        base[2],
+        base[3],
+        base[4],
+        (ww - a1r - l, -th),
+        (ww - a1l + l, -th),
+        (ww - a1l + l, 0.0),
+        base[5],
+        base[6],
+        base[7],
+        base[8],
+        base[9],
+        base[10],
+        base[11],
+        base[12],
+    ]
+
+
 def W_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.4
 ) -> ComposedGlyph:
@@ -1056,11 +1089,14 @@ def W_from_H(
         w_frac += 0.02
     w = w_frac * h.width
     bump = c.sharp_overshoot
-    return _diag_cap(
-        H,
-        ctx,
-        w,
-        w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump),
+    base = w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
+    baked = c.style.serif == "slab"
+    pts = _w_cap_slab_points(h, c, base) if baked else base
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
     )
 
 
