@@ -882,14 +882,14 @@ def D_from_H(
     _, _, _, i3 = _quarters(x0, cy, w - x0 - t, cy - bt, e)
     i0 = _quarters(x0, cy, w - x0 - t, cy - bt, e)[0]
 
-    baked = c.style.serif == "slab"
+    inlined = _cap_serif_inlined(c)
     b = PathBuilder()
-    if baked:
-        from typekernel.parts.serifs import serif_metrics
-
-        length, thick, _ = serif_metrics(c)
-        l = min(length, t * 0.48)
-        th = min(thick, cap * 0.1, t * 0.18)
+    foot_l = 0.0
+    if c.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=x0)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        foot_l = l
         b.moveTo(-l, -th)
         b.lineTo(t + l, -th)
         b.lineTo(t + l, 0.0)
@@ -899,10 +899,12 @@ def D_from_H(
         b.lineTo(x0, 0.0)
     _curve(b, q3)
     _curve(b, q0)
-    if baked:
+    if c.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
         b.lineTo(0.0, cap)
         b.lineTo(0.0, 0.0)
-        b.lineTo(-l, 0.0)
+        b.lineTo(-foot_l, 0.0)
     else:
         b.lineTo(0.0, cap)
     b.closePath()
@@ -916,7 +918,7 @@ def D_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not inlined),
         _ccw(Outline((outer, counter))),
     )
 
@@ -970,6 +972,34 @@ def _bowl_cap_setup(
     return c, h, e
 
 
+def _bowl_cap_stem_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
+    t, cap = h.stem, h.cap_height
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    l = min(length, t * 0.48)
+    th = min(thick, cap * 0.1, t * 0.18)
+    return l, th, bracket_r
+
+
+def _bowl_cap_bracketed_foot_start(
+    b: PathBuilder, h: HMetrics, ctx: DesignContext, *, stem_x: float
+) -> float:
+    """Left stem baseline foot with cubic bracket; ends at ``(stem_x, 0)``."""
+    t = h.stem
+    l, th, bracket_r = _bowl_cap_stem_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(stem_x, 0.0)
+    return l
+
+
+def _bowl_cap_bracketed_close_left(b: PathBuilder, *, cap: float, l: float) -> None:
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+
+
 def P_from_H(
     H: ComposedGlyph,
     O: ComposedGlyph | None = None,
@@ -985,14 +1015,14 @@ def P_from_H(
     w = max(width * h.width, min_bowl_stems(t) * t)
     x0, y_b = _straight_run(straight, w, t), bowl * cap - bt / 2.0
     q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, t, bt, e)
-    baked = c.style.serif == "slab"
+    inlined = _cap_serif_inlined(c)
     b = PathBuilder()
-    if baked:
-        from typekernel.parts.serifs import serif_metrics
-
-        length, thick, _ = serif_metrics(c)
-        l = min(length, t * 0.48)
-        th = min(thick, cap * 0.1, t * 0.18)
+    foot_l = 0.0
+    if c.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=t)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        foot_l = l
         b.moveTo(-l, -th)
         b.lineTo(t + l, -th)
         b.lineTo(t + l, 0.0)
@@ -1004,10 +1034,12 @@ def P_from_H(
         b.lineTo(*p)
     _curve(b, q3)
     _curve(b, q0)
-    if baked:
+    if c.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
         b.lineTo(0.0, cap)
         b.lineTo(0.0, 0.0)
-        b.lineTo(-l, 0.0)
+        b.lineTo(-foot_l, 0.0)
     else:
         b.lineTo(0.0, cap)
     b.closePath()
@@ -1015,7 +1047,7 @@ def P_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
+        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
         _with_counters(b),
     )
 
@@ -1058,14 +1090,14 @@ def R_from_H(
         raise ValueError("R leg does not fit between stem and bowl; adjust width")
     _, after = splitCubicAtT(*q3, t_c)
 
-    baked = c.style.serif == "slab"
+    inlined = _cap_serif_inlined(c)
     b = PathBuilder()
-    if baked:
-        from typekernel.parts.serifs import serif_metrics
-
-        length, thick, _ = serif_metrics(c)
-        l = min(length, t * 0.48)
-        th = min(thick, cap * 0.1, t * 0.18)
+    foot_l = 0.0
+    if c.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=t)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        foot_l = l
         b.moveTo(-l, -th)
         b.lineTo(t + l, -th)
         b.lineTo(t + l, 0.0)
@@ -1077,10 +1109,12 @@ def R_from_H(
         b.lineTo(*p)
     _curve(b, after)
     _curve(b, q0)
-    if baked:
+    if c.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
         b.lineTo(0.0, cap)
         b.lineTo(0.0, 0.0)
-        b.lineTo(-l, 0.0)
+        b.lineTo(-foot_l, 0.0)
     else:
         b.lineTo(0.0, cap)
     b.closePath()
@@ -1088,7 +1122,7 @@ def R_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
+        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
         _with_counters(b),
     )
 
@@ -1131,14 +1165,14 @@ def B_from_H(
     low_part, _ = splitCubicAtT(*lq0, inside[0].t1)
     _, up_part = splitCubicAtT(*uq3, inside[0].t2)
 
-    baked = c.style.serif == "slab"
+    inlined = _cap_serif_inlined(c)
     b = PathBuilder()
-    if baked:
-        from typekernel.parts.serifs import serif_metrics
-
-        length, thick, _ = serif_metrics(c)
-        l = min(length, t * 0.48)
-        th = min(thick, cap * 0.1, t * 0.18)
+    foot_l = 0.0
+    if c.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=xl)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        foot_l = l
         b.moveTo(-l, -th)
         b.lineTo(t + l, -th)
         b.lineTo(t + l, 0.0)
@@ -1150,10 +1184,12 @@ def B_from_H(
     _curve(b, low_part)
     _curve(b, (low_part[3], up_part[1], up_part[2], up_part[3]))
     _curve(b, uq0)
-    if baked:
+    if c.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
         b.lineTo(0.0, cap)
         b.lineTo(0.0, 0.0)
-        b.lineTo(-l, 0.0)
+        b.lineTo(-foot_l, 0.0)
     else:
         b.lineTo(0.0, cap)
     b.closePath()
@@ -1162,7 +1198,7 @@ def B_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
+        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
         _with_counters(b),
     )
 
