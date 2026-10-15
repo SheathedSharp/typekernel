@@ -377,6 +377,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   | `SSpec` | 脊线角度、上下碗比例、开口 |
   | `GSpec` / `RSpec` / `YSpec` | 尾深、耳、臂落差、尾形 |
   让 `Controls.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
+- **本轮（部分）**：``WEAK_GLYPH_SPECS`` 全字段单调性回归（含 ``M.apex`` 在 ``stem=150``）；默认 ``supported`` 哈希回归仍绿。
 - **验收**：每个字段有「单调效应」测试（改字段 → 对应测得量按预期变化）；默认值下 98 字形哈希不变；`docs/agent-recipes.md` 增加用法。
 - **依赖**：TK-108。
 
@@ -441,6 +442,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-501 文档与 skill 同步　〔S〕
 - **本轮**：`AGENT_GOAL`、`SKILL`、`reference.md`、`VISION`、`README`、`examples/italic_family` 已对齐 `tuned_glyph`、`italic_design`、TK-301/304 状态；`VISION`/`AGENT_GOAL` 同步 M4 斜体与 TK-205 `f`/`t`。
 - **本轮（部分）**：SKILL / `reference.md` 补充 `charset_failures`、family gate、`snapshot_trial` 与 `agent_studio` 退出码行为；`agent-recipes` / SKILL / `reference.md` 同步 TK-303 cap `G R Y` 的 `tuned_glyph` 规格表。
+- **本轮（部分）**：``agent-recipes`` 增加 TK-207 ``weight_ladder_sheet`` 人审片段（本地 ``artifacts/specimens/``）。
 - **待续**：`Style`（TK-305）、L3 验收全文、与 `agent-recipes` 的最终统一核对。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕

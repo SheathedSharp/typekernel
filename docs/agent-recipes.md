@@ -117,6 +117,23 @@ _report, failures = check_sentence_gate(controls, baseline=baseline_controls())
 
 固定 pair：`Ta` `To` `fi` `fl` `rn` `011`。光学间距 ≤ 0 算撞字。这组 **不** 证明字偶已经好看；间距仍是库内专项（见 AGENT_GOAL「库内仍未完成」）。
 
+## 字重阶梯校样（TK-207）
+
+R8 自动化已覆盖全部 `supported` 字符；人审时用阶梯 PNG 看字腔是否塌：
+
+```python
+from pathlib import Path
+from typekernel.parts import DesignContext
+from typekernel.qa.sheet import weight_ladder_sheet
+
+weight_ladder_sheet(
+    DesignContext.humanist_sans(),
+    Path("artifacts/specimens/weight_ladder_humanist.png"),
+)
+```
+
+默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
+
 ## 人审
 
 数字门槛通过之后，视觉接受必须由人写入 `approvals/*.json`（`typekernel.qa.gates.write_approval`）。gate 与 `design_review` 都不会自动批准。没有这份记录，就还不是被接受的试作。
