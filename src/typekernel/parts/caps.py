@@ -1239,6 +1239,46 @@ def N_from_H(
     return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
 
 
+def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
+    if ctx.style.serif != "slab":
+        return [
+            (s0, 0.0),
+            (s1, 0.0),
+            (s1, cap - bt),
+            (w, cap - bt),
+            (w, cap),
+            (0.0, cap),
+            (0.0, cap - bt),
+            (s0, cap - bt),
+        ]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    return [
+        (s0 - l, -th),
+        (s1 + l, -th),
+        (s1 + l, 0.0),
+        (s1, 0.0),
+        (s1, cap - bt),
+        (w, cap - bt),
+        (w, cap),
+        (s1 + l, cap),
+        (s1 + l, cap + th),
+        (s0 - l, cap + th),
+        (s0 - l, cap),
+        (0.0, cap),
+        (0.0, cap - bt),
+        (s0, cap - bt),
+        (s0, 0.0),
+        (s0 - l, 0.0),
+    ]
+
+
 def T_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1248,18 +1288,17 @@ def T_from_H(
     """``T``: an ``H`` stem centred under a top bar ``width`` × the ``H`` width."""
     c = ctx or H.context
     h = _h_record(H)
-    t, cap, bt = h.stem, h.cap_height, h.bar
     w = width * h.width
-    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
-    pts = [
-        (s0, 0.0),
-        (s1, 0.0),
-        (s1, cap - bt),
-        (w, cap - bt),
-        (w, cap),
-        (0.0, cap),
-        (0.0, cap - bt),
-        (s0, cap - bt),
-    ]
-    outline = _cap_f_t_outline(c, pts, w, cap, bt)
-    return _pack(c, h, _cap_anchors(w, h), outline)
+    baked = c.style.serif == "slab"
+    pts = _t_outline_points(h, c, width=width)
+    outline = (
+        _polygon(pts)
+        if baked
+        else _cap_f_t_outline(c, pts, w, h.cap_height, h.bar)
+    )
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        outline,
+    )
