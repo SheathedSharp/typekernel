@@ -76,7 +76,7 @@ Record: family name, target style (geometric sans / humanist / mono / …), axes
 Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `open_print()`, `paper_ink()`, `mono()`, or serif voices `slab_serif()` / `bracketed_serif()` (`Style.serif` slab / bracketed). Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset. New serif presets must pass `AGENT_SENTENCE` gate and L3 `voice_distance` (see `tests/qa/test_originality.py`).
 
 **3 — Controls**  
-`Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps A–Z except `H`/`I` have specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
+`Controls.from_context(ctx)` or `Controls.from_context(ctx, style=Style(...))` / `with_style(...)` for discrete topology (`a_form`, `g_form`, `l_tail`, `y_tail`, `i_dot`, `t_cut`, `serif` — defaults match stock presets). Full table: [agent-recipes.md](../../docs/agent-recipes.md) and [reference.md](reference.md). Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps A–Z except `H`/`I` have specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
 
 **4 — Build glyphs**  
 `drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
