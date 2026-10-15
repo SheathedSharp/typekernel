@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from typekernel.font import Font, Master, check_masters
 from typekernel.geo.contour import signed_area
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import bounds
@@ -41,6 +42,28 @@ def test_three_top_reaches_overshoot(figures, ctx: DesignContext) -> None:
     three = figures["3"]
     _, _, _, y1 = bounds(three.solids[0])
     assert y1 > ctx.cap_height + ctx.overshoot * 0.35
+
+
+def test_three_outer_segment_count_fixed_across_stems() -> None:
+    """TK-206: lining ``3`` keeps one outer topology for VF."""
+    ctx = DesignContext.humanist_sans()
+    ref = Controls.from_context(ctx).build("3")
+    ref_n = len(ref.solids[0].contours[0].segments)
+    for stem in (30.0, 86.0, 220.0):
+        three = Controls.from_context(ctx.tuned(stem=stem)).build("3")
+        assert len(three.solids[0].contours[0].segments) == ref_n
+
+
+def test_three_interpolates_across_weight_ladder() -> None:
+    ctx = DesignContext.humanist_sans()
+    light = Controls.from_context(ctx.tuned(stem=30.0))
+    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    reg_font = Font.from_context(ctx, "Three Sans", "Regular", weight_class=400)
+    reg_font.add_chars(light.build_all("3"))
+    bold_font = Font.from_context(ctx, "Three Sans", "Bold", weight_class=700)
+    bold_font.add_chars(bold.build_all("3"))
+    masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
+    assert check_masters(masters) == []
 
 
 def test_lining_height(figures, ctx: DesignContext) -> None:
