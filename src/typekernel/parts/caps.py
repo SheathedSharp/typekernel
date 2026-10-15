@@ -355,6 +355,25 @@ def build_O(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyp
     return build_o(ctx, metrics or cap_o_metrics(ctx))
 
 
+def _i_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
+    return _k_cap_foot_dims(h, ctx)
+
+
+def _write_i_bracketed_outer(b: PathBuilder, h: HMetrics, ctx: DesignContext) -> None:
+    t, cap = h.stem, h.cap_height
+    l, th, bracket_r = _i_cap_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(t, 0.0)
+    b.lineTo(t, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
     """``I``: one ``H`` stem."""
     c = ctx or H.context
@@ -364,6 +383,11 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     if c.style.serif == "slab":
         anchors = {"top": (half, cap), "bottom": (half, 0.0)}
         return _pack(c, h, anchors, _polygon(_i_slab_outline_points(h, c)))
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_i_bracketed_outer(b, h, c)
+        anchors = {"top": (half, cap), "bottom": (half, 0.0)}
+        return _pack(c, h, anchors, _ccw(b.build()))
     from typekernel.parts.primitives import contrast_stem_caps
 
     stem = contrast_stem_caps(c, 0.0, 0.0, cap, width=h.stem)
@@ -375,16 +399,42 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     return _pack(c, h, anchors, stem)
 
 
+def _l_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    return l, th, bracket_r
+
+
+def _write_l_bracketed_outer(
+    b: PathBuilder, h: HMetrics, ctx: DesignContext, *, width: float
+) -> None:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    l, th, bracket_r = _l_cap_foot_dims(h, ctx)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, t + l, th, bracket_r, bracketed=True)
+    b.lineTo(w, 0.0)
+    b.lineTo(w, bt)
+    b.lineTo(t, bt)
+    b.lineTo(t, cap)
+    b.lineTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, 0.0)
+    b.lineTo(-l, 0.0)
+    b.closePath()
+
+
 def _l_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
     t, cap, bt = h.stem, h.cap_height, h.bar
     w = width * h.width
     if ctx.style.serif != "slab":
         return [(0.0, 0.0), (w, 0.0), (w, bt), (t, bt), (t, cap), (0.0, cap)]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length, t * 0.5)
-    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    l, th, _ = _l_cap_foot_dims(h, ctx)
     return [
         (-l, -th),
         (t + l, -th),
@@ -413,14 +463,16 @@ def L_from_H(
     c = ctx or H.context
     h = _h_record(H)
     w = width * h.width
-    baked = c.style.serif == "slab"
-    outline = _polygon(_l_outline_points(h, c, width=width))
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
-        outline,
+    inlined = c.style.serif in ("slab", "bracketed")
+    anchors = _cap_anchors(
+        w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"
     )
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_l_bracketed_outer(b, h, c, width=width)
+        return _pack(c, h, anchors, _ccw(b.build()))
+    outline = _polygon(_l_outline_points(h, c, width=width))
+    return _pack(c, h, anchors, outline)
 
 
 def _e_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
