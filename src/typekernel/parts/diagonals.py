@@ -280,6 +280,25 @@ def y_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     w = m.width if width is None else width
+    if width is None:
+        s, scale = c.stem, 1.0
+        if s <= 50.0:
+            scale += 0.08
+            if c.contrast >= 1.0:
+                scale += 0.06
+        elif s <= 72.0:
+            scale += 0.06
+        if 65.0 <= s <= 75.0:
+            scale += 0.038
+            if c.contrast >= 1.0:
+                scale += 0.085
+        if 100.0 <= s <= 118.0:
+            scale += 0.072
+            if c.contrast >= 1.0:
+                scale += 0.032
+        if 142.0 <= s <= 158.0:
+            scale += 0.048
+        w = m.width * scale
     xh, desc = m.x_height, c.descender
     _, hw, cy, tan = _v_geometry(m.stem, xh, w, c.contrast, apex)
     # left outer edge x = (xh - y)·tan meets the right stroke's left edge

@@ -318,6 +318,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 ``G``/``I``/``L`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）；``test_cap_stem_letters_pass_counter_floor_across_ladder``。
 - **本轮（部分）**：``X_from_H``/``Y_from_H`` 中段阶梯微调；``X``/``Y`` 纳入 charset；``test_cap_x_passes_counter_floor_across_ladder`` / ``test_cap_y_passes_counter_floor_across_ladder``（默认 master 哈希未变）。
 - **本轮（部分）**：``V_from_H``/``W_from_H`` 按 stem/contrast/roundness/aperture 分段加宽；``V``/``W`` 纳入 charset；``test_cap_v_passes_counter_floor_across_ladder`` / ``test_cap_w_passes_counter_floor_across_ladder``；golden ``W``（``humanist_sans``）更新。
+- **本轮（部分）**：``y_from_n`` 字重阶梯加宽（含 contrast 分段）；``y`` 纳入 ``COUNTER_PINCH_CHARSET``；``test_y_passes_counter_floor_across_ladder``；golden ``y``（``humanist_sans``/``display``）。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 
