@@ -210,6 +210,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "run_m5_program_exit" in text
     assert "validate_snapshot.py" in text
     assert "human_review_bundle" in text
+    assert "contact_sheet.py" in text
     assert "AGENT_SENTENCE" in text
 
 
