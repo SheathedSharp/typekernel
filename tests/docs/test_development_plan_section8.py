@@ -96,6 +96,7 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "human_review_bundle" in text
     assert "snapshot_design.py" in text
     assert "test_agent_trial_reference" in text
+    assert "test_development_plan_section8" in text
 
 
 def test_section8_skill_reference_documents_m5_workflow() -> None:

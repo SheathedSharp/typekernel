@@ -13,3 +13,4 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "human_review_bundle" in text
     assert "brief-1" in text
     assert "tk502_reference_metrics" in text or "reference_metrics" in text
+    assert "test_development_plan_section8" in text

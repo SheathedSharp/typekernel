@@ -34,6 +34,8 @@
 
 与「参考试作」不同：终验必须由**执行试验的 agent/人**从对应 brief 的 preset 出发改字，不得只跑库内 `design_*.py` 并声称完成。
 
+**发布前程序条（库维护者，非终验本身）**：`pytest -q tests/docs/test_development_plan_section8.py`（[`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md) §8）；衬线/斜体视觉 gate 用 `examples/human_review_bundle.py` 校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。
+
 1. **固定 brief**（上表三行，文案不改）。
 2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。
 3. **每个 brief**：
@@ -44,7 +46,7 @@
 4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；视觉接受另写 `approvals/*.json`（见 `examples/human_review_bundle.py`）。
 5. **作废条件**：改过关句、改 L3/ gate 阈值、或 `cheating_flags` 非空。
 
-库维护者回归：`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）。
+库维护者回归：`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`。
 
 ## 跑预设基线快照（库维护者）
 
