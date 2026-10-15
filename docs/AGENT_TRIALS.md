@@ -27,7 +27,8 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | 基线（M1） | 2026-10-14 | 库维护者 | fail | fail | fail | `artifacts/trials/preset-baseline-2026-10-14/`（R1/引号等问题，已过时） |
 | 基线（M2） | 2026-10-14 | 库维护者 | pass | pass | pass | `artifacts/trials/preset-baseline-2026-10-14-gate-clear/`；CI：`test_preset_brief_snapshots_pass_gate` |
-| 终验 | _待填_ | | | | | M5 TK-502 |
+| 参考试作（程序） | 2026-10-15 | 库维护者 | pass | pass | pass | `design_*.py`；`voice_distance` ≈ 0.54 / 0.54 / 0.53；`tests/fixtures/tk502_reference_metrics.json` + `test_reference_metrics_match_committed_fixture` |
+| 终验 | _待填_ | | | | | M5 TK-502：须独立 agent 跑 brief + **人评**（1–5） |
 
 ## 跑预设基线快照（库维护者）
 

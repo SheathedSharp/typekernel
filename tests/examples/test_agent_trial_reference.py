@@ -18,6 +18,9 @@ from typekernel.qa.trial_protocol import (
 
 ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
+_METRICS_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "tk502_reference_metrics.json"
+)
 
 _REFERENCE_TRIALS = (
     ("brief-1", TRIAL / "design_warm_humanist.py"),
@@ -48,6 +51,21 @@ def _assert_reference_trial(brief_id: str, design_path: Path) -> None:
     assert snap.l3_voice_ok
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.glyph_spec_chars
+
+
+def test_reference_metrics_match_committed_fixture() -> None:
+    """TK-502: documented voice_distance / gate metrics stay aligned with design_*.py."""
+    expected = json.loads(_METRICS_FIXTURE.read_text(encoding="utf-8"))
+    for brief_id, design_path in _REFERENCE_TRIALS:
+        brief = next(b for b in FIXED_TRIAL_BRIEFS if b.id == brief_id)
+        snap = snapshot_trial(_load_controls(design_path), brief=brief, round=1)
+        row = expected[brief_id]
+        assert snap.family_gate_ok == row["family_gate_ok"]
+        assert snap.l3_voice_ok == row["l3_voice_ok"]
+        assert snap.weight_ladder_r8_failures == row["weight_ladder_r8_failures"]
+        assert snap.lint_error_count == row["lint_error_count"]
+        assert snap.identity_error_count == row["identity_error_count"]
+        assert abs(snap.voice_distance - row["voice_distance"]) < 1e-5
 
 
 def test_reference_warm_humanist_passes_gate_and_r8() -> None:
