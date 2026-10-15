@@ -8,6 +8,7 @@ Example::
     PYTHONPATH=src python examples/run_m5_program_exit.py --gate slab
     PYTHONPATH=src python examples/run_m5_program_exit.py --list
     PYTHONPATH=src python examples/run_m5_program_exit.py --with-linters
+    PYTHONPATH=src python examples/run_m5_program_exit.py --full-suite --with-linters
 """
 
 from __future__ import annotations
@@ -64,13 +65,30 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="after pytest, run ruff check src tests and mypy -p typekernel (DEVELOPMENT_PLAN §8.1)",
     )
+    parser.add_argument(
+        "--full-suite",
+        action="store_true",
+        help="run entire test suite (pytest -q) instead of §8 + pending gate subset",
+    )
     args = parser.parse_args(argv)
+    if args.full_suite and args.gate != "all":
+        parser.error("--full-suite cannot be combined with --gate other than all")
     paths = _evidence_paths(args.gate)
     if args.list:
-        for p in paths:
-            print(p)
+        if args.full_suite:
+            print("pytest -q  # entire suite")
+        else:
+            for p in paths:
+                print(p)
         return 0
-    proc = subprocess.run(_pytest_argv(paths), cwd=ROOT, check=False)
+    if args.full_suite:
+        proc = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q"],
+            cwd=ROOT,
+            check=False,
+        )
+    else:
+        proc = subprocess.run(_pytest_argv(paths), cwd=ROOT, check=False)
     if proc.returncode != 0:
         return int(proc.returncode)
     if not args.with_linters:

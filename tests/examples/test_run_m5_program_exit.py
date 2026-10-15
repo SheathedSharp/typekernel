@@ -50,3 +50,14 @@ def test_run_m5_program_exit_section8_only() -> None:
 def test_run_m5_program_exit_runs_section8() -> None:
     proc = _run("--gate", "section8")
     assert proc.returncode == 0, proc.stderr or proc.stdout
+
+
+def test_run_m5_program_exit_full_suite_list() -> None:
+    proc = _run("--full-suite", "--list")
+    assert proc.returncode == 0
+    assert "entire suite" in proc.stdout
+
+
+def test_run_m5_program_exit_rejects_full_suite_with_gate() -> None:
+    proc = _run("--full-suite", "--gate", "slab")
+    assert proc.returncode != 0

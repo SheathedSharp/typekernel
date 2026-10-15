@@ -105,6 +105,6 @@ Then update the JSON (`approved`, `approver`, `date`, `notes`) or use `write_app
 1. Re-run that gate’s program checks (above) so evidence matches the commit you are on.
 2. Set `approved: true`, fill `approver` / `date` / `notes` (keep `test_evidence` paths accurate).
 3. Update `tests/docs/test_development_plan_section8.py`: remove the signed gate from `_PENDING_HUMAN_GATES` (and mirror any `_PENDING_GATE_JSON` lists in `tests/qa/test_gates.py`) so CI no longer expects `approved: false` for that file. When **all three** visual gates are signed, `test_section8_human_gates_remain_pending_until_review` should be removed or rewritten to assert the approved records instead.
-4. Run `pytest -q` (full suite) before pushing — do not relax `AGENT_SENTENCE` or L3 thresholds.
+4. Run `PYTHONPATH=src python examples/run_m5_program_exit.py --full-suite --with-linters` (or `pytest -q` + ruff + mypy) before pushing — do not relax `AGENT_SENTENCE` or L3 thresholds.
 
 Agents must not flip ``approved`` to ``true`` without explicit human instruction.
