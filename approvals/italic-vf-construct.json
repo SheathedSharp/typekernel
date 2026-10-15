@@ -1,0 +1,11 @@
+{
+  "gate": "italic-vf-construct",
+  "approved": false,
+  "approver": "",
+  "date": "2026-10-15",
+  "notes": "Pending human review. Proofs: PYTHONPATH=src python examples/human_review_bundle.py --only italic --out artifacts/human-review",
+  "scope": "examples/italic_family build_italic_vf wght×ital",
+  "test_evidence": [
+    "tests/examples/test_italic_family.py"
+  ]
+}

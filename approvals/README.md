@@ -39,3 +39,12 @@ Prefer plain names that describe the decision, for example:
 - `italic-vf-construct.json` — after reviewing `examples/italic_family` VF from the same bundle (`--only italic`)
 
 Avoid internal planner ticket codes in file names or field values.
+
+## Pending templates (not approved)
+
+These ship with ``approved: false`` until a human updates them after review:
+
+- `serif-slab-voice.json` / `serif-bracketed-voice.json` — proofs via `examples/human_review_bundle.py --only serif`
+- `italic-vf-construct.json` — `--only italic`
+
+Agents must not flip ``approved`` to ``true`` without explicit human instruction.

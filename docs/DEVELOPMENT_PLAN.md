@@ -426,7 +426,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``slab_serif`` / ``bracketed_serif`` 纳入 TK-207 字重阶梯 ``R8_counter_min`` 回归；衬线脚/对角在阶梯 stem 带加宽反挤压；``test_serif_voice_trial_snapshots`` 断言 ``weight_ladder_r8_failures==0``；``outline_hashes.json`` 更新受影响字形。
 - **本轮（部分）**：``examples/human_review_bundle.py`` 生成本地校样 + ``REVIEW_CHECKLIST.md``（不写 ``approvals``）；``test_human_review_bundle`` 烟测；``agent-recipes`` / ``approvals/README`` 对齐 gate 文件名。
 - **本轮（部分）**：``bracketed_stem_foot_dims`` 粗 stem 缩尺 + 降部 ``p``/``q`` 脚帽；``examples/bracketed_serif`` Bold 碗形 ``b``/``d``/``p``/``q`` R3 清零；golden ``p``/``q`` 更新。
-- **待续**：**人审签字**（`approvals/*.json`，须人设 ``approved: true``）；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
+- **本轮（部分）**：``approvals/serif-*-voice.json``、``italic-vf-construct.json`` 占位（``approved: false``）；``test_repo_pending_human_review_templates``。
+- **待续**：人设 ``approved: true`` 签字；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。
@@ -586,7 +587,7 @@ M5：TK-501（贯穿）→ TK-502
 | 斜线类字形 | `parts/diagonals.py`（`_hwidth`、`k/v/w/x/y/z`） |
 | 字重 | `parts/weight_relief.py`、`axes/weight_delta.py` |
 | 端点 | `parts/terminals.py`、`parts/aperture.py` |
-| 骨架/笔（当前仅折线） | `parts/skeleton.py`、`parts/pen.py`、`geo/stroke.py` |
+| 骨架/笔（折线 + TK-308 cubic spike） | `parts/skeleton.py`、`parts/pen.py`、`geo/stroke.py` |
 | 间距/字偶 | `optics/space.py`、`parts/metrics.py` |
 | 构建 | `compile/family_build.py`（`compose_font_from_controls`）、`compile/build.py` |
 | QA | `qa/sentence_gate.py`、`qa/design_review.py`、`qa/score.py`、`qa/proof.py`、`qa/specimen_png.py`、`qa/gates.py` |

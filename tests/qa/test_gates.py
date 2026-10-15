@@ -68,6 +68,22 @@ def test_load_rejects_missing_field(tmp_path: Path) -> None:
         load_approval(path)
 
 
+def test_repo_pending_human_review_templates_load_but_block_require() -> None:
+    """TK-306 / TK-402: shipped placeholders stay ``approved: false``."""
+    root = Path(__file__).resolve().parents[2] / "approvals"
+    for name in (
+        "serif-slab-voice.json",
+        "serif-bracketed-voice.json",
+        "italic-vf-construct.json",
+    ):
+        path = root / name
+        data = load_approval(path)
+        assert data["approved"] is False
+        assert data["approver"] == ""
+        with pytest.raises(ApprovalError, match="not approved"):
+            require_approval(path)
+
+
 def test_write_approval_does_not_force_true(tmp_path: Path) -> None:
     """Recording approved=False must stay False — no auto-approve."""
     path = tmp_path / "pending.json"

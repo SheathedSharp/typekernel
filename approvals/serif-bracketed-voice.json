@@ -1,0 +1,11 @@
+{
+  "gate": "serif-bracketed-voice",
+  "approved": false,
+  "approver": "",
+  "date": "2026-10-15",
+  "notes": "Pending human review. Proofs: PYTHONPATH=src python examples/human_review_bundle.py --only serif --out artifacts/human-review",
+  "scope": "DesignContext.bracketed_serif + examples/bracketed_serif",
+  "test_evidence": [
+    "tests/examples/test_bracketed_serif.py"
+  ]
+}
