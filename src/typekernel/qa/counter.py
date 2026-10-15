@@ -9,7 +9,9 @@ from typekernel.parts.compose import ComposedGlyph
 
 # B-16 bowl letters, round figures, punctuation rings, and stem/diagonal lowercase.
 COUNTER_PINCH_CHARSET = frozenset(
-    "0123456789#%?&@acemnosu$bdgpqkvywxfhijlrtzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789#%?&@acemnosu$bdgpqkvywxfhijlrtz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "!\"'()+,-./:;<=>[\\]_{}°–—‘’“”−"
 )
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]
