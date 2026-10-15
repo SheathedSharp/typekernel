@@ -734,12 +734,18 @@ def r_from_n(
     if _italic_topology(c):
         outline, x_t = _r_branching_outline(m, scaled, c)
     else:
-        outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c))
+        outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c), ctx=c)
     outline = apply_terminal_shear(c, outline)
     anchors = {
         "top": (x_t / 2.0, m.x_height),
         "bottom": (m.stem / 2.0, 0.0),
-        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+        **_n_stem_serif_anchors(
+            m,
+            left_top=m.x_height,
+            right_foot=False,
+            ctx=c,
+            inline_left_foot=_stem_serif_inlined(c),
+        ),
     }
     return _pack(c, m, anchors, outline)
 
@@ -778,6 +784,7 @@ def _r_outline(
     hook_stem_knots: bool = False,
     hook_belly: float = 0.0,
     slab_foot: tuple[float, float, float] | None = None,
+    ctx: DesignContext | None = None,
 ) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
@@ -798,7 +805,19 @@ def _r_outline(
             b.lineTo(*p)
         if hook_stem_knots:
             b.lineTo(s.l1, y1)
-    b.lineTo(s.l0, m.x_height)
+    if (
+        ctx is not None
+        and _stem_serif_inlined(ctx)
+        and not hook_stem_knots
+        and bar is None
+        and abs(stem_floor) < 1e-6
+    ):
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
+        b.lineTo(s.l0, m.x_height)
+    else:
+        b.lineTo(s.l0, m.x_height)
     if slab_foot is not None:
         foot_l, foot_th, foot_br = slab_foot
         base_y = m.x_height
@@ -860,6 +879,10 @@ def _r_branching_outline(
     s, outer_arm, inner_arm, x_t = _r_pieces(mm, arm)
     b = PathBuilder()
     b.moveTo(s.l0, 0.0)
+    if _stem_serif_inlined(ctx):
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
     b.lineTo(s.l1, branch_y)

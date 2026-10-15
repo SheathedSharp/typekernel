@@ -108,6 +108,46 @@ def test_slab_m_masters_interpolate_on_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_slab_r_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    ref_n = len(
+        Controls.from_context(ctx.tuned(stem=stems[0])).build("r").solids[0].contours[0].segments
+    )
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+        g = Controls.from_context(ctx.tuned(stem=stem)).build("r")
+        assert len(g.solids[0].contours[0].segments) == ref_n
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_char("r", g)
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
+def test_bracketed_r_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.bracketed_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    ref_n = len(
+        Controls.from_context(ctx.tuned(stem=stems[0])).build("r").solids[0].contours[0].segments
+    )
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+        g = Controls.from_context(ctx.tuned(stem=stem)).build("r")
+        assert len(g.solids[0].contours[0].segments) == ref_n
+        font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
+        font.add_char("r", g)
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
 def test_bracketed_m_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
