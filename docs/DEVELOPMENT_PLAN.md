@@ -451,7 +451,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。
-- **本轮（部分）**：``vf_italic_pair`` 统一直立/斜体预切倾角；``examples/italic_family/build_italic_vf.py`` 四母版示例。
+- **本轮（部分）**：``vf_italic_pair`` 统一直立/斜体预切倾角；``examples/italic_family/build_italic_vf.py`` 四母版示例；``test_vf_italic_pair_check_masters_on_builtin_presets`` 七 preset 全字符 ``check_masters``。
 - **本轮**：全 charset `check_masters` + VF 编译；`vf_upright_controls`；`#` 轮廓起点规范化 + `deep_check_masters` 回归。
 - **验收**：
   - 竖笔实测倾角 = 目标 ± 0.5°。

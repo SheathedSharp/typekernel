@@ -106,3 +106,19 @@ def test_italic_design_clears_r4_on_builtin_presets(preset: str) -> None:
     ital = italic_design(Controls.from_context(ctx))
     r4 = {i.glyph for i in lint_controls(ital).issues if i.rule == "R4_extrema"}
     assert not r4
+
+
+@pytest.mark.parametrize("preset", _BUILTIN_PRESETS)
+def test_vf_italic_pair_check_masters_on_builtin_presets(preset: str) -> None:
+    """TK-404: full charset wght×ital masters interpolate on every built-in preset."""
+    ctx = getattr(DesignContext, preset)()
+    upright, ital = vf_italic_pair(Controls.from_context(ctx))
+    bold = vf_italic_pair(
+        Controls.from_context(ctx.tuned(stem=120.0)).with_stem_relief()
+    )[0]
+    masters = [
+        Master({"wght": 400, "ital": 0}, _font(upright, "Regular")),
+        Master({"wght": 400, "ital": 1}, _font(ital, "Italic")),
+        Master({"wght": 700, "ital": 0}, _font(bold, "Bold", stem=120.0)),
+    ]
+    assert check_masters(masters) == []
