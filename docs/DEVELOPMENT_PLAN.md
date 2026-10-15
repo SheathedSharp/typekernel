@@ -470,6 +470,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` 补 ``Style`` 默认值行 + ``serif``；``AGENT_GOAL`` L3 行对齐 ``Style`` API（不再写「待 TK-305」）。
 - **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。
 - **本轮（部分）**：SKILL Step 3 补 ``Style`` 指针（与 ``agent-recipes`` / ``reference`` 对齐）。
+- **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
 - **待续**：L3 试作与人评（TK-502）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕

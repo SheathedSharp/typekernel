@@ -99,6 +99,13 @@ Fails if:
 | `kerning groups differ` | Share `auto_side_kern_classes` from reference master |
 | Ugly style despite tuning | Wrong topology for brief—extend `parts`, do not only tune context |
 
+## Agent trials (M5 / TK-502)
+
+- Baselines: `examples/agent_trial/snapshot_presets.py`, `snapshot_serif_voices.py`.
+- Reference edits (L3 + gate/R8): `design_warm_humanist.py`, `design_editorial_geometric.py`, `design_coding_clear.py` — each exports `controls()`, `design_bold()`, `baseline_controls()`.
+- Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py`.
+- Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). Protocol: `docs/AGENT_TRIALS.md`.
+
 ## Tests
 
 After library changes: `uv run pytest -q`. Compile tests need `ufo2ft` (`[compile]` extra).
