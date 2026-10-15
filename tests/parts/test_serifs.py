@@ -249,7 +249,8 @@ def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     assert "stem_L_t" not in {a.name for a in slab.anchors}
     assert composed_glyph_hash(slab) == composed_glyph_hash(apply_glyph_serifs(slab))
     bracket = Controls.from_context(DesignContext.bracketed_serif()).build("m")
-    assert "stem_L_t" in {a.name for a in bracket.anchors}
+    assert "stem_L_t" not in {a.name for a in bracket.anchors}
+    assert composed_glyph_hash(bracket) == composed_glyph_hash(apply_glyph_serifs(bracket))
 
 
 def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
@@ -259,7 +260,8 @@ def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     assert "stem_L_t" not in {a.name for a in slab.anchors}
     assert composed_glyph_hash(slab) == composed_glyph_hash(apply_glyph_serifs(slab))
     bracket = Controls.from_context(DesignContext.bracketed_serif()).build("r")
-    assert "stem_L_t" in {a.name for a in bracket.anchors}
+    assert "stem_L_t" not in {a.name for a in bracket.anchors}
+    assert composed_glyph_hash(bracket) == composed_glyph_hash(apply_glyph_serifs(bracket))
 
 
 def test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3() -> None:
@@ -398,12 +400,7 @@ def test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors() -> None:
         if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
             stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
             changed.append((ch, stems))
-    assert changed == [
-        ("h", ["stem_R_t"]),
-        ("m", ["stem_L_t"]),
-        ("n", ["stem_L_t"]),
-        ("r", ["stem_L_t"]),
-    ]
+    assert changed == [("h", ["stem_R_t"]), ("n", ["stem_L_t"])]
 
 
 def test_slab_n_left_shoulder_cap_inlined_without_boolean_serif() -> None:

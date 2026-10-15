@@ -510,7 +510,7 @@ def _n_inline_shoulder_left_cap_slab(
     ctx: DesignContext,
     stem: float,
 ) -> None:
-    if ctx.style.serif != "slab":
+    if ctx.style.serif not in ("slab", "bracketed"):
         return
     from typekernel.parts.serifs import inline_shoulder_left_cap_slab_path
 
@@ -914,7 +914,7 @@ def r_from_n(
             right_foot=False,
             ctx=c,
             inline_left_foot=_stem_serif_inlined(c),
-            inline_left_top=c.style.serif == "slab",
+            inline_left_top=c.style.serif in ("slab", "bracketed"),
         ),
     }
     return _pack(c, m, anchors, outline)
@@ -1438,7 +1438,7 @@ def m_from_n(
         "bottom": (cx, 0.0),
     }
     if _stem_serif_inlined(c):
-        if c.style.serif != "slab":
+        if c.style.serif not in ("slab", "bracketed"):
             anchors["stem_L_t"] = (s1.l0 + half, xh)
     else:
         anchors["stem_L_b"] = (s1.l0 + half, 0.0)
