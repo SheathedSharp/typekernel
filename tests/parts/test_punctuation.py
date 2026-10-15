@@ -60,6 +60,42 @@ def test_dollar_interpolates_across_stems(preset: str) -> None:
     assert check_interpolatable(outlines) == []
 
 
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_hash_interpolates_across_stems(preset: str) -> None:
+    base = getattr(DesignContext, preset)()
+    stems = (50.0, base.stem, 140.0)
+    outlines = [
+        Glyph.from_composed("#", Controls.from_context(base.tuned(stem=s)).build("#")).outline
+        for s in stems
+    ]
+    assert check_interpolatable(outlines) == []
+
+
+def test_hash_outer_segment_count_fixed_across_stems() -> None:
+    ctx = DesignContext.humanist_sans()
+    ref = len(Controls.from_context(ctx).build("#").solids[0].contours[0].segments)
+    for stem in (30.0, 86.0, 220.0):
+        g = Controls.from_context(ctx.tuned(stem=stem)).build("#")
+        assert len(g.solids[0].contours[0].segments) == ref
+
+
+@pytest.mark.parametrize(
+    "preset",
+    ("humanist_sans", "code_clear", "geometric_sans"),
+)
+def test_percent_interpolates_across_stems(preset: str) -> None:
+    base = getattr(DesignContext, preset)()
+    stems = (50.0, base.stem, 140.0)
+    outlines = [
+        Glyph.from_composed("%", Controls.from_context(base.tuned(stem=s)).build("%")).outline
+        for s in stems
+    ]
+    assert check_interpolatable(outlines) == []
+
+
 def test_ampersand_tail_reaches_baseline() -> None:
     from typekernel.geo.layout import union_bounds
 
