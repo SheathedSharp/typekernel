@@ -21,16 +21,24 @@ def test_tuned_glyph_defaults_match_stock_derivation(ch: str) -> None:
 
 def test_cap_glyph_specs_default_match_stock() -> None:
     ctx = DesignContext.humanist_sans()
-    base = Controls.from_context(ctx).build_all("GRY")
+    base = Controls.from_context(ctx).build_all("GKRY")
     tuned = (
         Controls.from_context(ctx)
         .tuned_glyph("G")
+        .tuned_glyph("K")
         .tuned_glyph("R")
         .tuned_glyph("Y")
-        .build_all("GRY")
+        .build_all("GKRY")
     )
-    for ch in "GRY":
+    for ch in "GKRY":
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
+
+
+def test_k_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("K", width=0.86).build("K")
+    wide = Controls.from_context(ctx).tuned_glyph("K", width=0.98).build("K")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_g_bar_reach_moves_crossbar() -> None:

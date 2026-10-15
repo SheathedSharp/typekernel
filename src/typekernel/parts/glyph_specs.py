@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, replace
 from typing import Any
 
-from typekernel.parts.caps import G_from_O, R_from_H, Y_from_H
+from typekernel.parts.caps import G_from_O, K_from_H, R_from_H, Y_from_H
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
@@ -24,6 +24,7 @@ __all__ = [
     "FSpec",
     "GSpec",
     "JSpec",
+    "KSpec",
     "RSpec",
     "SSpec",
     "TSpec",
@@ -89,6 +90,14 @@ class GSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class KSpec:
+    """``K``: cap width fraction and stem junction height (before ladder relief)."""
+
+    width: float = 0.92
+    vertex: float = 0.42
+
+
+@dataclass(frozen=True, slots=True)
 class RSpec:
     """``R``: bowl width and leg splice along the lower curve."""
 
@@ -114,6 +123,7 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "e": ESpec,
     "s": SSpec,
     "G": GSpec,
+    "K": KSpec,
     "R": RSpec,
     "Y": YSpec,
 }
@@ -162,6 +172,8 @@ def build_from_spec(
         return s_from_o(o_glyph, ctx, **kw)
     if ch == "G" and isinstance(spec, GSpec):
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
+    if ch == "K" and isinstance(spec, KSpec):
+        return K_from_H(n_glyph, ctx, width=spec.width, vertex=spec.vertex)
     if ch == "R" and isinstance(spec, RSpec):
         return R_from_H(
             n_glyph,
