@@ -2560,7 +2560,7 @@ def s_from_o(
     li0, _, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
 
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
-    reach = s_opening_factor(c, ap)
+    reach = min(0.99, s_opening_factor(c, ap) + 0.012)
     x_tu = cx + (rx_u - th) * reach
     x_tl = cx - (rx_l - th) * reach
     u_top = _cut(u0, x_tu, horizontal=False)[1]

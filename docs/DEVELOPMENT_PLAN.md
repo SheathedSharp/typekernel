@@ -304,6 +304,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-15 仍视觉低优先。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band``（腰区单段墨迹 + 最小宽度）；附录 B 登记更新。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band`` 参数化七 preset（含衬线 voice）。
+- **本轮（部分）**：``s_from_o`` 开口 reach ``+0.012``（七 preset ``s``/``S``）；``outline_hashes.json`` 更新；本地校样 ``artifacts/specimens/tk206_s_opening_humanist.png``。
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试。
 - **本轮（部分）**：`s_from_o` 默认 `top_scale` 0.94→0.92，上环略收；golden `s`/`S` 三 preset 更新。
 - **本轮（部分）**：``G`` spur κ 圆角随 cap stem 略增（重字重仍 ``use≤0.34`` 防自交）；``test_g_outer_segment_count_fixed_across_stems`` / VF 阶梯回归；golden ``G`` 三 preset 更新。
