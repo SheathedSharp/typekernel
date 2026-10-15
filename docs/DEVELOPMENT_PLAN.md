@@ -560,6 +560,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``AGENT_TRIALS.md`` §终验流程（程序侧步骤、作废条件）；``tk502_reference_metrics`` 含 ``brief-2-slab``；SKILL/reference 同步。
 - **本轮（部分）**：``tests/docs/test_agent_trials_doc.py`` 固化 ``AGENT_TRIALS`` 终验与人审指针。
 - **本轮（部分）**：``tests/docs/test_development_plan_section8.py`` 固化 §8.2/§8.6/§8.7 可程序检项（xfail 空、文档在库、人审 gate 仍 ``approved: false``、终验文档指针）。
+- **本轮（部分）**：``test_section8_regression_test_hooks_present`` 锁定 §8.4/§8.5 与 TK-306/402 程序验收测试名仍在库中。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 

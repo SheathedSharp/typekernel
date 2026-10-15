@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-_XFAIL_DECORATOR = re.compile(r"@pytest\.mark\.xfail\b")
-
 from typekernel.qa.gates import ApprovalError, load_approval, require_approval
+
+_XFAIL_DECORATOR = re.compile(r"@pytest\.mark\.xfail\b")
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -25,6 +25,32 @@ _PENDING_HUMAN_GATES = (
     "approvals/serif-slab-voice.json",
     "approvals/serif-bracketed-voice.json",
     "approvals/italic-vf-construct.json",
+)
+
+_SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "tests/parts/test_knob_coverage.py",
+        (
+            "test_contrast_moves_round_letters",
+            "test_terminal_style_reaches_many_glyphs",
+        ),
+    ),
+    (
+        "tests/parts/test_italic_controls.py",
+        ("test_italic_construct_slant_matches_target_within_half_degree",),
+    ),
+    (
+        "tests/parts/test_italic_topology.py",
+        ("test_italic_design_differs_from_construct_oblique_on_key_letters",),
+    ),
+    (
+        "tests/parts/test_serifs.py",
+        ("test_serif_voice_meets_tk306_program_acceptance",),
+    ),
+    (
+        "tests/parts/test_italic_program_acceptance.py",
+        ("test_italic_vf_meets_tk402_program_acceptance_on_humanist",),
+    ),
 )
 
 
@@ -60,3 +86,15 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "终验" in text
     assert "作废条件" in text
     assert "human_review_bundle" in text
+    assert "snapshot_design.py" in text
+    assert "test_agent_trial_reference" in text
+
+
+def test_section8_regression_test_hooks_present() -> None:
+    """§8.4–§8.5 / TK-306–402: named acceptance tests stay in the tree."""
+    for rel, test_names in _SECTION8_REGRESSION_TESTS:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        text = path.read_text(encoding="utf-8")
+        for name in test_names:
+            assert f"def {name}" in text, f"{rel} missing {name}"
