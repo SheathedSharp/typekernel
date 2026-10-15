@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+import pytest
+
 from typekernel.font import Font, Master, check_masters
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.style import Style
+from typekernel.qa.family_gate import collect_family_gate_failures
+from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls, lint_glyph
+from typekernel.qa.originality import (
+    L3_VOICE_DISTANCE_THRESHOLD,
+    l3_voice_criteria_met,
+    nearest_voice_distance,
+)
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 
@@ -1180,6 +1189,31 @@ def test_bracketed_serif_lint_clean_on_full_supported() -> None:
     ctx = DesignContext.bracketed_serif()
     report = lint_controls(Controls.from_context(ctx))
     assert not report.errors, report.errors
+
+
+@pytest.mark.parametrize(
+    "factory",
+    (DesignContext.slab_serif, DesignContext.bracketed_serif),
+)
+def test_serif_voice_meets_tk306_program_acceptance(factory) -> None:
+    """Lint + identity + family gate + L3 + inlined stem serifs (no boolean)."""
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    controls = Controls.from_context(factory())
+    charset = controls.supported
+    lint_report = lint_controls(controls)
+    assert not lint_report.errors, lint_report.errors
+    identity_report = check_identity_controls(controls, charset)
+    assert not identity_report.errors, identity_report.errors
+    gate_failures = collect_family_gate_failures(controls)
+    assert gate_failures == [], gate_failures
+    assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
+    assert l3_voice_criteria_met(controls)
+    for ch in charset:
+        glyph = controls.build(ch)
+        assert composed_glyph_hash(glyph) == composed_glyph_hash(
+            apply_glyph_serifs(glyph)
+        )
 
 
 def test_bracketed_n_masters_interpolate_on_weight_ladder() -> None:

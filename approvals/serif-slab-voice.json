@@ -6,6 +6,9 @@
   "notes": "Pending human review. Bundle: PYTHONPATH=src python examples/human_review_bundle.py --only serif --out artifacts/human-review — slab_serif/proof.png, proof_brief.png; slab_serif_vf/proof_vf.png; weight_ladder_slab_serif.png",
   "scope": "DesignContext.slab_serif + examples/slab_serif",
   "test_evidence": [
-    "tests/examples/test_slab_serif.py"
+    "tests/examples/test_slab_serif.py",
+    "tests/parts/test_serifs.py",
+    "tests/qa/test_originality.py",
+    "tests/qa/test_sentence_gate.py"
   ]
 }
