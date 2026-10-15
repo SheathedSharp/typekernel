@@ -660,12 +660,29 @@ def D_from_H(
     _, _, _, i3 = _quarters(x0, cy, w - x0 - t, cy - bt, e)
     i0 = _quarters(x0, cy, w - x0 - t, cy - bt, e)[0]
 
+    baked = c.style.serif == "slab"
     b = PathBuilder()
-    b.moveTo(0.0, 0.0)
-    b.lineTo(x0, 0.0)
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        l = min(length, t * 0.48)
+        th = min(thick, cap * 0.1, t * 0.18)
+        b.moveTo(-l, -th)
+        b.lineTo(t + l, -th)
+        b.lineTo(t + l, 0.0)
+        b.lineTo(x0, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(x0, 0.0)
     _curve(b, q3)
     _curve(b, q0)
-    b.lineTo(0.0, cap)
+    if baked:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
     b.closePath()
     b.moveTo(t, bt)
     b.lineTo(t, cap - bt)
@@ -674,7 +691,12 @@ def D_from_H(
     _curve(b, _rev(i3))
     b.closePath()
     outer, counter = b.build().contours
-    return _pack(c, h, _cap_anchors(w, h), _ccw(Outline((outer, counter))))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _ccw(Outline((outer, counter))),
+    )
 
 
 """Heavy bowl capitals widen via :func:`~typekernel.parts.weight_relief.min_bowl_stems`."""
