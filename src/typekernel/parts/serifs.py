@@ -20,6 +20,7 @@ __all__ = [
     "bracketed_stem_foot_dims",
     "inline_hook_cap_serif_path",
     "inline_stem_foot_serif_path",
+    "inline_stem_foot_serif_path_right",
     "serif_metrics",
     "slab_serif_rect",
 ]
@@ -194,6 +195,30 @@ def inline_stem_foot_serif_path(
         bracket_r=bracket_r,
     )
     b.lineTo(x_stem_left, y_base)
+
+
+def inline_stem_foot_serif_path_right(
+    b: PathBuilder,
+    x_stem_right: float,
+    y_base: float,
+    ctx: DesignContext,
+    stem_width: float,
+) -> None:
+    """Append a foot serif on the right face of a vertical stem (fixed segment count)."""
+    l, th = bracketed_stem_foot_dims(ctx, stem_width, y_base)
+    _, _, bracket_r = serif_metrics(ctx)
+    xr = x_stem_right + l
+    yt = y_base - th
+    b.lineTo(x_stem_right, yt)
+    _bracket_fillet_at_outer_corner(
+        b,
+        x_corner=xr,
+        y_horiz=yt,
+        y_vert_end=y_base,
+        x_from=x_stem_right,
+        bracket_r=bracket_r,
+    )
+    b.lineTo(x_stem_right, y_base)
 
 
 def inline_hook_cap_serif_path(

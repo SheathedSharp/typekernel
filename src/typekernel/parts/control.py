@@ -480,6 +480,14 @@ def _n_begin_left_stem(
     _n_left_stem_foot_detour(b, l0, l1, left_top, ctx, stem)
 
 
+def _n_inline_right_stem_foot(
+    b: PathBuilder, x_stem_right: float, ctx: DesignContext, stem: float
+) -> None:
+    from typekernel.parts.serifs import inline_stem_foot_serif_path_right
+
+    inline_stem_foot_serif_path_right(b, x_stem_right, 0.0, ctx, stem)
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
@@ -511,6 +519,8 @@ def _n_family_outline(
     _curve(b, s.outer[0])
     _curve(b, s.outer[1])
     b.lineTo(s.r1, 0.0)
+    if ctx is not None and _stem_serif_inlined(ctx):
+        _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
     b.lineTo(s.r0, 0.0)
     b.lineTo(s.r0, m.join_y)
     _curve(b, s.inner[0])
@@ -662,6 +672,8 @@ def _n_branching_outline(
     _curve(b, s.outer[0])
     _curve(b, s.outer[1])
     b.lineTo(r1, 0.0)
+    if ctx is not None and _stem_serif_inlined(ctx):
+        _n_inline_right_stem_foot(b, r1, ctx, m.stem)
     b.lineTo(r0, 0.0)
     b.lineTo(r0, mm.join_y)
     _curve(b, s.inner[0])
@@ -725,6 +737,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             right_top=None,
             ctx=ctx,
             inline_left_foot=_stem_serif_inlined(ctx),
+            inline_right_foot=_stem_serif_inlined(ctx),
         ),
     }
     if _italic_topology(ctx):
@@ -748,6 +761,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             right_top=m.x_height,
             ctx=ctx,
             inline_left_foot=_stem_serif_inlined(ctx),
+            inline_right_foot=_stem_serif_inlined(ctx),
         ),
     }
     if _italic_topology(ctx):
