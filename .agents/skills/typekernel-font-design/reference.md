@@ -20,7 +20,7 @@ polish_glyph_map      join cleanup after build_all (default in compose_font)
 
 ```python
 from typekernel.parts import Controls, DesignContext, auto_class_kern, auto_side_kern_classes, rhythm_from_control_glyphs
-from typekernel.parts.italic import italic_design
+from typekernel.parts.italic import italic_design, vf_italic_pair, vf_upright_controls
 from typekernel.optics.space import space_font
 from typekernel.font import Font, Master
 from typekernel.compile import build_font, build_variable_font
@@ -68,7 +68,7 @@ VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladde
 
 ## Italic & oblique (M4)
 
-- **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF use `vf_upright_controls(regular)` on upright masters (stem segment compat + bowl oblique pre-splits).
+- **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF prefer `vf_italic_pair(regular, style=ItalicStyle(...))` (matched oblique pre-split angle) or `vf_upright_controls(regular, oblique_split_deg=…)` + `italic_design(upright, …)`.
 - **Oblique**: `oblique_font` / `ObliqueTransform` — mechanical shear only; do not label as Italic.
 - **TK-402**: `parts/oblique_compat.py` pre-splits bowl cubics before slant for glyphs **not** in `OBLIQUE_COMPAT_EXCLUDE` (`efhmnru`). Remaining italic glyphs may still warn R4.
 

@@ -29,6 +29,7 @@ __all__ = [
     "italic_controls",
     "italic_design",
     "slant_composed_glyph",
+    "vf_italic_pair",
     "vf_upright_controls",
 ]
 
@@ -82,6 +83,17 @@ def vf_upright_controls(regular: Controls, *, oblique_split_deg: float = 10.0) -
             vf_oblique_split_deg=oblique_split_deg,
         ),
     )
+
+
+def vf_italic_pair(
+    regular: Controls,
+    *,
+    style: ItalicStyle | None = None,
+) -> tuple[Controls, Controls]:
+    """Upright + italic sheets with matched oblique pre-split angle (TK-404)."""
+    s = style or ItalicStyle()
+    upright = vf_upright_controls(regular, oblique_split_deg=s.slant_deg)
+    return upright, italic_design(upright, style=s)
 
 
 def slant_composed_glyph(glyph: ComposedGlyph, angle_deg: float) -> ComposedGlyph:

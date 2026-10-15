@@ -6,9 +6,23 @@ from typekernel.font import Font, Master, check_masters
 from typekernel.geo.extrema import cubic_has_off_node_axis_extrema
 from typekernel.geo.segment import CubicSegment
 from typekernel.parts import Controls, DesignContext
-from typekernel.parts.italic import italic_design, vf_upright_controls
+from typekernel.parts.italic import ItalicStyle, italic_design, vf_italic_pair, vf_upright_controls
 from typekernel.parts.oblique_compat import OBLIQUE_COMPAT_EXCLUDE, oblique_compat_charset
 from typekernel.qa.lint import lint_controls
+
+
+def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
+    from dataclasses import replace
+
+    ctx = controls.context
+    if stem is not None:
+        ctx = ctx.tuned(stem=stem)
+    sheet = replace(controls, context=ctx)
+    if stem is not None and stem >= 100:
+        sheet = sheet.with_stem_relief()
+    font = Font.from_context(ctx, "Oblique VF", style)
+    font.add_chars(sheet.build_all())
+    return font
 
 
 def test_oblique_compat_excludes_branching_arch_glyphs() -> None:
@@ -26,6 +40,22 @@ def test_italic_o_clears_r4_with_oblique_compat_pipeline() -> None:
                 assert not cubic_has_off_node_axis_extrema(seg)
 
 
+def test_vf_italic_pair_custom_slant_interpolates() -> None:
+    base = DesignContext.code_clear()
+    upright, ital = vf_italic_pair(
+        Controls.from_context(base), style=ItalicStyle(slant_deg=12.0)
+    )
+    bold = vf_upright_controls(
+        Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+    )
+    masters = [
+        Master({"wght": 400, "ital": 0}, _font(upright, "Regular")),
+        Master({"wght": 400, "ital": 1}, _font(ital, "Italic")),
+        Master({"wght": 700, "ital": 0}, _font(bold, "Bold", stem=120.0)),
+    ]
+    assert check_masters(masters) == []
+
+
 def test_wght_ital_vf_masters_interpolate_with_oblique_compat() -> None:
     base = DesignContext.code_clear()
     reg = vf_upright_controls(Controls.from_context(base))
@@ -33,19 +63,6 @@ def test_wght_ital_vf_masters_interpolate_with_oblique_compat() -> None:
     bold = vf_upright_controls(
         Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
     )
-
-    def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
-        from dataclasses import replace
-
-        ctx = controls.context
-        if stem is not None:
-            ctx = ctx.tuned(stem=stem)
-        sheet = replace(controls, context=ctx)
-        if stem is not None and stem >= 100:
-            sheet = sheet.with_stem_relief()
-        font = Font.from_context(ctx, "Oblique VF", style)
-        font.add_chars(sheet.build_all())
-        return font
 
     masters = [
         Master({"wght": 400, "ital": 0}, _font(reg, "Regular")),

@@ -7,6 +7,7 @@ import pytest
 from typekernel.parts import Controls, DesignContext
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
+    L3_VOICE_DISTANCE_THRESHOLD,
     snapshot_trial,
     voice_distance,
     write_trial_snapshot,
@@ -35,6 +36,24 @@ def test_preset_brief_snapshots_pass_gate(brief) -> None:
     assert snap.lint_error_count == 0
     assert snap.identity_error_count == 0
     assert snap.weight_ladder_r8_failures == 0
+
+
+@pytest.mark.parametrize(
+    "factory",
+    (DesignContext.slab_serif, DesignContext.bracketed_serif),
+)
+def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
+    """TK-306 voices are valid L3 trial starting points (TK-502 baseline)."""
+    controls = Controls.from_context(factory())
+    snap = snapshot_trial(
+        controls,
+        brief=FIXED_TRIAL_BRIEFS[1],
+        round=0,
+        apis_used=("preset_only", "serif_voice"),
+    )
+    assert snap.family_gate_ok, snap.family_gate_failures
+    assert snap.metrics_ok
+    assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
 
 
 def test_voice_distance_zero_on_unchanged_preset() -> None:
