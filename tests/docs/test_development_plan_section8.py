@@ -219,6 +219,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "human_review_bundle" in text
     assert "run_m5_program_exit" in text
     assert "validate_snapshot.py" in text
+    assert "contact_sheet.py" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
 
 
