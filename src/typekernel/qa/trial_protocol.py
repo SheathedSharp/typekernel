@@ -30,6 +30,7 @@ __all__ = [
     "controls_at_ladder_stem",
     "l3_voice_criteria_met",
     "snapshot_trial",
+    "trial_snapshot_exit_code",
     "validate_trial_snapshot",
     "validate_trial_snapshot_record",
     "voice_distance",
@@ -212,6 +213,24 @@ def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
             "l3_voice_ok": snapshot.l3_voice_ok,
         }
     )
+
+
+def trial_snapshot_exit_code(
+    snapshot: TrialSnapshot,
+    problems: tuple[str, ...] = (),
+) -> int:
+    """CLI exit codes for ``snapshot_design.py`` / ``snapshot_reference_trials.py``."""
+    if not snapshot.metrics_ok:
+        return 2
+    if not snapshot.family_gate_ok:
+        return 3
+    if snapshot.weight_ladder_r8_failures:
+        return 4
+    if problems:
+        return 5
+    if not snapshot.l3_voice_ok:
+        return 6
+    return 0
 
 
 def write_trial_snapshot(path: Path | str, snapshot: TrialSnapshot) -> Path:

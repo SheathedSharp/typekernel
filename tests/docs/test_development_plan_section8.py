@@ -81,6 +81,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology",
         ),
     ),
+    (
+        "tests/examples/test_agent_trial_reference.py",
+        ("test_snapshot_design_stem_tweak_exit_code_6",),
+    ),
 )
 
 

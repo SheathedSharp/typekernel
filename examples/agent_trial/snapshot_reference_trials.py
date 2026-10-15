@@ -26,7 +26,11 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--out", type=Path, required=True, help="base output directory")
     args = p.parse_args(argv)
-    from typekernel.qa.trial_protocol import snapshot_trial
+    from typekernel.qa.trial_protocol import (
+        snapshot_trial,
+        trial_snapshot_exit_code,
+        validate_trial_snapshot,
+    )
 
     apis = ("Style", "terminal_style", "tuned_glyph", "design_module")
     worst = 0
@@ -34,17 +38,12 @@ def main(argv: list[str] | None = None) -> int:
         brief = _brief(brief_id)
         controls = _load_controls(design_path.resolve())
         snap = snapshot_trial(controls, brief=brief, round=1, apis_used=apis)
+        problems = validate_trial_snapshot(snap)
         sub = args.out / folder_id
         sub.mkdir(parents=True, exist_ok=True)
         write_trial_snapshot(sub / "snapshot.json", snap)
-        if not snap.metrics_ok:
-            worst = max(worst, 2)
-        if not snap.family_gate_ok:
-            worst = max(worst, 3)
-        if snap.weight_ladder_r8_failures:
-            worst = max(worst, 4)
-        if not snap.l3_voice_ok:
-            worst = max(worst, 5)
+        code = trial_snapshot_exit_code(snap, problems)
+        worst = max(worst, code)
     return worst
 
 

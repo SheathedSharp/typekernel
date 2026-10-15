@@ -15,6 +15,7 @@ from typekernel.qa.trial_protocol import (
     WEIGHT_LADDER_STEMS,
     controls_at_ladder_stem,
     snapshot_trial,
+    trial_snapshot_exit_code,
     validate_trial_snapshot,
     validate_trial_snapshot_record,
     voice_distance,
@@ -95,6 +96,7 @@ def test_validate_trial_snapshot_accepts_honest_stem_only_tweak() -> None:
     assert not snap.l3_voice_ok
     assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
     assert not validate_trial_snapshot(snap)
+    assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 6
 
 
 def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:

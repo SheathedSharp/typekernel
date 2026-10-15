@@ -11,6 +11,7 @@ from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     TrialBrief,
     snapshot_trial,
+    trial_snapshot_exit_code,
     validate_trial_snapshot,
     write_trial_snapshot,
 )
@@ -66,17 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"validate: {msg}", flush=True)
     path = write_trial_snapshot(args.out / "snapshot.json", snap)
     print(path)
-    if not snap.metrics_ok:
-        return 2
-    if not snap.family_gate_ok:
-        return 3
-    if snap.weight_ladder_r8_failures:
-        return 4
-    if problems:
-        return 5
-    if not snap.l3_voice_ok:
-        return 6
-    return 0
+    return trial_snapshot_exit_code(snap, problems)
 
 
 if __name__ == "__main__":

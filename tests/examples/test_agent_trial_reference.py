@@ -14,6 +14,7 @@ from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
     L3_VOICE_DISTANCE_THRESHOLD,
     snapshot_trial,
+    validate_trial_snapshot,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -59,6 +60,7 @@ def _assert_reference_trial(brief_id: str, design_path: Path) -> None:
     assert snap.l3_voice_ok
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.glyph_spec_chars
+    assert not validate_trial_snapshot(snap)
 
 
 def test_reference_metrics_match_committed_fixture() -> None:
@@ -80,6 +82,7 @@ def test_reference_metrics_match_committed_fixture() -> None:
             from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
 
             assert snap.topology_fraction >= L3_MIN_TOPOLOGY_FRACTION
+        assert not validate_trial_snapshot(snap)
 
 
 def test_reference_warm_humanist_passes_gate_and_r8() -> None:
@@ -123,6 +126,37 @@ def test_snapshot_reference_trials_script(tmp_path: Path) -> None:
             (tmp_path / folder / "snapshot.json").read_text(encoding="utf-8")
         )
         assert data["l3_voice_ok"] is True
+
+
+def test_snapshot_design_stem_tweak_exit_code_6(tmp_path: Path) -> None:
+    design = tmp_path / "stem_tweak.py"
+    design.write_text(
+        "from typekernel.parts import Controls, DesignContext\n\n"
+        "def controls() -> Controls:\n"
+        "    ctx = DesignContext.humanist_sans()\n"
+        "    return Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))\n",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "snapshot_design.py",
+            "--brief",
+            "brief-1",
+            "--design",
+            str(design),
+            "--out",
+            str(tmp_path / "out"),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 6, proc.stderr or proc.stdout
+    data = json.loads((tmp_path / "out" / "snapshot.json").read_text(encoding="utf-8"))
+    assert data["l3_voice_ok"] is False
 
 
 def test_snapshot_design_script(tmp_path: Path) -> None:
