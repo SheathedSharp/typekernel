@@ -68,6 +68,16 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     assert snap.metrics_ok
     assert snap.weight_ladder_r8_failures == 0
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
+    assert snap.l3_voice_ok
+
+
+def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:
+    """TK-502 / TK-307: trial JSON must not treat pure stem scaling as L3."""
+    ctx = DesignContext.humanist_sans()
+    tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
+    snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0], apis_used=("stem_tweak",))
+    assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
+    assert not snap.l3_voice_ok
 
 
 def test_voice_distance_zero_on_unchanged_preset() -> None:

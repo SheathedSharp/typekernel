@@ -79,6 +79,7 @@ class TrialSnapshot:
     weight_ladder_r8_failures: int
     glyph_spec_chars: tuple[str, ...]
     cheating_flags: tuple[str, ...]
+    l3_voice_ok: bool
 
     @property
     def family_gate_ok(self) -> bool:
@@ -87,10 +88,6 @@ class TrialSnapshot:
     @property
     def metrics_ok(self) -> bool:
         return self.lint_error_count == 0 and self.identity_error_count == 0
-
-    @property
-    def l3_voice_ok(self) -> bool:
-        return self.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
 
 
 def voice_distance(controls: Controls) -> float:
@@ -163,6 +160,7 @@ def snapshot_trial(
         weight_ladder_r8_failures=weight_ladder_r8_failures(controls),
         glyph_spec_chars=tuple(sorted(controls.glyph_specs)),
         cheating_flags=tuple(cheating_flags),
+        l3_voice_ok=l3_voice_criteria_met(controls),
     )
 
 
