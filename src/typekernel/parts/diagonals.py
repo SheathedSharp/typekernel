@@ -505,9 +505,23 @@ def k_from_n(
         if s >= 198.0:
             scale += 0.012
         w = m.width * scale
+    if c.terminal_style == "angled" and width is None:
+        w *= 1.026
+        if m.stem <= 75.0:
+            w *= 1.004
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
-    outline = apply_terminal_shear(
-        c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08)
-    )
+    if c.terminal_style == "angled":
+        outline = apply_terminal_shear(
+            c,
+            _polygon(pts),
+            at=(w - m.stem * 0.20, m.x_height * 0.09),
+            along="x",
+            inward="+",
+            band=m.stem * 0.26,
+        )
+    else:
+        outline = apply_terminal_shear(
+            c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08)
+        )
     return _pack(c, m, anchors, outline)

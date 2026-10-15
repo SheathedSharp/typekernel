@@ -69,5 +69,5 @@ def test_terminal_style_angled_reaches_open_stroke_glyphs() -> None:
     a = _build(base)
     b = _build(replace(base, terminal_style="angled"))
     changed = _shape_changed(a, b)
-    assert len(changed) >= 19
-    assert {"F", "T"}.issubset(set(changed))
+    assert len(changed) >= 20
+    assert {"F", "T", "k"}.issubset(set(changed))
