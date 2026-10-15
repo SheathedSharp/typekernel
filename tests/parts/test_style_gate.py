@@ -76,6 +76,24 @@ def test_double_a_form_masters_interpolate_light_to_medium() -> None:
     assert check_masters(masters) == []
 
 
+def test_double_a_form_masters_interpolate_on_weight_ladder() -> None:
+    """``a_form=double`` keeps point topology across a wide stem span."""
+    ctx = DesignContext.code_clear()
+    style = Style(a_form="double")
+    stems = (70.0, 86.0, 100.0, 120.0, 140.0, 180.0)
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 400.0, 500.0, 600.0, 650.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem), style=style)
+        font = Font.from_context(ctx, "Style Sans", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all("a"))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 400.0, 500.0, 600.0, 650.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
 @pytest.mark.parametrize(
     "style",
     (

@@ -19,12 +19,13 @@ from dataclasses import dataclass, replace
 
 from fontTools.misc.bezierTools import splitCubic
 
-from typekernel.geo.contour import reverse_contour, signed_area
+from typekernel.geo.contour import Contour, reverse_contour, signed_area
 from typekernel.geo.curves import superellipse_cubics
 from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.path_helpers import KAPPA
 from typekernel.geo.point import Point
+from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import (
@@ -1288,6 +1289,104 @@ def _double_storey_blend_radius(c: DesignContext) -> float:
     return min(max(2.0, c.join_radius * 0.45), c.stem * 0.08)
 
 
+def _segment_to_cubic(seg: LineSegment | CubicSegment) -> Cubic:
+    if isinstance(seg, CubicSegment):
+        pts = seg.points
+        return (
+            pts[0].as_tuple(),
+            pts[1].as_tuple(),
+            pts[2].as_tuple(),
+            pts[3].as_tuple(),
+        )
+    p0, p1 = seg.p0.as_tuple(), seg.p1.as_tuple()
+    return (
+        p0,
+        (p0[0] + (p1[0] - p0[0]) / 3.0, p0[1] + (p1[1] - p0[1]) / 3.0),
+        (p0[0] + 2.0 * (p1[0] - p0[0]) / 3.0, p0[1] + 2.0 * (p1[1] - p0[1]) / 3.0),
+        p1,
+    )
+
+
+def _contour_cubics(contour: Contour) -> list[Cubic]:
+    return [_segment_to_cubic(seg) for seg in contour.segments]
+
+
+def _superellipse_x_at_y(cx: float, cy: float, rx: float, ry: float, n: float, y: float) -> float:
+    """Right-side ``x`` where the superellipse crosses horizontal ``y``."""
+    t = abs((y - cy) / ry) ** n
+    if t > 1.0 + 1e-9:
+        raise ValueError(f"y={y} outside superellipse vertical range")
+    return float(cx + rx * (1.0 - t) ** (1.0 / n))
+
+
+def _append_bowl_outer_ccw(
+    b: PathBuilder,
+    bowl_outer: Outline,
+    *,
+    shelf_y: float,
+) -> None:
+    """Trace lower bowl outer CCW from the right shelf around to the baseline toe."""
+    cubics = _contour_cubics(bowl_outer.contours[0])
+    n = len(cubics)
+    start: Cubic | None = None
+    start_idx = -1
+    for i, c in enumerate(cubics):
+        hit = _split(c, shelf_y, horizontal=True)
+        if hit is None:
+            continue
+        lo, hi = hit
+        start = hi if hi[3][1] > lo[3][1] else lo
+        start_idx = i
+        break
+    if start is None or start_idx < 0:
+        raise ValueError("bowl outer does not cross shelf_y")
+    _curve(b, start)
+    for j in range(1, n):
+        c = cubics[(start_idx + j) % n]
+        _curve(b, c)
+        if abs(c[3][1]) < 1e-6:
+            return
+    raise ValueError("bowl outer did not reach baseline")
+
+
+def _double_storey_a_outline(
+    c: DesignContext,
+    o: OMetrics,
+    mm: NMetrics,
+    s: _Shoulder,
+    bowl_outer: Outline,
+    *,
+    bowl_cx: float,
+    bowl_cy: float,
+    bowl_rx: float,
+    bowl_ry: float,
+    sx0: float,
+    sx1: float,
+    xh: float,
+    bowl_join: float,
+) -> Outline:
+    """Single CCW outer for two-storey ``a`` (no boolean union; TK-305 VF)."""
+    n_exp = o.exponent
+    shelf_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, bowl_join)
+    exit_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, 0.0)
+
+    b = PathBuilder()
+    b.moveTo(sx1, 0.0)
+    b.lineTo(sx1, xh)
+    b.lineTo(sx1, mm.leg_top)
+    _curve(b, s.outer[1])
+    _curve(b, s.outer[0])
+    b.lineTo(sx0, bowl_join)
+    # Keep a horizontal shelf segment at every weight (heavy bowls meet the stem early).
+    shelf_landing = shelf_x if shelf_x < sx0 - 1e-6 else sx0 - max(mm.stem * 0.04, 2.0)
+    b.lineTo(shelf_landing, bowl_join)
+    _append_bowl_outer_ccw(b, bowl_outer, shelf_y=bowl_join)
+    if exit_x < sx1 - 1e-6:
+        b.lineTo(sx1, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def _merge_solid_contours(outline: Outline) -> Outline:
     contours = list(outline.contours)
     big = [ct for ct in contours if len(ct.segments) >= 6]
@@ -1348,36 +1447,46 @@ def _double_storey_a_from_o(
     s = _shoulder(mm, x0)
     bowl_join = bowl_cy + bowl_ry * 0.68
 
-    b = PathBuilder()
-    b.moveTo(sx0, 0.0)
-    b.lineTo(sx1, 0.0)
-    b.lineTo(sx1, xh)
-    b.lineTo(sx1, mm.leg_top)
-    _curve(b, s.outer[1])
-    _curve(b, s.outer[0])
-    b.lineTo(sx0, bowl_join)
-    b.lineTo(sx0, 0.0)
-    b.closePath()
-    arch_stem = _ccw(b.build())
-
     bi = PathBuilder()
-    bi.moveTo(sx0, bowl_join - stem * 0.08)
-    bi.lineTo(s.l1, mm.join_y)
+    bi.moveTo(sx0, bowl_join)
+    bi.lineTo(sx0, mm.join_y)
+    bi.lineTo(s.r0, mm.join_y)
     _curve(bi, s.inner[0])
     _curve(bi, s.inner[1])
-    bi.lineTo(sx0, bowl_join - stem * 0.08)
+    bi.lineTo(sx0, mm.join_y)
+    bi.lineTo(sx0, bowl_join)
     bi.closePath()
-    upper_eye = _ccw(bi.build())
+    upper_ct = bi.build().contours[0]
+    upper_eye = Outline(
+        (reverse_contour(upper_ct) if signed_area(upper_ct) > 0 else upper_ct,)
+    )
+    lower_ct = lower_hole.contours[0]
+    lower_hole = Outline(
+        (reverse_contour(lower_ct) if signed_area(lower_ct) > 0 else lower_ct,)
+    )
 
     glyph = (
         GlyphAssembler(c)
         .with_design(o)
-        .add(lower_outer)
-        .add(arch_stem)
+        .add(
+            _double_storey_a_outline(
+                c,
+                o,
+                mm,
+                s,
+                lower_outer,
+                bowl_cx=bowl_cx,
+                bowl_cy=bowl_cy,
+                bowl_rx=bowl_rx,
+                bowl_ry=bowl_ry,
+                sx0=sx0,
+                sx1=sx1,
+                xh=xh,
+                bowl_join=bowl_join,
+            )
+        )
         .add_hole(lower_hole)
         .add_hole(upper_eye)
-        .union_solids()
-        .subtract_holes()
         .anchor("top", width * 0.46, xh)
         .anchor("bottom", bowl_cx, 0.0)
         .anchor("ogonek", sx0 + stem / 2.0, 0.0)

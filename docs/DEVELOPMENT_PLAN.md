@@ -392,8 +392,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-305 风格 DNA：离散拓扑选项　〔L〕
 - **进展**：`Style` 六选项均已接线；`tests/parts/test_style_gate.py`（各选项 lint + 非拓扑 style 的 `check_masters`）；`agent-recipes` Style 表。
-- **本轮（部分）**：``g_form=double`` 经 ``normalize_master_outline`` + 轻量轮廓合并，在 ``code_clear`` 字重阶梯 ``check_masters`` 四母版全绿；``a_form=double`` 在 stem 86↔100 区间可插值（更宽阶梯仍建议独立母版）；非默认 Style 组合 ``code_clear`` 全 ``supported`` lint 零 error。
-- **待续**：``a_form=double`` 全阶梯 VF 点位一致；全 preset 全 Style 组合的 identity 抽检扩展。
+- **本轮（部分）**：``g_form=double`` 经 ``normalize_master_outline`` + 轻量轮廓合并，在 ``code_clear`` 字重阶梯 ``check_masters`` 四母版全绿；``a_form=double`` 单外轮廓 + 双孔（下碗 + 上拱肩）无布尔并集，``code_clear`` stem 70–180 六母版 ``check_masters`` 全绿（``test_double_a_form_masters_interpolate_on_weight_ladder``）；非默认 Style 组合 ``code_clear`` 全 ``supported`` lint 零 error。
+- **待续**：全 preset 全 Style 组合的 identity 抽检扩展。
 - **做什么**：新增冻结数据类 `Style`（名称为草案），**只含少量高杠杆的离散选择**，由配方读取；默认值 = 现有行为。建议首批：
   | 选项 | 取值 | 备注 |
   | --- | --- | --- |
