@@ -156,6 +156,30 @@ def test_slab_serif_masters_on_vf_stable_charset() -> None:
     assert check_masters(masters) == []
 
 
+def test_slab_opening_caps_change_c_and_g_outline() -> None:
+    sans = Controls.from_context(DesignContext.geometric_sans())
+    slab = Controls.from_context(DesignContext.slab_serif())
+    for ch in ("c", "C", "G"):
+        assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
+
+
+def test_slab_cap_cg_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    charset = "CG"
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem))
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all(charset))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
 def test_slab_t_baked_foot_changes_outline() -> None:
     sans = Controls.from_context(DesignContext.geometric_sans()).build("t")
     slab = Controls.from_context(DesignContext.slab_serif()).build("t")

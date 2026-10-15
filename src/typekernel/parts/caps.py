@@ -33,6 +33,8 @@ from typekernel.parts.control import (
     _ccw,
     _curve,
     _cut,
+    _opening_slab_metrics,
+    _opening_top_slab_move,
     _pack,
     _quarters,
     _rev,
@@ -555,7 +557,12 @@ def G_from_O(
     chamfer = min(h.stem * 0.32, bar_h * 0.48, 0.07 * o.x_height)
 
     b = PathBuilder()
-    b.moveTo(*top[0])
+    baked = c.style.serif == "slab"
+    if baked:
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+        _opening_top_slab_move(b, top[0], slab_l, slab_th)
+    else:
+        b.moveTo(*top[0])
     for cubic in (top, q1, q2, lower):
         _curve(b, cubic)
     b.lineTo(x_bar, bar_top)
@@ -575,7 +582,6 @@ def G_from_O(
     for cubic in (_rev(ilower), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)
     b.closePath()
-    baked = c.style.serif == "slab"
     return _pack(
         c,
         o,

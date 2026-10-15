@@ -1685,6 +1685,35 @@ def _terminal_x(o: OMetrics, aperture: float, closure: float) -> float:
     return o.rx + (o.rx - o.thickness_v) * (0.95 - closure * ap)
 
 
+def _opening_slab_metrics(c: DesignContext, o: OMetrics) -> tuple[float, float]:
+    """Horizontal caps on vertical ``c``/``G`` opening terminals (+x slab)."""
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(c)
+    cap = o.x_height
+    l = min(length * 0.35, o.thickness_v * 0.55, c.stem * 0.28)
+    th = min(thick * 0.55, cap * 0.04, c.stem * 0.1)
+    if c.stem > 150.0:
+        l = min(l, o.thickness_v * 0.42)
+        th = min(th, cap * 0.032, o.thickness_h * 0.35)
+    return l, th
+
+
+def _opening_top_slab_move(b: PathBuilder, pt: Pt, length: float, thick: float) -> None:
+    tx, ty = pt
+    b.moveTo(tx + length, ty + thick)
+    b.lineTo(tx + length, ty)
+    b.lineTo(tx, ty)
+
+
+def _opening_bottom_slab_detour(b: PathBuilder, pt: Pt, length: float, thick: float) -> None:
+    """Bottom opening shelf (+x); shallow vertical to avoid bowl overlap at bold."""
+    tx, ty = pt
+    b.lineTo(tx + length, ty)
+    b.lineTo(tx + length, ty - thick * 0.55)
+    b.lineTo(tx, ty - thick * 0.55)
+
+
 def _cut(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic]:
     pieces = _split(c, where, horizontal=horizontal)
     if pieces is None:
@@ -1715,9 +1744,15 @@ def c_from_o(
     ibot = _cut(i3, x_t, horizontal=False)[0]
 
     b = PathBuilder()
-    b.moveTo(*top[0])
+    if c.style.serif == "slab":
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+        _opening_top_slab_move(b, top[0], slab_l, slab_th)
+    else:
+        b.moveTo(*top[0])
     for cubic in (top, q1, q2, bot):
         _curve(b, cubic)
+    if c.style.serif == "slab":
+        _opening_bottom_slab_detour(b, bot[3], slab_l, slab_th)
     b.lineTo(*ibot[3])
     for cubic in (_rev(ibot), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)

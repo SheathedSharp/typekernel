@@ -414,7 +414,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 slab 内嵌或禁用错误锚点（``G``/``Q`` 与 ``C`` 同，无 H 宽假 stem 布尔）；碗形 ``B``/``D``/``P``/``R`` 为左 stem 脚底；``j``/``t`` slab 不走脚锚点（避免钩形段数漂移）。
 - **本轮（部分）**：``test_slab_serif_masters_on_vf_stable_charset`` 覆盖全 ``supported`` 四档母版。
 - **本轮（部分）**：``t`` slab 在 hook 母版 stem 脚底内嵌单轮廓衬线（``_r_outline`` 固定段数）。
-- **待续**：人审签字；``G``/``Q``/``j`` 开口/下伸脚内嵌；VF 示例。
+- **本轮（部分）**：``c``/``C``/``G`` 开口竖切顶/底（``+x``）内嵌 slab；``G`` 顶托架与 ``C`` 底托架段数固定。
+- **待续**：人审签字；``Q``/``j`` 脚衬线；VF 示例。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`serif="slab"` 构建全 98 字形 lint 零错误，并在 ≥ 3 个字重通过；人审；对应 preset（如 `slab_serif()`）与示例。
 - **依赖**：TK-305。
