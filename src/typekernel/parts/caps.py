@@ -744,8 +744,14 @@ def G_from_O(
     chamfer = min(h.stem * 0.32, bar_h * 0.48, 0.07 * o.x_height)
 
     b = PathBuilder()
-    baked = _cap_serif_inlined(c)
-    if baked:
+    inlined = _cap_serif_inlined(c)
+    if c.style.serif == "bracketed":
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+        from typekernel.parts.serifs import serif_metrics
+
+        _, _, bracket_r = serif_metrics(c)
+        _opening_top_bracketed_move(b, top[0], slab_l, slab_th, bracket_r)
+    elif inlined:
         slab_l, slab_th = _opening_slab_metrics(c, o)
         _opening_top_slab_move(b, top[0], slab_l, slab_th)
     else:
@@ -772,7 +778,7 @@ def G_from_O(
     return _pack(
         c,
         o,
-        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not baked),
+        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not inlined),
         _ccw(b.build()),
     )
 
@@ -820,22 +826,33 @@ def Q_from_O(
     b.moveTo(*q0[0])
     for cubic in (q0, q1, q2, before):
         _curve(b, cubic)
-    baked = _cap_serif_inlined(c)
+    inlined = _cap_serif_inlined(c)
     tail_l = end[0] - hw / 2.0
     tail_r = end[0] + hw / 2.0
     tail_y = end[1]
-    if baked:
+    if c.style.serif == "bracketed" or inlined:
         from typekernel.parts.serifs import serif_metrics
 
-        length, thick, _ = serif_metrics(c)
+        length, thick, bracket_r = serif_metrics(c)
         cap = o.x_height
         foot_l = min(length * 0.35, hw * 0.55, h.stem * 0.28)
         foot_th = min(thick * 0.55, cap * 0.04, h.stem * 0.1)
         b.lineTo(tail_l, tail_y)
         b.lineTo(tail_l - foot_l, tail_y)
-        b.lineTo(tail_l - foot_l, tail_y - foot_th)
-        b.lineTo(tail_r + foot_l, tail_y - foot_th)
-        b.lineTo(tail_r + foot_l, tail_y)
+        if c.style.serif == "bracketed":
+            _finish_foot_pad_below(
+                b,
+                tail_l - foot_l,
+                tail_r + foot_l,
+                tail_y,
+                foot_th,
+                bracket_r,
+                bracketed=True,
+            )
+        else:
+            b.lineTo(tail_l - foot_l, tail_y - foot_th)
+            b.lineTo(tail_r + foot_l, tail_y - foot_th)
+            b.lineTo(tail_r + foot_l, tail_y)
         b.lineTo(tail_r, tail_y)
     else:
         b.lineTo(tail_l, tail_y)
@@ -851,7 +868,7 @@ def Q_from_O(
     return _pack(
         c,
         o,
-        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not baked),
+        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not inlined),
         Outline((outer, reverse_contour(counter))),
     )
 
@@ -1426,6 +1443,51 @@ def _finish_baseline_foot_pad(
         -th + r,
     )
     b.lineTo(xr, 0.0)
+
+
+def _finish_foot_pad_below(
+    b: PathBuilder,
+    xl: float,
+    xr: float,
+    y: float,
+    th: float,
+    bracket_r: float,
+    *,
+    bracketed: bool,
+) -> None:
+    """Complete a foot pad below ``y`` from ``(xl, y)``; ends at ``(xr, y)``."""
+    if not bracketed:
+        b.lineTo(xl, y - th)
+        b.lineTo(xr, y - th)
+        b.lineTo(xr, y)
+        return
+    span_x = xr - xl
+    r = min(bracket_r, span_x * 0.4, th * 0.45)
+    if r < 0.35:
+        b.lineTo(xl, y - th)
+        b.lineTo(xr, y - th)
+        b.lineTo(xr, y)
+        return
+    b.lineTo(xl, y - th)
+    b.lineTo(xr - r, y - th)
+    b.curveTo(
+        xr - r + r * KAPPA,
+        y - th,
+        xr,
+        y - th + r - r * KAPPA,
+        xr,
+        y - th + r,
+    )
+    b.lineTo(xr, y)
+
+
+def _opening_top_bracketed_move(
+    b: PathBuilder, pt: Pt, length: float, thick: float, bracket_r: float
+) -> None:
+    """Opening terminal shelf (+x) with cubic bracket at the outer corner."""
+    tx, ty = pt
+    b.moveTo(tx + length, ty)
+    _append_upward_cap_foot_pad(b, tx, tx + length, ty, thick, bracket_r, bracketed=True)
 
 
 def _append_baseline_foot_pad(

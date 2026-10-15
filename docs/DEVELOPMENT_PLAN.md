@@ -446,6 +446,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 ``N`` ``bracketed`` 四脚内嵌托架圆角（``_write_n_bracketed_outer``）；重 stem 加宽与 ``M`` 同系；``test_bracketed_cap_n_*``；golden ``N``（``bracketed_serif``）。
 - **本轮（部分）**：碗形大写 ``D``/``P``/``R``/``B`` ``bracketed`` 左 stem 脚底 cubic 托架（``_bowl_cap_bracketed_*``）；``test_bracketed_bowl_caps_dprb_*``；golden ``D``/``P``/``R``/``B``；``tk502`` ``brief-2-bracketed`` ``voice_distance``。
 - **本轮（部分）**：大写 ``U`` ``bracketed`` 双 stem 顶脚 cubic 托架（``_write_u_bracketed_outer``，闭合不重复左顶衬线以免 R3）；``test_bracketed_cap_u_*``；golden ``U``。
+- **本轮（部分）**：大写 ``G``/``Q`` ``bracketed`` 开口顶/尾脚 cubic 托架（``_opening_top_bracketed_move`` / ``_finish_foot_pad_below``）；``test_bracketed_cap_gq_*``；golden ``G``/``Q``。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
