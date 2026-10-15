@@ -521,6 +521,18 @@ def _n_ascender_left_stem_cap(y_cap: float, m: NMetrics) -> bool:
     return y_cap > m.x_height + 0.5
 
 
+def _n_slab_h_ascender(
+    ctx: DesignContext | None, left_top: float, m: NMetrics
+) -> bool:
+    """Slab ``h``: ascender stem + shelf left foot (avoids pad-foot R3 pre-serif)."""
+    return (
+        ctx is not None
+        and ctx.style.serif == "slab"
+        and _stem_serif_inlined(ctx)
+        and left_top > m.x_height + 0.5
+    )
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
@@ -553,7 +565,19 @@ def _n_family_outline(
     elif vf_compat:
         b.lineTo(s.l1, left_top)
     _curve(b, s.outer[0])
-    _curve(b, s.outer[1])
+    if _n_slab_h_ascender(ctx, left_top, m):
+        slab_ctx = ctx
+        assert slab_ctx is not None
+        split_outer = _split(s.outer[1], m.x_height, horizontal=True)
+        if split_outer is not None:
+            _curve(b, split_outer[0])
+            b.lineTo(s.r1, m.x_height)
+            _n_inline_left_stem_cap(b, s.r0, s.r1, m.x_height, slab_ctx, m.stem)
+            b.lineTo(s.r1, split_outer[1][3][1])
+        else:
+            _curve(b, s.outer[1])
+    else:
+        _curve(b, s.outer[1])
     b.lineTo(s.r1, 0.0)
     if ctx is not None and _stem_serif_inlined(ctx):
         _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
@@ -734,6 +758,7 @@ def _n_stem_serif_anchors(
     inline_left_foot: bool = False,
     inline_right_foot: bool = False,
     inline_left_top: bool = False,
+    inline_right_top: bool = False,
 ) -> dict[str, Pt]:
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
@@ -750,7 +775,9 @@ def _n_stem_serif_anchors(
         inline_right_foot and ctx is not None and _stem_serif_inlined(ctx)
     ):
         anchors["stem_R_b"] = (m.width - half, 0.0)
-    if right_top is not None:
+    if right_top is not None and not (
+        inline_right_top and ctx is not None and _stem_serif_inlined(ctx)
+    ):
         anchors["stem_R_t"] = (m.width - half, right_top)
     return anchors
 
@@ -810,13 +837,21 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             inline_left_foot=_stem_serif_inlined(ctx),
             inline_right_foot=_stem_serif_inlined(ctx),
             inline_left_top=_stem_serif_inlined(ctx),
+            inline_right_top=ctx.style.serif == "slab",
         ),
     }
+    shelf_h = ctx.style.serif == "slab"
     if _italic_topology(ctx):
-        outline = _n_branching_outline(m, stem_top=m.ascender, ctx=ctx)
+        outline = _n_branching_outline(
+            m, stem_top=m.ascender, ctx=ctx, shelf_left_foot=shelf_h
+        )
     else:
         outline = _n_family_outline(
-            m, left_top=m.ascender, vf_compat=_vf_compat_stem(ctx), ctx=ctx
+            m,
+            left_top=m.ascender,
+            vf_compat=_vf_compat_stem(ctx),
+            ctx=ctx,
+            shelf_left_foot=shelf_h,
         )
     return _pack(ctx, m, anchors, outline)
 

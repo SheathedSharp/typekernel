@@ -468,7 +468,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``r`` ``slab`` 左肩口顶衬线内嵌（``inline_shoulder_left_cap_slab_path`` + ``inline_left_top``）；``test_slab_r_shoulder_cap_inlined_skips_left_top_anchor``；golden ``r``（``slab_serif``）。
 - **本轮（部分）**：``m`` ``slab`` 左肩口顶衬线内嵌（同 ``r`` 左缘配方）；``test_slab_m_shoulder_cap_inlined_skips_left_top_anchor``；golden ``m``（``slab_serif``）。
 - **本轮（部分）**：``test_slab_only_n_and_h_still_use_boolean_top_stem_serifs`` 锁定 slab 仅 ``n``/``h`` 仍走 ``stem_L_t``/``stem_R_t`` 布尔顶衬线。
-- **本轮（部分）**：``h`` ``stem_R_t`` 内嵌：在 ``x_height`` 水平切分 ``outer[1]`` 或竖直拉 ``r1`` 至肩高均触发 R3（与内肩 shelf 同高重叠）；``test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3`` 固化；仍保留布尔 ``stem_R_t``。
+- **本轮（部分）**：``h`` ``stem_R_t`` 内嵌：全宽 pad 左脚在未布尔前即 R3，需 ``shelf_left_foot`` + ``x_height`` 切 ``outer[1]`` + ``inline_stem_cap_serif_path``；``test_slab_h_right_leg_cap_inlined_without_boolean_serif``；golden ``h``（``slab_serif``）；``test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3`` 保留（无 shelf 时切分仍 R3）。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typekernel.font import Font, Master, check_masters
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.style import Style
-from typekernel.qa.lint import lint_controls
+from typekernel.qa.lint import lint_controls, lint_glyph
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 
@@ -224,7 +224,22 @@ def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
         g = Controls.from_context(factory()).build("h")
         names = {a.name for a in g.anchors}
         assert "stem_L_t" not in names
-        assert "stem_R_t" in names
+    slab = Controls.from_context(DesignContext.slab_serif()).build("h")
+    assert "stem_R_t" not in {a.name for a in slab.anchors}
+    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("h")
+    assert "stem_R_t" in {a.name for a in bracket.anchors}
+
+
+def test_slab_h_right_leg_cap_inlined_without_boolean_serif() -> None:
+    from typekernel.parts.control import h_from_n
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    ctx = DesignContext.slab_serif()
+    n = Controls.from_context(ctx).control_glyphs()[0]
+    h = h_from_n(n, ctx)
+    assert not [i for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"]
+    assert "stem_R_t" not in {a.name for a in h.anchors}
+    assert composed_glyph_hash(h) == composed_glyph_hash(apply_glyph_serifs(h))
 
 
 def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
@@ -301,7 +316,7 @@ def test_slab_only_n_and_h_still_use_boolean_top_stem_serifs() -> None:
         if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
             stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
             changed.append((ch, stems))
-    assert changed == [("h", ["stem_R_t"]), ("n", ["stem_L_t"])]
+    assert changed == [("n", ["stem_L_t"])]
 
 
 def test_serif_n_family_inlined_feet_omit_bottom_stem_anchors() -> None:
