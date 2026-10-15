@@ -1150,9 +1150,13 @@ def _bowl_stem_outline(
     b = PathBuilder()
     b.moveTo(s_r, stem_bottom)
     b.lineTo(s_r, stem_top)
+    top_join = top_cut[1]
+    p0 = top_join[0]
+    if abs(p0[0] - s_l) > 1e-9:
+        top_join = ((s_l, p0[1]), top_join[1], top_join[2], top_join[3])
     b.lineTo(s_l, stem_top)
-    b.lineTo(*top_cut[1][0])
-    _curve(b, top_cut[1])
+    b.lineTo(*top_join[0])
+    _curve(b, top_join)
     _curve(b, q1)
     _curve(b, q2)
     _curve(b, bot_cut[0])
@@ -1194,7 +1198,7 @@ def _bowl_glyph(
     if not descends:
         anchors["bottom"] = (cx, 0.0)
     if stem_left:
-        outline = Outline(tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours))
+        outline = Outline(tuple(reverse_contour(k) for k in mirror_x(outline, at_x=cx).contours))
     return _pack(c, o, anchors, outline)
 
 
