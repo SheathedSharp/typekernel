@@ -763,16 +763,39 @@ def P_from_H(
     w = max(width * h.width, min_bowl_stems(t) * t)
     x0, y_b = _straight_run(straight, w, t), bowl * cap - bt / 2.0
     q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, t, bt, e)
+    baked = c.style.serif == "slab"
     b = PathBuilder()
-    b.moveTo(0.0, 0.0)
-    for p in ((t, 0.0), (t, y_b), (x0, y_b)):
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        l = min(length, t * 0.48)
+        th = min(thick, cap * 0.1, t * 0.18)
+        b.moveTo(-l, -th)
+        b.lineTo(t + l, -th)
+        b.lineTo(t + l, 0.0)
+        b.lineTo(t, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(t, 0.0)
+    for p in ((t, y_b), (x0, y_b)):
         b.lineTo(*p)
     _curve(b, q3)
     _curve(b, q0)
-    b.lineTo(0.0, cap)
+    if baked:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
     b.closePath()
     _counter(b, t, x0, i3, i0)
-    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _with_counters(b),
+    )
 
 
 def R_from_H(
