@@ -419,7 +419,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``tests/golden/outline_hashes.json`` 锁定 ``slab_serif`` 全 98 字；``examples/slab_serif`` 三档 sentence gate + proof 烟测通过。
 - **本轮（部分）**：``examples/slab_serif/build_vf.py`` 四档 ``wght`` VF（与稳定字符集同 stem 阶梯）+ ``proof_vf.png``；``test_slab_serif_build_vf_script``；VF 与 ``build_family`` 共用 ``_voice``（``f`` arm 0.75）。
 - **本轮（部分）**：``bracketed_serif`` 全 98 字 golden 哈希；``bracketed`` 全字符集 VF 母版仍待稳定（锚点衬线段数漂移）。
-- **待续**：**人审签字**（slab 自动化验收已齐）；``bracketed`` 大写/钩形 VF 内嵌或排除表。
+- **本轮（部分）**：大写 stem 锚点按字形跨度（``dual``/``left``/``none``）与 ``M``/``N``/``T``/``U`` 真实 stem 位；``bracketed`` 对角大写禁用假 stem 布尔；``f``/``t``/``j`` 与 ``b``/``d``/``p``/``q`` 钩脚/碗 stem 脚避免 VF 段数漂移；``test_bracketed_serif_masters_on_vf_stable_charset`` 全 ``supported`` 四档母版。
+- **待续**：**人审签字**（slab 自动化验收已齐）；``bracketed`` 碗形/钩形脚底内嵌（现无脚衬线）。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`serif="slab"` 构建全 98 字形 lint 零错误，并在 ≥ 3 个字重通过；人审；对应 preset（如 `slab_serif()`）与示例。
 - **依赖**：TK-305。

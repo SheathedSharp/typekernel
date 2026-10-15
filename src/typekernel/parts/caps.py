@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
 from fontTools.misc.bezierTools import (
     cubicPointAtT,
@@ -154,24 +154,61 @@ def _polygon(points: list[Pt]) -> Outline:
     return _ccw(b.build())
 
 
-def _cap_stem_serif_anchors(h: HMetrics) -> dict[str, Pt]:
+StemSerifMode = Literal["dual", "left", "none"]
+
+
+def _cap_stem_serif_mode(span_width: float, h: HMetrics) -> StemSerifMode:
+    """Pick stem serif sites from glyph span vs the control ``H`` width."""
+    if abs(span_width - h.width) < 0.5:
+        return "dual"
+    if span_width > h.width + h.stem * 0.25:
+        return "none"
+    if span_width < h.width - 0.5:
+        return "left"
+    return "none"
+
+
+def _cap_stem_serif_anchors(h: HMetrics, *, mode: StemSerifMode) -> dict[str, Pt]:
     half = h.stem / 2.0
-    return {
+    if mode == "none":
+        return {}
+    anchors: dict[str, Pt] = {
         "stem_L_b": (half, 0.0),
         "stem_L_t": (half, h.cap_height),
-        "stem_R_b": (h.width - half, 0.0),
-        "stem_R_t": (h.width - half, h.cap_height),
     }
+    if mode == "dual":
+        anchors["stem_R_b"] = (h.width - half, 0.0)
+        anchors["stem_R_t"] = (h.width - half, h.cap_height)
+    return anchors
 
 
-def _cap_anchors(width: float, h: HMetrics, *, stem_serif_anchors: bool = True) -> dict[str, Pt]:
+def _cap_anchors(
+    width: float,
+    h: HMetrics,
+    *,
+    stem_serif_anchors: bool = True,
+    stem_serif_mode: StemSerifMode | None = None,
+) -> dict[str, Pt]:
     anchors: dict[str, Pt] = {
         "top": (width / 2.0, h.cap_height),
         "bottom": (width / 2.0, 0.0),
     }
     if stem_serif_anchors:
-        anchors.update(_cap_stem_serif_anchors(h))
+        mode = stem_serif_mode if stem_serif_mode is not None else _cap_stem_serif_mode(width, h)
+        anchors.update(_cap_stem_serif_anchors(h, mode=mode))
     return anchors
+
+
+def _cap_serif_inlined(c: DesignContext) -> bool:
+    """Serif feet drawn in the cap outline (slab geometry; bracketed borrows for VF/L3)."""
+    return c.style.serif in ("slab", "bracketed")
+
+
+def _cap_stem_serif_anchors_enabled(
+    c: DesignContext, *, baked: bool, diagonal: bool = False
+) -> bool:
+    """Whether cap stem sites get boolean serifs (slab inline and diagonals opt out)."""
+    return not (baked or diagonal)
 
 
 def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
@@ -335,7 +372,7 @@ def L_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         outline,
     )
 
@@ -404,7 +441,7 @@ def E_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         outline,
     )
 
@@ -476,7 +513,7 @@ def F_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         outline,
     )
 
@@ -557,7 +594,7 @@ def G_from_O(
     chamfer = min(h.stem * 0.32, bar_h * 0.48, 0.07 * o.x_height)
 
     b = PathBuilder()
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     if baked:
         slab_l, slab_th = _opening_slab_metrics(c, o)
         _opening_top_slab_move(b, top[0], slab_l, slab_th)
@@ -633,7 +670,7 @@ def Q_from_O(
     b.moveTo(*q0[0])
     for cubic in (q0, q1, q2, before):
         _curve(b, cubic)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     tail_l = end[0] - hw / 2.0
     tail_r = end[0] + hw / 2.0
     tail_y = end[1]
@@ -828,7 +865,7 @@ def P_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         _with_counters(b),
     )
 
@@ -901,7 +938,7 @@ def R_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         _with_counters(b),
     )
 
@@ -975,7 +1012,7 @@ def B_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=not baked, stem_serif_mode="left"),
         _with_counters(b),
     )
 
@@ -1047,12 +1084,21 @@ def U_from_H(
         b.lineTo(t + l, cap + th)
         b.lineTo(-l, cap + th)
     b.closePath()
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
-        _ccw(b.build()),
-    )
+    half = t / 2.0
+    anchors: dict[str, Pt] = {
+        "top": (w / 2.0, cap),
+        "bottom": (w / 2.0, 0.0),
+    }
+    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+        anchors.update(
+            {
+                "stem_L_b": (half, 0.0),
+                "stem_L_t": (half, cap),
+                "stem_R_b": (w - half, 0.0),
+                "stem_R_t": (w - half, cap),
+            }
+        )
+    return _pack(c, h, anchors, _ccw(b.build()))
 
 
 def J_from_H(
@@ -1155,12 +1201,12 @@ def V_from_H(
     w = w_frac * h.width
     bump = c.sharp_overshoot
     base = v_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     pts = _v_cap_slab_points(h, c, base) if baked else base
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
         _polygon(pts),
     )
 
@@ -1215,12 +1261,12 @@ def W_from_H(
     w = w_frac * h.width
     bump = c.sharp_overshoot
     base = w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     pts = _w_cap_slab_points(h, c, base) if baked else base
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
         _polygon(pts),
     )
 
@@ -1267,12 +1313,12 @@ def X_from_H(
         w_frac += 0.011
     w = w_frac * h.width
     base = x_points(h.stem, h.cap_height, w, c.contrast)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     pts = _x_cap_slab_points(h, c, base) if baked else base
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
         _polygon(pts),
     )
 
@@ -1316,12 +1362,12 @@ def Z_from_H(
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
     base = z_points(h.stem, h.bar, h.cap_height, w, c.contrast)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     pts = _z_cap_slab_points(h, c, base) if baked else base
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
         _polygon(pts),
     )
 
@@ -1444,7 +1490,7 @@ def A_from_H(
     def right(y: float) -> float:
         return w - hw - a * y / cap
 
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
     base_outer = [
         (0.0, 0.0),
         (hw, 0.0),
@@ -1467,7 +1513,7 @@ def A_from_H(
     return _pack(
         c,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
         _with_counters(b),
     )
 
@@ -1660,12 +1706,21 @@ def M_from_H(
         raise ValueError("M strokes do not fit this width; widen it or thin the stem")
     baked = c.style.serif == "slab"
     pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
-        _polygon(pts),
-    )
+    half = t / 2.0
+    anchors: dict[str, Pt] = {
+        "top": (w / 2.0, cap),
+        "bottom": (w / 2.0, 0.0),
+    }
+    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+        anchors.update(
+            {
+                "stem_L_b": (half, 0.0),
+                "stem_L_t": (half, cap),
+                "stem_R_b": (w - half, 0.0),
+                "stem_R_t": (w - half, cap),
+            }
+        )
+    return _pack(c, h, anchors, _polygon(pts))
 
 
 def _n_cap_outline_points(
@@ -1751,12 +1806,21 @@ def N_from_H(
         raise ValueError("N diagonal does not fit this width; widen it or thin the stem")
     baked = c.style.serif == "slab"
     pts = _n_cap_outline_points(h, c, w=w, y_left=y_left, y_right=y_right)
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
-        _polygon(pts),
-    )
+    half = t / 2.0
+    anchors: dict[str, Pt] = {
+        "top": (w / 2.0, cap),
+        "bottom": (w / 2.0, 0.0),
+    }
+    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+        anchors.update(
+            {
+                "stem_L_b": (half, 0.0),
+                "stem_L_t": (half, cap),
+                "stem_R_b": (w - half, 0.0),
+                "stem_R_t": (w - half, cap),
+            }
+        )
+    return _pack(c, h, anchors, _polygon(pts))
 
 
 def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
@@ -1816,9 +1880,12 @@ def T_from_H(
         if baked
         else _cap_f_t_outline(c, pts, w, h.cap_height, h.bar)
     )
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not baked),
-        outline,
-    )
+    cx = w / 2.0
+    anchors: dict[str, Pt] = {
+        "top": (w / 2.0, h.cap_height),
+        "bottom": (cx, 0.0),
+    }
+    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+        anchors["stem_M_b"] = (cx, 0.0)
+        anchors["stem_M_t"] = (cx, h.cap_height)
+    return _pack(c, h, anchors, outline)

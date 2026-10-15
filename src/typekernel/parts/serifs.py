@@ -8,6 +8,7 @@ from typing import Literal
 
 from typekernel.geo.boolean import union_all
 from typekernel.geo.outline import Outline
+from typekernel.geo.path_builder import PathBuilder
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import rounded_rect, serif_bracket
@@ -15,6 +16,7 @@ from typekernel.parts.primitives import rounded_rect, serif_bracket
 __all__ = [
     "StemSerifSite",
     "apply_glyph_serifs",
+    "inline_stem_foot_serif_path",
     "serif_metrics",
     "slab_serif_rect",
 ]
@@ -115,6 +117,23 @@ def _sites_from_anchors(glyph: ComposedGlyph) -> list[StemSerifSite]:
             )
         )
     return sites
+
+
+def inline_stem_foot_serif_path(
+    b: PathBuilder,
+    x_stem_left: float,
+    y_base: float,
+    ctx: DesignContext,
+    stem_width: float,
+) -> None:
+    """Append a foot serif on the left face of a vertical stem (fixed segment count)."""
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, stem_width * 0.48)
+    th = min(thick, ctx.x_height * 0.1, stem_width * 0.18)
+    b.lineTo(x_stem_left - l, y_base)
+    b.lineTo(x_stem_left - l, y_base - th)
+    b.lineTo(x_stem_left, y_base - th)
+    b.lineTo(x_stem_left, y_base)
 
 
 def _serif_outline(ctx: DesignContext, site: StemSerifSite) -> Outline:

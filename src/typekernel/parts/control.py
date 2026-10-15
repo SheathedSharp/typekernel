@@ -428,15 +428,19 @@ def _f_stem_floor(ctx: DesignContext) -> float:
 
 
 def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float] | None:
-    """Left-stem foot slab ``(length, thickness)`` for hook letters, or ``None``."""
-    if ctx.style.serif != "slab":
+    """Inline foot serif on hook letters (slab + bracketed), or ``None``."""
+    if ctx.style.serif not in ("slab", "bracketed"):
         return None
     from typekernel.parts.serifs import serif_metrics
 
     length, thick, _ = serif_metrics(ctx)
     xh = ctx.x_height
-    l = min(length * 0.42, stem * 0.48)
-    th = min(thick * 0.65, xh * 0.05, stem * 0.18)
+    if ctx.style.serif == "bracketed":
+        l = min(length, stem * 0.48)
+        th = min(thick, xh * 0.1, stem * 0.18)
+    else:
+        l = min(length * 0.42, stem * 0.48)
+        th = min(thick * 0.65, xh * 0.05, stem * 0.18)
     return l, th
 
 
@@ -856,15 +860,17 @@ def f_from_n(
         bar,
         blend=not inline,
         inline_crossbar=inline,
+        slab_foot=_hook_slab_stem_foot(c, m.stem),
     )
     outline = apply_terminal_shear(c, outline)
     half = m.stem / 2.0
-    anchors = {
-        "bottom": (half, 0.0),
-        **_vertical_stem_serif_anchors(
-            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
-        ),
-    }
+    anchors: dict[str, Pt] = {"bottom": (half, 0.0)}
+    if c.style.serif not in ("slab", "bracketed"):
+        anchors.update(
+            _vertical_stem_serif_anchors(
+                m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+            )
+        )
     return _pack(c, m, anchors, outline)
 
 
@@ -920,7 +926,7 @@ def t_from_n(
         outline = apply_terminal_shear(c, flipped, at=tip)
     half = m.stem / 2.0
     anchors: dict[str, Pt] = {"bottom": (half, 0.0)}
-    if c.style.serif != "slab":
+    if c.style.serif not in ("slab", "bracketed"):
         anchors.update(
             _vertical_stem_serif_anchors(
                 m.stem, half, bottom=0.0, top=top, side="L", include_top=False
@@ -957,7 +963,7 @@ def j_from_n(
         "top": (half, dot_y + m.stem * 0.95),
         "bottom": (half, c.descender),
     }
-    if c.style.serif != "slab":
+    if c.style.serif not in ("slab", "bracketed"):
         anchors.update(
             _vertical_stem_serif_anchors(
                 m.stem,
@@ -1342,22 +1348,20 @@ def _bowl_glyph(
         bottom, top = c.descender, o.x_height
     else:
         bottom, top = 0.0, (_n_record(n_glyph).ascender if n_glyph is not None else c.ascender)
-    outline = _bowl_stem_outline(o, stem, stem_bottom=bottom, stem_top=top, join=join)
+    foot: Callable[[PathBuilder, float], None] | None = None
+    if c.style.serif == "bracketed":
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        y_foot = bottom
+
+        def foot(b: PathBuilder, x_stem: float) -> None:
+            inline_stem_foot_serif_path(b, x_stem, y_foot, c, stem)
+
+    outline = _bowl_stem_outline(
+        o, stem, stem_bottom=bottom, stem_top=top, join=join, foot=foot
+    )
     cx = o.rx
     anchors: dict[str, Pt] = {"top": (cx, o.x_height)}
-    if c.style.serif == "bracketed":
-        stem_center = stem / 2.0 if stem_left else (2.0 * cx - stem / 2.0)
-        stem_side: Literal["L", "R"] = "L" if stem_left else "R"
-        anchors.update(
-            _vertical_stem_serif_anchors(
-                stem,
-                stem_center,
-                bottom=bottom,
-                top=top,
-                side=stem_side,
-                include_top=False,
-            )
-        )
     if not descends:
         anchors["bottom"] = (cx, 0.0)
     if stem_left:
