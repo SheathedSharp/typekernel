@@ -827,10 +827,10 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             inline_left_top=ctx.style.serif == "slab",
         ),
     }
-    slab_n = ctx.style.serif == "slab"
+    shelf_n = ctx.style.serif in ("slab", "bracketed")
     if _italic_topology(ctx):
         outline = _n_branching_outline(
-            m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=slab_n
+            m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=shelf_n
         )
     else:
         outline = _n_family_outline(
@@ -838,7 +838,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             left_top=m.x_height,
             vf_compat=_vf_compat_stem(ctx),
             ctx=ctx,
-            shelf_left_foot=slab_n,
+            shelf_left_foot=shelf_n,
         )
     return _pack(ctx, m, anchors, outline)
 

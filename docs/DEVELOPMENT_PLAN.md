@@ -469,6 +469,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``m`` ``slab`` 左肩口顶衬线内嵌（同 ``r`` 左缘配方）；``test_slab_m_shoulder_cap_inlined_skips_left_top_anchor``；golden ``m``（``slab_serif``）。
 - **本轮（部分）**：``test_slab_apply_glyph_serifs_is_noop_on_supported`` 锁定 slab 全 ``supported`` 不再依赖 stem 布尔衬线。
 - **本轮（部分）**：``h`` ``stem_R_t`` 内嵌：全宽 pad 左脚在未布尔前即 R3，需 ``shelf_left_foot`` + ``x_height`` 切 ``outer[1]`` + ``inline_stem_cap_serif_path``；``test_slab_h_right_leg_cap_inlined_without_boolean_serif``；golden ``h``（``slab_serif``）；``test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3`` 保留（无 shelf 时切分仍 R3）。
+- **本轮（部分）**：``bracketed`` ``n`` 左 stem 改 shelf 脚（单轮廓无 R3，为肩口顶衬线内嵌铺路）；``test_bracketed_n_pre_serif_outline_lint_clean`` / ``test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors``；golden ``n``（``bracketed_serif``）。``bracketed`` ``h``/``m``/``r`` 顶衬线仍布尔。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。

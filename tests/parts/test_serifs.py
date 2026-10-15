@@ -319,6 +319,33 @@ def test_slab_apply_glyph_serifs_is_noop_on_supported() -> None:
     assert changed == []
 
 
+def test_bracketed_n_pre_serif_outline_lint_clean() -> None:
+    from typekernel.parts.control import build_n, n_metrics
+
+    ctx = DesignContext.bracketed_serif()
+    n = build_n(ctx, n_metrics(ctx))
+    assert not [i for i in lint_glyph(n, ctx, glyph_name="n") if i.severity == "error"]
+
+
+def test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors() -> None:
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    ctx = DesignContext.bracketed_serif()
+    controls = Controls.from_context(ctx)
+    changed: list[tuple[str, list[str]]] = []
+    for ch in controls.supported:
+        g = controls.build(ch)
+        if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
+            stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
+            changed.append((ch, stems))
+    assert changed == [
+        ("h", ["stem_R_t"]),
+        ("m", ["stem_L_t"]),
+        ("n", ["stem_L_t"]),
+        ("r", ["stem_L_t"]),
+    ]
+
+
 def test_slab_n_left_shoulder_cap_inlined_without_boolean_serif() -> None:
     from typekernel.parts.control import build_n, n_metrics
     from typekernel.parts.serifs import apply_glyph_serifs
