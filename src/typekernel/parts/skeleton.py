@@ -73,6 +73,7 @@ class Stroke:
         points: Polyline vertices in design units (endpoints when ``beziers`` set).
         beziers: Optional cubic midline; uses :func:`~typekernel.geo.stroke.expand_cubic`.
         chord_budget: Flatten budget for cubic strokes (design units).
+        offset_fit_budget: Rail cubic fit budget when ``expand_cubic`` uses offset path.
         closed: Closed centerline → annular ribbon (outer + hole).
         thickness / contrast / angle_deg: Pen overrides; ``None`` uses context.
         join / cap: Per-stroke styles; ``None`` inherits :func:`trace_letter` defaults.
@@ -83,6 +84,7 @@ class Stroke:
     points: tuple[tuple[float, float], ...]
     beziers: tuple[CubicBezier, ...] | None = None
     chord_budget: float = 0.35
+    offset_fit_budget: float = 0.75
     closed: bool = False
     thickness: float | None = None
     contrast: float | None = None
@@ -108,6 +110,8 @@ class Stroke:
             raise ValueError(f"stroke {self.name!r} needs at least two points")
         if self.chord_budget <= 0:
             raise ValueError(f"stroke {self.name!r} chord_budget must be positive")
+        if self.offset_fit_budget <= 0:
+            raise ValueError(f"stroke {self.name!r} offset_fit_budget must be positive")
         if self.closed and (self.start is not None or self.end is not None):
             # Closed ribbons have no free ends.
             object.__setattr__(self, "start", None)
@@ -129,12 +133,14 @@ class Stroke:
         end: EndTreatment | TerminalKind | None = None,
         beziers: tuple[CubicBezier, ...] | None = None,
         chord_budget: float = 0.35,
+        offset_fit_budget: float = 0.75,
     ) -> Stroke:
         return cls(
             name=name,
             points=tuple((float(x), float(y)) for x, y in points),
             beziers=beziers,
             chord_budget=chord_budget,
+            offset_fit_budget=offset_fit_budget,
             closed=closed,
             thickness=thickness,
             contrast=contrast,
@@ -153,6 +159,7 @@ class Stroke:
         *,
         closed: bool = False,
         chord_budget: float = 0.35,
+        offset_fit_budget: float = 0.75,
         thickness: float | None = None,
         contrast: float | None = None,
         angle_deg: float = 0.0,
@@ -169,6 +176,7 @@ class Stroke:
             points=(segs[0].p0, segs[-1].p3),
             beziers=segs,
             chord_budget=chord_budget,
+            offset_fit_budget=offset_fit_budget,
             closed=closed,
             thickness=thickness,
             contrast=contrast,
@@ -246,7 +254,7 @@ class Skeleton:
         Each value is either a point sequence or a dict with keys::
 
             points, closed, thickness, contrast, angle_deg, join, cap, start, end,
-            beziers, chord_budget
+            beziers, chord_budget, offset_fit_budget
         """
         if not data:
             raise ValueError("skeleton mapping is empty")
@@ -271,6 +279,7 @@ class Skeleton:
                             beziers,
                             closed=bool(raw.get("closed", False)),
                             chord_budget=float(raw.get("chord_budget", 0.35)),
+                            offset_fit_budget=float(raw.get("offset_fit_budget", 0.75)),
                             thickness=raw.get("thickness"),
                             contrast=raw.get("contrast"),
                             angle_deg=float(raw.get("angle_deg", 0.0)),
@@ -296,6 +305,7 @@ class Skeleton:
                         start=raw.get("start"),
                         end=raw.get("end"),
                         chord_budget=float(raw.get("chord_budget", 0.35)),
+                        offset_fit_budget=float(raw.get("offset_fit_budget", 0.75)),
                     )
                 )
             else:
@@ -397,6 +407,7 @@ def _expand_stroke(
             cubic,
             pen,
             chord_budget=stroke.chord_budget,
+            offset_fit_budget=stroke.offset_fit_budget,
             join=join,
             cap=cap,
             miter_limit=miter_limit,

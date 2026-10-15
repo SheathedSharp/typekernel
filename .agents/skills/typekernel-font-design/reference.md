@@ -74,7 +74,7 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 | --- | --- |
 | `Stroke.from_points` | Polyline midline (default) |
 | `Stroke.from_beziers` | Cubic midline → `expand_cubic` |
-| `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers` + `chord_budget` |
+| `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers`, `chord_budget`, `offset_fit_budget` |
 | `expand_cubic` | Returns `(Outline, CenterlineExpandReport)` — `max_offset_fit_error` on single-segment butt cap |
 
 Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike.

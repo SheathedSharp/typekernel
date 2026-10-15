@@ -139,6 +139,21 @@ def test_flatten_cubic_line_is_two_points() -> None:
     assert report.cubic_segment_count == 1
 
 
+def test_expand_cubic_multi_segment_matches_polyline_bbox() -> None:
+    segs = (
+        CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
+        CubicBezier.line((100.0, 0.0), (100.0, 100.0)),
+    )
+    cl = CubicCenterline.from_beziers(segs)
+    pen = Pen(thickness=40.0)
+    cubic_outline, _ = expand_cubic(cl, pen, cap="butt", chord_budget=0.05)
+    poly_outline = expand([(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)], pen, cap="butt")
+    bb_c = bounds(cubic_outline)
+    bb_p = bounds(poly_outline)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_p[i], abs=0.5)
+
+
 def test_expand_cubic_multi_segment_open_uses_chord_flatten() -> None:
     segs = (
         CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
