@@ -47,7 +47,7 @@ def test_double_g_form_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.code_clear()
     style = Style(g_form="double")
     stems = (70.0, 110.0, 150.0, 180.0)
-    fonts: list = []
+    fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
         controls = Controls.from_context(ctx.tuned(stem=stem), style=style)
         if stem >= 150.0:

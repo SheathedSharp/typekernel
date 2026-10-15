@@ -1337,7 +1337,6 @@ def _double_storey_a_from_o(
         shape="superellipse",
         n=o.exponent,
     )
-    stem_o = contrast_stem_caps(c, sx0, 0.0, xh, width=stem)
     x0 = sx0 - m.counter - stem
     join_y = bowl_cy + bowl_ry * 0.38
     mm = m.tuned(
@@ -1350,15 +1349,16 @@ def _double_storey_a_from_o(
     bowl_join = bowl_cy + bowl_ry * 0.68
 
     b = PathBuilder()
-    b.moveTo(sx0, bowl_join)
-    b.lineTo(sx0, xh)
+    b.moveTo(sx0, 0.0)
+    b.lineTo(sx1, 0.0)
     b.lineTo(sx1, xh)
     b.lineTo(sx1, mm.leg_top)
     _curve(b, s.outer[1])
     _curve(b, s.outer[0])
     b.lineTo(sx0, bowl_join)
+    b.lineTo(sx0, 0.0)
     b.closePath()
-    arch_band = _ccw(b.build())
+    arch_stem = _ccw(b.build())
 
     bi = PathBuilder()
     bi.moveTo(sx0, bowl_join - stem * 0.08)
@@ -1372,14 +1372,12 @@ def _double_storey_a_from_o(
     glyph = (
         GlyphAssembler(c)
         .with_design(o)
-        .add(stem_o)
         .add(lower_outer)
-        .add(arch_band)
+        .add(arch_stem)
         .add_hole(lower_hole)
         .add_hole(upper_eye)
         .union_solids()
         .subtract_holes()
-        .blend_joins(_double_storey_blend_radius(c))
         .anchor("top", width * 0.46, xh)
         .anchor("bottom", bowl_cx, 0.0)
         .anchor("ogonek", sx0 + stem / 2.0, 0.0)
