@@ -8,8 +8,10 @@ from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.pens import draw_outline
 from typekernel.optics.stem import measure_oriented_stem
+from typekernel.parts.caps import HMetrics
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
+from typekernel.parts.control import OMetrics, o_metrics
 from typekernel.parts.family import Controls
 
 REFERENCE_THICKNESS_CHARS = "noHO"
@@ -28,11 +30,15 @@ __all__ = [
     "REFERENCE_THICKNESS_CHARS",
     "THICKNESS_OUTLIER_FACTOR",
     "control_max_thickness_ratio",
+    "figure_bar_over_stem_ink_ratio",
+    "figure_nine_bar_over_stem_ink_ratio",
+    "figure_stacked_ring_ink_ratio",
     "hook_min_thin_floor",
     "max_local_thickness",
     "measurement_outline",
     "min_hook_thickness",
     "min_local_thickness",
+    "ometrics_ink_horizontal_over_vertical_ratio",
     "thickness_ratio_to_stem",
 ]
 
@@ -66,6 +72,99 @@ def measurement_outline(glyph: ComposedGlyph) -> Outline:
         for contour in part.contours
     )
     return Outline(contours)
+
+
+def ometrics_ink_horizontal_over_vertical_ratio(
+    glyph: ComposedGlyph,
+    *,
+    side_y_fraction: float = 0.5,
+    side_x_fraction: float | None = None,
+) -> float:
+    """Horizontal ring stroke ÷ vertical side stroke on ``OMetrics`` probe stations."""
+    design = glyph.design
+    if not isinstance(design, OMetrics):
+        raise TypeError(f"expected OMetrics design, got {type(design)!r}")
+    m = design
+    outline = measurement_outline(glyph)
+    cx = m.rx
+    cy_side = m.x_height * side_y_fraction
+    top_y = m.x_height + m.overshoot * 0.5
+    side_x = (
+        m.width * side_x_fraction
+        if side_x_fraction is not None
+        else m.width - m.thickness_v * 0.5
+    )
+    top_w = measure_oriented_stem(outline, (cx, top_y - m.thickness_h * 0.5), 0.0)
+    side_w = measure_oriented_stem(outline, (side_x, cy_side), 90.0)
+    if top_w is None or side_w is None or side_w <= 0.0:
+        raise ValueError("contrast ink probes missed ink on OMetrics glyph")
+    return top_w / side_w
+
+
+def figure_bar_over_stem_ink_ratio(
+    glyph: ComposedGlyph,
+    *,
+    stem_y_fraction: float = 0.75,
+) -> float:
+    """Top bar thickness ÷ vertical stem thickness (``5``-style figures)."""
+    design = glyph.design
+    if not isinstance(design, HMetrics):
+        raise TypeError(f"expected HMetrics design, got {type(design)!r}")
+    h = design
+    outline = measurement_outline(glyph)
+    top_w = measure_oriented_stem(
+        outline, (h.width * 0.5, h.cap_height - h.bar * 0.5), 0.0
+    )
+    side_w = measure_oriented_stem(
+        outline, (h.stem * 0.5, h.cap_height * stem_y_fraction), 90.0
+    )
+    if top_w is None or side_w is None or side_w <= 0.0:
+        raise ValueError("bar/stem ink probes missed ink on figure glyph")
+    return top_w / side_w
+
+
+def figure_stacked_ring_ink_ratio(glyph: ComposedGlyph, *, waist: float) -> float:
+    """Lower-bowl ring horizontal ÷ vertical thickness (``8`` waist band)."""
+    design = glyph.design
+    if not isinstance(design, HMetrics):
+        raise TypeError(f"expected HMetrics design, got {type(design)!r}")
+    h = design
+    o = o_metrics(glyph.context)
+    cap, os_ = h.cap_height, o.overshoot
+    bar, w = h.bar, h.width
+    tv = min(bar, 0.25 * cap)
+    ym = waist * cap
+    cx = w / 2.0
+    ry_l = (ym + tv / 2.0 + os_) / 2.0
+    cy_l = ry_l - os_
+    tv_ring = min(tv, 0.6 * ry_l)
+    outline = measurement_outline(glyph)
+    side_x = w * 0.85
+    cy_side = waist * cap * 0.45
+    side_w = measure_oriented_stem(outline, (side_x, cy_side), 90.0)
+    top_y = cy_l + ry_l - tv_ring * 0.5
+    top_w = measure_oriented_stem(outline, (cx, top_y), 0.0)
+    if top_w is None or side_w is None or side_w <= 0.0:
+        raise ValueError("stacked-ring ink probes missed ink on figure glyph")
+    return top_w / side_w
+
+
+def figure_nine_bar_over_stem_ink_ratio(glyph: ComposedGlyph) -> float:
+    """``9`` bowl crossbar thickness ÷ stem thickness (rotated ``6`` topology)."""
+    design = glyph.design
+    if not isinstance(design, HMetrics):
+        raise TypeError(f"expected HMetrics design, got {type(design)!r}")
+    h = design
+    outline = measurement_outline(glyph)
+    top_w = measure_oriented_stem(
+        outline, (h.width * 0.5, h.cap_height - h.bar * 0.5), 0.0
+    )
+    side_w = measure_oriented_stem(
+        outline, (h.width * 0.85, h.cap_height * 0.65), 90.0
+    )
+    if top_w is None or side_w is None or side_w <= 0.0:
+        raise ValueError("nine ink probes missed ink on figure glyph")
+    return top_w / side_w
 
 
 def _point_in_ink(x: float, y: float, glyph: ComposedGlyph) -> bool:

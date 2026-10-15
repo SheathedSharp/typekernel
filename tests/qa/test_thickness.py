@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.caps import HMetrics
 from typekernel.parts.compose import ComposedGlyph
@@ -16,10 +15,13 @@ from typekernel.qa.thickness import (
     HOOK_MIN_THIN_RATIO_DISPLAY,
     HOOK_MIN_THIN_RATIO_SOFT,
     THICKNESS_OUTLIER_FACTOR,
+    figure_bar_over_stem_ink_ratio,
+    figure_nine_bar_over_stem_ink_ratio,
+    figure_stacked_ring_ink_ratio,
     hook_min_thin_floor,
     max_local_thickness,
-    measurement_outline,
     min_hook_thickness,
+    ometrics_ink_horizontal_over_vertical_ratio,
     thickness_ratio_to_stem,
 )
 
@@ -51,16 +53,7 @@ def test_o_ring_thickness_near_stem(preset: str, max_ratio: float) -> None:
 
 def _o_horizontal_over_vertical_thickness(ctx: DesignContext) -> float:
     glyph = Controls.from_context(ctx).build_all("o")["o"]
-    m = o_metrics(ctx)
-    outline = measurement_outline(glyph)
-    cx = m.rx
-    top_y = m.x_height + m.overshoot * 0.5
-    side_x = m.rx * 2.0 - m.thickness_v * 0.5
-    cy = m.x_height / 2.0
-    top_w = measure_oriented_stem(outline, (cx, top_y - m.thickness_h * 0.5), 0.0)
-    side_w = measure_oriented_stem(outline, (side_x, cy), 90.0)
-    assert top_w is not None and side_w is not None
-    return top_w / side_w
+    return ometrics_ink_horizontal_over_vertical_ratio(glyph)
 
 
 def test_o_contrast_top_to_side_thickness_ratio() -> None:
@@ -104,6 +97,64 @@ def test_lowercase_s_carries_o_contrast_in_design() -> None:
     design = glyph.design
     assert isinstance(design, OMetrics)
     assert abs(design.thickness_h / design.thickness_v - ctx.contrast) <= 1e-5
+
+
+_CONTRAST_INK_TOLERANCE = 0.05
+_FIGURE_BAR_STEM_TOLERANCE = 0.06
+_FIGURE_RING_INK_TOLERANCE = 0.06
+
+
+@pytest.mark.parametrize(
+    ("char", "side_y_fraction", "side_x_fraction"),
+    (
+        ("Q", 0.5, None),
+        ("G", 0.35, None),
+        ("S", 0.732, 0.09),
+    ),
+)
+def test_ometrics_ink_contrast_ratio(
+    char: str, side_y_fraction: float, side_x_fraction: float | None
+) -> None:
+    """TK-301: ring ink thickness ratio ≈ ``contrast`` (``measure_oriented_stem``)."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.73, stem=92.0)
+    glyph = Controls.from_context(ctx).build(char)
+    ratio = ometrics_ink_horizontal_over_vertical_ratio(
+        glyph,
+        side_y_fraction=side_y_fraction,
+        side_x_fraction=side_x_fraction,
+    )
+    assert abs(ratio - ctx.contrast) <= _CONTRAST_INK_TOLERANCE
+
+
+@pytest.mark.parametrize(
+    ("char", "waist", "expected_scale"),
+    (
+        ("5", None, 0.92),
+        ("8", 0.54, 1.0),
+        ("9", None, 0.92),
+    ),
+)
+def test_figure_ink_contrast_ratio(
+    char: str, waist: float | None, expected_scale: float
+) -> None:
+    """TK-301: figure bar/ring ink probes track contrast (not only ``OMetrics``)."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.73, stem=92.0)
+    glyph = Controls.from_context(ctx).build(char)
+    expected = ctx.contrast * expected_scale
+    if char == "5":
+        ratio = figure_bar_over_stem_ink_ratio(glyph)
+    elif char == "8":
+        assert waist is not None
+        ratio = figure_stacked_ring_ink_ratio(glyph, waist=waist)
+    else:
+        ratio = figure_nine_bar_over_stem_ink_ratio(glyph)
+    if expected_scale < 1.0:
+        tol = _FIGURE_BAR_STEM_TOLERANCE
+    elif char == "8":
+        tol = _FIGURE_RING_INK_TOLERANCE
+    else:
+        tol = _CONTRAST_INK_TOLERANCE
+    assert abs(ratio - expected) <= tol
 
 
 @pytest.mark.parametrize("char", ("3", "5", "8", "9", "G", "Q", "S"))
