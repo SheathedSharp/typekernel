@@ -226,6 +226,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/contact_sheet.py`` / ``examples/diff_overlay.py``（``--preset`` / ``--trial-preset`` + ``--baseline-preset``）；``tests/examples/test_contact_sheet.py`` / ``test_diff_overlay.py`` 烟测；``design_review`` 仍写 ``out/review/``。
 - **本轮（部分）**：``test_contact_sheet_full_charset_width_at_most_1600`` 锁定全 ``supported`` 宽度 ≤ 1600px；``agent-recipes`` / ``README`` / §8 钩子补 TK-104 CLI 指针。
 - **本轮（部分）**：``test_design_review`` 断言 ``design_review`` 写出 ``contact.png`` 宽度 ≤ 1600px；``dev-standards`` 补校样 CLI 指针。
+- **本轮（部分）**：``tests/qa/test_sheet.py`` 补 ``diff_overlay`` 写出烟测（库 API，与 ``examples/diff_overlay.py`` 对齐）。
 - **验收**：对 HEAD 生成的 contact sheet 能肉眼看出 `& # ! $ m` 的问题；`design_review` 自动调用并列出路径。
 - **依赖**：TK-101。
 
