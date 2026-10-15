@@ -466,7 +466,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` 增加 TK-207 ``weight_ladder_sheet`` 人审片段（本地 ``artifacts/specimens/``）。
 - **本轮（部分）**：SKILL preset 表补 ``slab_serif``/``bracketed_serif``、L3 指针与 ``examples/*_serif``；TK-306 验收行与 bracketed 对齐。
 - **本轮（部分）**：``agent-recipes`` 补 ``Style`` 默认值行 + ``serif``；``AGENT_GOAL`` L3 行对齐 ``Style`` API（不再写「待 TK-305」）。
-- **待续**：与 ``reference.md`` / SKILL 的 Style 表逐字段交叉核对；L3 试作与人评（TK-502）。
+- **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。
+- **待续**：与 SKILL 示例表最终交叉核对；L3 试作与人评（TK-502）。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
