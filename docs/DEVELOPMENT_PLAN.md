@@ -326,7 +326,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：小写 ``f``/``h``/``i``/``j``/``l``/``r``/``t``/``z`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）；``test_stem_lowercase_pass_counter_floor_across_ladder``。
 - **本轮（部分）**：默认 supported 标点（除 ``*``）纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）。
 - **本轮（部分）**：``asterisk_from_n_o`` 外径 ``0.34→0.375`` 打开字腔；``*`` 纳入 charset；``test_asterisk_passes_counter_floor_across_ladder``；golden ``*`` 五 preset 更新。
-- **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
+- **本轮（部分）**：``COUNTER_PINCH_CHARSET`` 与默认 ``supported`` 一致（全字符 R8 回归）；``weight_ladder_sheet`` 默认阶梯含 ``stem=200``（对齐 ``test_weight_ladder``）。
+- **验收**：`stem ∈ {30,70,110,150,180,200}` 上 `COUNTER_PINCH_CHARSET` 零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时 `with_stem_relief()`；`weight_ladder_sheet` 人审 PNG（本地 ``artifacts/specimens/``，不入库）；自动化已绿，人审待签。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 
 #### TK-208 扩展拉丁默认策略　〔S，可选〕
@@ -365,6 +366,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``BSpec``/``USpec``/``CapJSpec``/``CapCSpec``/``CapSSpec``；``C_from_O``/``S_from_O`` 暴露默认等价参数；``B``/``U``/``S`` 单调性测试。
 - **本轮（部分）**：``QSpec``（``tail_reach``/``tail_drop``）+ ``Q_from_O`` 参数；``Q`` 尾长单调性测试。
 - **本轮（部分）**：``test_width_spec_monotone_changes_outline`` / ``test_glyph_spec_field_monotone_changes_outline`` 覆盖剩余 cap 宽轴与多字段规格（``B``/``P``/``R``/``s``/``U`` 等）。
+- **本轮（部分）**：``A``/``J``/``s`` 缺字段单调性补全；``test_m_apex_monotone_moves_baseline_vertex``（``stem=150``，避开阶梯覆盖带）。
 - **做什么**：为弱字及其近亲定义**带类型、带文档的规格记录**，字段是设计师会谈论的量，默认值等于当前行为：
   | 记录 | 字段示例 |
   | --- | --- |

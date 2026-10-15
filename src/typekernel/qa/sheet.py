@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 _DEFAULT_LADDER_CHARS = "Hamburgefonstiv&!?#$"
-_DEFAULT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0)
+_DEFAULT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
 
 def _require_pil() -> tuple[Any, Any, Any]:
