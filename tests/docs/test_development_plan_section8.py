@@ -163,6 +163,13 @@ def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
     assert "run_m5_program_exit" in text
 
 
+def test_section8_agent_recipes_documents_tk104_review_clis() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-104" in text
+    assert "contact_sheet.py" in text
+    assert "diff_overlay.py" in text
+
+
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     text = (ROOT / "examples/agent_trial/README.md").read_text(encoding="utf-8")
     assert "trial_snapshot_exit_code" in text
@@ -189,6 +196,7 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
     assert "weight_ladder_sheet.py" in text
+    assert "contact_sheet.py" in text
     assert "run_m5_program_exit.py" in text
     assert "validate_snapshot.py" in text
     assert "test_development_plan_section8" in text

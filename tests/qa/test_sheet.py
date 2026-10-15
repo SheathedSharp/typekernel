@@ -17,6 +17,16 @@ def test_contact_sheet_writes(tmp_path) -> None:
     assert path.stat().st_size > 500
 
 
+def test_contact_sheet_full_charset_width_at_most_1600(tmp_path) -> None:
+    """TK-104: agent-preview sheets stay within the documented width cap."""
+    from PIL import Image
+
+    controls = Controls.from_context(DesignContext.humanist_sans())
+    path = contact_sheet(controls, tmp_path / "full.png")
+    with Image.open(path) as image:
+        assert image.width <= 1600
+
+
 def test_weight_ladder_sheet_writes(tmp_path) -> None:
     pytest.importorskip("ufo2ft")
     path = weight_ladder_sheet(

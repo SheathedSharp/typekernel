@@ -224,6 +224,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-104 全字符校样与对比叠图 `qa/sheet.py`　〔M〕
 - **做什么**：`contact_sheet(controls_or_font, out, chars=None, sizes=(72, 36), zones=True)`：全部声明字符，标注字形名，画 baseline/x-height/cap/asc/desc 线，**单张宽度 ≤ 1600px**（保证 agent 能直接看图）。另提供 `weight_ladder_sheet`（同一批字在 `stem` 阶梯上的并排图）与 `diff_overlay`（相对 baseline 的红/蓝叠图）。输出统一进 `out/review/`，并写 `index.json` 列出文件。
 - **本轮（部分）**：``examples/contact_sheet.py`` / ``examples/diff_overlay.py``（``--preset`` / ``--trial-preset`` + ``--baseline-preset``）；``tests/examples/test_contact_sheet.py`` / ``test_diff_overlay.py`` 烟测；``design_review`` 仍写 ``out/review/``。
+- **本轮（部分）**：``test_contact_sheet_full_charset_width_at_most_1600`` 锁定全 ``supported`` 宽度 ≤ 1600px；``agent-recipes`` / ``README`` / §8 钩子补 TK-104 CLI 指针。
 - **验收**：对 HEAD 生成的 contact sheet 能肉眼看出 `& # ! $ m` 的问题；`design_review` 自动调用并列出路径。
 - **依赖**：TK-101。
 
