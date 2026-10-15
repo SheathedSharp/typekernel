@@ -212,6 +212,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "validate_snapshot.py" in text
     assert "human_review_bundle" in text
     assert "contact_sheet.py" in text
+    assert "regenerate_outline_hashes.py" in text
     assert "AGENT_SENTENCE" in text
 
 

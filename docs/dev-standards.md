@@ -64,6 +64,11 @@ mypy -p typekernel
 
 All three should be green on the commits you intend to publish.
 
+After intentional outline changes, list affected glyphs in the commit message and refresh
+`tests/golden/outline_hashes.json` with
+`PYTHONPATH=src python examples/regenerate_outline_hashes.py --write` (or run without
+`--write` to print drift only).
+
 ## Approvals / gates
 
 Human visual or API gates leave a JSON record under `approvals/` (for example
