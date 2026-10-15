@@ -21,3 +21,4 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "run_m5_program_exit" in text
     assert "validate_snapshot.py" in text
     assert "test_agent_trial.py" in text or "test_agent_trial" in text
+    assert "contact_sheet.py" in text

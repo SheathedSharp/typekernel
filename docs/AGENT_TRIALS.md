@@ -34,7 +34,7 @@
 
 与「参考试作」不同：终验必须由**执行试验的 agent/人**从对应 brief 的 preset 出发改字，不得只跑库内 `design_*.py` 并声称完成。
 
-**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + TK-502 试验烟测 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py` 校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。
+**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + TK-502 试验烟测 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py` 校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。可选全字符/叠图/字重阶梯 PNG：`examples/contact_sheet.py`、`examples/diff_overlay.py`、`examples/weight_ladder_sheet.py`（本地 `artifacts/specimens/`，见 `agent-recipes.md` TK-104/207）。
 
 1. **固定 brief**（上表三行，文案不改）。
 2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。

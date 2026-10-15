@@ -191,6 +191,7 @@ def test_section8_skill_documents_m5_exit_workflow() -> None:
     assert "validate_snapshot.py" in text
     assert "test_development_plan_section8" in text
     assert "test_m3_exit" in text
+    assert "contact_sheet.py" in text
 
 
 def test_section8_readme_points_at_plan_and_review_bundle() -> None:
