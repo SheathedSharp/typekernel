@@ -162,34 +162,84 @@ def _cap_stem_serif_anchors(h: HMetrics) -> dict[str, Pt]:
     }
 
 
-def _cap_anchors(width: float, h: HMetrics) -> dict[str, Pt]:
-    return {
+def _cap_anchors(width: float, h: HMetrics, *, stem_serif_anchors: bool = True) -> dict[str, Pt]:
+    anchors: dict[str, Pt] = {
         "top": (width / 2.0, h.cap_height),
         "bottom": (width / 2.0, 0.0),
-        **_cap_stem_serif_anchors(h),
     }
+    if stem_serif_anchors:
+        anchors.update(_cap_stem_serif_anchors(h))
+    return anchors
+
+
+def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
+    """Single CCW outer for ``H``; bakes slab serifs when ``style.serif`` is set."""
+    t, w, cap = h.stem, h.width, h.cap_height
+    y0, y1 = h.bar_y - h.bar / 2.0, h.bar_y + h.bar / 2.0
+    if ctx.style.serif == "none":
+        return [
+            (0.0, 0.0),
+            (t, 0.0),
+            (t, y0),
+            (w - t, y0),
+            (w - t, 0.0),
+            (w, 0.0),
+            (w, cap),
+            (w - t, cap),
+            (w - t, y1),
+            (t, y1),
+            (t, cap),
+            (0.0, cap),
+        ]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    gap = max(w - 2.0 * t, t)
+    l = min(length, t * 0.48, gap * 0.32)
+    th = min(thick, y0 * 0.36, t * 0.18, gap * 0.14)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (t, 0.0),
+        (t, y0),
+        (w - t, y0),
+        (w - t, 0.0),
+        (w - t - l, 0.0),
+        (w - t - l, -th),
+        (w + l, -th),
+        (w + l, 0.0),
+        (w, 0.0),
+        (w, cap),
+        (w + l, cap),
+        (w + l, cap + th),
+        (w - t - l, cap + th),
+        (w - t - l, cap),
+        (w - t, cap),
+        (w - t, y1),
+        (t, y1),
+        (t, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
 
 
 def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyph:
     """Control ``H``: two cap stems and a crossbar, one contour."""
     h = metrics or h_cap_metrics(ctx)
-    t, w, cap = h.stem, h.width, h.cap_height
-    y0, y1 = h.bar_y - h.bar / 2.0, h.bar_y + h.bar / 2.0
-    pts = [
-        (0.0, 0.0),
-        (t, 0.0),
-        (t, y0),
-        (w - t, y0),
-        (w - t, 0.0),
-        (w, 0.0),
-        (w, cap),
-        (w - t, cap),
-        (w - t, y1),
-        (t, y1),
-        (t, cap),
-        (0.0, cap),
-    ]
-    return _pack(ctx, h, _cap_anchors(w, h), _polygon(pts))
+    baked = ctx.style.serif != "none"
+    outline = _polygon(_h_outline_points(h, ctx))
+    return _pack(
+        ctx,
+        h,
+        _cap_anchors(h.width, h, stem_serif_anchors=not baked),
+        outline,
+    )
 
 
 def build_O(ctx: DesignContext, metrics: OMetrics | None = None) -> ComposedGlyph:

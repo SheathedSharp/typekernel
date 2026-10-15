@@ -41,3 +41,20 @@ def test_slab_n_masters_interpolate_on_weight_ladder() -> None:
         for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
     ]
     assert check_masters(masters) == []
+
+
+def test_slab_h_masters_interpolate_on_weight_ladder() -> None:
+    """Cap ``H`` bakes slab serifs in one contour for VF-stable segments."""
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 120.0, 180.0)
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem))
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all("H"))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 500.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
