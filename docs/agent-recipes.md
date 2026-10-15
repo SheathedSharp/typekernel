@@ -32,7 +32,7 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 | `y_tail` | `curved` | `y` 右下弧 |
 | `t_cut` | `slanted` | `t` 底端斜切（可独立于 `terminal_style`） |
 
-`g_form=double` 在 `code_clear` 字重阶梯上已通过四母版 `check_masters`。`a_form=double` 在 `code_clear` stem **70–180** 六母版阶梯上已通过 `check_masters`（见 `test_double_a_form_masters_interpolate_on_weight_ladder`）。其余 Style 选项在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
+`g_form=double` 在 `code_clear` 字重阶梯上已通过四母版 `check_masters`。`a_form=double` 在 `code_clear` stem **70–180** 六母版阶梯上已通过 `check_masters`（见 `test_double_a_form_masters_interpolate_on_weight_ladder`）。各 Style 选项与典型组合在七 preset 上已通过 identity 抽检（`test_style_option_identity_spot_check_on_preset`、`test_styled_voice_identity_core_charset_on_preset`）。其余非拓扑 Style 在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
 
 ## 弱字
 

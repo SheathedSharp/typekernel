@@ -7,7 +7,20 @@ import pytest
 from typekernel.font import Font, Master, check_masters
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.style import Style
+from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls
+
+_STYLE_IDENTITY_PRESETS: tuple[str, ...] = (
+    "humanist_sans",
+    "geometric_sans",
+    "code_clear",
+    "mono",
+    "display",
+    "paper_ink",
+    "open_print",
+)
+
+_STYLE_CORE_IDENTITY_CHARSET = "abcdeoHOA!&#$%"
 
 _STYLE_LINT_CASES: tuple[tuple[Style, str], ...] = (
     (Style(i_dot="square"), "i"),
@@ -25,6 +38,36 @@ def test_style_option_lint_clean_on_geometric(style: Style, chars: str) -> None:
     controls = Controls.from_context(DesignContext.geometric_sans(), style=style)
     report = lint_controls(controls, chars)
     assert not report.errors, report.errors
+
+
+@pytest.mark.parametrize("preset", _STYLE_IDENTITY_PRESETS)
+@pytest.mark.parametrize(("style", "chars"), _STYLE_LINT_CASES)
+def test_style_option_identity_spot_check_on_preset(
+    preset: str,
+    style: Style,
+    chars: str,
+) -> None:
+    ctx = getattr(DesignContext, preset)()
+    report = check_identity_controls(Controls.from_context(ctx, style=style), chars)
+    assert report.ok(), (preset, style, report.errors)
+
+
+@pytest.mark.parametrize("preset", _STYLE_IDENTITY_PRESETS)
+@pytest.mark.parametrize(
+    "style",
+    (
+        Style(a_form="double"),
+        Style(g_form="double"),
+        Style(l_tail="tailed", y_tail="curved", t_cut="slanted", i_dot="diamond"),
+    ),
+)
+def test_styled_voice_identity_core_charset_on_preset(preset: str, style: Style) -> None:
+    ctx = getattr(DesignContext, preset)()
+    report = check_identity_controls(
+        Controls.from_context(ctx, style=style),
+        _STYLE_CORE_IDENTITY_CHARSET,
+    )
+    assert report.ok(), (preset, style, report.errors)
 
 
 def test_styled_masters_interpolate_across_weight_ladder() -> None:
