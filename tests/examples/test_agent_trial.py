@@ -103,6 +103,31 @@ def test_validate_snapshot_recursive_on_reference_trials(tmp_path: Path) -> None
     assert proc.returncode == 0, proc.stderr or proc.stdout
 
 
+def test_validate_snapshot_program_only_rejects_premature_human_scores(tmp_path: Path) -> None:
+    snap_path = tmp_path / "snapshot.json"
+    snap_path.write_text(
+        '{"human_review_scores": {"readable": 5, "unified": 5, "unique": 5, "charset_complete": 5},'
+        '"family_gate_ok": true, "lint_error_count": 0, "identity_error_count": 0,'
+        '"l3_voice_ok": true, "weight_ladder_r8_failures": 0, "cheating_flags": [],'
+        '"voice_distance": 0.5, "topology_fraction": 0.1}\n',
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "validate_snapshot.py",
+            "--program-snapshot-only",
+            str(snap_path),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 5, proc.stderr or proc.stdout
+
+
 def test_validate_snapshot_require_human_scores_exit_8_without_scores(tmp_path: Path) -> None:
     subprocess.run(
         [

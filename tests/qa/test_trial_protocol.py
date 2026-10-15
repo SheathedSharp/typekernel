@@ -121,6 +121,15 @@ def test_validate_trial_snapshot_record_accepts_human_review_scores() -> None:
     assert not problems
 
 
+def test_validate_trial_snapshot_record_program_only_rejects_human_scores() -> None:
+    problems = validate_trial_snapshot_record(
+        {"human_review_scores": {"readable": 4}},
+        program_snapshot_only=True,
+    )
+    assert problems
+    assert any("human_review_scores" in p for p in problems)
+
+
 def test_validate_trial_snapshot_record_rejects_invalid_human_review_scores() -> None:
     problems = validate_trial_snapshot_record(
         {

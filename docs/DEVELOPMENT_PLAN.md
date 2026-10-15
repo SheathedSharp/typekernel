@@ -567,6 +567,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
 - **本轮（部分）**：``validate_snapshot.py --require-human-scores``（退出码 8）；``human_review_scores_complete``；``test_validate_snapshot_require_human_scores_exit_8_without_scores``。
 - **本轮（部分）**：作废条件与 ``agent-recipes`` / ``reference`` 明确 ``human_review_scores`` 仅人后可写；程序写出 JSON 不含该键。
+- **本轮（部分）**：``validate_snapshot.py --program-snapshot-only``（预填人评 → 退出码 5）；``test_validate_snapshot_program_only_rejects_premature_human_scores``。
 - **本轮（部分）**：``approvals/README.md`` 补签字后维护步骤（更新 ``_PENDING_HUMAN_GATES``，全签后改写 §8 人审测试）。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
 - **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。

@@ -82,6 +82,7 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_validate_trial_snapshot_record_rejects_forged_program_pass_ok",
             "test_stem_only_tweak_records_cheating_flag_and_exit_code_7",
             "test_validate_trial_snapshot_record_accepts_human_review_scores",
+            "test_validate_trial_snapshot_record_program_only_rejects_human_scores",
         ),
     ),
     (
@@ -93,6 +94,7 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "test_snapshot_presets_script_writes_gate_baseline",
             "test_validate_snapshot_recursive_on_reference_trials",
+            "test_validate_snapshot_program_only_rejects_premature_human_scores",
             "test_validate_snapshot_require_human_scores_exit_8_without_scores",
             "test_validate_snapshot_script_on_reference_trial",
         ),

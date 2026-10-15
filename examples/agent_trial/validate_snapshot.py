@@ -44,7 +44,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="after program pass, require complete human_review_scores (exit 8 if missing)",
     )
+    parser.add_argument(
+        "--program-snapshot-only",
+        action="store_true",
+        help="reject JSON that already contains human_review_scores (exit 5)",
+    )
     args = parser.parse_args(argv)
+    if args.require_human_scores and args.program_snapshot_only:
+        parser.error("--require-human-scores and --program-snapshot-only are mutually exclusive")
     paths = _collect_snapshot_paths(tuple(args.snapshots), recursive=args.recursive)
     worst = 0
     for path in paths:
@@ -53,7 +60,10 @@ def main(argv: list[str] | None = None) -> int:
             worst = max(worst, 2)
             continue
         data = read_trial_snapshot_json(path)
-        problems = validate_trial_snapshot_record(data)
+        problems = validate_trial_snapshot_record(
+            data,
+            program_snapshot_only=args.program_snapshot_only,
+        )
         for msg in problems:
             print(f"{path}: validate: {msg}", flush=True)
         code = trial_snapshot_json_exit_code(

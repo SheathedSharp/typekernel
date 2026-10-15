@@ -262,9 +262,15 @@ def _record_program_pass_ok(data: Mapping[str, object]) -> bool:
     return lint_ok and identity_ok and gate_ok and r8_ok and l3_ok and not flags
 
 
-def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...]:
+def validate_trial_snapshot_record(
+    data: Mapping[str, object],
+    *,
+    program_snapshot_only: bool = False,
+) -> tuple[str, ...]:
     """Program checks on a written snapshot JSON (TK-502 final validation review)."""
     problems: list[str] = []
+    if program_snapshot_only and data.get("human_review_scores") is not None:
+        problems.append("human_review_scores must not be present on program snapshots")
     voice_distance_val = _snapshot_float(data.get("voice_distance"), 0.0)
     topology = _snapshot_float(data.get("topology_fraction"), 0.0)
     l3_ok = bool(data.get("l3_voice_ok"))
@@ -284,7 +290,8 @@ def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...
         recorded = bool(data.get("program_pass_ok"))
         if recorded != _record_program_pass_ok(data):
             problems.append("program_pass_ok does not match other snapshot fields")
-    problems.extend(_human_review_score_problems(data.get("human_review_scores")))
+    if not program_snapshot_only:
+        problems.extend(_human_review_score_problems(data.get("human_review_scores")))
     return tuple(problems)
 
 
@@ -295,7 +302,7 @@ def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
     payload["metrics_ok"] = snapshot.metrics_ok
     payload["program_pass_ok"] = snapshot.program_pass_ok
     payload["l3_voice_ok"] = snapshot.l3_voice_ok
-    return validate_trial_snapshot_record(payload)
+    return validate_trial_snapshot_record(payload, program_snapshot_only=True)
 
 
 def read_trial_snapshot_json(path: Path | str) -> dict[str, object]:
