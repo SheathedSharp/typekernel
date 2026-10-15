@@ -540,6 +540,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。
 - **本轮（部分）**：SKILL Step 3 补 ``Style`` 指针（与 ``agent-recipes`` / ``reference`` 对齐）。
 - **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
+- **本轮（部分）**：``reference.md`` / ``README.md`` 补 §8、程序验收 pytest 与 ``human_review_bundle`` 指针；``test_section8_skill_reference_documents_m5_workflow`` / ``test_section8_readme_points_at_plan_and_review_bundle``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
 - **本轮（部分）**：``test_skeleton`` 闭合 cubic stroke 烟测（``trace_letter`` → 环带实体）。

@@ -90,6 +90,25 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "test_agent_trial_reference" in text
 
 
+def test_section8_skill_reference_documents_m5_workflow() -> None:
+    """§8.7: skill reference points at trials, review bundle, and acceptance tests."""
+    text = (
+        ROOT / ".agents/skills/typekernel-font-design/reference.md"
+    ).read_text(encoding="utf-8")
+    assert "human_review_bundle" in text
+    assert "snapshot_serif_voices" in text
+    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_italic_program_acceptance" in text
+    assert "test_development_plan_section8" in text
+
+
+def test_section8_readme_points_at_plan_and_review_bundle() -> None:
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "DEVELOPMENT_PLAN.md" in text
+    assert "human_review_bundle.py" in text
+    assert "test_development_plan_section8" in text
+
+
 def test_section8_regression_test_hooks_present() -> None:
     """§8.4–§8.5 / TK-306–402: named acceptance tests stay in the tree."""
     for rel, test_names in _SECTION8_REGRESSION_TESTS:
