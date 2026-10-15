@@ -227,7 +227,7 @@ def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
     slab = Controls.from_context(DesignContext.slab_serif()).build("h")
     assert "stem_R_t" not in {a.name for a in slab.anchors}
     bracket = Controls.from_context(DesignContext.bracketed_serif()).build("h")
-    assert "stem_R_t" in {a.name for a in bracket.anchors}
+    assert "stem_R_t" not in {a.name for a in bracket.anchors}
 
 
 def test_slab_h_right_leg_cap_inlined_without_boolean_serif() -> None:
@@ -389,35 +389,28 @@ def test_bracketed_n_pre_serif_outline_lint_clean() -> None:
     assert not [i for i in lint_glyph(n, ctx, glyph_name="n") if i.severity == "error"]
 
 
-def test_bracketed_apply_glyph_serifs_only_h_still_needs_top_stem_serif() -> None:
+def test_bracketed_apply_glyph_serifs_is_noop_on_supported() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.bracketed_serif()
     controls = Controls.from_context(ctx)
-    changed: list[tuple[str, list[str]]] = []
     for ch in controls.supported:
         g = controls.build(ch)
-        if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
-            stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
-            changed.append((ch, stems))
-    assert changed == [("h", ["stem_R_t"])]
+        assert composed_glyph_hash(g) == composed_glyph_hash(apply_glyph_serifs(g))
 
 
-def test_bracketed_h_pre_serif_self_intersect_healed_by_stem_R_t_boolean() -> None:
+def test_bracketed_h_pre_serif_outline_lint_clean() -> None:
     from typekernel.parts.control import build_h, n_metrics
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.bracketed_serif()
     h = build_h(ctx, n_metrics(ctx))
-    assert "R3_self_intersect" in {
-        i.rule for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"
-    }
-    healed = apply_glyph_serifs(h)
-    assert not [i for i in lint_glyph(healed, ctx, glyph_name="h") if i.severity == "error"]
-    assert "stem_R_t" in {a.name for a in h.anchors}
+    assert not [i for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"]
+    assert "stem_R_t" not in {a.name for a in h.anchors}
+    assert composed_glyph_hash(h) == composed_glyph_hash(apply_glyph_serifs(h))
 
 
-def test_bracketed_h_right_leg_top_cap_self_intersects() -> None:
+def test_bracketed_h_slab_rect_stem_caps_lint_clean() -> None:
     from typekernel.geo.path_builder import PathBuilder
     from typekernel.parts.compose import GlyphAssembler
     from typekernel.parts.control import (
@@ -438,14 +431,16 @@ def test_bracketed_h_right_leg_top_cap_self_intersects() -> None:
     b = PathBuilder()
     _n_begin_left_stem(b, s.l0, s.l1, m.ascender, ctx, m.stem, shelf_foot=True)
     b.lineTo(s.l1, m.ascender)
-    _n_inline_left_stem_cap(b, s.l0, s.l1, m.ascender, ctx, m.stem)
+    _n_inline_left_stem_cap(
+        b, s.l0, s.l1, m.ascender, ctx, m.stem, slab_rect=True
+    )
     b.lineTo(s.l1, xh)
     _curve(b, s.outer[0])
     split_outer = _split(s.outer[1], xh, horizontal=True)
     assert split_outer is not None
     _curve(b, split_outer[0])
     b.lineTo(s.r1, xh)
-    _n_inline_left_stem_cap(b, s.r0, s.r1, xh, ctx, m.stem)
+    _n_inline_left_stem_cap(b, s.r0, s.r1, xh, ctx, m.stem, slab_rect=True)
     b.lineTo(s.r1, split_outer[1][3][1])
     b.lineTo(s.r1, 0.0)
     _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
@@ -456,9 +451,7 @@ def test_bracketed_h_right_leg_top_cap_self_intersects() -> None:
     b.lineTo(s.l1, 0.0)
     b.closePath()
     g = GlyphAssembler(ctx).with_design(m).add(_ccw(b.build())).build()
-    assert "R3_self_intersect" in {
-        i.rule for i in lint_glyph(g, ctx, glyph_name="h") if i.severity == "error"
-    }
+    assert not [i for i in lint_glyph(g, ctx, glyph_name="h") if i.severity == "error"]
 
 
 def test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor() -> None:

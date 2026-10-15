@@ -21,6 +21,7 @@ __all__ = [
     "inline_hook_cap_serif_path",
     "inline_shoulder_left_cap_slab_path",
     "inline_stem_cap_serif_path",
+    "inline_stem_cap_serif_path_slab_rect",
     "inline_stem_foot_serif_path",
     "inline_stem_foot_serif_path_right",
     "serif_metrics",
@@ -241,6 +242,27 @@ def inline_shoulder_left_cap_slab_path(
     b.lineTo(x_stem_left, y_cap)
 
 
+def inline_stem_cap_serif_path_slab_rect(
+    b: PathBuilder,
+    x_stem_left: float,
+    x_stem_right: float,
+    y_cap: float,
+    ctx: DesignContext,
+    stem_width: float,
+    *,
+    thickness_scale: float = 1.0,
+) -> None:
+    """Full-width slab rectangle cap; current point ``(x_stem_right, y_cap)``."""
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, stem_width * 0.5)
+    th = min(thick, y_cap * 0.1, stem_width * 0.2) * thickness_scale
+    xl = x_stem_left - l
+    b.lineTo(xl, y_cap)
+    b.lineTo(xl, y_cap + th)
+    b.lineTo(x_stem_right, y_cap + th)
+    b.lineTo(x_stem_right, y_cap)
+
+
 def inline_stem_cap_serif_path(
     b: PathBuilder,
     x_stem_left: float,
@@ -262,14 +284,9 @@ def inline_stem_cap_serif_path(
     )
     l, th, bracket_r = _i_cap_foot_dims(h, ctx)
     if ctx.style.serif == "slab":
-        length, thick, _ = serif_metrics(ctx)
-        l = min(length, stem_width * 0.5)
-        th = min(thick, y_cap * 0.1, stem_width * 0.2)
-        xl = x_stem_left - l
-        b.lineTo(xl, y_cap)
-        b.lineTo(xl, y_cap + th)
-        b.lineTo(x_stem_right, y_cap + th)
-        b.lineTo(x_stem_right, y_cap)
+        inline_stem_cap_serif_path_slab_rect(
+            b, x_stem_left, x_stem_right, y_cap, ctx, stem_width
+        )
         return
     _append_upward_cap_foot_pad(
         b,

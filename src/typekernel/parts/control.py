@@ -495,12 +495,29 @@ def _n_inline_left_stem_cap(
     y_cap: float,
     ctx: DesignContext,
     stem: float,
+    *,
+    slab_rect: bool = False,
+    slab_rect_thickness_scale: float = 1.0,
 ) -> None:
     if not _stem_serif_inlined(ctx):
         return
-    from typekernel.parts.serifs import inline_stem_cap_serif_path
+    from typekernel.parts.serifs import (
+        inline_stem_cap_serif_path,
+        inline_stem_cap_serif_path_slab_rect,
+    )
 
-    inline_stem_cap_serif_path(b, x_stem_left, x_stem_right, y_cap, ctx, stem)
+    if slab_rect:
+        inline_stem_cap_serif_path_slab_rect(
+            b,
+            x_stem_left,
+            x_stem_right,
+            y_cap,
+            ctx,
+            stem,
+            thickness_scale=slab_rect_thickness_scale,
+        )
+    else:
+        inline_stem_cap_serif_path(b, x_stem_left, x_stem_right, y_cap, ctx, stem)
 
 
 def _n_inline_shoulder_left_cap_slab(
@@ -529,9 +546,28 @@ def _n_slab_inlined(ctx: DesignContext | None) -> bool:
     )
 
 
-def _n_slab_right_leg_top_cap(ctx: DesignContext | None) -> bool:
-    """Slab ``n``/``h``: inline right-leg top serif (unblocks inlined right foot)."""
-    return _n_slab_inlined(ctx)
+def _n_bracketed_h_inlined(
+    ctx: DesignContext | None, left_top: float, m: NMetrics
+) -> bool:
+    """Bracketed ``h``: slab-rect stem caps avoid R3 on ascender + right leg."""
+    return (
+        ctx is not None
+        and ctx.style.serif == "bracketed"
+        and _stem_serif_inlined(ctx)
+        and left_top > m.x_height + 0.5
+    )
+
+
+def _n_bracketed_h_ascender_cap_thickness_scale(m: NMetrics) -> float:
+    """Heavy ladder stems: thinner ascender cap preserves ``h`` counter pinch (R8)."""
+    return 0.35 if m.stem <= 110.0 else 1.0
+
+
+def _n_right_leg_top_cap_inlined(
+    ctx: DesignContext | None, left_top: float, m: NMetrics
+) -> bool:
+    """Slab ``n``/``h`` and bracketed ``h``: inline right-leg top serif."""
+    return _n_slab_inlined(ctx) or _n_bracketed_h_inlined(ctx, left_top, m)
 
 
 def _n_slab_n_left_shoulder_cap(
@@ -576,7 +612,19 @@ def _n_family_outline(
             _n_inline_shoulder_left_cap_slab(b, s.l0, left_top, ctx, m.stem)
         b.lineTo(s.l1, left_top)
         if _n_ascender_left_stem_cap(left_top, m):
-            _n_inline_left_stem_cap(b, s.l0, s.l1, left_top, ctx, m.stem)
+            bracket_h = _n_bracketed_h_inlined(ctx, left_top, m)
+            _n_inline_left_stem_cap(
+                b,
+                s.l0,
+                s.l1,
+                left_top,
+                ctx,
+                m.stem,
+                slab_rect=bracket_h,
+                slab_rect_thickness_scale=(
+                    _n_bracketed_h_ascender_cap_thickness_scale(m) if bracket_h else 1.0
+                ),
+            )
     else:
         b.moveTo(s.l0, 0.0)
         b.lineTo(s.l0, left_top)
@@ -591,14 +639,22 @@ def _n_family_outline(
         assert slab_ctx is not None
         _n_inline_left_stem_cap(b, s.l0, s.l1, m.x_height, slab_ctx, m.stem)
     _curve(b, s.outer[0])
-    if _n_slab_right_leg_top_cap(ctx):
-        slab_ctx = ctx
-        assert slab_ctx is not None
+    if _n_right_leg_top_cap_inlined(ctx, left_top, m):
+        cap_ctx = ctx
+        assert cap_ctx is not None
         split_outer = _split(s.outer[1], m.x_height, horizontal=True)
         if split_outer is not None:
             _curve(b, split_outer[0])
             b.lineTo(s.r1, m.x_height)
-            _n_inline_left_stem_cap(b, s.r0, s.r1, m.x_height, slab_ctx, m.stem)
+            _n_inline_left_stem_cap(
+                b,
+                s.r0,
+                s.r1,
+                m.x_height,
+                cap_ctx,
+                m.stem,
+                slab_rect=_n_bracketed_h_inlined(ctx, left_top, m),
+            )
             b.lineTo(s.r1, split_outer[1][3][1])
         else:
             _curve(b, s.outer[1])
@@ -871,10 +927,10 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             inline_left_foot=_stem_serif_inlined(ctx),
             inline_right_foot=_stem_serif_inlined(ctx),
             inline_left_top=_stem_serif_inlined(ctx),
-            inline_right_top=ctx.style.serif == "slab",
+            inline_right_top=ctx.style.serif in ("slab", "bracketed"),
         ),
     }
-    shelf_h = ctx.style.serif == "slab"
+    shelf_h = ctx.style.serif in ("slab", "bracketed")
     if _italic_topology(ctx):
         outline = _n_branching_outline(
             m, stem_top=m.ascender, ctx=ctx, shelf_left_foot=shelf_h
