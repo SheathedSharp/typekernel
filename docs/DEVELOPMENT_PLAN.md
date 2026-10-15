@@ -352,6 +352,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-302 应力轴（stress）　〔M〕
 - **做什么**：圆形笔画的最细处不一定在顶/底。新增 `DesignContext.stress`（度，默认 0，加字段属公共 API 变更，先写签名草图），环构造按角度函数分配厚度。`humanist_sans` 是否采用非零值是设计决定，需人审。
 - **本轮**：`stress` 字段；`bowl` / `_ring` 对 counter 施加绕 bowl 中心的旋转（`stress=0` 与改造前一致）；`tests/parts/test_stress.py` 探针。
+- **本轮（部分）**：``test_knob_coverage`` 补 ``stress`` 旋钮覆盖（``ocCO0`` 形状响应）。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
 
