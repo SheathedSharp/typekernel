@@ -90,3 +90,26 @@ def test_s_top_bowl_narrower(ctx: DesignContext) -> None:
     assert max(b for _, b in upper) - min(a for a, _ in upper) < (
         max(b for _, b in lower) - min(a for a, _ in lower)
     )
+
+
+def test_s_outer_segment_count_fixed_across_stems() -> None:
+    """TK-206: spine topology stays fixed for VF masters."""
+    ctx = DesignContext.humanist_sans()
+    ref = s_from_o(build_o(ctx), ctx)
+    ref_n = len(ref.solids[0].contours[0].segments)
+    for stem in (30.0, 86.0, 220.0):
+        heavy = ctx.tuned(stem=stem)
+        s = s_from_o(build_o(heavy), heavy)
+        assert len(s.solids[0].contours[0].segments) == ref_n
+
+
+def test_s_interpolates_across_weight_ladder() -> None:
+    ctx = DesignContext.humanist_sans()
+    light = Controls.from_context(ctx.tuned(stem=30.0))
+    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    reg_font = Font.from_context(ctx, "S Sans", "Regular", weight_class=400)
+    reg_font.add_chars(light.build_all("s"))
+    bold_font = Font.from_context(ctx, "S Sans", "Bold", weight_class=700)
+    bold_font.add_chars(bold.build_all("s"))
+    masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
+    assert check_masters(masters) == []

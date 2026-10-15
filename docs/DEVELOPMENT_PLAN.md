@@ -280,7 +280,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试。
 - **本轮（部分）**：`s_from_o` 默认 `top_scale` 0.94→0.92，上环略收；golden `s`/`S` 三 preset 更新。
 - **本轮（部分）**：``G`` spur κ 圆角随 cap stem 略增（重字重仍 ``use≤0.34`` 防自交）；``test_g_outer_segment_count_fixed_across_stems`` / VF 阶梯回归；golden ``G`` 三 preset 更新。
-- `3`：平顶「Ʒ」形（`figures.py:389`）；`s` 偏生硬（低优先）。
+- **本轮（部分）**：``s`` VF 阶梯段数固定 + ``check_masters`` 回归（``test_s_outer_segment_count_fixed_across_stems`` / ``test_s_interpolates_across_weight_ladder``）。
+- `3`：平顶「Ʒ」形（`figures.py:389`）；`s` 视觉仍偏生硬（低优先）。
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。
