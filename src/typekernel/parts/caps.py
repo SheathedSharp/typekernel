@@ -575,7 +575,13 @@ def G_from_O(
     for cubic in (_rev(ilower), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)
     b.closePath()
-    return _pack(c, o, _cap_anchors(2.0 * o.rx, h), _ccw(b.build()))
+    baked = c.style.serif == "slab"
+    return _pack(
+        c,
+        o,
+        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not baked),
+        _ccw(b.build()),
+    )
 
 
 def Q_from_O(
@@ -631,7 +637,13 @@ def Q_from_O(
         _curve(b, cubic)
     b.closePath()
     outer, counter = b.build().contours
-    return _pack(c, o, _cap_anchors(2.0 * o.rx, h), Outline((outer, reverse_contour(counter))))
+    baked = c.style.serif == "slab"
+    return _pack(
+        c,
+        o,
+        _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not baked),
+        Outline((outer, reverse_contour(counter))),
+    )
 
 
 def D_from_H(

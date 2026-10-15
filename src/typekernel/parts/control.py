@@ -889,12 +889,13 @@ def t_from_n(
     else:
         outline = apply_terminal_shear(c, flipped, at=tip)
     half = m.stem / 2.0
-    anchors = {
-        "bottom": (half, 0.0),
-        **_vertical_stem_serif_anchors(
-            m.stem, half, bottom=0.0, top=top, side="L", include_top=False
-        ),
-    }
+    anchors: dict[str, Pt] = {"bottom": (half, 0.0)}
+    if c.style.serif != "slab":
+        anchors.update(
+            _vertical_stem_serif_anchors(
+                m.stem, half, bottom=0.0, top=top, side="L", include_top=False
+            )
+        )
     return _pack(c, m, anchors, outline)
 
 
@@ -917,18 +918,21 @@ def j_from_n(
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
     half = m.stem / 2.0
-    anchors = {
+    anchors: dict[str, Pt] = {
         "top": (half, dot_y + m.stem * 0.95),
         "bottom": (half, c.descender),
-        **_vertical_stem_serif_anchors(
-            m.stem,
-            half,
-            bottom=c.descender,
-            top=m.x_height,
-            side="L",
-            include_top=False,
-        ),
     }
+    if c.style.serif != "slab":
+        anchors.update(
+            _vertical_stem_serif_anchors(
+                m.stem,
+                half,
+                bottom=c.descender,
+                top=m.x_height,
+                side="L",
+                include_top=False,
+            )
+        )
     return _pack(c, m, anchors, body, dot)
 
 

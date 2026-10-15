@@ -137,21 +137,34 @@ def test_slab_l_masters_interpolate_on_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
-# Caps with anchor slab feet + ``j``/``t`` still drift segment counts on the ladder.
-_SLAB_VF_STABLE_EXCLUDE = "GQjt"  # baked: A B C D E F H I J K L M N O P R S T U V W X Y Z
-
-
 def test_slab_serif_masters_on_vf_stable_charset() -> None:
-    """Slab voice: lint-clean charset minus known VF-unstable cap hook letters."""
+    """Slab voice: full supported charset on the four-master weight ladder."""
     ctx = DesignContext.slab_serif()
     controls = Controls.from_context(ctx)
-    charset = "".join(ch for ch in controls.supported if ch not in _SLAB_VF_STABLE_EXCLUDE)
+    charset = controls.supported
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
         tuned = Controls.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
         font.add_chars(tuned.build_all(charset))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
+def test_slab_gqjt_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    charset = "GQjt"
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem))
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
