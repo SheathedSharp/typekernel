@@ -164,6 +164,17 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 
 默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_tk208_extended_latin.py`。
 
+## Agent 终验快照（TK-502，程序侧）
+
+参考试作 ≠ 终验：终验须从 brief 的 preset 自行改字并留痕，见 `docs/AGENT_TRIALS.md` §终验流程。
+
+```bash
+PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
+  --brief brief-1 --design path/to/your_design.py --out artifacts/trials/my-run/brief-1
+```
+
+写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3（例如只缩放 stem）。库维护者程序条：`examples/run_m5_program_exit.py`（`pytest -q tests/docs/test_development_plan_section8.py`）。
+
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
 自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：

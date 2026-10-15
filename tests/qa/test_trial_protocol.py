@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -97,6 +98,20 @@ def test_validate_trial_snapshot_accepts_honest_stem_only_tweak() -> None:
     assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
     assert not validate_trial_snapshot(snap)
     assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 6
+
+
+def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
+    spec = importlib.util.spec_from_file_location(
+        "warm",
+        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    snap = snapshot_trial(mod.controls(), brief=FIXED_TRIAL_BRIEFS[0])
+    path = write_trial_snapshot(tmp_path / "snapshot.json", snap)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert not validate_trial_snapshot_record(data)
 
 
 def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:

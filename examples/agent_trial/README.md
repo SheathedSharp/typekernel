@@ -10,7 +10,7 @@
 | `design_editorial_bracketed.py` | brief-2 bracketed serif variant (`--variant bracketed`). |
 | `design_coding_clear.py` | brief-3 edited sheet. |
 | `snapshot_design.py` | Run `snapshot_trial` on any module that exports `controls()`. |
-| `snapshot_reference_trials.py` | All three `design_*.py` → `out/brief-*/snapshot.json`. |
+| `snapshot_reference_trials.py` | All three `design_*.py` → `out/brief-*/snapshot.json` (same exit codes as below). |
 | `build_reference_family.py` | `--brief brief-{1,2,3}` → Regular + Bold OTFs + `proof.png`. |
 | `build_brief1_reference.py` | Thin wrapper for brief-1 only. |
 
@@ -25,5 +25,18 @@ PYTHONPATH=src python examples/agent_trial/snapshot_reference_trials.py \
 ```
 
 CI: `tests/examples/test_agent_trial_reference.py`, `tests/qa/test_m3_exit.py` (M3 L3 voice triad), `tests/qa/test_trial_protocol.py` (`test_serif_voice_trial_snapshots_meet_l3`).
+
+`snapshot_design.py` / `snapshot_reference_trials.py` call `validate_trial_snapshot` before writing JSON, then `trial_snapshot_exit_code`:
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Program pass (`metrics_ok`, gate, R8 ladder, `l3_voice_ok`, empty `cheating_flags`) |
+| 2 | Lint / identity errors (`metrics_ok`) |
+| 3 | `family_gate` failures |
+| 4 | `weight_ladder_r8_failures` > 0 |
+| 5 | Snapshot record inconsistent (e.g. forged `l3_voice_ok` with `topology_fraction` too low) |
+| 6 | Honest design but `l3_voice_ok` false (e.g. stem-only tweak) |
+
+Full final-trial checklist: `docs/AGENT_TRIALS.md` §终验流程. Library program bar: `examples/run_m5_program_exit.py`.
 
 Serif/italic **visual** review (separate from trial snapshots): `examples/human_review_bundle.py` → `approvals/serif-*-voice.json`, `italic-vf-construct.json`.

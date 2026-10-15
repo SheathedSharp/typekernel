@@ -132,9 +132,26 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     ).read_text(encoding="utf-8")
     assert "human_review_bundle" in text
     assert "snapshot_serif_voices" in text
+    assert "validate_trial_snapshot" in text
+    assert "trial_snapshot_exit_code" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_italic_program_acceptance" in text
     assert "test_development_plan_section8" in text
+
+
+def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-502" in text
+    assert "validate_trial_snapshot" in text
+    assert "trial_snapshot_exit_code" in text
+    assert "run_m5_program_exit" in text
+
+
+def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
+    text = (ROOT / "examples/agent_trial/README.md").read_text(encoding="utf-8")
+    assert "trial_snapshot_exit_code" in text
+    assert "validate_trial_snapshot" in text
+    assert "AGENT_TRIALS.md" in text
 
 
 def test_section8_skill_documents_m5_exit_workflow() -> None:
