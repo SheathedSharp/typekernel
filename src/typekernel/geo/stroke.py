@@ -171,6 +171,8 @@ class CenterlineExpandReport:
     polyline_vertex_count: int
     outline_cubic_segment_count: int
     chord_budget: float
+    max_offset_fit_error: float = 0.0
+    """Max sampled offset-rail distance to fitted cubics (0 when flatten path used)."""
 
 
 def _mid(
@@ -261,16 +263,163 @@ def _outline_cubic_segment_count(outline: Outline) -> int:
     )
 
 
+def _cubic_eval(seg: CubicBezier, t: float) -> tuple[float, float]:
+    u = 1.0 - t
+    p0, p1, p2, p3 = seg.p0, seg.p1, seg.p2, seg.p3
+    return (
+        u**3 * p0[0]
+        + 3 * u**2 * t * p1[0]
+        + 3 * u * t**2 * p2[0]
+        + t**3 * p3[0],
+        u**3 * p0[1]
+        + 3 * u**2 * t * p1[1]
+        + 3 * u * t**2 * p2[1]
+        + t**3 * p3[1],
+    )
+
+
+def _cubic_deriv_eval(seg: CubicBezier, t: float) -> tuple[float, float]:
+    u = 1.0 - t
+    p0, p1, p2, p3 = seg.p0, seg.p1, seg.p2, seg.p3
+    return (
+        3 * u**2 * (p1[0] - p0[0])
+        + 6 * u * t * (p2[0] - p1[0])
+        + 3 * t**2 * (p3[0] - p2[0]),
+        3 * u**2 * (p1[1] - p0[1])
+        + 6 * u * t * (p2[1] - p1[1])
+        + 3 * t**2 * (p3[1] - p2[1]),
+    )
+
+
+def _sample_offset_rail(
+    seg: CubicBezier,
+    pen: Pen,
+    samples: int,
+    *,
+    left_side: bool,
+) -> list[tuple[float, float]]:
+    if samples < 2:
+        raise ValueError("samples must be >= 2")
+    pts: list[tuple[float, float]] = []
+    for i in range(samples):
+        t = i / (samples - 1)
+        px, py = _cubic_eval(seg, t)
+        dx, dy = _cubic_deriv_eval(seg, t)
+        tx, ty = _unit(dx, dy)
+        nx, ny = _left(tx, ty) if left_side else _right(tx, ty)
+        pts.append(_offset(px, py, nx, ny, pen))
+    return pts
+
+
+def _fit_cubic_endpoints_tangents(
+    points: Sequence[tuple[float, float]],
+) -> CubicBezier:
+    if len(points) < 2:
+        raise ValueError("need at least two points to fit")
+    p0, p3 = points[0], points[-1]
+    if len(points) == 2:
+        return CubicBezier.line(p0, p3)
+    t0 = _unit(points[1][0] - p0[0], points[1][1] - p0[1])
+    t1 = _unit(p3[0] - points[-2][0], p3[1] - points[-2][1])
+    chord = math.hypot(p3[0] - p0[0], p3[1] - p0[1])
+    alpha = chord / 3.0
+    p1 = (p0[0] + t0[0] * alpha, p0[1] + t0[1] * alpha)
+    p2 = (p3[0] - t1[0] * alpha, p3[1] - t1[1] * alpha)
+    return CubicBezier(p0, p1, p2, p3)
+
+
+def _distance_point_to_cubic(
+    seg: CubicBezier,
+    px: float,
+    py: float,
+    *,
+    steps: int = 32,
+) -> float:
+    best = float("inf")
+    for i in range(steps + 1):
+        t = i / steps
+        x, y = _cubic_eval(seg, t)
+        best = min(best, math.hypot(px - x, py - y))
+    return best
+
+
+def _fit_offset_rail(
+    points: list[tuple[float, float]],
+    budget: float,
+    *,
+    depth: int = 0,
+    max_depth: int = 4,
+) -> tuple[list[CubicBezier], float]:
+    fit = _fit_cubic_endpoints_tangents(points)
+    err = max(_distance_point_to_cubic(fit, p[0], p[1]) for p in points)
+    if err <= budget or depth >= max_depth or len(points) < 5:
+        return [fit], err
+    mid = len(points) // 2
+    left, err_l = _fit_offset_rail(points[: mid + 1], budget, depth=depth + 1)
+    right, err_r = _fit_offset_rail(points[mid:], budget, depth=depth + 1)
+    return left + right, max(err_l, err_r)
+
+
+def _append_cubic_chain(b: PathBuilder, chain: list[CubicBezier]) -> None:
+    for seg in chain:
+        b.curveTo(seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1], seg.p3[0], seg.p3[1])
+
+
+def _expand_open_single_cubic_offset(
+    seg: CubicBezier,
+    pen: Pen,
+    *,
+    offset_fit_budget: float,
+    samples: int = 17,
+) -> tuple[Outline, float]:
+    """Offset a single open cubic midline; sides are cubic chains + butt caps."""
+    left = _sample_offset_rail(seg, pen, samples, left_side=True)
+    right = _sample_offset_rail(seg, pen, samples, left_side=False)
+    left_chain, err_l = _fit_offset_rail(left, offset_fit_budget)
+    right_chain, err_r = _fit_offset_rail(right, offset_fit_budget)
+    max_err = max(err_l, err_r)
+    b = PathBuilder()
+    b.moveTo(left[0][0], left[0][1])
+    _append_cubic_chain(b, left_chain)
+    b.lineTo(right[-1][0], right[-1][1])
+    for seg_r in reversed(right_chain):
+        b.curveTo(seg_r.p2[0], seg_r.p2[1], seg_r.p1[0], seg_r.p1[1], seg_r.p0[0], seg_r.p0[1])
+    b.closePath()
+    return b.build(), max_err
+
+
 def expand_cubic(
     centerline: CubicCenterline,
     pen: Pen,
     *,
     chord_budget: float = 0.35,
+    offset_fit_budget: float = 0.75,
     join: JoinStyle = "miter",
     cap: CapStyle = "butt",
     miter_limit: float = 4.0,
 ) -> tuple[Outline, CenterlineExpandReport]:
     """Expand a cubic midline; output includes cubics at round joins/caps."""
+    if (
+        len(centerline.segments) == 1
+        and not centerline.closed
+        and cap == "butt"
+        and join == "miter"
+        and offset_fit_budget > 0
+    ):
+        outline, fit_err = _expand_open_single_cubic_offset(
+            centerline.segments[0],
+            pen,
+            offset_fit_budget=offset_fit_budget,
+        )
+        return outline, CenterlineExpandReport(
+            max_chord_error=0.0,
+            cubic_segment_count=1,
+            polyline_vertex_count=0,
+            outline_cubic_segment_count=_outline_cubic_segment_count(outline),
+            chord_budget=chord_budget,
+            max_offset_fit_error=fit_err,
+        )
+
     poly, report = flatten_cubic_centerline(centerline, chord_budget)
     outline = expand(
         poly,
@@ -285,6 +434,7 @@ def expand_cubic(
         polyline_vertex_count=report.polyline_vertex_count,
         outline_cubic_segment_count=_outline_cubic_segment_count(outline),
         chord_budget=chord_budget,
+        max_offset_fit_error=0.0,
     )
 
 

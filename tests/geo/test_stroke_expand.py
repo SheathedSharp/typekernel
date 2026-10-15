@@ -127,15 +127,27 @@ def test_expand_cubic_line_matches_polyline_expand() -> None:
         assert bb_c[i] == pytest.approx(bb_l[i], abs=0.5)
 
 
+def test_expand_cubic_single_segment_reports_offset_fit_error() -> None:
+    k = 0.5522847498 * 100.0
+    seg = CubicBezier((0.0, 0.0), (0.0, k), (100.0 - k, 100.0), (100.0, 100.0))
+    cl = CubicCenterline.from_beziers([seg])
+    outline, report = expand_cubic(cl, Pen(40.0), cap="butt", offset_fit_budget=0.75)
+    assert report.max_chord_error == 0.0
+    assert report.max_offset_fit_error > 0.0
+    assert report.max_offset_fit_error <= 0.75
+    assert report.outline_cubic_segment_count >= 2
+    assert outline.contour_count == 1
+
+
 def test_expand_cubic_curved_centerline_within_chord_budget() -> None:
     k = 0.5522847498 * 100.0
     seg = CubicBezier((0.0, 0.0), (0.0, k), (100.0 - k, 100.0), (100.0, 100.0))
     cl = CubicCenterline.from_beziers([seg])
-    budget = 0.4
-    outline, report = expand_cubic(cl, Pen(40.0), cap="butt", chord_budget=budget)
-    assert report.max_chord_error <= budget
+    outline, report = expand_cubic(
+        cl, Pen(40.0), cap="butt", offset_fit_budget=0.75
+    )
     assert report.cubic_segment_count == 1
-    assert report.polyline_vertex_count >= 2
+    assert report.max_offset_fit_error <= 0.75
     assert outline.contour_count == 1
     bb = bounds(outline)
     assert bb[2] - bb[0] > 80.0
