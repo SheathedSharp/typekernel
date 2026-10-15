@@ -400,7 +400,15 @@ def test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors() -> None:
         if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
             stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
             changed.append((ch, stems))
-    assert changed == [("h", ["stem_R_t"]), ("n", ["stem_L_t"])]
+    assert changed == [("h", ["stem_R_t"])]
+
+
+def test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor() -> None:
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    n = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    assert "stem_L_t" not in {a.name for a in n.anchors}
+    assert composed_glyph_hash(n) == composed_glyph_hash(apply_glyph_serifs(n))
 
 
 def test_slab_n_left_shoulder_cap_inlined_without_boolean_serif() -> None:

@@ -541,6 +541,18 @@ def _n_slab_n_left_shoulder_cap(
     return _n_slab_inlined(ctx) and abs(left_top - m.x_height) < 0.5
 
 
+def _n_bracketed_n_left_shoulder_cap(
+    ctx: DesignContext | None, left_top: float, m: NMetrics
+) -> bool:
+    """Bracketed ``n``: left-face shoulder cap at ``x_height`` (``stem_L_t``)."""
+    return (
+        ctx is not None
+        and ctx.style.serif == "bracketed"
+        and _stem_serif_inlined(ctx)
+        and abs(left_top - m.x_height) < 0.5
+    )
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
@@ -560,6 +572,8 @@ def _n_family_outline(
         _n_begin_left_stem(
             b, s.l0, s.l1, left_top, ctx, m.stem, shelf_foot=shelf_left_foot
         )
+        if _n_bracketed_n_left_shoulder_cap(ctx, left_top, m):
+            _n_inline_shoulder_left_cap_slab(b, s.l0, left_top, ctx, m.stem)
         b.lineTo(s.l1, left_top)
         if _n_ascender_left_stem_cap(left_top, m):
             _n_inline_left_stem_cap(b, s.l0, s.l1, left_top, ctx, m.stem)
@@ -824,7 +838,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             ctx=ctx,
             inline_left_foot=_stem_serif_inlined(ctx),
             inline_right_foot=_stem_serif_inlined(ctx),
-            inline_left_top=ctx.style.serif == "slab",
+            inline_left_top=ctx.style.serif in ("slab", "bracketed"),
         ),
     }
     shelf_n = ctx.style.serif in ("slab", "bracketed")
