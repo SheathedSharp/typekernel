@@ -126,6 +126,14 @@ _report, failures = check_sentence_gate(controls, baseline=baseline_controls())
 
 R8 自动化已覆盖全部 `supported` 字符；人审时用阶梯 PNG 看字腔是否塌：
 
+```bash
+PYTHONPATH=src python examples/weight_ladder_sheet.py \
+  --preset humanist_sans \
+  --out artifacts/specimens/weight_ladder_humanist.png
+```
+
+或在脚本里直接调 API：
+
 ```python
 from pathlib import Path
 from typekernel.parts import DesignContext

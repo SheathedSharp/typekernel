@@ -338,6 +338,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：默认 supported 标点（除 ``*``）纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）。
 - **本轮（部分）**：``asterisk_from_n_o`` 外径 ``0.34→0.375`` 打开字腔；``*`` 纳入 charset；``test_asterisk_passes_counter_floor_across_ladder``；golden ``*`` 五 preset 更新。
 - **本轮（部分）**：``COUNTER_PINCH_CHARSET`` 与默认 ``supported`` 一致（全字符 R8 回归）；``weight_ladder_sheet`` 默认阶梯含 ``stem=200``（对齐 ``test_weight_ladder``）。
+- **本轮（部分）**：``examples/weight_ladder_sheet.py``（``--preset`` / ``--out``）与 ``tests/examples/test_weight_ladder_sheet.py`` 烟测；``agent-recipes`` 文档优先 CLI。
 - **验收**：`stem ∈ {30,70,110,150,180,200}` 上 `COUNTER_PINCH_CHARSET` 零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时 `with_stem_relief()`；`weight_ladder_sheet` 人审 PNG（本地 ``artifacts/specimens/``，不入库）；自动化已绿，人审待签。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 
