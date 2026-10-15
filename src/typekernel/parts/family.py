@@ -323,6 +323,7 @@ class Controls:
                     glyph = forms[ch](a, b, self.context)
                     slant = self.context.italic_slant_deg
                     from typekernel.parts.oblique_compat import (
+                        OBLIQUE_PRE_EXTREMA,
                         apply_oblique_compat_glyph,
                         oblique_compat_charset,
                     )
@@ -340,6 +341,7 @@ class Controls:
                             glyph,
                             angle,
                             slant=abs(slant) > 1e-9,
+                            pre_axis_extrema=ch in OBLIQUE_PRE_EXTREMA,
                         )
                     elif abs(slant) > 1e-9:
                         from typekernel.parts.italic import slant_composed_glyph

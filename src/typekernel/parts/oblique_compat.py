@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import math
 
-from typekernel.geo.extrema import outline_oblique_compat_splits
+from typekernel.geo.extrema import (
+    outline_oblique_compat_splits,
+    outline_with_axis_extrema_on_curve,
+)
 from typekernel.parts.compose import ComposedGlyph
 
-# Branching-arch italics (TK-403) diverge after oblique splits; ``e`` counter topology
-# diverges across the wght axis when ``with_stem_relief()`` is used on bold masters.
-OBLIQUE_COMPAT_EXCLUDE = frozenset("efhmnru")
+# ``e`` stays on plain construct slant: oblique pre-splits change counter segment
+# counts when ``with_stem_relief()`` bold masters pair with upright VF splits (TK-402).
+OBLIQUE_COMPAT_EXCLUDE = frozenset("e")
+# Branching ``m`` / ``u`` need on-curve axis extrema before oblique pre-split (TK-402).
+OBLIQUE_PRE_EXTREMA = frozenset("mu")
 
 __all__ = [
     "OBLIQUE_COMPAT_EXCLUDE",
+    "OBLIQUE_PRE_EXTREMA",
     "apply_oblique_compat_glyph",
     "oblique_compat_charset",
 ]
@@ -34,8 +40,18 @@ def apply_oblique_compat_glyph(
     angle_deg: float,
     *,
     slant: bool,
+    pre_axis_extrema: bool = False,
 ) -> ComposedGlyph:
     """Pre-split for oblique axis extrema; optionally apply construct slant."""
+    if pre_axis_extrema:
+        glyph = ComposedGlyph(
+            tuple(outline_with_axis_extrema_on_curve(s) for s in glyph.solids),
+            tuple(outline_with_axis_extrema_on_curve(h) for h in glyph.holes),
+            glyph.advance,
+            glyph.context,
+            anchors=glyph.anchors,
+            design=glyph.design,
+        )
     shear = math.tan(math.radians(angle_deg))
     split_glyph = ComposedGlyph(
         tuple(outline_oblique_compat_splits(s, shear) for s in glyph.solids),

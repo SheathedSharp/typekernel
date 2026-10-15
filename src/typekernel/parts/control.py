@@ -414,7 +414,7 @@ def _pack(
 
 def _italic_topology(ctx: DesignContext) -> bool:
     """True when construct slant should use branching arches (M4 TK-403)."""
-    return ctx.italic_slant_deg >= 6.0
+    return ctx.italic_slant_deg >= 6.0 or bool(ctx.vf_compat_oblique_splits)
 
 
 def _vf_compat_stem(ctx: DesignContext) -> bool:

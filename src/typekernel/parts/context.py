@@ -45,8 +45,9 @@ class DesignContext:
         vf_compat_stem_segments: When true, upright ``n``-family glyphs emit an
             extra colinear stem segment so segment counts match branching italics
             for ``wght×ital`` interpolation (TK-404).
-        vf_compat_oblique_splits: When true, :data:`~typekernel.parts.oblique_compat.OBLIQUE_COMPAT_EXCLUDE`
-            bowl-like glyphs get oblique pre-splits at ``vf_oblique_split_deg``.
+        vf_compat_oblique_splits: When true, glyphs outside
+            :data:`~typekernel.parts.oblique_compat.OBLIQUE_COMPAT_EXCLUDE`` get oblique
+            pre-splits at ``vf_oblique_split_deg`` (upright masters; see TK-402).
         vf_oblique_split_deg: Construct slant paired with ``vf_compat_oblique_splits``.
         stress: Degrees CCW rotation of the thin/thick axis on round strokes
             (``0`` = thick on the sides, thin on top/bottom when ``contrast`` < 1).

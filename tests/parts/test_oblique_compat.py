@@ -86,4 +86,4 @@ def test_italic_r4_warns_only_on_oblique_compat_exclude() -> None:
     ital = italic_design(Controls.from_context(DesignContext.code_clear()))
     r4 = {i.glyph for i in lint_controls(ital).issues if i.rule == "R4_extrema"}
     assert r4 <= OBLIQUE_COMPAT_EXCLUDE
-    assert r4 == frozenset("ehmnu")
+    assert r4 == frozenset("e")
