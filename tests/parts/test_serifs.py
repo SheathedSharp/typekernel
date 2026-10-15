@@ -761,6 +761,34 @@ def test_slab_e_opening_changes_outline() -> None:
     assert composed_glyph_hash(sans.build("e")) != composed_glyph_hash(slab.build("e"))
 
 
+def test_slab_s_opening_changes_outline() -> None:
+    sans = Controls.from_context(DesignContext.geometric_sans())
+    slab = Controls.from_context(DesignContext.slab_serif())
+    for ch in ("s", "S"):
+        assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
+
+
+def test_slab_s_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    for ch in ("s", "S"):
+        ref_n = len(
+            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+        )
+        fonts = []
+        for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            assert len(g.solids[0].contours[0].segments) == ref_n
+            font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+            font.add_char(ch, g)
+            fonts.append(font)
+        masters = [
+            Master({"wght": wght}, font)
+            for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+        ]
+        assert check_masters(masters) == []
+
+
 def test_slab_cap_cg_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.slab_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
