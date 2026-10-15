@@ -152,8 +152,22 @@ def _polygon(points: list[Pt]) -> Outline:
     return _ccw(b.build())
 
 
+def _cap_stem_serif_anchors(h: HMetrics) -> dict[str, Pt]:
+    half = h.stem / 2.0
+    return {
+        "stem_L_b": (half, 0.0),
+        "stem_L_t": (half, h.cap_height),
+        "stem_R_b": (h.width - half, 0.0),
+        "stem_R_t": (h.width - half, h.cap_height),
+    }
+
+
 def _cap_anchors(width: float, h: HMetrics) -> dict[str, Pt]:
-    return {"top": (width / 2.0, h.cap_height), "bottom": (width / 2.0, 0.0)}
+    return {
+        "top": (width / 2.0, h.cap_height),
+        "bottom": (width / 2.0, 0.0),
+        **_cap_stem_serif_anchors(h),
+    }
 
 
 def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyph:
@@ -190,7 +204,13 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     from typekernel.parts.primitives import contrast_stem_caps
 
     stem = contrast_stem_caps(c, 0.0, 0.0, h.cap_height, width=h.stem)
-    return _pack(c, h, _cap_anchors(h.stem, h), stem)
+    half = h.stem / 2.0
+    anchors = {
+        **_cap_anchors(h.stem, h),
+        "stem_L_b": (half, 0.0),
+        "stem_L_t": (half, h.cap_height),
+    }
+    return _pack(c, h, anchors, stem)
 
 
 def L_from_H(

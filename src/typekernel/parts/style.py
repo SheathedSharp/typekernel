@@ -11,6 +11,7 @@ LTail = Literal["none", "tailed"]
 YTail = Literal["straight", "curved"]
 IDot = Literal["round", "square", "diamond"]
 TCut = Literal["flat", "slanted"]
+SerifKind = Literal["none", "slab", "bracketed"]
 
 __all__ = [
     "DEFAULT_STYLE",
@@ -18,6 +19,7 @@ __all__ = [
     "GForm",
     "IDot",
     "LTail",
+    "SerifKind",
     "Style",
     "TCut",
     "YTail",
@@ -34,6 +36,7 @@ class Style:
     y_tail: YTail = "straight"
     i_dot: IDot = "round"
     t_cut: TCut = "flat"
+    serif: SerifKind = "none"
 
     def tuned(self, **kwargs: Any) -> Style:
         return replace(self, **kwargs)

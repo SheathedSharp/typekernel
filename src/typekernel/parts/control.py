@@ -473,11 +473,32 @@ def _n_branching_outline(m: NMetrics, *, stem_top: float) -> Outline:
     return _ccw(b.build())
 
 
+def _n_stem_serif_anchors(
+    m: NMetrics,
+    *,
+    left_top: float,
+    right_top: float | None = None,
+    right_foot: bool = True,
+) -> dict[str, Pt]:
+    """Stem feet/caps for ``n``-family letters (TK-306)."""
+    half = m.stem / 2.0
+    anchors: dict[str, Pt] = {"stem_L_b": (half, 0.0), "stem_L_t": (half, left_top)}
+    if right_foot:
+        anchors["stem_R_b"] = (m.width - half, 0.0)
+    if right_top is not None:
+        anchors["stem_R_t"] = (m.width - half, right_top)
+    return anchors
+
+
 def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """Control ``n``: continuous cubic outline from its design record."""
     m = metrics or n_metrics(ctx)
     cx = m.width / 2.0
-    anchors = {"top": (cx, m.x_height), "bottom": (cx, 0.0)}
+    anchors = {
+        "top": (cx, m.x_height),
+        "bottom": (cx, 0.0),
+        **_n_stem_serif_anchors(m, left_top=m.x_height, right_top=None),
+    }
     if _italic_topology(ctx):
         outline = _n_branching_outline(m, stem_top=m.x_height)
     else:
@@ -490,7 +511,15 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
 def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """``h`` from the same shoulder/leg recipe as ``n`` (ascender left stem)."""
     m = metrics or n_metrics(ctx)
-    anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.width / 2.0, 0.0)}
+    anchors = {
+        "top": (m.stem / 2.0, m.ascender),
+        "bottom": (m.width / 2.0, 0.0),
+        **_n_stem_serif_anchors(
+            m,
+            left_top=m.ascender,
+            right_top=m.x_height,
+        ),
+    }
     if _italic_topology(ctx):
         outline = _n_branching_outline(m, stem_top=m.ascender)
     else:
@@ -529,7 +558,11 @@ def r_from_n(
     else:
         outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c))
     outline = apply_terminal_shear(c, outline)
-    anchors = {"top": (x_t / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    anchors = {
+        "top": (x_t / 2.0, m.x_height),
+        "bottom": (m.stem / 2.0, 0.0),
+        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+    }
     return _pack(c, m, anchors, outline)
 
 
@@ -960,7 +993,15 @@ def m_from_n(
     b.lineTo(s1.l1, 0.0)
     b.closePath()
     cx = s2.r1 / 2.0
-    anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
+    half = mm.stem / 2.0
+    anchors = {
+        "top": (cx, xh),
+        "bottom": (cx, 0.0),
+        "stem_L_b": (s1.l0 + half, 0.0),
+        "stem_L_t": (s1.l0 + half, xh),
+        "stem_M_b": ((s1.r0 + s2.l1) / 2.0, 0.0),
+        "stem_R_b": (s2.r1 - half, 0.0),
+    }
     return _pack(c, m, anchors, _ccw(b.build()))
 
 
@@ -994,7 +1035,11 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
-    anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
+    anchors = {
+        "top": (cx, xh),
+        "bottom": (cx, 0.0),
+        **_n_stem_serif_anchors(um, left_top=xh, right_top=None),
+    }
     return _pack(c, m, anchors, outline)
 
 
@@ -1005,7 +1050,11 @@ def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     stem = contrast_stem_caps(c, 0.0, 0.0, m.x_height, width=m.stem)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
-    anchors = {"top": (m.stem / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    anchors = {
+        "top": (m.stem / 2.0, m.x_height),
+        "bottom": (m.stem / 2.0, 0.0),
+        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+    }
     return _pack(c, m, anchors, stem, dot)
 
 
@@ -1014,7 +1063,11 @@ def dotless_i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
-    anchors = {"top": (m.stem / 2.0, m.x_height), "bottom": (m.stem / 2.0, 0.0)}
+    anchors = {
+        "top": (m.stem / 2.0, m.x_height),
+        "bottom": (m.stem / 2.0, 0.0),
+        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+    }
     return _pack(c, m, anchors, stem)
 
 

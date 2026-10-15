@@ -326,5 +326,9 @@ class Controls:
                         from typekernel.parts.italic import slant_composed_glyph
 
                         glyph = slant_composed_glyph(glyph, slant)
+                    if self.context.style.serif != "none":
+                        from typekernel.parts.serifs import apply_glyph_serifs
+
+                        glyph = apply_glyph_serifs(glyph)
                     out[ch] = glyph
         return {ch: out[ch] for ch in wanted}

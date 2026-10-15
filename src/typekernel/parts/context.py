@@ -218,6 +218,27 @@ class DesignContext:
         )
 
     @classmethod
+    def slab_serif(cls) -> DesignContext:
+        """Editorial slab: sturdy stems with rectangular serifs (TK-306)."""
+        from typekernel.parts.style import Style
+
+        return cls(
+            units_per_em=1000.0,
+            x_height=520.0,
+            cap_height=700.0,
+            ascender=750.0,
+            descender=-230.0,
+            stem=96.0,
+            contrast=1.0,
+            overshoot=12.0,
+            roundness=0.22,
+            tracking=0.0,
+            sidebearing_ratio=0.10,
+            aperture=0.58,
+            style=Style(serif="slab"),
+        )
+
+    @classmethod
     def open_print(cls) -> DesignContext:
         """Print-open: soft joins, wide aperture, airy counters for paper."""
         return cls(

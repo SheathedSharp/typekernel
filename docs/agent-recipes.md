@@ -11,6 +11,7 @@
 | 代码 / UI 正文，等高、侧距松 | `code_clear()` |
 | 人文主义无衬线，开口大、有对比 | `humanist_sans()` |
 | 几何无衬线 | `geometric_sans()` |
+| 方衬线编辑体（`Style.serif=slab`） | `slab_serif()` |
 | 等宽感觉 | `mono()` |
 | 标题 | `display()` |
 | 纸书、墨更重 | `paper_ink()` |

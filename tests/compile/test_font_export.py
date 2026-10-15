@@ -56,7 +56,13 @@ def test_font_to_ufo_writes_glyph_set(font: Font, ctx: DesignContext) -> None:
     assert ufo["o.alt"].unicodes == []
     assert ufo["n"].width == pytest.approx(font["n"].advance)
     assert len(ufo["o"].contours) == 2
-    assert sorted(a.name for a in ufo["n"].anchors) == ["bottom", "top"]
+    assert sorted(a.name for a in ufo["n"].anchors) == [
+        "bottom",
+        "stem_L_b",
+        "stem_L_t",
+        "stem_R_b",
+        "top",
+    ]
     top = next(a for a in ufo["n"].anchors if a.name == "top")
     assert (top.x, top.y) == (300.0, ctx.x_height)
     assert [c.baseGlyph for c in ufo["oo"].components] == ["o", "o"]

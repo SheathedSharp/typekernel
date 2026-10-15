@@ -119,8 +119,14 @@ def test_u_baseline_toe_keeps_sentence_g1_budget() -> None:
 @pytest.mark.parametrize(
     ("builder", "names"),
     [
-        (build_n, {"top", "bottom"}),
-        (build_h, {"top", "bottom"}),
+        (
+            build_n,
+            {"top", "bottom", "stem_L_b", "stem_L_t", "stem_R_b"},
+        ),
+        (
+            build_h,
+            {"top", "bottom", "stem_L_b", "stem_L_t", "stem_R_b", "stem_R_t"},
+        ),
         (build_o, {"top", "bottom"}),
     ],
 )
