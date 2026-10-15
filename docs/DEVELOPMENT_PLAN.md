@@ -255,6 +255,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`test_dollar_waist_coupled_topology` 固化单 solid 双孔、腰墨、顶/底竖笔帽与外轮廓 15 段 VF 拓扑。
 - **本轮（部分）**：`#` / `%` 三 preset 字重插值 `check_interpolatable` + `#` 外轮廓 28 段 VF 拓扑回归。
 - **本轮（部分）**：`@` 重字重略缩小环内 belly（`heavy×0.10`），`geometric_sans` 阶梯 R8 通过；`@` 纳入 `COUNTER_PINCH_CHARSET` + VF 插值回归。
+- **本轮（部分）**：`@` belly 随环内半径 `fill` 缩放 shrink、超重 `belly_k` 微调；字重阶梯 R8 覆盖七内置 preset。
 - **本轮（部分）**：`&` 上下环壁厚相对 bowl 半径封顶（`wall_cap=0.36`），重 stem 孔洞不再塌缩；golden `&` 三 preset；`&` 纳入 `COUNTER_PINCH_CHARSET`。
 - `$` 真 S 贯穿竖笔（非仅顶/底帽）仍非目标；`#`/`%` 实现见 `hash_from_n_o` / `percent_from_n_o`。
 

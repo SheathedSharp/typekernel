@@ -20,7 +20,15 @@ _LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
 
 @pytest.mark.parametrize(
     "preset",
-    ("humanist_sans", "code_clear", "geometric_sans"),
+    (
+        "humanist_sans",
+        "code_clear",
+        "geometric_sans",
+        "mono",
+        "display",
+        "paper_ink",
+        "open_print",
+    ),
 )
 @pytest.mark.parametrize("stem", _LADDER_STEMS)
 def test_counter_pinch_charset_passes_r8(preset: str, stem: float) -> None:
