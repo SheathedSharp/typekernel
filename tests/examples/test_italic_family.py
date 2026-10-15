@@ -27,3 +27,5 @@ def test_italic_family_build_vf_script(tmp_path: Path) -> None:
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert list(tmp_path.glob("*.ttf"))
+    assert (tmp_path / "proof.png").is_file()
+    assert (tmp_path / "proof_vf.png").is_file()

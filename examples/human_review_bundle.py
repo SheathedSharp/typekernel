@@ -61,6 +61,8 @@ write_approval(
 | Artifact | Path |
 | --- | --- |
 | wght×ital VF | `{out}/italic_family/*.ttf` |
+| Sentence proof (4 masters) | `{out}/italic_family/proof.png` |
+| VF weight ladder | `{out}/italic_family/proof_vf.png` |
 
 Judge: construct slant vs mechanical oblique, branching ``n``/``h``, bold italic counters.
 

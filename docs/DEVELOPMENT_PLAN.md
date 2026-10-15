@@ -465,6 +465,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **TK-401**：`italic_design(regular, ItalicStyle)`；`italic_controls` 弃用并 `DeprecationWarning`；`DesignContext.italic_slant_deg` 在 `build_all` 施加构造倾角；TK-002 xfail 已转正。
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
 - **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；七内置 preset 斜体 R4 清零（见 TK-101 回归）。**人审**仍待（校样命令见 ``human_review_bundle.py``）。
+- **本轮（部分）**：``examples/italic_family/build_italic_vf.py`` 产出 ``proof.png`` / ``proof_vf.png``（``AGENT_SENTENCE`` + 字重阶梯）；人审 bundle / 烟测断言。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。

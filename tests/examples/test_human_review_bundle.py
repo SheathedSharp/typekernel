@@ -56,6 +56,8 @@ def test_human_review_bundle_italic_only(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
     assert list((tmp_path / "italic_family").glob("*.ttf"))
+    assert (tmp_path / "italic_family" / "proof.png").is_file()
+    assert (tmp_path / "italic_family" / "proof_vf.png").is_file()
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
     assert "italic-vf-construct" in checklist
     assert "TK-402" in checklist
