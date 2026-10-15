@@ -306,7 +306,13 @@ def _u_family_outline(m: NMetrics, ctx: DesignContext, *, vf_compat: bool = Fals
     if bulge <= 0.0:
         return _ccw(
             mirror_x(
-                _n_family_outline(m, left_top=m.x_height, vf_compat=vf_compat),
+                _n_family_outline(
+                    m,
+                    left_top=m.x_height,
+                    vf_compat=vf_compat,
+                    ctx=ctx,
+                    shelf_left_foot=_stem_serif_inlined(ctx),
+                ),
                 at_x=m.width / 2.0,
             )
         )
@@ -335,7 +341,17 @@ def _u_family_outline(m: NMetrics, ctx: DesignContext, *, vf_compat: bool = Fals
 def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) -> Outline:
     bulge = _u_foot_bulge(ctx, m.stem)
     if bulge <= 0.0:
-        return _ccw(mirror_x(_n_branching_outline(m, stem_top=stem_top), at_x=m.width / 2.0))
+        return _ccw(
+            mirror_x(
+                _n_branching_outline(
+                    m,
+                    stem_top=stem_top,
+                    ctx=ctx,
+                    shelf_left_foot=_stem_serif_inlined(ctx),
+                ),
+                at_x=m.width / 2.0,
+            )
+        )
     branch_y = _italic_branch_y(m, stem_top)
     drop = stem_top - branch_y
     mm = m.tuned(
@@ -440,12 +456,37 @@ def _n_left_stem_foot_detour(
         _n_slab_left_foot_detour(b, l0, l1, left_top, ctx, stem)
 
 
+def _n_begin_left_stem(
+    b: PathBuilder,
+    l0: float,
+    l1: float,
+    left_top: float,
+    ctx: DesignContext,
+    stem: float,
+    *,
+    shelf_foot: bool,
+) -> None:
+    """Rise on the left stem from the baseline, with optional inlined foot."""
+    b.moveTo(l0, 0.0)
+    if not _stem_serif_inlined(ctx):
+        b.lineTo(l0, left_top)
+        return
+    if shelf_foot:
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        inline_stem_foot_serif_path(b, l0, 0.0, ctx, stem)
+        b.lineTo(l0, left_top)
+        return
+    _n_left_stem_foot_detour(b, l0, l1, left_top, ctx, stem)
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
     left_top: float,
     vf_compat: bool = False,
     ctx: DesignContext | None = None,
+    shelf_left_foot: bool = False,
 ) -> Outline:
     """One continuous outer contour: left stem + shoulder + right leg.
 
@@ -454,10 +495,12 @@ def _n_family_outline(
     """
     s = _shoulder(m)
     b = PathBuilder()
-    b.moveTo(s.l0, 0.0)
-    if ctx is not None and _stem_serif_inlined(ctx):
-        _n_left_stem_foot_detour(b, s.l0, s.l1, left_top, ctx, m.stem)
+    if ctx is not None:
+        _n_begin_left_stem(
+            b, s.l0, s.l1, left_top, ctx, m.stem, shelf_foot=shelf_left_foot
+        )
     else:
+        b.moveTo(s.l0, 0.0)
         b.lineTo(s.l0, left_top)
     b.lineTo(s.l1, left_top)
     if left_top > m.x_height + 0.5:
@@ -587,7 +630,11 @@ def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
 
 
 def _n_branching_outline(
-    m: NMetrics, *, stem_top: float, ctx: DesignContext | None = None
+    m: NMetrics,
+    *,
+    stem_top: float,
+    ctx: DesignContext | None = None,
+    shelf_left_foot: bool = False,
 ) -> Outline:
     """``n`` / ``h`` shoulder springing from the left stem mid-height (italic)."""
     branch_y = _italic_branch_y(m, stem_top)
@@ -603,10 +650,12 @@ def _n_branching_outline(
     t = m.stem
     l0, l1, r0, r1 = 0.0, t, t + m.counter, m.width
     b = PathBuilder()
-    b.moveTo(l0, 0.0)
-    if ctx is not None and _stem_serif_inlined(ctx):
-        _n_left_stem_foot_detour(b, l0, l1, stem_top, ctx, m.stem)
+    if ctx is not None:
+        _n_begin_left_stem(
+            b, l0, l1, stem_top, ctx, m.stem, shelf_foot=shelf_left_foot
+        )
     else:
+        b.moveTo(l0, 0.0)
         b.lineTo(l0, stem_top)
     b.lineTo(l1, stem_top)
     b.lineTo(l1, branch_y)
@@ -630,6 +679,7 @@ def _n_stem_serif_anchors(
     right_foot: bool = True,
     ctx: DesignContext | None = None,
     inline_left_foot: bool = False,
+    inline_right_foot: bool = False,
 ) -> dict[str, Pt]:
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
@@ -637,7 +687,9 @@ def _n_stem_serif_anchors(
     if not (inline_left_foot and ctx is not None and _stem_serif_inlined(ctx)):
         anchors["stem_L_b"] = (half, 0.0)
     anchors["stem_L_t"] = (half, left_top)
-    if right_foot:
+    if right_foot and not (
+        inline_right_foot and ctx is not None and _stem_serif_inlined(ctx)
+    ):
         anchors["stem_R_b"] = (m.width - half, 0.0)
     if right_top is not None:
         anchors["stem_R_t"] = (m.width - half, right_top)
@@ -1302,7 +1354,14 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     anchors = {
         "top": (cx, xh),
         "bottom": (cx, 0.0),
-        **_n_stem_serif_anchors(um, left_top=xh, right_top=None),
+        **_n_stem_serif_anchors(
+            um,
+            left_top=xh,
+            right_top=None,
+            ctx=c,
+            inline_left_foot=False,
+            inline_right_foot=_stem_serif_inlined(c),
+        ),
     }
     return _pack(c, m, anchors, outline)
 
