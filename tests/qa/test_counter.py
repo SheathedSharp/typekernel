@@ -28,3 +28,10 @@ def test_round_bowl_still_reports_counter_gap() -> None:
     gap = min_counter_gap(controls.build("o"))
     floor = counter_gap_floor(ctx.stem)
     assert gap >= floor
+
+
+def test_cap_k_ignores_stem_diagonal_micro_slivers() -> None:
+    """``K`` stem–arm wedges must not dominate R8 (see TK-207 ``K`` charset audit)."""
+    ctx = DesignContext.humanist_sans().tuned(stem=70.0)
+    gap = min_counter_gap(Controls.from_context(ctx).build("K"))
+    assert gap >= counter_gap_floor(ctx.stem)

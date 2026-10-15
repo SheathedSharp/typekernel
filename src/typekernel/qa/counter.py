@@ -43,6 +43,8 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
     # ``p``/``q``/``g`` descenders: ignore stem–counter slivers below the x-height band.
     if y0 < 0.0:
         y_lo = max(y_lo, 0.12 * y1)
+    # Diagonal caps (``K``/``X``): ignore sub-stem slivers between ink runs on a scanline.
+    min_run_gap = max(1.0, 0.09 * glyph.context.stem)
     for iy in range(grid):
         y = y_lo + (iy + 0.5) / grid * (y_hi - y_lo)
         runs = ink_intervals_at_y(scan_solids, y)
@@ -50,6 +52,8 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
             continue
         for j in range(len(runs) - 1):
             gap = runs[j + 1][0] - runs[j][1]
+            if gap < min_run_gap:
+                continue
             if 0.0 < gap < best:
                 best = gap
     return best

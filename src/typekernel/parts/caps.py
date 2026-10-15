@@ -761,7 +761,7 @@ def K_from_H(
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
     cap = h.cap_height
-    return _diag_cap(H, ctx, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=0.4))
+    return _diag_cap(H, ctx, w, k_points(h.stem, cap, cap, w, c.contrast, vertex=0.42))
 
 
 def A_from_H(
