@@ -1183,7 +1183,13 @@ def m_from_n(
 
     b = PathBuilder()
     b.moveTo(s1.l0, 0.0)
-    b.lineTo(s1.l0, xh)
+    if _stem_serif_inlined(c):
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        inline_stem_foot_serif_path(b, s1.l0, 0.0, c, mm.stem)
+        b.lineTo(s1.l0, xh)
+    else:
+        b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
     if branch_y is not None:
         b.lineTo(s1.l1, branch_y)
@@ -1226,14 +1232,17 @@ def m_from_n(
     b.closePath()
     cx = s2.r1 / 2.0
     half = mm.stem / 2.0
-    anchors = {
+    anchors: dict[str, Pt] = {
         "top": (cx, xh),
         "bottom": (cx, 0.0),
-        "stem_L_b": (s1.l0 + half, 0.0),
-        "stem_L_t": (s1.l0 + half, xh),
         "stem_M_b": ((s1.r0 + s2.l1) / 2.0, 0.0),
         "stem_R_b": (s2.r1 - half, 0.0),
     }
+    if _stem_serif_inlined(c):
+        anchors["stem_L_t"] = (s1.l0 + half, xh)
+    else:
+        anchors["stem_L_b"] = (s1.l0 + half, 0.0)
+        anchors["stem_L_t"] = (s1.l0 + half, xh)
     return _pack(c, m, anchors, _ccw(b.build()))
 
 
