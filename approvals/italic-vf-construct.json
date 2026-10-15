@@ -3,7 +3,7 @@
   "approved": false,
   "approver": "",
   "date": "2026-10-15",
-  "notes": "Pending human review. Proofs: PYTHONPATH=src python examples/human_review_bundle.py --only italic --out artifacts/human-review",
+  "notes": "Pending human review. Bundle: PYTHONPATH=src python examples/human_review_bundle.py --only italic --out artifacts/human-review — open italic_family/*.ttf, proof.png (4 masters, AGENT_SENTENCE), proof_vf.png (wght ladder). Or: examples/italic_family/build_italic_vf.py --out …",
   "scope": "examples/italic_family build_italic_vf wght×ital",
   "test_evidence": [
     "tests/examples/test_italic_family.py"

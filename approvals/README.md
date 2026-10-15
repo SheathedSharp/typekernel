@@ -45,6 +45,6 @@ Avoid internal planner ticket codes in file names or field values.
 These ship with ``approved: false`` until a human updates them after review:
 
 - `serif-slab-voice.json` / `serif-bracketed-voice.json` — proofs via `examples/human_review_bundle.py --only serif`
-- `italic-vf-construct.json` — `--only italic`
+- `italic-vf-construct.json` — `--only italic` (review `proof.png`, `proof_vf.png`, VF `.ttf` under `italic_family/`)
 
 Agents must not flip ``approved`` to ``true`` without explicit human instruction.

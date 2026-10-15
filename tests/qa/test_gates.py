@@ -82,6 +82,9 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
         assert data["approver"] == ""
         with pytest.raises(ApprovalError, match="not approved"):
             require_approval(path)
+    italic = load_approval(root / "italic-vf-construct.json")
+    assert "proof.png" in italic["notes"]
+    assert "proof_vf.png" in italic["notes"]
 
 
 def test_write_approval_does_not_force_true(tmp_path: Path) -> None:
