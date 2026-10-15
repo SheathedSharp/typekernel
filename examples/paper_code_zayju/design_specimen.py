@@ -17,10 +17,10 @@ from typekernel.geo.layout import union_bounds
 from typekernel.geo.segment import LineSegment
 from typekernel.parts import (
     ComposedGlyph,
+    Controls,
     DesignContext,
     default_sans_kern,
     layout_glyphs,
-    Controls,
 )
 
 OUT_DIR = Path(__file__).resolve().parent / "out"

@@ -17,7 +17,6 @@ from typekernel.parts import (
     Controls,
     DesignContext,
     auto_class_kern,
-    auto_side_kern_classes,
     rhythm_from_control_glyphs,
 )
 from typekernel.qa.proof import proof_weight_ladder

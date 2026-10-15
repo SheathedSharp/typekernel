@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw, ImageFont
 from typekernel.geo.joins import SMOOTH_DEG, join_angles
 from typekernel.geo.segment import LineSegment
 from typekernel.optics.space import space_word_optical
-from typekernel.parts import ComposedGlyph, Controls, DesignContext, layout_glyphs
+from typekernel.parts import ComposedGlyph, DesignContext, layout_glyphs
 from typekernel.parts.latin import word_zayju
 from typekernel.qa.score import WordReport, word_report
 
