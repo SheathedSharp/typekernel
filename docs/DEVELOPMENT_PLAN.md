@@ -469,7 +469,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``m`` ``slab`` 左肩口顶衬线内嵌（同 ``r`` 左缘配方）；``test_slab_m_shoulder_cap_inlined_skips_left_top_anchor``；golden ``m``（``slab_serif``）。
 - **本轮（部分）**：``test_slab_apply_glyph_serifs_is_noop_on_supported`` 锁定 slab 全 ``supported`` 不再依赖 stem 布尔衬线。
 - **本轮（部分）**：``h`` ``stem_R_t`` 内嵌：全宽 pad 左脚在未布尔前即 R3，需 ``shelf_left_foot`` + ``x_height`` 切 ``outer[1]`` + ``inline_stem_cap_serif_path``；``test_slab_h_right_leg_cap_inlined_without_boolean_serif``；golden ``h``（``slab_serif``）；``test_slab_h_cannot_split_outer_shoulder_at_x_height_without_r3`` 保留（无 shelf 时切分仍 R3）。
-- **本轮（部分）**：``bracketed`` ``n`` 左 stem 改 shelf 脚（单轮廓无 R3，为肩口顶衬线内嵌铺路）；``test_bracketed_n_pre_serif_outline_lint_clean`` / ``test_bracketed_apply_glyph_serifs_still_changes_nhmr_top_anchors``；golden ``n``（``bracketed_serif``）。``bracketed`` ``h``/``m``/``r`` 顶衬线仍布尔。
+- **本轮（部分）**：``bracketed`` ``n`` 左 stem 改 shelf 脚（单轮廓无 R3，为肩口顶衬线内嵌铺路）；``test_bracketed_n_pre_serif_outline_lint_clean``；golden ``n``（``bracketed_serif``）。
 - **本轮（部分）**：``test_bracketed_n_shoulder_cap_paths_self_intersect`` 固化 bracketed ``n`` 全宽/托架肩口顶内嵌仍 R3（``stem_L_t`` 暂保留布尔）。
 - **本轮（部分）**：``bracketed`` ``m``/``r`` 左肩口顶衬线内嵌（复用 ``inline_shoulder_left_cap_slab_path`` 段数 + ``inline_left_top``）；golden ``m``/``r``（``bracketed_serif``）。
 - **本轮（部分）**：``bracketed`` ``n`` 左肩口顶衬线内嵌（同 ``m``/``r`` 左缘配方，非全宽顶）；``test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor``；golden ``n``。
