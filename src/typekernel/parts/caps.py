@@ -34,6 +34,7 @@ from typekernel.parts.control import (
     _curve,
     _cut,
     _opening_slab_metrics,
+    _opening_top_bracketed_move,
     _opening_top_slab_move,
     _pack,
     _quarters,
@@ -1479,15 +1480,6 @@ def _finish_foot_pad_below(
         y - th + r,
     )
     b.lineTo(xr, y)
-
-
-def _opening_top_bracketed_move(
-    b: PathBuilder, pt: Pt, length: float, thick: float, bracket_r: float
-) -> None:
-    """Opening terminal shelf (+x) with cubic bracket at the outer corner."""
-    tx, ty = pt
-    b.moveTo(tx + length, ty)
-    _append_upward_cap_foot_pad(b, tx, tx + length, ty, thick, bracket_r, bracketed=True)
 
 
 def _append_baseline_foot_pad(

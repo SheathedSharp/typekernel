@@ -1742,6 +1742,56 @@ def _opening_bottom_slab_detour(b: PathBuilder, pt: Pt, length: float, thick: fl
     b.lineTo(tx, ty - thick * 0.55)
 
 
+def _opening_top_bracketed_move(
+    b: PathBuilder, pt: Pt, length: float, thick: float, bracket_r: float
+) -> None:
+    """Opening terminal shelf (+x) with cubic bracket at the outer corner."""
+    tx, ty = pt
+    xl, xr, y = tx, tx + length, ty
+    b.moveTo(xr, y)
+    b.lineTo(xr, y + thick)
+    span_x = xr - xl
+    r = min(bracket_r, span_x * 0.4, thick * 0.45)
+    if r < 0.35:
+        b.lineTo(xl, y + thick)
+        b.lineTo(xl, y)
+        return
+    b.lineTo(xl + r, y + thick)
+    b.curveTo(
+        xl + r - r * KAPPA,
+        y + thick,
+        xl,
+        y + thick - r + r * KAPPA,
+        xl,
+        y + thick - r,
+    )
+    b.lineTo(xl, y)
+
+
+def _opening_bottom_bracketed_detour(
+    b: PathBuilder, pt: Pt, length: float, thick: float, bracket_r: float
+) -> None:
+    """Bottom opening shelf (+x) with cubic bracket (shallow shelf like slab)."""
+    tx, ty = pt
+    shelf = thick * 0.55
+    b.lineTo(tx + length, ty)
+    r = min(bracket_r, length * 0.4, shelf * 0.45)
+    if r < 0.35:
+        b.lineTo(tx + length, ty - shelf)
+        b.lineTo(tx, ty - shelf)
+        return
+    b.lineTo(tx + length, ty - shelf + r)
+    b.curveTo(
+        tx + length,
+        ty - shelf + r - r * KAPPA,
+        tx + length - r + r * KAPPA,
+        ty - shelf,
+        tx + length - r,
+        ty - shelf,
+    )
+    b.lineTo(tx, ty - shelf)
+
+
 def _cut(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic]:
     pieces = _split(c, where, horizontal=horizontal)
     if pieces is None:
@@ -1772,14 +1822,24 @@ def c_from_o(
     ibot = _cut(i3, x_t, horizontal=False)[0]
 
     b = PathBuilder()
-    if c.style.serif == "slab":
+    slab_l, slab_th = 0.0, 0.0
+    bracket_r = 0.0
+    if c.style.serif in ("slab", "bracketed"):
         slab_l, slab_th = _opening_slab_metrics(c, o)
+    if c.style.serif == "bracketed":
+        from typekernel.parts.serifs import serif_metrics
+
+        _, _, bracket_r = serif_metrics(c)
+        _opening_top_bracketed_move(b, top[0], slab_l, slab_th, bracket_r)
+    elif c.style.serif == "slab":
         _opening_top_slab_move(b, top[0], slab_l, slab_th)
     else:
         b.moveTo(*top[0])
     for cubic in (top, q1, q2, bot):
         _curve(b, cubic)
-    if c.style.serif == "slab":
+    if c.style.serif == "bracketed":
+        _opening_bottom_bracketed_detour(b, bot[3], slab_l, slab_th, bracket_r)
+    elif c.style.serif == "slab":
         _opening_bottom_slab_detour(b, bot[3], slab_l, slab_th)
     b.lineTo(*ibot[3])
     for cubic in (_rev(ibot), _rev(i2), _rev(i1), _rev(itop)):
