@@ -9,6 +9,7 @@ from typing import Literal
 from typekernel.geo.boolean import union_all
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
+from typekernel.geo.path_helpers import KAPPA
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
 from typekernel.parts.primitives import rounded_rect, serif_bracket
@@ -17,6 +18,7 @@ __all__ = [
     "StemSerifSite",
     "apply_glyph_serifs",
     "bracketed_stem_foot_dims",
+    "inline_hook_cap_serif_path",
     "inline_stem_foot_serif_path",
     "serif_metrics",
     "slab_serif_rect",
@@ -139,6 +141,37 @@ def bracketed_stem_foot_dims(
     return l, th
 
 
+def _bracket_fillet_at_outer_corner(
+    b: PathBuilder,
+    *,
+    x_corner: float,
+    y_horiz: float,
+    y_vert_end: float,
+    x_from: float,
+    bracket_r: float,
+) -> None:
+    """Fillet the outer corner between a horizontal and a vertical segment."""
+    span_x = abs(x_from - x_corner)
+    span_y = abs(y_vert_end - y_horiz)
+    if span_x <= 0 or span_y <= 0:
+        raise ValueError("corner spans must be positive")
+    r = min(bracket_r, span_x * 0.4, span_y * 0.45)
+    if r < 0.35:
+        b.lineTo(x_corner, y_horiz)
+        b.lineTo(x_corner, y_vert_end)
+        return
+    b.lineTo(x_corner + r, y_horiz)
+    b.curveTo(
+        x_corner + r - r * KAPPA,
+        y_horiz,
+        x_corner,
+        y_horiz + r - r * KAPPA,
+        x_corner,
+        y_horiz + r,
+    )
+    b.lineTo(x_corner, y_vert_end)
+
+
 def inline_stem_foot_serif_path(
     b: PathBuilder,
     x_stem_left: float,
@@ -148,10 +181,43 @@ def inline_stem_foot_serif_path(
 ) -> None:
     """Append a foot serif on the left face of a vertical stem (fixed segment count)."""
     l, th = bracketed_stem_foot_dims(ctx, stem_width, y_base)
-    b.lineTo(x_stem_left, y_base - th)
-    b.lineTo(x_stem_left - l, y_base - th)
-    b.lineTo(x_stem_left - l, y_base)
+    _, _, bracket_r = serif_metrics(ctx)
+    xl = x_stem_left - l
+    yt = y_base - th
+    b.lineTo(x_stem_left, yt)
+    _bracket_fillet_at_outer_corner(
+        b,
+        x_corner=xl,
+        y_horiz=yt,
+        y_vert_end=y_base,
+        x_from=x_stem_left,
+        bracket_r=bracket_r,
+    )
     b.lineTo(x_stem_left, y_base)
+
+
+def inline_hook_cap_serif_path(
+    b: PathBuilder,
+    x_stem_left: float,
+    x_stem_right: float,
+    y_base: float,
+    foot_l: float,
+    foot_th: float,
+    bracket_r: float,
+) -> None:
+    """Cap serif on a hook stem (left face at ``x_stem_left``), fixed segment count."""
+    xl = x_stem_left - foot_l
+    yt = y_base + foot_th
+    _bracket_fillet_at_outer_corner(
+        b,
+        x_corner=xl,
+        y_horiz=y_base,
+        y_vert_end=yt,
+        x_from=x_stem_left,
+        bracket_r=bracket_r,
+    )
+    b.lineTo(x_stem_right, yt)
+    b.lineTo(x_stem_right, y_base)
 
 
 def _serif_outline(ctx: DesignContext, site: StemSerifSite) -> Outline:

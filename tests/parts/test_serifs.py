@@ -49,6 +49,25 @@ def test_bracketed_serif_changes_n_outline() -> None:
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
+def test_bracketed_inline_bowl_foot_uses_cubic_bracket_corner() -> None:
+    from typekernel.parts import b_from_o, build_n, build_o
+
+    ctx = DesignContext.bracketed_serif().tuned(stem=100.0)
+    glyph = b_from_o(build_o(ctx), build_n(ctx))
+    kinds = [s.kind for s in glyph.solids[0].contours[0].segments]
+    # Foot stack on the stem: horiz, cubic fillet, vert, horiz along baseline.
+    assert kinds.count("cubic") >= 1
+    foot_idx = kinds.index("line")
+    while foot_idx + 3 < len(kinds) and kinds[foot_idx : foot_idx + 4] != [
+        "line",
+        "cubic",
+        "line",
+        "line",
+    ]:
+        foot_idx = kinds.index("line", foot_idx + 1)
+    assert kinds[foot_idx : foot_idx + 4] == ["line", "cubic", "line", "line"]
+
+
 def test_bracketed_bowl_glyphs_inline_foot_extends_left_of_plain_stem() -> None:
     """Inline bowl foot serifs must project past the stem (TK-306 bracketed)."""
     from typekernel.optics.space import ink_intervals_at_y

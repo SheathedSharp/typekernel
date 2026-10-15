@@ -427,13 +427,16 @@ def _f_stem_floor(ctx: DesignContext) -> float:
     return 0.0
 
 
-def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float] | None:
-    """Inline foot serif on hook letters (slab + bracketed), or ``None``."""
+def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float, float] | None:
+    """Inline cap serif on hook letters (slab + bracketed), or ``None``.
+
+    Returns ``(length, thickness, bracket_radius)``; ``bracket_radius`` is zero for slab.
+    """
     if ctx.style.serif not in ("slab", "bracketed"):
         return None
     from typekernel.parts.serifs import serif_metrics
 
-    length, thick, _ = serif_metrics(ctx)
+    length, thick, bracket_r = serif_metrics(ctx)
     xh = ctx.x_height
     if ctx.style.serif == "bracketed":
         from typekernel.parts.serifs import bracketed_stem_foot_dims
@@ -442,7 +445,8 @@ def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float]
     else:
         l = min(length * 0.42, stem * 0.48)
         th = min(thick * 0.65, xh * 0.05, stem * 0.18)
-    return l, th
+        bracket_r = 0.0
+    return l, th, bracket_r
 
 
 def _f_use_inline_crossbar(ctx: DesignContext) -> bool:
@@ -643,7 +647,7 @@ def _r_outline(
     stem_floor: float = 0.0,
     hook_stem_knots: bool = False,
     hook_belly: float = 0.0,
-    slab_foot: tuple[float, float] | None = None,
+    slab_foot: tuple[float, float, float] | None = None,
 ) -> tuple[Outline, float]:
     """``r``-type outline (stem + truncated shoulder) and its terminal x.
 
@@ -666,12 +670,17 @@ def _r_outline(
             b.lineTo(s.l1, y1)
     b.lineTo(s.l0, m.x_height)
     if slab_foot is not None:
-        foot_l, foot_th = slab_foot
+        foot_l, foot_th, foot_br = slab_foot
         base_y = m.x_height
-        b.lineTo(s.l0 - foot_l, base_y)
-        b.lineTo(s.l0 - foot_l, base_y + foot_th)
-        b.lineTo(s.l1, base_y + foot_th)
-        b.lineTo(s.l1, base_y)
+        if foot_br > 0.0:
+            from typekernel.parts.serifs import inline_hook_cap_serif_path
+
+            inline_hook_cap_serif_path(b, s.l0, s.l1, base_y, foot_l, foot_th, foot_br)
+        else:
+            b.lineTo(s.l0 - foot_l, base_y)
+            b.lineTo(s.l0 - foot_l, base_y + foot_th)
+            b.lineTo(s.l1, base_y + foot_th)
+            b.lineTo(s.l1, base_y)
     b.lineTo(s.l1, m.x_height)
     if vf_compat:
         b.lineTo(s.l1, m.x_height)
@@ -831,7 +840,7 @@ def _hook_with_crossbar_outline(
     blend: bool = True,
     inline_crossbar: bool = False,
     hook_belly: float = 0.0,
-    slab_foot: tuple[float, float] | None = None,
+    slab_foot: tuple[float, float, float] | None = None,
 ) -> tuple[Outline, float]:
     """Hook master + crossbar as fixed stem detours (no boolean union)."""
     del n_m
