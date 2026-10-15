@@ -24,4 +24,6 @@ PYTHONPATH=src python examples/agent_trial/snapshot_reference_trials.py \
   --out artifacts/trials/reference-designs
 ```
 
-CI: `tests/examples/test_agent_trial_reference.py`.
+CI: `tests/examples/test_agent_trial_reference.py`, `tests/qa/test_m3_exit.py` (M3 L3 voice triad), `tests/qa/test_trial_protocol.py` (`test_serif_voice_trial_snapshots_meet_l3`).
+
+Serif/italic **visual** review (separate from trial snapshots): `examples/human_review_bundle.py` → `approvals/serif-*-voice.json`, `italic-vf-construct.json`.

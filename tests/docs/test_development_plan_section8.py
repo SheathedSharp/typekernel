@@ -17,6 +17,7 @@ _SECTION8_DOC_PATHS = (
     "docs/AGENT_GOAL.md",
     ".agents/skills/typekernel-font-design/SKILL.md",
     "docs/agent-recipes.md",
+    "docs/dev-standards.md",
     "docs/VISION.md",
     "README.md",
 )
@@ -123,6 +124,13 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
     assert "test_development_plan_section8" in text
+
+
+def test_section8_dev_standards_documents_program_exit() -> None:
+    text = (ROOT / "docs/dev-standards.md").read_text(encoding="utf-8")
+    assert "test_development_plan_section8" in text
+    assert "human_review_bundle" in text
+    assert "AGENT_SENTENCE" in text
 
 
 def test_section8_agent_goal_documents_program_vs_human_gates() -> None:

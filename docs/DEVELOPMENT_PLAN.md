@@ -544,6 +544,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` / ``README.md`` 补 §8、程序验收 pytest 与 ``human_review_bundle`` 指针；``test_section8_skill_reference_documents_m5_workflow`` / ``test_section8_readme_points_at_plan_and_review_bundle``。
 - **本轮（部分）**：``approvals/README.md`` 补 bundle 命令与签字前程序验收指针；``test_section8_approvals_readme_documents_review_workflow``。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
+- **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
 - **本轮（部分）**：``test_skeleton`` 闭合 cubic stroke 烟测（``trace_letter`` → 环带实体）。
