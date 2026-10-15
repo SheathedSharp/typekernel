@@ -390,7 +390,9 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：TK-107 `terminal_style` xfail 已转正（``horizontal`` ≥20 字形）；默认 `vertical` 下 golden 哈希不变；``angled``/``ball``/``flared`` 字重阶梯 R8 零报（见本轮测试）。
 
 #### TK-305 风格 DNA：离散拓扑选项　〔L〕
-- **进展**：`Style` 六选项均已接线；`tests/parts/test_style_gate.py`（各选项 lint + 非拓扑 style 的 `check_masters`）；`agent-recipes` Style 表。待续：`a_form`/`g_form` 跨字重 VF 兼容、全族 lint/identity 清零。
+- **进展**：`Style` 六选项均已接线；`tests/parts/test_style_gate.py`（各选项 lint + 非拓扑 style 的 `check_masters`）；`agent-recipes` Style 表。
+- **本轮（部分）**：``g_form=double`` 经 ``normalize_master_outline`` + 轻量轮廓合并，在 ``code_clear`` 字重阶梯 ``check_masters`` 四母版全绿；``a_form=double`` 在 stem 86↔100 区间可插值（更宽阶梯仍建议独立母版）；非默认 Style 组合 ``code_clear`` 全 ``supported`` lint 零 error。
+- **待续**：``a_form=double`` 全阶梯 VF 点位一致；全 preset 全 Style 组合的 identity 抽检扩展。
 - **做什么**：新增冻结数据类 `Style`（名称为草案），**只含少量高杠杆的离散选择**，由配方读取；默认值 = 现有行为。建议首批：
   | 选项 | 取值 | 备注 |
   | --- | --- | --- |

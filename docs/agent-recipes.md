@@ -32,7 +32,7 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 | `y_tail` | `curved` | `y` 右下弧 |
 | `t_cut` | `slanted` | `t` 底端斜切（可独立于 `terminal_style`） |
 
-`a_form` / `g_form` 与字重阶梯插值点位不完全兼容时，VF 应只用 Regular/Bold **独立母版**或避开跨 master 插值那些字。其余选项在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
+`g_form=double` 在 `code_clear` 字重阶梯上已通过四母版 `check_masters`。`a_form=double` 在 stem **86–100** 区间可插值；更宽跨度或重字重请用 Regular/Bold **独立母版**或勿对 `a` 做跨 master 插值。其余 Style 选项在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
 
 ## 弱字
 

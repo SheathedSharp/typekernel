@@ -33,7 +33,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
 
-from typekernel.geo.contour import Contour
+from typekernel.geo.contour import Contour, canonical_contour_start
+from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
 
 
@@ -82,3 +83,34 @@ def bounds(outline: Outline) -> tuple[float, float, float, float]:
     if not xs:
         raise ValueError("an outline with no segments has no bounds")
     return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _line_to_cubic(seg: LineSegment) -> CubicSegment:
+    p0, p1 = seg.p0, seg.p1
+    dx = p1.x - p0.x
+    dy = p1.y - p0.y
+    return CubicSegment(
+        p0,
+        Point(p0.x + dx / 3.0, p0.y + dy / 3.0),
+        Point(p0.x + 2.0 * dx / 3.0, p0.y + 2.0 * dy / 3.0),
+        p1,
+    )
+
+
+def _contour_to_cubics(contour: Contour) -> Contour:
+    segs: list[LineSegment | CubicSegment] = [
+        _line_to_cubic(seg) if isinstance(seg, LineSegment) else seg for seg in contour.segments
+    ]
+    return canonical_contour_start(Contour(tuple(segs), closed=contour.closed))
+
+
+def _contour_sort_key(contour: Contour) -> tuple[float, float]:
+    min_x, min_y, _, _ = bounds(Outline((contour,)))
+    return (min_y, min_x)
+
+
+def normalize_master_outline(outline: Outline) -> Outline:
+    """Stabilise contour order and segment kinds for :func:`check_interpolatable`."""
+    normed = [_contour_to_cubics(ct) for ct in outline.contours]
+    normed.sort(key=_contour_sort_key)
+    return Outline(tuple(normed))

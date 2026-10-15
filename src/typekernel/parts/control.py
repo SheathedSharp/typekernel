@@ -1283,6 +1283,32 @@ def _single_storey_a_from_o(
     return _pack(c, o, anchors, outline)
 
 
+def _double_storey_blend_radius(c: DesignContext) -> float:
+    """Cap join fillet so heavy stems do not split two-storey VF outlines."""
+    return min(max(2.0, c.join_radius * 0.45), c.stem * 0.08)
+
+
+def _merge_solid_contours(outline: Outline) -> Outline:
+    contours = list(outline.contours)
+    big = [ct for ct in contours if len(ct.segments) >= 6]
+    if big and len(big) < len(contours):
+        contours = big
+    if len(contours) <= 1:
+        return Outline(tuple(contours))
+    from typekernel.geo.boolean import union_all
+
+    return union_all([Outline((ct,)) for ct in contours])
+
+
+def _vf_ready_composed(glyph: ComposedGlyph) -> ComposedGlyph:
+    from typekernel.geo.outline import normalize_master_outline
+
+    solids = tuple(
+        normalize_master_outline(_merge_solid_contours(s)) for s in glyph.solids
+    )
+    return replace(glyph, solids=solids)
+
+
 def _double_storey_a_from_o(
     o_glyph: ComposedGlyph,
     n_glyph: ComposedGlyph | None,
@@ -1353,13 +1379,13 @@ def _double_storey_a_from_o(
         .add_hole(upper_eye)
         .union_solids()
         .subtract_holes()
-        .blend_joins(max(2.5, c.join_radius * 0.95))
+        .blend_joins(_double_storey_blend_radius(c))
         .anchor("top", width * 0.46, xh)
         .anchor("bottom", bowl_cx, 0.0)
         .anchor("ogonek", sx0 + stem / 2.0, 0.0)
         .build()
     )
-    return glyph
+    return _vf_ready_composed(glyph)
 
 
 def a_from_o(
@@ -1557,7 +1583,7 @@ def _double_storey_g_from_o(
         )
     )
 
-    return (
+    glyph = (
         GlyphAssembler(c)
         .with_design(o)
         .add(stem_o)
@@ -1565,11 +1591,12 @@ def _double_storey_g_from_o(
         .add(lower_outer)
         .add_hole(counters)
         .union_solids()
-        .blend_joins(max(2.5, c.join_radius * 0.95))
+        .blend_joins(_double_storey_blend_radius(c))
         .anchor("top", upper_cx, xh)
         .anchor("bottom", lower_cx, desc)
         .build()
     )
+    return _vf_ready_composed(glyph)
 
 
 def _g_hook_join_y(stem: float, join_y: float, inner_crown: float) -> float:
