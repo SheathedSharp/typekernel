@@ -55,4 +55,49 @@ PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-revi
 
 Before signing, run the `test_evidence` paths on each JSON file and the programmatic checks in `REVIEW_CHECKLIST.md` (for example `tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance` and `tests/parts/test_italic_program_acceptance.py`). See `tests/docs/test_development_plan_section8.py` for `DEVELOPMENT_PLAN` §8 hooks.
 
+### Copy-paste program checks (pending gates)
+
+From repo root, after opening `artifacts/human-review/` (or your `--out` path):
+
+**`serif-slab-voice.json`**
+
+```bash
+pytest -q \
+  tests/examples/test_slab_serif.py \
+  tests/examples/test_human_review_bundle.py \
+  tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance \
+  tests/qa/test_m3_exit.py \
+  tests/qa/test_originality.py \
+  tests/qa/test_sentence_gate.py \
+  tests/docs/test_development_plan_section8.py
+```
+
+**`serif-bracketed-voice.json`**
+
+```bash
+pytest -q \
+  tests/examples/test_bracketed_serif.py \
+  tests/examples/test_human_review_bundle.py \
+  tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance \
+  tests/qa/test_m3_exit.py \
+  tests/qa/test_originality.py \
+  tests/qa/test_sentence_gate.py \
+  tests/docs/test_development_plan_section8.py
+```
+
+**`italic-vf-construct.json`**
+
+```bash
+pytest -q \
+  tests/examples/test_human_review_bundle.py \
+  tests/examples/test_italic_family.py \
+  tests/parts/test_italic_program_acceptance.py \
+  tests/parts/test_italic_controls.py \
+  tests/parts/test_italic_topology.py \
+  tests/parts/test_oblique_compat.py \
+  tests/docs/test_development_plan_section8.py
+```
+
+Then update the JSON (`approved`, `approver`, `date`, `notes`) or use `write_approval` as in `examples/human_review_bundle.py` → `REVIEW_CHECKLIST.md`.
+
 Agents must not flip ``approved`` to ``true`` without explicit human instruction.

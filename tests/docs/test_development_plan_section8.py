@@ -161,6 +161,9 @@ def test_section8_approvals_readme_documents_review_workflow() -> None:
     assert "human_review_bundle" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_development_plan_section8" in text
+    for gate_file in _PENDING_HUMAN_GATES:
+        assert Path(gate_file).name in text
+    assert text.count("pytest -q") >= len(_PENDING_HUMAN_GATES)
 
 
 def test_section8_regression_test_hooks_present() -> None:

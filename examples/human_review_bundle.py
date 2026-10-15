@@ -66,7 +66,25 @@ write_approval(
         "tests/docs/test_development_plan_section8.py",
     ],
 )
-# Repeat for approvals/serif-bracketed-voice.json (gate serif-bracketed-voice)
+
+write_approval(
+    "approvals/serif-bracketed-voice.json",
+    gate="serif-bracketed-voice",
+    approved=True,  # only after your review
+    approver="YOUR_NAME",
+    date="YYYY-MM-DD",
+    notes="Reviewed bracketed_serif proofs under artifacts/human-review/…",
+    scope="DesignContext.bracketed_serif + examples/bracketed_serif",
+    test_evidence=[
+        "tests/examples/test_bracketed_serif.py",
+        "tests/examples/test_human_review_bundle.py",
+        "tests/parts/test_serifs.py",
+        "tests/qa/test_m3_exit.py",
+        "tests/qa/test_originality.py",
+        "tests/qa/test_sentence_gate.py",
+        "tests/docs/test_development_plan_section8.py",
+    ],
+)
 ```
 
 ## TK-402 true italic — open
