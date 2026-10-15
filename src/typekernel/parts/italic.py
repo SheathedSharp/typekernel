@@ -72,11 +72,15 @@ def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
     return italic_design(regular, style=ItalicStyle(lean=lean))
 
 
-def vf_upright_controls(regular: Controls) -> Controls:
+def vf_upright_controls(regular: Controls, *, oblique_split_deg: float = 10.0) -> Controls:
     """Upright sheet for ``wght×ital`` VFs (TK-404 segment compatibility)."""
     return replace(
         regular,
-        context=regular.context.tuned(vf_compat_stem_segments=True),
+        context=regular.context.tuned(
+            vf_compat_stem_segments=True,
+            vf_compat_oblique_splits=True,
+            vf_oblique_split_deg=oblique_split_deg,
+        ),
     )
 
 

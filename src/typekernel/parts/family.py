@@ -322,7 +322,26 @@ class Controls:
                 for ch in chars_here:
                     glyph = forms[ch](a, b, self.context)
                     slant = self.context.italic_slant_deg
-                    if abs(slant) > 1e-9:
+                    from typekernel.parts.oblique_compat import (
+                        apply_oblique_compat_glyph,
+                        oblique_compat_charset,
+                    )
+
+                    compat = ch in oblique_compat_charset(self.supported)
+                    if compat and (
+                        abs(slant) > 1e-9 or self.context.vf_compat_oblique_splits
+                    ):
+                        angle = (
+                            slant
+                            if abs(slant) > 1e-9
+                            else self.context.vf_oblique_split_deg
+                        )
+                        glyph = apply_oblique_compat_glyph(
+                            glyph,
+                            angle,
+                            slant=abs(slant) > 1e-9,
+                        )
+                    elif abs(slant) > 1e-9:
                         from typekernel.parts.italic import slant_composed_glyph
 
                         glyph = slant_composed_glyph(glyph, slant)

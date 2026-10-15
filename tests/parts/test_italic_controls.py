@@ -51,8 +51,11 @@ def test_italic_design_matches_italic_controls_default() -> None:
     )
 
 
-def test_italic_and_regular_interpolate() -> None:
+def test_italic_and_regular_interpolate_on_vf_oblique_compat() -> None:
     ctx = DesignContext.code_clear()
-    reg = Controls.from_context(ctx).build_all("a")
-    ital = italic_design(Controls.from_context(ctx)).build_all("a")
-    assert check_interpolatable([reg["a"].solids[0], ital["a"].solids[0]]) == []
+    from typekernel.parts.italic import vf_upright_controls
+
+    base = vf_upright_controls(Controls.from_context(ctx))
+    reg = base.build_all("o")
+    ital = italic_design(base).build_all("o")
+    assert check_interpolatable([reg["o"].solids[0], ital["o"].solids[0]]) == []
