@@ -13,6 +13,8 @@ from typekernel.geo.segment import CubicSegment, LineSegment
 
 __all__ = [
     "cubic_has_off_node_axis_extrema",
+    "oblique_compat_split_ts",
+    "outline_oblique_compat_splits",
     "outline_with_axis_extrema_on_curve",
 ]
 
@@ -67,13 +69,29 @@ def cubic_has_off_node_axis_extrema(
     return False
 
 
-def _cubic_axis_extrema_ts(seg: CubicSegment) -> list[float]:
+def _cubic_deriv_quad_coeffs(
+    seg: CubicSegment,
+) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
     p0, p1, p2, p3 = seg.p0, seg.p1, seg.p2, seg.p3
     c0x, c0y = 3.0 * (p1.x - p0.x), 3.0 * (p1.y - p0.y)
     c1x, c1y = 6.0 * (p2.x - p1.x), 6.0 * (p2.y - p1.y)
     c2x, c2y = 3.0 * (p3.x - p2.x), 3.0 * (p3.y - p2.y)
     ax, bx, cx = c0x - c1x + c2x, -2.0 * c0x + c1x, c0x
     ay, by, cy = c0y - c1y + c2y, -2.0 * c0y + c1y, c0y
+    return (ax, bx, cx), (ay, by, cy)
+
+
+def oblique_compat_split_ts(seg: CubicSegment, shear: float) -> list[float]:
+    """Parameters to split *before* shear so oblique axis extrema sit on nodes."""
+    (ax, bx, cx), (ay, by, cy) = _cubic_deriv_quad_coeffs(seg)
+    ts = set(_quad_roots_open_unit(ay, by, cy))
+    sx, sy, sz = ax + shear * ay, bx + shear * by, cx + shear * cy
+    ts.update(_quad_roots_open_unit(sx, sy, sz))
+    return sorted(ts)
+
+
+def _cubic_axis_extrema_ts(seg: CubicSegment) -> list[float]:
+    (ax, bx, cx), (ay, by, cy) = _cubic_deriv_quad_coeffs(seg)
     ts = set(_quad_roots_open_unit(ax, bx, cx))
     ts.update(_quad_roots_open_unit(ay, by, cy))
     return sorted(ts)
@@ -91,6 +109,24 @@ def _split_cubic_at_ts(seg: CubicSegment, ts: list[float]) -> tuple[CubicSegment
         current = CubicSegment(*(Point(*p) for p in right))
     parts.append(current)
     return tuple(parts)
+
+
+def _contour_oblique_compat_splits(contour: Contour, shear: float) -> Contour:
+    new_segs: list[LineSegment | CubicSegment] = []
+    for seg in contour.segments:
+        if isinstance(seg, LineSegment):
+            new_segs.append(seg)
+            continue
+        ts = oblique_compat_split_ts(seg, shear)
+        new_segs.extend(_split_cubic_at_ts(seg, ts))
+    return Contour(tuple(new_segs), closed=contour.closed)
+
+
+def outline_oblique_compat_splits(outline: Outline, shear: float) -> Outline:
+    """Split cubics for a later horizontal shear (TK-402, VF-safe)."""
+    if abs(shear) < 1e-12:
+        return outline
+    return Outline(tuple(_contour_oblique_compat_splits(ct, shear) for ct in outline.contours))
 
 
 def _contour_with_axis_extrema(contour: Contour) -> Contour:
