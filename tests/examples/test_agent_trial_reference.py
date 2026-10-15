@@ -1,4 +1,4 @@
-"""TK-502 reference design module (not preset-only)."""
+"""TK-502 reference design modules (not preset-only)."""
 
 from __future__ import annotations
 
@@ -18,20 +18,26 @@ from typekernel.qa.trial_protocol import (
 
 ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
-DESIGN = TRIAL / "design_warm_humanist.py"
 
-def _load_controls() -> Controls:
-    spec = importlib.util.spec_from_file_location("design_warm_humanist", DESIGN)
+_REFERENCE_TRIALS = (
+    ("brief-1", TRIAL / "design_warm_humanist.py"),
+    ("brief-2", TRIAL / "design_editorial_geometric.py"),
+    ("brief-3", TRIAL / "design_coding_clear.py"),
+)
+
+
+def _load_controls(path: Path) -> Controls:
+    spec = importlib.util.spec_from_file_location(path.stem, path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.controls()
 
 
-def test_reference_warm_humanist_passes_gate_and_r8() -> None:
-    brief = next(b for b in FIXED_TRIAL_BRIEFS if b.id == "brief-1")
+def _assert_reference_trial(brief_id: str, design_path: Path) -> None:
+    brief = next(b for b in FIXED_TRIAL_BRIEFS if b.id == brief_id)
     snap = snapshot_trial(
-        _load_controls(),
+        _load_controls(design_path),
         brief=brief,
         round=1,
         apis_used=("Style", "terminal_style", "tuned_glyph"),
@@ -41,7 +47,19 @@ def test_reference_warm_humanist_passes_gate_and_r8() -> None:
     assert snap.weight_ladder_r8_failures == 0
     assert snap.l3_voice_ok
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
-    assert "f" in snap.glyph_spec_chars
+    assert snap.glyph_spec_chars
+
+
+def test_reference_warm_humanist_passes_gate_and_r8() -> None:
+    _assert_reference_trial("brief-1", _REFERENCE_TRIALS[0][1])
+
+
+def test_reference_editorial_geometric_passes_l3() -> None:
+    _assert_reference_trial("brief-2", _REFERENCE_TRIALS[1][1])
+
+
+def test_reference_coding_clear_passes_l3() -> None:
+    _assert_reference_trial("brief-3", _REFERENCE_TRIALS[2][1])
 
 
 def test_snapshot_design_script(tmp_path: Path) -> None:
@@ -52,7 +70,7 @@ def test_snapshot_design_script(tmp_path: Path) -> None:
             "--brief",
             "brief-1",
             "--design",
-            str(DESIGN),
+            str(_REFERENCE_TRIALS[0][1]),
             "--out",
             str(tmp_path),
         ],

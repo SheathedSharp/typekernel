@@ -52,4 +52,4 @@ PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
   --brief brief-1 --out artifacts/trials/warm-humanist-ref
 ```
 
-设计稿：`examples/agent_trial/design_warm_humanist.py`（brief-1 参考已达 L3 距离 + gate/R8）。CI：`test_agent_trial_reference.py`；**人审**与终验摘要表仍须填写。
+设计稿：`design_warm_humanist.py`（brief-1）、`design_editorial_geometric.py`（brief-2）、`design_coding_clear.py`（brief-3）——均达 L3 距离 + gate/R8。CI：`test_agent_trial_reference.py`；**人审**与终验摘要表仍须填写。
