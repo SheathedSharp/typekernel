@@ -81,6 +81,40 @@ def test_slab_i_masters_interpolate_on_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_slab_nhi_masters_interpolate_on_weight_ladder() -> None:
+    """Lowercase + caps share slab stem topology across weights."""
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 110.0, 160.0)
+    charset = "nHI"
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem))
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all(charset))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 500.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
+def test_slab_l_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.slab_serif()
+    stems = (70.0, 120.0, 180.0)
+    fonts = []
+    for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
+        controls = Controls.from_context(ctx.tuned(stem=stem))
+        font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
+        font.add_chars(controls.build_all("L"))
+        fonts.append(font)
+    masters = [
+        Master({"wght": wght}, font)
+        for wght, font in zip((300.0, 500.0, 700.0), fonts, strict=True)
+    ]
+    assert check_masters(masters) == []
+
+
 def test_slab_h_masters_interpolate_on_weight_ladder() -> None:
     """Cap ``H`` bakes slab serifs in one contour for VF-stable segments."""
     ctx = DesignContext.slab_serif()

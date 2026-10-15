@@ -290,6 +290,34 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     return _pack(c, h, anchors, stem)
 
 
+def _l_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    if ctx.style.serif != "slab":
+        return [(0.0, 0.0), (w, 0.0), (w, bt), (t, bt), (t, cap), (0.0, cap)]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2, bt * 0.45)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (w, 0.0),
+        (w, bt),
+        (t, bt),
+        (t, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def L_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -299,10 +327,15 @@ def L_from_H(
     """``L``: the ``H`` stem with a foot ``width`` × the ``H`` width."""
     c = ctx or H.context
     h = _h_record(H)
-    t, cap, bt = h.stem, h.cap_height, h.bar
     w = width * h.width
-    pts = [(0.0, 0.0), (w, 0.0), (w, bt), (t, bt), (t, cap), (0.0, cap)]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    baked = c.style.serif == "slab"
+    outline = _polygon(_l_outline_points(h, c, width=width))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        outline,
+    )
 
 
 def E_from_H(
