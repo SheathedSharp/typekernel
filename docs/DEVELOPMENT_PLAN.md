@@ -18,7 +18,7 @@
    source .venv/bin/activate
    pytest -q && ruff check src tests && mypy -p typekernel
    ```
-   **基线并不干净**（见 TK-001），先清掉再做别的。
+   每个任务结束仍须 **pytest + ruff + mypy 全绿**（TK-001 已清零撰写时的 ruff/mypy 债务；当前基线见 §2.3.1）。
 3. 新增公共符号：先在任务里写签名草图，只在对应模块 `__all__` 暴露，不要为了方便全部导出。
 4. 改动 `parts/`、`compile/` 或推荐管线时，同步更新 `.agents/skills/typekernel-font-design/SKILL.md` 与 `docs/AGENT_GOAL.md`。
 5. 凡是改变字形外观的任务，提交里要附 before/after 校样图（放 `docs/images/` 或 `artifacts/`），并在提交说明里列出「哪些字形变了」。
@@ -62,14 +62,20 @@
 ### 2.2 不需要动的部分
 
 - 编译链路机械上可用：静态 OTF/TTF、`build_variable_font`、`wght×ital` VF、`examples/agent_family` 三字重、`examples/variable_family` 均能构建 **【实测】**。
-- 基线测试：593 个全部通过 **【实测】**。
+- 基线测试：撰写时 593 个全部通过 **【实测】**；当前见 §2.3.1。
 - `geo/`（三次曲线核、路径、join、boolean）与 `optics/` 的主体不是瓶颈。
 
 → **本计划不动 `compile/` 的构建逻辑**（只做 TK-001 的类型修复）。
 
-### 2.3 基线并不干净 【实测】
+### 2.3 基线并不干净 【实测】（撰写时快照，2026-10-14）
 
-`dev-standards.md` 要求 `pytest + ruff + mypy` 全绿，但现在 **ruff 9 个错误，mypy 24 个错误**（位置见 TK-001）。其中 `parts/context.py:78` 的 `OpticalContext` 是真实的未定义名（只因 `from __future__ import annotations` 没在运行时炸）。
+`dev-standards.md` 要求 `pytest + ruff + mypy` 全绿，但当时 **ruff 9 个错误，mypy 24 个错误**（位置见 TK-001）。其中 `parts/context.py:78` 的 `OpticalContext` 是真实的未定义名（只因 `from __future__ import annotations` 没在运行时炸）。
+
+### 2.3.1 质量门禁（当前）【实测，2026-10-16】
+
+- `pytest -q`：**1378 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
+- **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
 ### 2.4 三个结构性缺口
 
@@ -160,7 +166,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 ### M0 基线与诚实化
 
 #### TK-001 清零 ruff 与 mypy　〔S〕
-- **ruff（9）**：`compile/__init__.py`（I001、RUF022）；`compile/family_build.py`（I001、F401 未用的 `Mapping`）；`optics/__init__.py`（RUF022）；`parts/context.py:78`（UP037、F821）；`tests/axes/test_slant_types.py`、`tests/parts/test_letter_e.py`（I001）。其中 8 个可 `ruff --fix`。
+- **本轮**：已完成（`pytest` ≥1378、`ruff`、`mypy` 全绿；验收命令见下）。
+- **ruff（9，撰写时）**：`compile/__init__.py`（I001、RUF022）；`compile/family_build.py`（I001、F401 未用的 `Mapping`）；`optics/__init__.py`（RUF022）；`parts/context.py:78`（UP037、F821）；`tests/axes/test_slant_types.py`、`tests/parts/test_letter_e.py`（I001）。其中 8 个可 `ruff --fix`。
 - **mypy（24）**：
   - `parts/context.py:72` `tuned(**kwargs: float)` 与 `terminal_style: Literal[...]` 冲突，改成接受真实字段类型。
   - `parts/context.py:78` 用 `TYPE_CHECKING` 导入 `OpticalContext`。
@@ -633,6 +640,20 @@ M5：TK-501（贯穿）→ TK-502
 5. 真斜体通过实测倾角与拓扑差异检查，TK-002 的 xfail 已移除。
 6. 第 6 节 Agent 试验终验通过。
 7. `AGENT_GOAL.md`、`SKILL.md`、`agent-recipes.md`、`VISION.md`、`README.md` 与实现一致。
+
+**进度对照（2026-10-16，非终态声明）**
+
+| §8 条 | 程序侧证据 | 状态 |
+| --- | --- | --- |
+| 1 | 本地 `pytest`/`ruff`/`mypy`；CI `.github/workflows/ci.yml` 同命令 | 已满足 |
+| 2 | `test_section8_tk106_has_no_strict_xfail_markers` | 已满足 |
+| 3 | `test_section8_family_gate_on_main_and_serif_voices` | 已满足 |
+| 4 | `tests/parts/test_knob_coverage.py`（§8.4 钩子） | 已满足 |
+| 5 | `tests/parts/test_italic_controls.py` / `test_italic_topology.py`（§8.5 钩子） | 已满足 |
+| 6 | `docs/AGENT_TRIALS.md` 终验摘要表 + 独立 agent 试验 | **未完成** |
+| 7 | `test_section8_required_docs_exist` 等文档钩子 | 已满足（人审签字除外） |
+
+人审视觉 gate（衬线两 voice + 斜体 VF）：`examples/human_review_bundle.py` → 人更新 `approvals/*.json`；在 `approved: false` 时不得声称 M5 视觉验收完成。
 
 ---
 

@@ -156,3 +156,13 @@ def test_section8_regression_test_hooks_present() -> None:
         text = path.read_text(encoding="utf-8")
         for name in test_names:
             assert f"def {name}" in text, f"{rel} missing {name}"
+
+
+def test_section8_plan_documents_program_vs_human_exit() -> None:
+    """Plan §8 progress table must not claim full M5 exit while gates stay pending."""
+    text = (ROOT / "docs" / "DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
+    assert "进度对照" in text
+    assert "test_section8_family_gate_on_main_and_serif_voices" in text
+    assert "approved: false" in text
+    assert "终验" in text
+    assert "2.3.1 质量门禁（当前）" in text
