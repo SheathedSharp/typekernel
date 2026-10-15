@@ -247,6 +247,20 @@ def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     assert "stem_L_t" in {a.name for a in bracket.anchors}
 
 
+def test_slab_only_n_and_h_still_use_boolean_top_stem_serifs() -> None:
+    from typekernel.parts.serifs import apply_glyph_serifs
+
+    ctx = DesignContext.slab_serif()
+    controls = Controls.from_context(ctx)
+    changed: list[tuple[str, list[str]]] = []
+    for ch in controls.supported:
+        g = controls.build(ch)
+        if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
+            stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
+            changed.append((ch, stems))
+    assert changed == [("h", ["stem_R_t"]), ("n", ["stem_L_t"])]
+
+
 def test_serif_n_family_inlined_feet_omit_bottom_stem_anchors() -> None:
     """Inlined foot serifs must not leave boolean ``stem_*_b`` sites on these glyphs."""
     for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
