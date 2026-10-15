@@ -17,6 +17,8 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "serif-bracketed-voice" in text
     assert "italic-vf-construct" in text
     assert "proof_vf.png" in text
+    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_italic_program_acceptance.py" in text
 
 
 def test_human_review_bundle_serif_only(tmp_path: Path) -> None:

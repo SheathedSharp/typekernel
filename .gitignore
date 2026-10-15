@@ -77,6 +77,9 @@ artifacts/build/**
 artifacts/trials/**
 !artifacts/trials/.gitkeep
 
+# Human review PNG/TTF bundles (see examples/human_review_bundle.py)
+artifacts/human-review/**
+
 # weight_ladder_sheet UFO scratch (see tests/qa/test_sheet.py)
 artifacts/_ladder_tmp/
 artifacts/_test_ladder.png

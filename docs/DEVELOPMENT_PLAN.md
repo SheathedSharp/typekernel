@@ -431,6 +431,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_human_review_bundle_italic_only`` 断言 checklist 含 ``italic-vf-construct``。
 - **本轮（部分）**：``serif-*-voice`` 占位 ``notes`` 列出 bundle 内 ``proof``/``proof_vf``/阶梯 PNG；``test_gates`` 固化路径提示。
 - **本轮（部分）**：``human_review_bundle`` checklist 补斜体 ``write_approval`` 示例；``test_evidence`` 路径存在性回归。
+- **本轮（部分）**：``human_review_bundle`` checklist 对齐 TK-306/402 程序验收 pytest（``test_serif_voice_meets_tk306_program_acceptance`` / ``test_italic_vf_meets_tk402_program_acceptance_on_humanist``）与 ``approvals`` ``test_evidence`` 列表格式。
 - **本轮（部分）**：``test_bracketed_bowl_glyphs_inline_foot_extends_left_of_plain_stem`` 固化 ``b``/``d``/``p``/``q`` 内嵌脚衬线外伸。
 - **本轮（部分）**：``inline_stem_foot_serif_path`` / ``inline_hook_cap_serif_path`` 外角 cubic 托架圆角（``f``/``t``/``j`` 顶脚 + 碗形脚底）；``test_bracketed_inline_bowl_foot_uses_cubic_bracket_corner``；golden ``b``/``d``/``f``/``j``/``p``/``q``/``t``。
 - **本轮（部分）**：大写 ``V`` 内嵌脚底托架圆角（``_v_cap_bracketed_outline``，``slab`` 仍折线）；``test_bracketed_cap_v_*``；golden ``V``。
