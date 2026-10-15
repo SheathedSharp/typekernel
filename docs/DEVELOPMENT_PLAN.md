@@ -293,7 +293,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``3`` 上环 ``ry_u`` 乘 ``top_apex=1.06``（顶仍对齐 cap+overshoot，减少平顶）；golden ``3`` 三 preset 更新。
 - **本轮（部分）**：``s_from_o`` 默认 ``top_scale`` 0.92→0.90（上环再收）；golden ``s``/``S`` 三 preset 更新。
 - **本轮（部分）**：``one_from_H`` 顶旗随字重缩小，重 stem 肩区字腔满足 R8（见 TK-207 ``1``）。
-- **待续**：lining ``5`` 下碗/竖干接点字腔在中等 ``stem`` 仍低于 R8 下限（内轮廓包围盒主导），暂不进 ``COUNTER_PINCH_CHARSET``。
+- **本轮（部分）**：``five_from_O`` 按 ``DesignContext.stem`` 加宽下碗、略收环笔画与开口；``test_five_stem_relief_opens_bowl_counter_midweights``；golden ``5`` 五 preset；极轻/极黑 preset 仍待 R8 后再进 charset。
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 

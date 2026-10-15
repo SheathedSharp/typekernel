@@ -68,6 +68,18 @@ def test_three_interpolates_across_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_five_stem_relief_opens_bowl_counter_midweights() -> None:
+    """TK-206: ``5`` bowl ring thins with stem so mid-ladder R8 headroom improves."""
+    for preset in ("humanist_sans", "geometric_sans", "open_print"):
+        for stem in (70.0, 110.0, 150.0):
+            ctx = getattr(DesignContext, preset)().tuned(stem=stem)
+            controls = Controls.from_context(ctx)
+            if stem >= STEM_RELIEF_ONSET:
+                controls = controls.with_stem_relief()
+            gap = min_counter_gap(controls.build("5"))
+            assert gap >= counter_gap_floor(stem)
+
+
 def test_one_heavy_stem_flag_relief_opens_pinch() -> None:
     """TK-206/207: ``1`` top flag shrinks so R8 headroom remains at black weights."""
     for preset in ("open_print", "paper_ink", "geometric_sans", "mono"):

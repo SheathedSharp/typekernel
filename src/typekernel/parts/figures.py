@@ -472,11 +472,15 @@ def five_from_O(
     o = _o_rec(O)
     h, t, bar, w = _fig(H)
     cap, os_, e = h.cap_height, o.overshoot, o.exponent
+    relief = min(1.0, max(0.0, (c.stem - 45.0) / 130.0))
+    w *= 1.028 + 0.15 * relief
     cx, rx = w / 2.0, w / 2.0
-    ry = (bowl * cap + os_) / 2.0
+    bowl_eff = bowl - 0.035 * relief
+    ry = (bowl_eff * cap + os_) / 2.0
     cy = ry - os_
-    tv = min(bar, 0.6 * ry)
-    th = min(t, 0.6 * rx)
+    stroke_scale = (1.0 - 0.13 * relief) * (0.972 + 0.008 * relief)
+    tv = min(bar, 0.6 * ry) * stroke_scale
+    th = min(t, 0.6 * rx) * stroke_scale
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e)
     y_seat = cy + seat * (ry - tv)
     i_seat = _cut(i1, y_seat, horizontal=True)  # inner top → seat → inner left
@@ -484,7 +488,8 @@ def five_from_O(
     s0 = s1 - t
     o_join = _cut(q1, s1, horizontal=False)  # outer top → stem face → outer left
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
-    x_t = cx - (rx - th) * (0.95 - 0.5 * ap)
+    ap_eff = min(1.0, ap + 0.12 * relief)
+    x_t = cx - (rx - th) * (0.95 - 0.5 * ap_eff)
     l_bot = _cut(q2, x_t, horizontal=False)[1]
     li_bot = _cut(i2, x_t, horizontal=False)[1]
     if not o_join[0][3][1] < cap - bar:
