@@ -940,7 +940,12 @@ def j_from_n(
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
     hook = _hook_record(m, height, c)
-    outline, _ = _r_outline(hook, arm, hook_belly=_hook_belly_fillet(m.stem))
+    outline, _ = _r_outline(
+        hook,
+        arm,
+        hook_belly=_hook_belly_fillet(m.stem),
+        slab_foot=_hook_slab_stem_foot(c, m.stem),
+    )
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     tip = (m.stem * 1.05, c.descender + m.stem * 0.28)

@@ -633,8 +633,26 @@ def Q_from_O(
     b.moveTo(*q0[0])
     for cubic in (q0, q1, q2, before):
         _curve(b, cubic)
-    b.lineTo(end[0] - hw / 2.0, end[1])
-    b.lineTo(end[0] + hw / 2.0, end[1])
+    baked = c.style.serif == "slab"
+    tail_l = end[0] - hw / 2.0
+    tail_r = end[0] + hw / 2.0
+    tail_y = end[1]
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        cap = o.x_height
+        foot_l = min(length * 0.35, hw * 0.55, h.stem * 0.28)
+        foot_th = min(thick * 0.55, cap * 0.04, h.stem * 0.1)
+        b.lineTo(tail_l, tail_y)
+        b.lineTo(tail_l - foot_l, tail_y)
+        b.lineTo(tail_l - foot_l, tail_y - foot_th)
+        b.lineTo(tail_r + foot_l, tail_y - foot_th)
+        b.lineTo(tail_r + foot_l, tail_y)
+        b.lineTo(tail_r, tail_y)
+    else:
+        b.lineTo(tail_l, tail_y)
+        b.lineTo(tail_r, tail_y)
     b.lineTo(*after[0])
     _curve(b, after)
     b.closePath()
@@ -643,7 +661,6 @@ def Q_from_O(
         _curve(b, cubic)
     b.closePath()
     outer, counter = b.build().contours
-    baked = c.style.serif == "slab"
     return _pack(
         c,
         o,
