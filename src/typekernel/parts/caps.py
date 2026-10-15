@@ -1167,7 +1167,7 @@ def _v_cap_foot_dims(h: HMetrics, ctx: DesignContext, apex_x: float) -> tuple[fl
     return l, th, bracket_r
 
 
-def _append_baseline_foot_pad(
+def _finish_baseline_foot_pad(
     b: PathBuilder,
     xl: float,
     xr: float,
@@ -1176,8 +1176,7 @@ def _append_baseline_foot_pad(
     *,
     bracketed: bool,
 ) -> None:
-    """Foot pad below the baseline from ``xl`` to ``xr``; ends at ``(xr, 0)``."""
-    b.lineTo(xl, -th)
+    """Complete a baseline foot pad from ``(xl, -th)``; ends at ``(xr, 0)``."""
     if not bracketed:
         b.lineTo(xr, -th)
         b.lineTo(xr, 0.0)
@@ -1198,6 +1197,20 @@ def _append_baseline_foot_pad(
         -th + r,
     )
     b.lineTo(xr, 0.0)
+
+
+def _append_baseline_foot_pad(
+    b: PathBuilder,
+    xl: float,
+    xr: float,
+    th: float,
+    bracket_r: float,
+    *,
+    bracketed: bool,
+) -> None:
+    """Foot pad below the baseline from ``xl`` to ``xr``; ends at ``(xr, 0)``."""
+    b.lineTo(xl, -th)
+    _finish_baseline_foot_pad(b, xl, xr, th, bracket_r, bracketed=bracketed)
 
 
 def _append_upward_cap_foot_pad(
@@ -1614,16 +1627,21 @@ def K_from_H(
     )
 
 
+def _a_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    t = h.stem
+    l = min(length * 0.42, hw * 0.55, t * 0.48)
+    th = min(thick * 0.65, h.cap_height * 0.05, t * 0.18)
+    return l, th, bracket_r
+
+
 def _a_cap_slab_outer(
     h: HMetrics, ctx: DesignContext, hw: float, w: float, base: list[Pt]
 ) -> list[Pt]:
     """Slab feet on the two baseline stems of cap ``A`` (apex stays sharp)."""
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    t = h.stem
-    l = min(length * 0.42, hw * 0.55, t * 0.48)
-    th = min(thick * 0.65, h.cap_height * 0.05, t * 0.18)
+    l, th, _ = _a_cap_foot_dims(h, ctx, hw)
     return [
         (-l, -th),
         (hw + l, -th),
@@ -1638,6 +1656,34 @@ def _a_cap_slab_outer(
         base[7],
         (-l, 0.0),
     ]
+
+
+def _write_a_cap_bracketed_outer(
+    b: PathBuilder,
+    h: HMetrics,
+    ctx: DesignContext,
+    hw: float,
+    w: float,
+    f: float,
+    peak: float,
+    y0: float,
+    *,
+    left_at_y0: float,
+) -> None:
+    """Bracketed ``A`` outer contour with cubic foot fillets (fixed topology)."""
+    l, th, bracket_r = _a_cap_foot_dims(h, ctx, hw)
+    b.moveTo(-l, -th)
+    _finish_baseline_foot_pad(b, -l, hw + l, th, bracket_r, bracketed=True)
+    b.lineTo(hw, 0.0)
+    b.lineTo(left_at_y0, y0)
+    b.lineTo(w - hw - l, -th)
+    _finish_baseline_foot_pad(b, w - hw - l, w + l, th, bracket_r, bracketed=True)
+    b.lineTo(w - hw, 0.0)
+    b.lineTo(w, 0.0)
+    b.lineTo((w + f) / 2.0, peak)
+    b.lineTo((w - f) / 2.0, peak)
+    b.lineTo(-l, 0.0)
+    b.closePath()
 
 
 def A_from_H(
@@ -1683,11 +1729,16 @@ def A_from_H(
         ((w + f) / 2.0, peak),
         ((w - f) / 2.0, peak),
     ]
-    outer_pts = _a_cap_slab_outer(h, c, hw, w, base_outer) if baked else base_outer
     b = PathBuilder()
-    for i, p in enumerate(outer_pts):
-        (b.moveTo if i == 0 else b.lineTo)(*p)
-    b.closePath()
+    if baked and c.style.serif == "bracketed":
+        _write_a_cap_bracketed_outer(
+            b, h, c, hw, w, f, peak, y0, left_at_y0=left(y0)
+        )
+    else:
+        outer_pts = _a_cap_slab_outer(h, c, hw, w, base_outer) if baked else base_outer
+        for i, p in enumerate(outer_pts):
+            (b.moveTo if i == 0 else b.lineTo)(*p)
+        b.closePath()
     b.moveTo(left(y1), y1)
     b.lineTo(w / 2.0, crotch)
     b.lineTo(right(y1), y1)
