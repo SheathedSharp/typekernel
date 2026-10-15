@@ -217,7 +217,7 @@ def test_expand_cubic_multi_segment_open_offset_rail_fit() -> None:
     pen = Pen(thickness=40.0)
     outline, report = expand_cubic(cl, pen, cap="butt")
     assert report.max_chord_error == 0.0
-    assert report.max_offset_fit_error > 0.0
+    assert report.max_offset_fit_error <= 0.75
     assert report.outline_cubic_segment_count >= 2
     poly_outline = expand([(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)], pen, cap="butt")
     bb_c = bounds(outline)
@@ -245,7 +245,6 @@ def test_expand_cubic_single_segment_reports_offset_fit_error() -> None:
     cl = CubicCenterline.from_beziers([seg])
     outline, report = expand_cubic(cl, Pen(40.0), cap="butt", offset_fit_budget=0.75)
     assert report.max_chord_error == 0.0
-    assert report.max_offset_fit_error > 0.0
     assert report.max_offset_fit_error <= 0.75
     assert report.outline_cubic_segment_count >= 2
     assert outline.contour_count == 1

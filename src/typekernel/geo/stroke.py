@@ -15,6 +15,7 @@ Agent-facing entry points:
 
 from __future__ import annotations
 
+import itertools
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -361,6 +362,50 @@ def _distance_point_to_cubic(
     return best
 
 
+def _polyline_colinear(
+    points: Sequence[tuple[float, float]],
+    *,
+    eps: float = 1e-3,
+) -> bool:
+    if len(points) < 3:
+        return True
+    ax, ay = points[0]
+    bx, by = points[-1]
+    tx, ty = _unit(bx - ax, by - ay)
+    for px, py in points[1:-1]:
+        cross = abs(tx * (py - ay) - ty * (px - ax))
+        if cross > eps:
+            return False
+    return True
+
+
+def _split_polyline_at_corners(
+    points: Sequence[tuple[float, float]],
+) -> list[list[tuple[float, float]]]:
+    """Split a sampled offset rail at direction changes (miters, segment knots)."""
+    if len(points) < 3:
+        return [list(points)]
+    corner_indices = [0]
+    prev_dir: tuple[float, float] | None = None
+    for i in range(1, len(points)):
+        d = _unit(
+            points[i][0] - points[i - 1][0],
+            points[i][1] - points[i - 1][1],
+        )
+        if prev_dir is not None:
+            cross = abs(prev_dir[0] * d[1] - prev_dir[1] * d[0])
+            if cross > 1e-4:
+                corner_indices.append(i - 1)
+        prev_dir = d
+    corner_indices.append(len(points) - 1)
+    runs: list[list[tuple[float, float]]] = []
+    for start, end in itertools.pairwise(corner_indices):
+        run = list(points[start : end + 1])
+        if len(run) >= 2:
+            runs.append(run)
+    return runs if runs else [list(points)]
+
+
 def _fit_offset_rail(
     points: list[tuple[float, float]],
     budget: float,
@@ -376,6 +421,26 @@ def _fit_offset_rail(
     left, err_l = _fit_offset_rail(points[: mid + 1], budget, depth=depth + 1)
     right, err_r = _fit_offset_rail(points[mid:], budget, depth=depth + 1)
     return left + right, max(err_l, err_r)
+
+
+def _fit_offset_rail_piecewise(
+    points: list[tuple[float, float]],
+    budget: float,
+) -> tuple[list[CubicBezier], float]:
+    """Fit cubics per colinear run so miters do not get smoothed away."""
+    chain: list[CubicBezier] = []
+    max_err = 0.0
+    for run in _split_polyline_at_corners(points):
+        if len(run) < 2:
+            continue
+        if _polyline_colinear(run):
+            seg = CubicBezier.line(run[0], run[-1])
+            chain.append(seg)
+            continue
+        part, err = _fit_offset_rail(run, budget)
+        chain.extend(part)
+        max_err = max(max_err, err)
+    return chain, max_err
 
 
 def _append_cubic_chain(b: PathBuilder, chain: list[CubicBezier]) -> None:
@@ -489,8 +554,8 @@ def _expand_open_multi_cubic_offset(
         miter_limit=miter_limit,
         samples=samples,
     )
-    left_chain, err_l = _fit_offset_rail(left_poly, offset_fit_budget)
-    right_chain, err_r = _fit_offset_rail(right_poly, offset_fit_budget)
+    left_chain, err_l = _fit_offset_rail_piecewise(left_poly, offset_fit_budget)
+    right_chain, err_r = _fit_offset_rail_piecewise(right_poly, offset_fit_budget)
     max_err = max(err_l, err_r)
     b = PathBuilder()
     b.moveTo(left_chain[0].p0[0], left_chain[0].p0[1])
@@ -523,8 +588,8 @@ def _expand_closed_cubic_offset(
     for seg in centerline.segments:
         left = _sample_offset_rail(seg, pen, samples, left_side=True)
         right = _sample_offset_rail(seg, pen, samples, left_side=False)
-        oc, err_o = _fit_offset_rail(right, offset_fit_budget)
-        ic, err_i = _fit_offset_rail(left, offset_fit_budget)
+        oc, err_o = _fit_offset_rail_piecewise(right, offset_fit_budget)
+        ic, err_i = _fit_offset_rail_piecewise(left, offset_fit_budget)
         max_err = max(max_err, err_o, err_i)
         outer_chains.append(oc)
         inner_chains.append(ic)
@@ -561,8 +626,8 @@ def _expand_open_cubic_offset(
     seg = centerline.segments[0]
     left = _sample_offset_rail(seg, pen, samples, left_side=True)
     right = _sample_offset_rail(seg, pen, samples, left_side=False)
-    left_chain, err_l = _fit_offset_rail(left, offset_fit_budget)
-    right_chain, err_r = _fit_offset_rail(right, offset_fit_budget)
+    left_chain, err_l = _fit_offset_rail_piecewise(left, offset_fit_budget)
+    right_chain, err_r = _fit_offset_rail_piecewise(right, offset_fit_budget)
     max_err = max(err_l, err_r)
     b = PathBuilder()
     b.moveTo(left[0][0], left[0][1])
