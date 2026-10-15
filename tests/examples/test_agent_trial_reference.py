@@ -128,7 +128,7 @@ def test_snapshot_reference_trials_script(tmp_path: Path) -> None:
         assert data["l3_voice_ok"] is True
 
 
-def test_snapshot_design_stem_tweak_exit_code_6(tmp_path: Path) -> None:
+def test_snapshot_design_stem_tweak_exit_code_7(tmp_path: Path) -> None:
     design = tmp_path / "stem_tweak.py"
     design.write_text(
         "from typekernel.parts import Controls, DesignContext\n\n"
@@ -154,9 +154,10 @@ def test_snapshot_design_stem_tweak_exit_code_6(tmp_path: Path) -> None:
         check=False,
         env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
     )
-    assert proc.returncode == 6, proc.stderr or proc.stdout
+    assert proc.returncode == 7, proc.stderr or proc.stdout
     data = json.loads((tmp_path / "out" / "snapshot.json").read_text(encoding="utf-8"))
     assert data["l3_voice_ok"] is False
+    assert data["cheating_flags"] == ["stem_only_or_scale_voice"]
 
 
 def test_snapshot_design_script(tmp_path: Path) -> None:

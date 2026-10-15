@@ -142,6 +142,18 @@ def _api_tags(controls: Controls, extra: Sequence[str] = ()) -> tuple[str, ...]:
     return tuple(dict.fromkeys(tags))
 
 
+def _infer_cheating_flags(controls: Controls) -> tuple[str, ...]:
+    """TK-307/502: high voice_distance with no topology change (e.g. stem-only scale)."""
+    voice_distance_val = voice_distance(controls)
+    topology = topology_fraction_vs_nearest_presets(controls)
+    if (
+        voice_distance_val >= L3_VOICE_DISTANCE_THRESHOLD
+        and topology < L3_MIN_TOPOLOGY_FRACTION
+    ):
+        return ("stem_only_or_scale_voice",)
+    return ()
+
+
 def snapshot_trial(
     controls: Controls,
     *,
@@ -154,6 +166,7 @@ def snapshot_trial(
     charset = controls.supported
     lint_report = lint_controls(controls, charset)
     identity_report = check_identity_controls(controls, charset)
+    merged_flags = tuple(dict.fromkeys((*cheating_flags, *_infer_cheating_flags(controls))))
     return TrialSnapshot(
         brief_id=brief.id,
         preset=brief.preset,
@@ -166,7 +179,7 @@ def snapshot_trial(
         topology_fraction=topology_fraction_vs_nearest_presets(controls),
         weight_ladder_r8_failures=weight_ladder_r8_failures(controls),
         glyph_spec_chars=tuple(sorted(controls.glyph_specs)),
-        cheating_flags=tuple(cheating_flags),
+        cheating_flags=merged_flags,
         l3_voice_ok=l3_voice_criteria_met(controls),
     )
 
@@ -182,9 +195,6 @@ def _snapshot_float(value: object, default: float = 0.0) -> float:
 def validate_trial_snapshot_record(data: Mapping[str, object]) -> tuple[str, ...]:
     """Program checks on a written snapshot JSON (TK-502 final validation review)."""
     problems: list[str] = []
-    flags = data.get("cheating_flags")
-    if flags:
-        problems.append("cheating_flags must be empty")
     voice_distance_val = _snapshot_float(data.get("voice_distance"), 0.0)
     topology = _snapshot_float(data.get("topology_fraction"), 0.0)
     l3_ok = bool(data.get("l3_voice_ok"))
@@ -207,7 +217,6 @@ def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
     """Validate a :class:`TrialSnapshot` before claiming TK-502 program pass."""
     return validate_trial_snapshot_record(
         {
-            "cheating_flags": snapshot.cheating_flags,
             "voice_distance": snapshot.voice_distance,
             "topology_fraction": snapshot.topology_fraction,
             "l3_voice_ok": snapshot.l3_voice_ok,
@@ -228,6 +237,8 @@ def trial_snapshot_exit_code(
         return 4
     if problems:
         return 5
+    if snapshot.cheating_flags:
+        return 7
     if not snapshot.l3_voice_ok:
         return 6
     return 0

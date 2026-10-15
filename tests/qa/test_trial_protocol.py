@@ -90,14 +90,15 @@ def test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology() -
     assert any("topology_fraction" in p for p in problems)
 
 
-def test_validate_trial_snapshot_accepts_honest_stem_only_tweak() -> None:
+def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
     ctx = DesignContext.humanist_sans()
     tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
     snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0])
     assert not snap.l3_voice_ok
     assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
+    assert snap.cheating_flags == ("stem_only_or_scale_voice",)
     assert not validate_trial_snapshot(snap)
-    assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 6
+    assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 7
 
 
 def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
@@ -134,6 +135,7 @@ def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert not snap.l3_voice_ok
     assert snap.topology_fraction == 0.0
+    assert snap.cheating_flags == ("stem_only_or_scale_voice",)
 
 
 def test_voice_distance_zero_on_unchanged_preset() -> None:

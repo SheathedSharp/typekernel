@@ -173,7 +173,7 @@ PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
   --brief brief-1 --design path/to/your_design.py --out artifacts/trials/my-run/brief-1
 ```
 
-写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3（例如只缩放 stem）。库维护者程序条：`examples/run_m5_program_exit.py`（`pytest -q tests/docs/test_development_plan_section8.py`）。
+写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok`）。`snapshot_trial` 会对纯 stem 缩放写入 `cheating_flags`（`stem_only_or_scale_voice`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3；**7** 作废条件（`cheating_flags` 非空）。库维护者程序条：`examples/run_m5_program_exit.py`（`pytest -q tests/docs/test_development_plan_section8.py`）。
 
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 

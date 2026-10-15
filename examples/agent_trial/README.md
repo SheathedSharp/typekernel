@@ -35,7 +35,8 @@ CI: `tests/examples/test_agent_trial_reference.py`, `tests/qa/test_m3_exit.py` (
 | 3 | `family_gate` failures |
 | 4 | `weight_ladder_r8_failures` > 0 |
 | 5 | Snapshot record inconsistent (e.g. forged `l3_voice_ok` with `topology_fraction` too low) |
-| 6 | Honest design but `l3_voice_ok` false (e.g. stem-only tweak) |
+| 6 | Honest design but `l3_voice_ok` false |
+| 7 | Non-empty `cheating_flags` (e.g. auto `stem_only_or_scale_voice` for stem-only scaling) |
 
 Full final-trial checklist: `docs/AGENT_TRIALS.md` §终验流程. Library program bar: `examples/run_m5_program_exit.py`.
 
