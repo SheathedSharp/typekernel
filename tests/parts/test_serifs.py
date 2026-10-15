@@ -755,6 +755,12 @@ def test_slab_opening_caps_change_c_and_g_outline() -> None:
         assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
 
 
+def test_slab_e_opening_changes_outline() -> None:
+    sans = Controls.from_context(DesignContext.geometric_sans())
+    slab = Controls.from_context(DesignContext.slab_serif())
+    assert composed_glyph_hash(sans.build("e")) != composed_glyph_hash(slab.build("e"))
+
+
 def test_slab_cap_cg_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.slab_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
