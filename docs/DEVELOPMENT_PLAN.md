@@ -449,7 +449,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``Stroke.beziers`` / ``from_beziers`` + ``Skeleton.from_mapping`` 的 ``beziers`` 键；``trace_letter`` 走 ``expand_cubic``。
 - **本轮（部分）**：单段开放 cubic + butt cap 走偏移轨道 cubic 链拟合（``max_offset_fit_error`` / ``offset_fit_budget``）；多段/圆角仍折线化。
 - **本轮（部分）**：闭合 cubic 中线（多段）偏移轨道拟合 → 双轮廓环（``_expand_closed_cubic_offset``）。
-- **待续**：多段开放 cubic 拐角 miter、段间 C1、圆角 cap/join、更高阶椭圆笔拟合。
+- **待续**：多段开放 cubic 拐角（须先折线化偏移轨再 miter，或统一采样轨）；段间 C1、圆角 cap/join。
 
 ### M4 真斜体
 

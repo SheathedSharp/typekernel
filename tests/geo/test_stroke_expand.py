@@ -139,6 +139,19 @@ def test_flatten_cubic_line_is_two_points() -> None:
     assert report.cubic_segment_count == 1
 
 
+def test_expand_cubic_multi_segment_open_uses_chord_flatten() -> None:
+    segs = (
+        CubicBezier.line((0.0, 0.0), (100.0, 0.0)),
+        CubicBezier.line((100.0, 0.0), (100.0, 100.0)),
+    )
+    cl = CubicCenterline.from_beziers(segs)
+    pen = Pen(thickness=40.0)
+    _, report = expand_cubic(cl, pen, cap="butt", chord_budget=0.25)
+    assert report.max_chord_error <= 0.25
+    assert report.polyline_vertex_count >= 3
+    assert report.max_offset_fit_error == 0.0
+
+
 def test_expand_cubic_line_matches_polyline_expand() -> None:
     seg = CubicBezier.line((0.0, 0.0), (200.0, 0.0))
     cl = CubicCenterline.from_beziers([seg])
