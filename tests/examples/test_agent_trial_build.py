@@ -1,4 +1,4 @@
-"""TK-502 brief-1 reference family build smoke."""
+"""TK-502 reference family build smoke (Regular + Bold per brief)."""
 
 from __future__ import annotations
 
@@ -16,9 +16,17 @@ ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
 
 
-def test_build_brief1_reference_script(tmp_path: Path) -> None:
+@pytest.mark.parametrize("brief_id", ("brief-1", "brief-2", "brief-3"))
+def test_build_reference_family_script(tmp_path: Path, brief_id: str) -> None:
     proc = subprocess.run(
-        [sys.executable, "build_brief1_reference.py", "--out", str(tmp_path)],
+        [
+            sys.executable,
+            "build_reference_family.py",
+            "--brief",
+            brief_id,
+            "--out",
+            str(tmp_path / brief_id),
+        ],
         cwd=TRIAL,
         capture_output=True,
         text=True,
@@ -26,6 +34,7 @@ def test_build_brief1_reference_script(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
-    assert list(tmp_path.glob("*.otf"))
-    assert (tmp_path / "proof.png").is_file()
-    assert (tmp_path / "snapshot.json").is_file()
+    out = tmp_path / brief_id
+    assert list(out.glob("*.otf"))
+    assert (out / "proof.png").is_file()
+    assert (out / "snapshot.json").is_file()

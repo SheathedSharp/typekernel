@@ -9,7 +9,8 @@
 | `design_coding_clear.py` | brief-3 edited sheet. |
 | `snapshot_design.py` | Run `snapshot_trial` on any module that exports `controls()`. |
 | `snapshot_reference_trials.py` | All three `design_*.py` → `out/brief-*/snapshot.json`. |
-| `build_brief1_reference.py` | brief-1 Regular + Bold OTFs, `AGENT_SENTENCE` gate, `proof.png`. |
+| `build_reference_family.py` | `--brief brief-{1,2,3}` → Regular + Bold OTFs + `proof.png`. |
+| `build_brief1_reference.py` | Thin wrapper for brief-1 only. |
 
 ```bash
 # Reference trial (metrics gate; raise voice_distance toward L3 in the design file)
