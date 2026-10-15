@@ -52,6 +52,11 @@ def test_slab_serif_meets_l3_voice_distance() -> None:
     assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
 
 
+def test_bracketed_serif_meets_l3_voice_distance() -> None:
+    controls = Controls.from_context(DesignContext.bracketed_serif())
+    assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
+
+
 def test_tuned_glyph_raises_nearest_distance() -> None:
     base = Controls.from_context(DesignContext.humanist_sans())
     tuned = base.tuned_glyph("f", arm=0.55).tuned_glyph("t", arm=0.45)

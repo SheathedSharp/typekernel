@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from typing import Literal
 
 from fontTools.misc.bezierTools import splitCubic
 
@@ -490,6 +491,22 @@ def _n_stem_serif_anchors(
     return anchors
 
 
+def _vertical_stem_serif_anchors(
+    stem: float,
+    center_x: float,
+    *,
+    bottom: float,
+    top: float,
+    side: Literal["L", "R"] = "L",
+    include_top: bool = True,
+) -> dict[str, Pt]:
+    """Single vertical stem feet/caps (``l``, ``f``, bowl stems, …)."""
+    anchors: dict[str, Pt] = {f"stem_{side}_b": (center_x, bottom)}
+    if include_top:
+        anchors[f"stem_{side}_t"] = (center_x, top)
+    return anchors
+
+
 def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyph:
     """Control ``n``: continuous cubic outline from its design record."""
     m = metrics or n_metrics(ctx)
@@ -818,7 +835,13 @@ def f_from_n(
         inline_crossbar=inline,
     )
     outline = apply_terminal_shear(c, outline)
-    anchors = {"bottom": (m.stem / 2.0, 0.0)}
+    half = m.stem / 2.0
+    anchors = {
+        "bottom": (half, 0.0),
+        **_vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+        ),
+    }
     return _pack(c, m, anchors, outline)
 
 
@@ -849,7 +872,7 @@ def t_from_n(
     bar = _t_crossbar_in_hook_space(c, m, hook, top)
     belly_scale = 0.06 + 0.94 * min(1.0, max(0.0, (t_w - 0.68) / 0.32))
     belly = _hook_belly_fillet(m.stem) * belly_scale
-    outline, x_t = _hook_with_crossbar_outline(
+    outline, _x_t = _hook_with_crossbar_outline(
         hook, m, c, arm, bar, blend=False, hook_belly=belly
     )
     flipped = _ccw(mirror_y(outline, at_y=top / 2.0))
@@ -865,7 +888,13 @@ def t_from_n(
         outline = shear_end(flipped, tip, -16.0, band=band, along="y", inward="-")
     else:
         outline = apply_terminal_shear(c, flipped, at=tip)
-    anchors = {"bottom": (x_t / 2.0, 0.0)}
+    half = m.stem / 2.0
+    anchors = {
+        "bottom": (half, 0.0),
+        **_vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=top, side="L", include_top=False
+        ),
+    }
     return _pack(c, m, anchors, outline)
 
 
@@ -887,9 +916,18 @@ def j_from_n(
     body = apply_terminal_shear(c, body, at=tip)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
+    half = m.stem / 2.0
     anchors = {
-        "top": (m.stem / 2.0, dot_y + m.stem * 0.95),
-        "bottom": (m.stem / 2.0, c.descender),
+        "top": (half, dot_y + m.stem * 0.95),
+        "bottom": (half, c.descender),
+        **_vertical_stem_serif_anchors(
+            m.stem,
+            half,
+            bottom=c.descender,
+            top=m.x_height,
+            side="L",
+            include_top=False,
+        ),
     }
     return _pack(c, m, anchors, body, dot)
 
@@ -1111,7 +1149,14 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         outline = _ccw(b.build())
     else:
         outline = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
-    anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (m.stem / 2.0, 0.0)}
+    half = m.stem / 2.0
+    anchors = {
+        "top": (half, m.ascender),
+        "bottom": (half, 0.0),
+        **_vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+        ),
+    }
     return _pack(c, m, anchors, outline)
 
 
@@ -1260,7 +1305,20 @@ def _bowl_glyph(
         bottom, top = 0.0, (_n_record(n_glyph).ascender if n_glyph is not None else c.ascender)
     outline = _bowl_stem_outline(o, stem, stem_bottom=bottom, stem_top=top, join=join)
     cx = o.rx
-    anchors = {"top": (cx, o.x_height)}
+    anchors: dict[str, Pt] = {"top": (cx, o.x_height)}
+    if c.style.serif == "bracketed":
+        stem_center = stem / 2.0 if stem_left else (2.0 * cx - stem / 2.0)
+        stem_side: Literal["L", "R"] = "L" if stem_left else "R"
+        anchors.update(
+            _vertical_stem_serif_anchors(
+                stem,
+                stem_center,
+                bottom=bottom,
+                top=top,
+                side=stem_side,
+                include_top=False,
+            )
+        )
     if not descends:
         anchors["bottom"] = (cx, 0.0)
     if stem_left:

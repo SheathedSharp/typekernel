@@ -20,7 +20,7 @@ from typekernel.geo.path_builder import PathBuilder
 from typekernel.optics.stem import diagonal_compensation
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.control import _ccw, _n_record, _pack
+from typekernel.parts.control import _ccw, _n_record, _pack, _vertical_stem_serif_anchors
 from typekernel.parts.terminal_openings import apply_terminal_shear
 
 __all__ = [
@@ -546,7 +546,14 @@ def k_from_n(
             if 140.0 <= m.stem <= 160.0:
                 w *= 1.016
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
-    anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
+    half = m.stem / 2.0
+    anchors = {
+        "top": (half, m.ascender),
+        "bottom": (w / 2.0, 0.0),
+        **_vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+        ),
+    }
     tip = (w - m.stem * 0.15, m.x_height * 0.08)
     if c.terminal_style == "angled":
         outline = apply_terminal_shear(

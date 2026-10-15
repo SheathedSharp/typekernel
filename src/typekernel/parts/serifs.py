@@ -81,8 +81,13 @@ def _bracket_serif(
     else:
         x_stem = site.center_x - site.stem_width / 2.0
         side = "right"
-    y = site.y if site.edge == "b" else site.y - thickness
-    return serif_bracket(ctx, x_stem, y, side=side, length=length, thickness=thickness)
+    if site.edge == "b":
+        y_base = site.y - thickness
+    else:
+        y_base = site.y
+    return serif_bracket(
+        ctx, x_stem, y_base, side=side, length=length, thickness=thickness
+    )
 
 
 def _stem_width(glyph: ComposedGlyph) -> float:

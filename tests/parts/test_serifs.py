@@ -43,6 +43,12 @@ def test_slab_n_masters_interpolate_on_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_bracketed_serif_changes_n_outline() -> None:
+    plain = Controls.from_context(DesignContext.humanist_sans()).build("n")
+    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
+
+
 def test_bracketed_serif_lint_clean_on_full_supported() -> None:
     ctx = DesignContext.bracketed_serif()
     report = lint_controls(Controls.from_context(ctx))
