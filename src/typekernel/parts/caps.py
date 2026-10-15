@@ -836,16 +836,39 @@ def R_from_H(
         raise ValueError("R leg does not fit between stem and bowl; adjust width")
     _, after = splitCubicAtT(*q3, t_c)
 
+    baked = c.style.serif == "slab"
     b = PathBuilder()
-    b.moveTo(0.0, 0.0)
-    for p in ((t, 0.0), (t, y_b), (x_l, y_b), (w - hw, 0.0), foot_r, after[0]):
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        l = min(length, t * 0.48)
+        th = min(thick, cap * 0.1, t * 0.18)
+        b.moveTo(-l, -th)
+        b.lineTo(t + l, -th)
+        b.lineTo(t + l, 0.0)
+        b.lineTo(t, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(t, 0.0)
+    for p in ((t, y_b), (x_l, y_b), (w - hw, 0.0), foot_r, after[0]):
         b.lineTo(*p)
     _curve(b, after)
     _curve(b, q0)
-    b.lineTo(0.0, cap)
+    if baked:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
     b.closePath()
     _counter(b, t, x0, i3, i0)
-    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _with_counters(b),
+    )
 
 
 def B_from_H(
@@ -886,18 +909,40 @@ def B_from_H(
     low_part, _ = splitCubicAtT(*lq0, inside[0].t1)
     _, up_part = splitCubicAtT(*uq3, inside[0].t2)
 
+    baked = c.style.serif == "slab"
     b = PathBuilder()
-    b.moveTo(0.0, 0.0)
-    b.lineTo(xl, 0.0)
+    if baked:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(c)
+        l = min(length, t * 0.48)
+        th = min(thick, cap * 0.1, t * 0.18)
+        b.moveTo(-l, -th)
+        b.lineTo(t + l, -th)
+        b.lineTo(t + l, 0.0)
+        b.lineTo(xl, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(xl, 0.0)
     _curve(b, lq3)
     _curve(b, low_part)
     _curve(b, (low_part[3], up_part[1], up_part[2], up_part[3]))
     _curve(b, uq0)
-    b.lineTo(0.0, cap)
+    if baked:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
     b.closePath()
     _counter(b, t, xl, li3, li0)
     _counter(b, t, xu, ui3, ui0)
-    return _pack(c, h, _cap_anchors(w, h), _with_counters(b))
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _with_counters(b),
+    )
 
 
 def _u_parts(h: HMetrics, w: float, e: float, spring: float) -> tuple[Cubic, ...]:
