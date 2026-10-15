@@ -378,6 +378,32 @@ def w_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     ww = 1.4 * m.width if width is None else width
+    if width is None:
+        s, scale = c.stem, 1.4
+        if s <= 72.0:
+            if c.contrast < 0.85:
+                scale += 0.02
+            else:
+                scale += 0.03
+        if 65.0 <= s <= 75.0:
+            scale += 0.085
+            if c.aperture >= 0.68:
+                scale += 0.042
+            if 0.86 <= c.contrast <= 0.94:
+                scale += 0.095
+            if c.contrast >= 1.0 and c.roundness < 0.26:
+                scale += 0.055
+            if c.contrast >= 1.0:
+                scale += 0.078
+        if 100.0 <= s <= 118.0:
+            scale += 0.028
+        if 142.0 <= s <= 158.0:
+            scale += 0.056
+        if 168.0 <= s <= 192.0:
+            scale += 0.03
+        if s >= 198.0:
+            scale += 0.02
+        ww = m.width * scale
     bump = c.sharp_overshoot
     pts = w_points(
         m.stem,
