@@ -407,7 +407,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-303、TK-207。
 
 #### TK-306 衬线系统（先 slab，后 bracketed）　〔L〕
-- **进展（部分）**：`parts/serifs.py` + `Style.serif`（`none`/`slab`/`bracketed`）；`stem_*` 锚点接线（`n`/`h`/`m`/`u`/`r`/`i`、cap ``I``）；cap ``H`` 内嵌 slab 单轮廓（``test_slab_h_masters_interpolate_on_weight_ladder``）；`build_all` 后 `apply_glyph_serifs`；`DesignContext.slab_serif()`；全 ``supported`` lint 零 error；``n`` 四母版 ``check_masters``。
+- **进展（部分）**：`parts/serifs.py` + `Style.serif`；cap ``H``/``I`` 内嵌 slab 单轮廓；`examples/slab_serif/`（Regular/Light/Bold + family gate）；`slab_serif()` / `bracketed_serif()`；全 ``supported`` lint 零 error；``n``/``H``/``I`` 字重阶梯 ``check_masters`` 测试。
 - **本轮（部分）**：``bracketed_serif()`` preset；``test_bracketed_serif_lint_clean_on_full_supported`` + ``n`` 四母版 ``check_masters``；cap ``H`` 仅 ``slab`` 内嵌（``bracketed`` 仍走锚点布尔）。
 - **待续**：更多字形 stem 锚点 / 内嵌轮廓；人审与示例。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。

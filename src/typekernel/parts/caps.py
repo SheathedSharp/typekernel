@@ -229,6 +229,29 @@ def _h_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
     ]
 
 
+def _i_slab_outline_points(h: HMetrics, ctx: DesignContext) -> list[Pt]:
+    t, cap = h.stem, h.cap_height
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, t * 0.5)
+    th = min(thick, cap * 0.1, t * 0.2)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (t, 0.0),
+        (t, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyph:
     """Control ``H``: two cap stems and a crossbar, one contour."""
     h = metrics or h_cap_metrics(ctx)
@@ -251,14 +274,18 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
     """``I``: one ``H`` stem."""
     c = ctx or H.context
     h = _h_record(H)
+    half = h.stem / 2.0
+    cap = h.cap_height
+    if c.style.serif == "slab":
+        anchors = {"top": (half, cap), "bottom": (half, 0.0)}
+        return _pack(c, h, anchors, _polygon(_i_slab_outline_points(h, c)))
     from typekernel.parts.primitives import contrast_stem_caps
 
-    stem = contrast_stem_caps(c, 0.0, 0.0, h.cap_height, width=h.stem)
-    half = h.stem / 2.0
+    stem = contrast_stem_caps(c, 0.0, 0.0, cap, width=h.stem)
     anchors = {
         **_cap_anchors(h.stem, h),
         "stem_L_b": (half, 0.0),
-        "stem_L_t": (half, h.cap_height),
+        "stem_L_t": (half, cap),
     }
     return _pack(c, h, anchors, stem)
 

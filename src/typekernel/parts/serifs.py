@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+from typekernel.geo.boolean import union_all
 from typekernel.geo.outline import Outline
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
@@ -125,14 +126,21 @@ def apply_glyph_serifs(glyph: ComposedGlyph) -> ComposedGlyph:
     sites = _sites_from_anchors(glyph)
     if not sites:
         return glyph
+    serif_parts = [_serif_outline(ctx, site) for site in sites]
+    ink = list(glyph.solids)
+    if ink:
+        stem = ink[0]
+        merged = (
+            union_all([stem, *serif_parts])
+            if serif_parts
+            else stem
+        )
+        ink = [merged, *ink[1:]]
     asm = GlyphAssembler(ctx).with_design(glyph.design)
-    for solid in glyph.solids:
+    for solid in ink:
         asm.add(solid)
     for hole in glyph.holes:
         asm.add_hole(hole)
-    for site in sites:
-        asm.add(_serif_outline(ctx, site))
-    asm.union_solids()
     for anchor in glyph.anchors:
         asm.anchor(anchor.name, anchor.x, anchor.y)
     return asm.build()
