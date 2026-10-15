@@ -1658,7 +1658,7 @@ def s_from_o(
     *,
     aperture: float | None = None,
     width: float = 0.82,
-    top_scale: float = 0.92,
+    top_scale: float = 0.90,
     spine: float = 0.50,
 ) -> ComposedGlyph:
     """Derive ``s``: two stacked half-rings sharing the spine.
