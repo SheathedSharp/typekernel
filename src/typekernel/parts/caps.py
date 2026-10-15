@@ -1015,13 +1015,53 @@ def X_from_H(
     return _diag_cap(H, ctx, w, x_points(h.stem, h.cap_height, w, c.contrast))
 
 
+def _z_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
+    """Slab feet on the lower-left and upper-left (and top-right cap) of cap ``Z``."""
+    cap, bt = h.cap_height, h.bar
+    w = base[1][0]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, bt * 0.55, h.stem * 0.48)
+    th = min(thick, bt * 0.5, cap * 0.08)
+    hw = base[3][0]
+    return [
+        (-l, -th),
+        (bt + l, -th),
+        (bt + l, 0.0),
+        (w, 0.0),
+        (w, bt),
+        (hw, bt),
+        (w, cap - bt),
+        (w, cap),
+        (w + l, cap),
+        (w + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, cap - bt),
+        (w - hw, cap - bt),
+        (0.0, bt),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def Z_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.88
 ) -> ComposedGlyph:
     """``Z``: ``H``-bar-thick top and foot joined by one compensated diagonal."""
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
-    return _diag_cap(H, ctx, w, z_points(h.stem, h.bar, h.cap_height, w, c.contrast))
+    base = z_points(h.stem, h.bar, h.cap_height, w, c.contrast)
+    baked = c.style.serif == "slab"
+    pts = _z_cap_slab_points(h, c, base) if baked else base
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
+    )
 
 
 def _k_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
