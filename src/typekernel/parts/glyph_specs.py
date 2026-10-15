@@ -5,7 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, replace
 from typing import Any
 
-from typekernel.parts.caps import G_from_O, K_from_H, R_from_H, Y_from_H
+from typekernel.parts.caps import (
+    G_from_O,
+    K_from_H,
+    M_from_H,
+    N_from_H,
+    R_from_H,
+    V_from_H,
+    W_from_H,
+    X_from_H,
+    Y_from_H,
+)
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
@@ -25,9 +35,14 @@ __all__ = [
     "GSpec",
     "JSpec",
     "KSpec",
+    "MSpec",
+    "NSpec",
     "RSpec",
     "SSpec",
     "TSpec",
+    "VSpec",
+    "WSpec",
+    "XSpec",
     "YSpec",
     "build_from_spec",
     "merge_spec",
@@ -98,6 +113,42 @@ class KSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class MSpec:
+    """``M``: cap width fraction and inner vertex depth on the baseline."""
+
+    width: float = 1.18
+    apex: float = 0.35
+
+
+@dataclass(frozen=True, slots=True)
+class NSpec:
+    """``N``: cap width fraction."""
+
+    width: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class VSpec:
+    """``V``: cap width fraction."""
+
+    width: float = 0.98
+
+
+@dataclass(frozen=True, slots=True)
+class WSpec:
+    """``W``: cap width fraction (wider than ``V`` by default)."""
+
+    width: float = 1.4
+
+
+@dataclass(frozen=True, slots=True)
+class XSpec:
+    """``X``: crossing diagonals width fraction."""
+
+    width: float = 0.92
+
+
+@dataclass(frozen=True, slots=True)
 class RSpec:
     """``R``: bowl width and leg splice along the lower curve."""
 
@@ -124,7 +175,12 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "s": SSpec,
     "G": GSpec,
     "K": KSpec,
+    "M": MSpec,
+    "N": NSpec,
     "R": RSpec,
+    "V": VSpec,
+    "W": WSpec,
+    "X": XSpec,
     "Y": YSpec,
 }
 
@@ -174,6 +230,16 @@ def build_from_spec(
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
     if ch == "K" and isinstance(spec, KSpec):
         return K_from_H(n_glyph, ctx, width=spec.width, vertex=spec.vertex)
+    if ch == "M" and isinstance(spec, MSpec):
+        return M_from_H(n_glyph, ctx, width=spec.width, apex=spec.apex)
+    if ch == "N" and isinstance(spec, NSpec):
+        return N_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "V" and isinstance(spec, VSpec):
+        return V_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "W" and isinstance(spec, WSpec):
+        return W_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "X" and isinstance(spec, XSpec):
+        return X_from_H(n_glyph, ctx, width=spec.width)
     if ch == "R" and isinstance(spec, RSpec):
         return R_from_H(
             n_glyph,

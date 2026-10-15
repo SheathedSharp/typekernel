@@ -46,7 +46,7 @@ Typed knobs in `parts/glyph_specs.py` (defaults match stock derivations):
 | Char | Spec | Fields |
 | --- | --- | --- |
 | `f` `t` `j` `a` `s` `e` | `FSpec` … `SSpec` | see dataclass docstrings |
-| `G` `R` `Y` | `GSpec` `RSpec` `YSpec` | `bar_reach`; `width`/`leg_at`/…; `junction` |
+| `G` `K` `R` `Y` `V` `W` `X` `M` `N` | cap specs | `bar_reach`; `width`/`vertex`; `leg_at`/…; `junction`; `apex` (M) |
 
 L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family polish and review notes.
 

@@ -34,10 +34,29 @@ def test_cap_glyph_specs_default_match_stock() -> None:
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
 
 
+def test_cap_vwx_mn_specs_default_match_stock() -> None:
+    ctx = DesignContext.humanist_sans()
+    chars = "VWXMN"
+    base = Controls.from_context(ctx).build_all(chars)
+    tuned = Controls.from_context(ctx)
+    for ch in chars:
+        tuned = tuned.tuned_glyph(ch)
+    built = tuned.build_all(chars)
+    for ch in chars:
+        assert composed_glyph_hash(base[ch]) == composed_glyph_hash(built[ch])
+
+
 def test_k_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
     narrow = Controls.from_context(ctx).tuned_glyph("K", width=0.86).build("K")
     wide = Controls.from_context(ctx).tuned_glyph("K", width=0.98).build("K")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
+def test_v_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("V", width=0.88).build("V")
+    wide = Controls.from_context(ctx).tuned_glyph("V", width=1.06).build("V")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 

@@ -346,9 +346,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-303 字形规格记录与 `Controls.tuned_glyph` 〔M〕★ 优先
 - **目的**：补上缺失的「中间层」——介于全局浮点（太浅）和手写 `PathBuilder`（太深）之间。
-- **进展**：`glyph_specs.py` + `Controls.tuned_glyph` 覆盖 `f t j a s e` 与 cap `G R Y`；`design_review` 记 `spec`；`tests/parts/test_glyph_specs.py` 单调性 + 默认哈希。
+- **进展**：`glyph_specs.py` + `Controls.tuned_glyph` 覆盖 `f t j a s e` 与 cap `G K R Y V W X M N`；`design_review` 记 `spec`；`tests/parts/test_glyph_specs.py` 单调性 + 默认哈希。
 - **本轮（部分）**：``SSpec.top_scale`` 与 ``s_from_o`` 对齐；``build_all`` 按字形表路由 ``glyph_overrides``；``test_tuned_glyph_defaults_match_stock_derivation`` 参数化覆盖 ``f``/``t``/``j``/``a``/``e``/``s``。
 - **本轮（部分）**：``KSpec``（``width``/``vertex``）+ ``tuned_glyph("K")``；``K_from_H`` 暴露 ``vertex`` 参数；``test_k_width_monotone_opens_outline``；默认 master 哈希未变。
+- **本轮（部分）**：``VSpec``/``WSpec``/``XSpec``/``MSpec``/``NSpec`` + ``tuned_glyph`` 路由；默认哈希与单调性测试（``V`` width）。
 - **做什么**：为弱字及其近亲定义**带类型、带文档的规格记录**，字段是设计师会谈论的量，默认值等于当前行为：
   | 记录 | 字段示例 |
   | --- | --- |

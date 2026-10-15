@@ -49,7 +49,7 @@ controls = (
 )
 ```
 
-字段见 `typekernel.parts.glyph_specs`（小写 `FSpec` / `TSpec` / `JSpec` / `ASpec` / `ESpec` / `SSpec`；大写 `GSpec` / `RSpec` / `YSpec`）。Cap 规格同样走 `tuned_glyph("G", bar_reach=0.12)` 等，内部仍从 `H`/`O` 派生。`design_review` 的 `notes` 会列出 `spec f: {...}`。
+字段见 `typekernel.parts.glyph_specs`（小写 `FSpec` / `TSpec` / `JSpec` / `ASpec` / `ESpec` / `SSpec`；大写 `GSpec` / `KSpec` / `RSpec` / `YSpec` / `VSpec` / `WSpec` / `XSpec` / `MSpec` / `NSpec`）。Cap 规格同样走 `tuned_glyph("G", bar_reach=0.12)` 或 `tuned_glyph("K", width=0.94)` 等，内部仍从 `H`/`O` 派生。`design_review` 的 `notes` 会列出 `spec f: {...}`。
 
 仍可直接 `with_glyph` 挂自定义 builder：
 
