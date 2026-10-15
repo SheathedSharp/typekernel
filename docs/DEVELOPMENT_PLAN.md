@@ -417,7 +417,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``c``/``C``/``G`` 开口竖切顶/底（``+x``）内嵌 slab；``G`` 顶托架与 ``C`` 底托架段数固定。
 - **本轮（部分）**：``j`` 复用 hook ``_r_outline`` 脚底；``Q`` 尾端内嵌 slab。
 - **本轮（部分）**：``tests/golden/outline_hashes.json`` 锁定 ``slab_serif`` 全 98 字；``examples/slab_serif`` 三档 sentence gate + proof 烟测通过。
-- **待续**：**人审签字**（自动化验收已齐：lint / 四档 ``check_masters`` / L3 / 示例 gate）；可选 slab VF 示例。
+- **本轮（部分）**：``examples/slab_serif/build_vf.py`` 四档 ``wght`` VF（与稳定字符集同 stem 阶梯）+ ``proof_vf.png``；``test_slab_serif_build_vf_script``。
+- **待续**：**人审签字**（自动化验收已齐：lint / 四档 ``check_masters`` / L3 / 静态与 VF 示例）。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`serif="slab"` 构建全 98 字形 lint 零错误，并在 ≥ 3 个字重通过；人审；对应 preset（如 `slab_serif()`）与示例。
 - **依赖**：TK-305。

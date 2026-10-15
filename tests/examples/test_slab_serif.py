@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -31,6 +32,20 @@ def test_slab_preset_stems_order_light_regular_bold() -> None:
     bold = design.design_bold()
     assert light.context.stem < regular.context.stem < bold.context.stem
     assert regular.context.style.serif == "slab"
+
+
+def test_slab_serif_build_vf_script(tmp_path: Path) -> None:
+    proc = subprocess.run(
+        [sys.executable, "build_vf.py", "--out", str(tmp_path)],
+        cwd=EXAMPLE,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**dict(**__import__("os").environ), "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    assert (tmp_path / "TypekernelSlab-VF.ttf").is_file()
+    assert (tmp_path / "proof_vf.png").is_file()
 
 
 def test_slab_serif_build_script(tmp_path: Path) -> None:
