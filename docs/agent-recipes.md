@@ -49,7 +49,24 @@ controls = (
 )
 ```
 
-字段见 `typekernel.parts.glyph_specs`（小写 `FSpec` / `TSpec` / `JSpec` / `ASpec` / `ESpec` / `SSpec`；大写 `GSpec` / `KSpec` / `RSpec` / `YSpec` / `VSpec` / `WSpec` / `XSpec` / `MSpec` / `NSpec`）。Cap 规格同样走 `tuned_glyph("G", bar_reach=0.12)` 或 `tuned_glyph("K", width=0.94)` 等，内部仍从 `H`/`O` 派生。`design_review` 的 `notes` 会列出 `spec f: {...}`。
+规格类型在 `typekernel.parts.glyph_specs`；`tuned_glyph(ch, **fields)` 只接受该字 `spec_fields(ch)` 里的字段名。Cap 仍从 `H`/`O` 派生。
+
+| 字 | 类型 | 字段（默认） |
+| --- | --- | --- |
+| `f` | `FSpec` | `arm` (0.75) |
+| `t` | `TSpec` | `arm` (0.6), `rise` (0.3) |
+| `j` | `JSpec` | `arm` (0.75) |
+| `a` | `ASpec` | `join` (0.85) |
+| `e` | `ESpec` | `bar_raise` (0.25), `aperture` (None) |
+| `s` | `SSpec` | `width`, `top_scale`, `spine`, `aperture` |
+| `A` | `CapASpec` | `width` (1.02), `apex` (0.35), `bar` (0.28) |
+| `G` | `GSpec` | `bar_reach` (0.1) |
+| `K` | `KSpec` | `width` (0.92), `vertex` (0.42) |
+| `R` | `RSpec` | `width`, `straight`, `bowl`, `leg_at` |
+| `Y` | `YSpec` | `width` (0.98), `junction` (0.42) |
+| `V` `W` `X` `M` `N` | `VSpec` … `NSpec` | 以 `width` 为主；`M` 另有 `apex` (0.35) |
+
+`design_review` 的 `notes` 会列出 `spec f: {...}`。
 
 仍可直接 `with_glyph` 挂自定义 builder：
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass, fields, replace
 from typing import Any
 
 from typekernel.parts.caps import (
+    A_from_H,
     G_from_O,
     K_from_H,
     M_from_H,
@@ -30,6 +31,7 @@ from typekernel.parts.control import (
 __all__ = [
     "WEAK_GLYPH_SPECS",
     "ASpec",
+    "CapASpec",
     "ESpec",
     "FSpec",
     "GSpec",
@@ -95,6 +97,15 @@ class SSpec:
     top_scale: float = 0.90
     spine: float = 0.50
     aperture: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CapASpec:
+    """``A``: cap width, apex flat, and crossbar height (× cap)."""
+
+    width: float = 1.02
+    apex: float = 0.35
+    bar: float = 0.28
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +184,7 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "a": ASpec,
     "e": ESpec,
     "s": SSpec,
+    "A": CapASpec,
     "G": GSpec,
     "K": KSpec,
     "M": MSpec,
@@ -226,6 +238,10 @@ def build_from_spec(
         if spec.aperture is not None:
             kw["aperture"] = spec.aperture
         return s_from_o(o_glyph, ctx, **kw)
+    if ch == "A" and isinstance(spec, CapASpec):
+        return A_from_H(
+            n_glyph, ctx, width=spec.width, apex=spec.apex, bar=spec.bar
+        )
     if ch == "G" and isinstance(spec, GSpec):
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
     if ch == "K" and isinstance(spec, KSpec):

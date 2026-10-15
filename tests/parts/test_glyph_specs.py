@@ -7,7 +7,7 @@ import pytest
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import Controls, DesignContext
-from typekernel.parts.glyph_specs import FSpec, TSpec, merge_spec
+from typekernel.parts.glyph_specs import WEAK_GLYPH_SPECS, FSpec, TSpec, merge_spec
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 
@@ -32,6 +32,23 @@ def test_cap_glyph_specs_default_match_stock() -> None:
     )
     for ch in "GKRY":
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
+
+
+def test_tuned_glyph_defaults_preserve_supported_charset_hashes() -> None:
+    ctx = DesignContext.humanist_sans()
+    base = Controls.from_context(ctx)
+    tuned = Controls.from_context(ctx)
+    for ch in sorted(WEAK_GLYPH_SPECS):
+        tuned = tuned.tuned_glyph(ch)
+    chars = base.supported
+    base_glyphs = base.build_all(chars)
+    tuned_glyphs = tuned.build_all(chars)
+    mismatches = [
+        ch
+        for ch in chars
+        if composed_glyph_hash(base_glyphs[ch]) != composed_glyph_hash(tuned_glyphs[ch])
+    ]
+    assert mismatches == []
 
 
 def test_cap_vwx_mn_specs_default_match_stock() -> None:
@@ -65,6 +82,13 @@ def test_g_bar_reach_moves_crossbar() -> None:
     short = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.05).build("G")
     long = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.18).build("G")
     assert composed_glyph_hash(short) != composed_glyph_hash(long)
+
+
+def test_cap_a_bar_moves_crossbar() -> None:
+    ctx = DesignContext.humanist_sans()
+    low = Controls.from_context(ctx).tuned_glyph("A", bar=0.22).build("A")
+    high = Controls.from_context(ctx).tuned_glyph("A", bar=0.34).build("A")
+    assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
 def test_y_junction_moves_crotch() -> None:
