@@ -1047,7 +1047,7 @@ def U_from_H(
     w = max(width * h.width, min_bowl_stems(t) * t)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
-    baked = c.style.serif == "slab"
+    baked = _cap_serif_inlined(c)
 
     b = PathBuilder()
     if baked:

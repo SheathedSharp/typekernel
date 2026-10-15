@@ -130,9 +130,9 @@ def inline_stem_foot_serif_path(
     length, thick, _ = serif_metrics(ctx)
     l = min(length, stem_width * 0.48)
     th = min(thick, ctx.x_height * 0.1, stem_width * 0.18)
-    b.lineTo(x_stem_left - l, y_base)
-    b.lineTo(x_stem_left - l, y_base - th)
     b.lineTo(x_stem_left, y_base - th)
+    b.lineTo(x_stem_left - l, y_base - th)
+    b.lineTo(x_stem_left - l, y_base)
     b.lineTo(x_stem_left, y_base)
 
 
