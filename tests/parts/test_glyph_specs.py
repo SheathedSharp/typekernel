@@ -183,6 +183,62 @@ def test_s_spine_monotone_moves_midline() -> None:
     assert runs_hi[0] != runs_lo[0]
 
 
+@pytest.mark.parametrize(
+    ("ch", "low", "high"),
+    (
+        ("F", 0.74, 0.90),
+        ("J", 0.66, 0.78),
+        ("L", 0.70, 0.86),
+        ("M", 1.10, 1.26),
+        ("N", 0.92, 1.08),
+        ("P", 0.84, 0.96),
+        ("R", 0.86, 1.02),
+        ("W", 1.30, 1.50),
+        ("X", 0.84, 1.00),
+        ("Y", 0.90, 1.06),
+        ("Z", 0.80, 0.96),
+        ("s", 0.74, 0.90),
+    ),
+)
+def test_width_spec_monotone_changes_outline(ch: str, low: float, high: float) -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph(ch, width=low).build(ch)
+    wide = Controls.from_context(ctx).tuned_glyph(ch, width=high).build(ch)
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
+@pytest.mark.parametrize(
+    ("ch", "field", "low", "high"),
+    (
+        ("a", "join", 0.70, 0.95),
+        ("B", "top_scale", 0.82, 0.98),
+        ("B", "straight", 0.35, 0.55),
+        ("B", "waist", 0.45, 0.62),
+        ("C", "aperture", 0.85, 1.15),
+        ("D", "straight", 0.30, 0.55),
+        ("e", "aperture", 0.85, 1.15),
+        ("j", "arm", 0.55, 0.95),
+        ("J", "spring", 0.30, 0.46),
+        ("K", "vertex", 0.36, 0.52),
+        ("P", "straight", 0.35, 0.55),
+        ("P", "bowl", 0.40, 0.54),
+        ("Q", "tail_drop", 0.06, 0.14),
+        ("R", "straight", 0.35, 0.55),
+        ("R", "leg_at", 0.22, 0.38),
+        ("s", "top_scale", 0.82, 0.98),
+        ("t", "rise", 0.15, 0.45),
+        ("U", "spring", 0.30, 0.46),
+    ),
+)
+def test_glyph_spec_field_monotone_changes_outline(
+    ch: str, field: str, low: float, high: float
+) -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph(ch, **{field: low}).build(ch)
+    wide = Controls.from_context(ctx).tuned_glyph(ch, **{field: high}).build(ch)
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
 def test_merge_spec_rejects_unknown_fields() -> None:
     with pytest.raises(TypeError, match="no field"):
         merge_spec("t", TSpec(), foo=1.0)

@@ -364,6 +364,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``DSpec``/``PSpec``（需 ``O`` 指数）+ ``D`` width 单调性测试。
 - **本轮（部分）**：``BSpec``/``USpec``/``CapJSpec``/``CapCSpec``/``CapSSpec``；``C_from_O``/``S_from_O`` 暴露默认等价参数；``B``/``U``/``S`` 单调性测试。
 - **本轮（部分）**：``QSpec``（``tail_reach``/``tail_drop``）+ ``Q_from_O`` 参数；``Q`` 尾长单调性测试。
+- **本轮（部分）**：``test_width_spec_monotone_changes_outline`` / ``test_glyph_spec_field_monotone_changes_outline`` 覆盖剩余 cap 宽轴与多字段规格（``B``/``P``/``R``/``s``/``U`` 等）。
 - **做什么**：为弱字及其近亲定义**带类型、带文档的规格记录**，字段是设计师会谈论的量，默认值等于当前行为：
   | 记录 | 字段示例 |
   | --- | --- |
