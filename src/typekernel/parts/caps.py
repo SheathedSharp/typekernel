@@ -264,7 +264,20 @@ def F_from_H(
         (w_top, cap),
         (0.0, cap),
     ]
-    outline = apply_terminal_shear(c, _polygon(pts), at=(w_top, cap - bt * 0.5))
+    if c.terminal_style == "horizontal":
+        outline = apply_terminal_shear(
+            c, _polygon(pts), at=(w_top, cap - bt * 0.5), prefer_flat=True
+        )
+    elif c.terminal_style == "angled":
+        outline = apply_terminal_shear(
+            c,
+            _polygon(pts),
+            at=(w_top, cap - bt * 0.5),
+            along="x",
+            inward="-",
+        )
+    else:
+        outline = _polygon(pts)
     return _pack(c, h, _cap_anchors(w, h), outline)
 
 
@@ -1030,5 +1043,18 @@ def T_from_H(
         (0.0, cap - bt),
         (s0, cap - bt),
     ]
-    outline = apply_terminal_shear(c, _polygon(pts), at=(w, cap - bt * 0.5))
+    if c.terminal_style == "horizontal":
+        outline = apply_terminal_shear(
+            c, _polygon(pts), at=(w, cap - bt * 0.5), prefer_flat=True
+        )
+    elif c.terminal_style == "angled":
+        outline = apply_terminal_shear(
+            c,
+            _polygon(pts),
+            at=(w, cap - bt * 0.5),
+            along="x",
+            inward="-",
+        )
+    else:
+        outline = _polygon(pts)
     return _pack(c, h, _cap_anchors(w, h), outline)

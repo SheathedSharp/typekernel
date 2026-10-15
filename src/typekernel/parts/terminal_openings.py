@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from typekernel.geo.outline import Outline, bounds
 from typekernel.parts.context import DesignContext
 
@@ -41,9 +43,21 @@ def r_arm_scale(ctx: DesignContext) -> float:
     return 0.93
 
 
-def _tip_cut(ctx: DesignContext, outline: Outline, at: tuple[float, float]) -> Outline:
-    band = max(6.0, ctx.stem * 0.38)
-    if ctx.terminal_style == "horizontal":
+def _tip_cut(
+    ctx: DesignContext,
+    outline: Outline,
+    at: tuple[float, float],
+    *,
+    prefer_flat: bool = False,
+    along: Literal["x", "y"] = "y",
+    inward: Literal["auto", "+", "-"] = "-",
+    band: float | None = None,
+) -> Outline:
+    shear_band = band if band is not None else max(6.0, ctx.stem * 0.38)
+    use_flat = ctx.terminal_style == "horizontal" or (
+        ctx.terminal_style == "angled" and prefer_flat
+    )
+    if use_flat:
         import importlib.util
 
         if importlib.util.find_spec("pathops") is not None:
@@ -60,7 +74,9 @@ def _tip_cut(ctx: DesignContext, outline: Outline, at: tuple[float, float]) -> O
     from typekernel.parts.terminals import shear_end
 
     angle = -10.0 if ctx.terminal_style == "horizontal" else -16.0
-    return shear_end(outline, at, angle, band=band, along="y", inward="-")
+    return shear_end(
+        outline, at, angle, band=shear_band, along=along, inward=inward
+    )
 
 
 def apply_terminal_shear(
@@ -68,6 +84,10 @@ def apply_terminal_shear(
     outline: Outline,
     *,
     at: tuple[float, float] | None = None,
+    prefer_flat: bool = False,
+    along: Literal["x", "y"] = "y",
+    inward: Literal["auto", "+", "-"] = "-",
+    band: float | None = None,
 ) -> Outline:
     """Shear or flat-cut one open terminal on ``outline``."""
     if ctx.terminal_style == "vertical":
@@ -78,4 +98,12 @@ def apply_terminal_shear(
         except ValueError:
             return outline
         at = (max_x, max_y - ctx.stem * 0.12)
-    return _tip_cut(ctx, outline, at)
+    return _tip_cut(
+        ctx,
+        outline,
+        at,
+        prefer_flat=prefer_flat,
+        along=along,
+        inward=inward,
+        band=band,
+    )

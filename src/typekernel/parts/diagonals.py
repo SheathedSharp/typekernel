@@ -507,5 +507,7 @@ def k_from_n(
         w = m.width * scale
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
     anchors = {"top": (m.stem / 2.0, m.ascender), "bottom": (w / 2.0, 0.0)}
-    outline = apply_terminal_shear(c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08))
+    outline = apply_terminal_shear(
+        c, _polygon(pts), at=(w - m.stem * 0.15, m.x_height * 0.08)
+    )
     return _pack(c, m, anchors, outline)

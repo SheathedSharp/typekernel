@@ -64,9 +64,10 @@ def test_terminal_style_reaches_many_glyphs() -> None:
 
 
 def test_terminal_style_angled_reaches_open_stroke_glyphs() -> None:
-    """TK-304: angled shear must move bowl / hook letters (caps ``F``/``T`` still vertical)."""
+    """TK-304: angled terminals move bowl / hook letters and cap ``F``/``T`` bar ends."""
     base = DesignContext.humanist_sans()
     a = _build(base)
     b = _build(replace(base, terminal_style="angled"))
     changed = _shape_changed(a, b)
-    assert len(changed) >= 15
+    assert len(changed) >= 19
+    assert {"F", "T"}.issubset(set(changed))

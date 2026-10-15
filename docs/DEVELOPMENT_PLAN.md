@@ -383,9 +383,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-304 端点系统　〔M〕
 - **做什么**：`terminal_openings.py` 将 `terminal_style` 接到 `c e s r f t j g y k a` 与 `C G S J F T` 等（开口 closure + `terminals` 切/剪）；`ball` / `flared` 仍待扩展。
-- **本轮（部分）**：``test_angled_terminal_counter_pinch_charset_passes_r8``（七 preset × 阶梯 R8）；``test_terminal_style_angled_reaches_open_stroke_glyphs``（≥15 字）。
+- **本轮（部分）**：``test_angled_terminal_counter_pinch_charset_passes_r8``（七 preset × 阶梯 R8）；``test_terminal_style_angled_reaches_open_stroke_glyphs``（≥19 字，含 cap ``F``/``T`` 斜切）。
+- **本轮（部分）**：cap ``F``/``T`` 在 ``angled`` 下用 ``shear_end``（``along=x``）替代 flat cut，避免 R8 细缝；``horizontal`` 仍 flat cut。
 - **验收**：TK-107 `terminal_style` xfail 已转正（``horizontal`` ≥20 字形）；默认 `vertical` 下 golden 哈希不变；``angled`` 字重阶梯 R8 零报（见本轮测试）。
-- **待续**：``angled`` 对闭顶 cap ``F``/``T`` 与 ``k`` 臂端（``horizontal`` 有 flat cut）仍与 ``vertical`` 同形；``ball``/``flared``。
+- **待续**：``k`` 臂端 ``angled`` 与 ``vertical`` 仍同形（臂 shear 会触发 R8）；``ball``/``flared``。
 
 #### TK-305 风格 DNA：离散拓扑选项　〔L〕
 - **进展**：`Style` 六选项均已接线；`tests/parts/test_style_gate.py`（各选项 lint + 非拓扑 style 的 `check_masters`）；`agent-recipes` Style 表。待续：`a_form`/`g_form` 跨字重 VF 兼容、全族 lint/identity 清零。
