@@ -1158,15 +1158,54 @@ def _diag_cap(
     return _pack(c, h, _cap_anchors(width, h), _polygon(pts))
 
 
+def _v_cap_foot_dims(h: HMetrics, ctx: DesignContext, apex_x: float) -> tuple[float, float, float]:
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    l = min(length * 0.35, apex_x * 0.28, h.stem * 0.28)
+    th = min(thick * 0.55, h.cap_height * 0.04, h.stem * 0.1)
+    return l, th, bracket_r
+
+
+def _append_v_cap_foot_pad(
+    b: PathBuilder,
+    apex_x: float,
+    l: float,
+    th: float,
+    bracket_r: float,
+    *,
+    bracketed: bool,
+) -> None:
+    """Bottom foot pad at one ``V`` apex (ends on ``(apex_x + l, 0)``)."""
+    xl, xr = apex_x - l, apex_x + l
+    b.lineTo(xl, -th)
+    if not bracketed:
+        b.lineTo(xr, -th)
+        b.lineTo(xr, 0.0)
+        return
+    span_x = xr - xl
+    r = min(bracket_r, span_x * 0.4, th * 0.45)
+    if r < 0.35:
+        b.lineTo(xr, -th)
+        b.lineTo(xr, 0.0)
+        return
+    b.lineTo(xr - r, -th)
+    b.curveTo(
+        xr - r + r * KAPPA,
+        -th,
+        xr,
+        -th + r - r * KAPPA,
+        xr,
+        -th + r,
+    )
+    b.lineTo(xr, 0.0)
+
+
 def _v_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
     """Slab feet on the flat ``V`` apex only (top stays sharp for lint)."""
     a0 = base[1][0]
     w = base[3][0]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length * 0.35, a0 * 0.28, h.stem * 0.28)
-    th = min(thick * 0.55, h.cap_height * 0.04, h.stem * 0.1)
+    l, th, _ = _v_cap_foot_dims(h, ctx, a0)
     return [
         base[0],
         base[1],
@@ -1182,6 +1221,23 @@ def _v_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[
         base[5],
         base[6],
     ]
+
+
+def _v_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> Outline:
+    """Bracketed ``V``: slab foot pads with inner cubic fillets (fixed topology)."""
+    a0 = base[1][0]
+    w = base[3][0]
+    l, th, bracket_r = _v_cap_foot_dims(h, ctx, a0)
+    b = PathBuilder()
+    b.moveTo(*base[0])
+    b.lineTo(*base[1])
+    _append_v_cap_foot_pad(b, a0, l, th, bracket_r, bracketed=True)
+    b.lineTo(*base[2])
+    _append_v_cap_foot_pad(b, w - a0, l, th, bracket_r, bracketed=True)
+    for p in base[3:]:
+        b.lineTo(*p)
+    b.closePath()
+    return _ccw(b.build())
 
 
 def V_from_H(
@@ -1202,13 +1258,16 @@ def V_from_H(
     bump = c.sharp_overshoot
     base = v_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
     baked = _cap_serif_inlined(c)
-    pts = _v_cap_slab_points(h, c, base) if baked else base
-    return _pack(
-        c,
+    anchors = _cap_anchors(
+        w,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
-        _polygon(pts),
+        stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
+    if baked and c.style.serif == "bracketed":
+        outline = _v_cap_bracketed_outline(h, c, base)
+        return _pack(c, h, anchors, outline)
+    pts = _v_cap_slab_points(h, c, base) if baked else base
+    return _pack(c, h, anchors, _polygon(pts))
 
 
 def _w_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
