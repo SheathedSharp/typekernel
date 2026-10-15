@@ -194,7 +194,8 @@ Default punctuation/figures live in `Controls.supported` via `PUNCT_FORMS`, caps
 | `examples/first_font/` | Full static family pipeline + features |
 | `examples/zayju_letter/` | Hand-built `n` with `PathBuilder` when `Controls` is not enough |
 | `examples/variable_family/` | wght VF, designed counters |
-| `examples/italic_family/` | wght × ital, shared kern classes |
+| `examples/italic_family/` | wght × ital via `vf_italic_pair`, shared kern (`build_italic_vf.py`) |
+| `examples/agent_trial/` | TK-502 preset / serif voice trial snapshots (`snapshot_*.py`) |
 | `examples/slab_serif/` | **L2 serif** — slab voice, static three masters + `build_vf.py` |
 | `examples/bracketed_serif/` | **L2 serif** — bracketed voice, same ladder as slab VF tests |
 | `examples/variable_width/build_vfwd.py` | wght × wdth |
