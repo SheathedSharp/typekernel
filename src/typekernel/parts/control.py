@@ -454,6 +454,15 @@ def _horizontal_slant_scale(ctx: DesignContext) -> float:
     return horizontal_slant_compensation(ctx)
 
 
+def _e_oblique_shear(ctx: DesignContext) -> float | None:
+    """Shear used to pre-split ``e`` before construct slant (TK-402)."""
+    if abs(ctx.italic_slant_deg) >= 6.0:
+        return math.tan(math.radians(ctx.italic_slant_deg))
+    if ctx.vf_compat_oblique_splits:
+        return math.tan(math.radians(ctx.vf_oblique_split_deg))
+    return None
+
+
 def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     if stem_top > m.x_height + 1.0:
         return m.x_height + (stem_top - m.x_height) * 0.38
@@ -1820,8 +1829,14 @@ def e_from_o(
     b.closePath()
 
     outer, eye = b.build().contours
+    outline = Outline((outer, reverse_contour(eye)))
+    shear = _e_oblique_shear(c)
+    if shear is not None:
+        from typekernel.geo.extrema import outline_e_oblique_splits
+
+        outline = outline_e_oblique_splits(outline, shear)
     anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
-    return _pack(c, o, anchors, Outline((outer, reverse_contour(eye))))
+    return _pack(c, o, anchors, outline)
 
 
 def _double_storey_g_from_o(

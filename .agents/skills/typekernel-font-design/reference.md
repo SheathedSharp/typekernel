@@ -70,7 +70,7 @@ VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladde
 
 - **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF prefer `vf_italic_pair(regular, style=ItalicStyle(...))` (matched oblique pre-split angle) or `vf_upright_controls(regular, oblique_split_deg=…)` + `italic_design(upright, …)`.
 - **Oblique**: `oblique_font` / `ObliqueTransform` — mechanical shear only; do not label as Italic.
-- **TK-402**: `parts/oblique_compat.py` pre-splits before slant for glyphs outside `OBLIQUE_COMPAT_EXCLUDE` (currently `e` only). `OBLIQUE_PRE_EXTREMA` (`mu`) splits axis extrema on-curve first. VF upright uses branching arches when `vf_compat_oblique_splits`. Italic R4 may still warn on `e`.
+- **TK-402**: `parts/oblique_compat.py` pre-splits before slant for glyphs outside `OBLIQUE_COMPAT_EXCLUDE` (`e` bakes splits in `e_from_o` via `outline_e_oblique_splits`). `OBLIQUE_PRE_EXTREMA` (`mu`). VF upright uses branching arches when `vf_compat_oblique_splits`.
 
 ## Glyph derivation (today)
 

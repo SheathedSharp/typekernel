@@ -14,6 +14,7 @@ from typekernel.geo.segment import CubicSegment, LineSegment
 __all__ = [
     "cubic_has_off_node_axis_extrema",
     "oblique_compat_split_ts",
+    "outline_e_oblique_splits",
     "outline_oblique_compat_splits",
     "outline_with_axis_extrema_on_curve",
 ]
@@ -127,6 +128,31 @@ def outline_oblique_compat_splits(outline: Outline, shear: float) -> Outline:
     if abs(shear) < 1e-12:
         return outline
     return Outline(tuple(_contour_oblique_compat_splits(ct, shear) for ct in outline.contours))
+
+
+_E_EYE_FALLBACK_SPLIT_T = 0.94
+
+
+def _e_eye_oblique_segment_parity(eye: Contour) -> Contour:
+    """Heavy ``e`` eyes may miss an oblique split; match the regular eye topology."""
+    if len(eye.segments) != 3:
+        return eye
+    seg = eye.segments[2]
+    if not isinstance(seg, CubicSegment):
+        return eye
+    new_segs: list[LineSegment | CubicSegment] = list(eye.segments[:2])
+    new_segs.extend(_split_cubic_at_ts(seg, [_E_EYE_FALLBACK_SPLIT_T]))
+    return Contour(tuple(new_segs), closed=eye.closed)
+
+
+def outline_e_oblique_splits(outline: Outline, shear: float) -> Outline:
+    """Oblique pre-splits for ``e``; normalises eye contour segment counts (TK-402)."""
+    split = outline_oblique_compat_splits(outline, shear)
+    if len(split.contours) < 2:
+        return split
+    outer, eye = split.contours[0], split.contours[1]
+    eye = _e_eye_oblique_segment_parity(eye)
+    return Outline((outer, eye))
 
 
 def _contour_with_axis_extrema(contour: Contour) -> Contour:

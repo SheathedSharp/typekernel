@@ -10,8 +10,7 @@ from typekernel.geo.extrema import (
 )
 from typekernel.parts.compose import ComposedGlyph
 
-# ``e`` stays on plain construct slant: oblique pre-splits change counter segment
-# counts when ``with_stem_relief()`` bold masters pair with upright VF splits (TK-402).
+# ``e`` bakes oblique pre-splits in :func:`~typekernel.parts.control.e_from_o` (TK-402).
 OBLIQUE_COMPAT_EXCLUDE = frozenset("e")
 # Branching ``m`` / ``u`` need on-curve axis extrema before oblique pre-split (TK-402).
 OBLIQUE_PRE_EXTREMA = frozenset("mu")
