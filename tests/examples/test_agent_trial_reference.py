@@ -75,6 +75,11 @@ def test_reference_metrics_match_committed_fixture() -> None:
         assert snap.lint_error_count == row["lint_error_count"]
         assert snap.identity_error_count == row["identity_error_count"]
         assert abs(snap.voice_distance - row["voice_distance"]) < 1e-5
+        assert abs(snap.topology_fraction - row["topology_fraction"]) < 1e-5
+        if row["l3_voice_ok"]:
+            from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
+
+            assert snap.topology_fraction >= L3_MIN_TOPOLOGY_FRACTION
 
 
 def test_reference_warm_humanist_passes_gate_and_r8() -> None:

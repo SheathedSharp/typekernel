@@ -78,6 +78,7 @@ def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:
     snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0], apis_used=("stem_tweak",))
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert not snap.l3_voice_ok
+    assert snap.topology_fraction == 0.0
 
 
 def test_voice_distance_zero_on_unchanged_preset() -> None:

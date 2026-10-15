@@ -4,6 +4,7 @@
     "identity_error_count": 0,
     "l3_voice_ok": true,
     "lint_error_count": 0,
+    "topology_fraction": 0.173469,
     "voice_distance": 0.540816,
     "weight_ladder_r8_failures": 0
   },
@@ -12,6 +13,7 @@
     "identity_error_count": 0,
     "l3_voice_ok": true,
     "lint_error_count": 0,
+    "topology_fraction": 0.183673,
     "voice_distance": 0.540816,
     "weight_ladder_r8_failures": 0
   },
@@ -20,6 +22,7 @@
     "identity_error_count": 0,
     "l3_voice_ok": true,
     "lint_error_count": 0,
+    "topology_fraction": 0.173469,
     "voice_distance": 0.530612,
     "weight_ladder_r8_failures": 0
   },
@@ -28,6 +31,7 @@
     "identity_error_count": 0,
     "l3_voice_ok": true,
     "lint_error_count": 0,
+    "topology_fraction": 0.418367,
     "voice_distance": 1.0,
     "weight_ladder_r8_failures": 0
   },
@@ -36,6 +40,7 @@
     "identity_error_count": 0,
     "l3_voice_ok": true,
     "lint_error_count": 0,
+    "topology_fraction": 0.469388,
     "voice_distance": 0.469388,
     "weight_ladder_r8_failures": 0
   }

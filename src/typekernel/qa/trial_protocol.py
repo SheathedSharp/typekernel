@@ -16,6 +16,7 @@ from typekernel.qa.originality import (
     L3_VOICE_DISTANCE_THRESHOLD,
     l3_voice_criteria_met,
     nearest_voice_distance,
+    topology_fraction_vs_nearest_presets,
 )
 
 WEIGHT_LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
@@ -76,6 +77,7 @@ class TrialSnapshot:
     lint_error_count: int
     identity_error_count: int
     voice_distance: float
+    topology_fraction: float
     weight_ladder_r8_failures: int
     glyph_spec_chars: tuple[str, ...]
     cheating_flags: tuple[str, ...]
@@ -157,6 +159,7 @@ def snapshot_trial(
         lint_error_count=len(lint_report.errors),
         identity_error_count=len(identity_report.errors),
         voice_distance=voice_distance(controls),
+        topology_fraction=topology_fraction_vs_nearest_presets(controls),
         weight_ladder_r8_failures=weight_ladder_r8_failures(controls),
         glyph_spec_chars=tuple(sorted(controls.glyph_specs)),
         cheating_flags=tuple(cheating_flags),
