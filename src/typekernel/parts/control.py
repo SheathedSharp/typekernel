@@ -421,6 +421,35 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
     return bool(ctx.vf_compat_stem_segments)
 
 
+def _stem_serif_inlined(ctx: DesignContext) -> bool:
+    """Slab/bracketed feet drawn in the stem outline (not anchor boolean)."""
+    return ctx.style.serif in ("slab", "bracketed")
+
+
+def _inline_single_stem_outline(ctx: DesignContext, stem: float, top: float) -> Outline:
+    """Vertical stem with inlined foot/cap serifs (``i``/``l``/cap ``I`` recipe)."""
+    from typekernel.parts.caps import (
+        HMetrics,
+        _i_slab_outline_points,
+        _polygon,
+        _write_i_bracketed_outer,
+    )
+
+    h = HMetrics(
+        stem=stem,
+        bar=stem * ctx.contrast * 0.92,
+        cap_height=top,
+        width=stem,
+        bar_y=top * 0.52,
+        overshoot=0.0,
+    )
+    if ctx.style.serif == "slab":
+        return _polygon(_i_slab_outline_points(h, ctx))
+    b = PathBuilder()
+    _write_i_bracketed_outer(b, h, ctx)
+    return _ccw(b.build())
+
+
 def _f_stem_floor(ctx: DesignContext) -> float:
     if _italic_topology(ctx):
         return ctx.descender * 0.78
@@ -1149,13 +1178,19 @@ def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """``i``: the ``n`` stem plus a tittle."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    stem = contrast_stem_caps(c, 0.0, 0.0, m.x_height, width=m.stem)
+    half = m.stem / 2.0
+    if _stem_serif_inlined(c):
+        stem = _inline_single_stem_outline(c, m.stem, m.x_height)
+        serif_anchors: dict[str, Pt] = {}
+    else:
+        stem = contrast_stem_caps(c, 0.0, 0.0, m.x_height, width=m.stem)
+        serif_anchors = _n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False)
     dot_y = m.x_height + m.stem * 0.55
-    dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
+    dot = tittle(c, half, dot_y, size=m.stem * 0.95)
     anchors = {
-        "top": (m.stem / 2.0, m.x_height),
-        "bottom": (m.stem / 2.0, 0.0),
-        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+        "top": (half, m.x_height),
+        "bottom": (half, 0.0),
+        **serif_anchors,
     }
     return _pack(c, m, anchors, stem, dot)
 
@@ -1164,13 +1199,19 @@ def dotless_i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     """Dotless ``ı`` (for ``i`` + accent composites)."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    stem = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
+    half = m.stem / 2.0
+    if _stem_serif_inlined(c):
+        outline = _inline_single_stem_outline(c, m.stem, m.x_height)
+        serif_anchors: dict[str, Pt] = {}
+    else:
+        outline = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
+        serif_anchors = _n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False)
     anchors = {
-        "top": (m.stem / 2.0, m.x_height),
-        "bottom": (m.stem / 2.0, 0.0),
-        **_n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False),
+        "top": (half, m.x_height),
+        "bottom": (half, 0.0),
+        **serif_anchors,
     }
-    return _pack(c, m, anchors, stem)
+    return _pack(c, m, anchors, outline)
 
 
 def dotless_j_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -1199,6 +1240,7 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     """``l``: the ``n`` stem rising to the ascender."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
+    half = m.stem / 2.0
     if c.style.l_tail == "tailed":
         t = m.stem
         ext = t * 0.88
@@ -1211,15 +1253,21 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         b.lineTo(0.0, 0.0)
         b.closePath()
         outline = _ccw(b.build())
+        serif_anchors = _vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+        )
+    elif _stem_serif_inlined(c):
+        outline = _inline_single_stem_outline(c, m.stem, m.ascender)
+        serif_anchors: dict[str, Pt] = {}
     else:
         outline = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
-    half = m.stem / 2.0
+        serif_anchors = _vertical_stem_serif_anchors(
+            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
+        )
     anchors = {
         "top": (half, m.ascender),
         "bottom": (half, 0.0),
-        **_vertical_stem_serif_anchors(
-            m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
-        ),
+        **serif_anchors,
     }
     return _pack(c, m, anchors, outline)
 
