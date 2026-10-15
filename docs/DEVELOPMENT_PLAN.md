@@ -292,6 +292,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**： lining ``3`` VF 段数固定 + ``check_masters`` 回归（``test_three_outer_segment_count_fixed_across_stems`` / ``test_three_interpolates_across_weight_ladder``）。
 - **本轮（部分）**：``3`` 上环 ``ry_u`` 乘 ``top_apex=1.06``（顶仍对齐 cap+overshoot，减少平顶）；golden ``3`` 三 preset 更新。
 - **本轮（部分）**：``s_from_o`` 默认 ``top_scale`` 0.92→0.90（上环再收）；golden ``s``/``S`` 三 preset 更新。
+- **本轮（部分）**：``one_from_H`` 顶旗随字重缩小，重 stem 肩区字腔满足 R8（见 TK-207 ``1``）。
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 
@@ -304,7 +305,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
-- **本轮（部分）**： lining ``4`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；``1`` 重 stem 字腔仍不足，未纳入）。
+- **本轮（部分）**： lining ``4`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
+- **本轮（部分）**：``one_from_H`` 重字重缩小顶旗 ``fw``/``fv``（``stem_weight_fraction``）；``1`` 纳入 ``COUNTER_PINCH_CHARSET``；``test_one_heavy_stem_flag_relief_opens_pinch``；golden ``1`` 五 preset 更新。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

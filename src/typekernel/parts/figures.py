@@ -36,7 +36,7 @@ from typekernel.parts.control import (
 )
 from typekernel.parts.diagonals import _hwidth
 from typekernel.parts.transforms import mirror_x, mirror_y
-from typekernel.parts.weight_relief import figure_width_floor
+from typekernel.parts.weight_relief import figure_width_floor, stem_weight_fraction
 
 __all__ = [
     "FIGURE_STEM_RATIO",
@@ -93,9 +93,13 @@ def one_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGl
     c = ctx or H.context
     h, t, bar, w = _fig(H)
     cap = h.cap_height
+    wf = stem_weight_fraction(t)
+    heavy = max(0.0, wf - 0.45) / 0.55
     s1 = 0.62 * w + t / 2.0
     s0 = s1 - t
-    fw, fh, fv = 0.34 * w, 0.2 * cap, 1.1 * bar
+    fw = 0.34 * w * (1.0 - 0.2 * heavy)
+    fh = 0.2 * cap
+    fv = 1.1 * bar * (1.0 - 0.4 * heavy)
     pts = [
         (s0, 0.0),
         (s1, 0.0),

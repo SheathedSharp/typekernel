@@ -11,6 +11,8 @@ from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import FIGURE_FORMS, Controls, DesignContext, h_cap_metrics, tabular
 from typekernel.parts.figures import FIGURE_STEM_RATIO
+from typekernel.parts.weight_relief import STEM_RELIEF_ONSET, counter_gap_floor
+from typekernel.qa.counter import min_counter_gap
 
 COUNTERS = {"0": 1, "4": 1, "6": 1, "8": 2, "9": 1}
 
@@ -64,6 +66,17 @@ def test_three_interpolates_across_weight_ladder() -> None:
     bold_font.add_chars(bold.build_all("3"))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
+
+
+def test_one_heavy_stem_flag_relief_opens_pinch() -> None:
+    """TK-206/207: ``1`` top flag shrinks so R8 headroom remains at black weights."""
+    for preset in ("open_print", "paper_ink", "geometric_sans", "mono"):
+        ctx = getattr(DesignContext, preset)().tuned(stem=200.0)
+        controls = Controls.from_context(ctx)
+        if 200.0 >= STEM_RELIEF_ONSET:
+            controls = controls.with_stem_relief()
+        gap = min_counter_gap(controls.build("1"))
+        assert gap >= counter_gap_floor(200.0)
 
 
 def test_lining_height(figures, ctx: DesignContext) -> None:
