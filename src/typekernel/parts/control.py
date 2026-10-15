@@ -366,6 +366,36 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
     return _ccw(b.build())
 
 
+def _n_slab_left_foot_detour(
+    b: PathBuilder,
+    l0: float,
+    l1: float,
+    left_top: float,
+    ctx: DesignContext,
+    stem: float,
+) -> None:
+    """Slab foot below baseline; ends on ``(l0, left_top)``."""
+    from typekernel.parts.caps import _finish_baseline_foot_pad
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    l = min(length, stem * 0.5)
+    th = min(thick, ctx.x_height * 0.1, stem * 0.2)
+    _, _, bracket_r = serif_metrics(ctx)
+    b.lineTo(l0 - l, -th)
+    _finish_baseline_foot_pad(b, l0 - l, l1 + l, th, 0.0, bracketed=False)
+    from typekernel.parts.serifs import _bracket_fillet_at_outer_corner
+
+    _bracket_fillet_at_outer_corner(
+        b,
+        x_corner=l0,
+        y_horiz=0.0,
+        y_vert_end=left_top,
+        x_from=l1 + l,
+        bracket_r=bracket_r,
+    )
+
+
 def _n_bracketed_left_foot_detour(
     b: PathBuilder,
     l0: float,
@@ -396,6 +426,20 @@ def _n_bracketed_left_foot_detour(
     )
 
 
+def _n_left_stem_foot_detour(
+    b: PathBuilder,
+    l0: float,
+    l1: float,
+    left_top: float,
+    ctx: DesignContext,
+    stem: float,
+) -> None:
+    if ctx.style.serif == "bracketed":
+        _n_bracketed_left_foot_detour(b, l0, l1, left_top, ctx, stem)
+    else:
+        _n_slab_left_foot_detour(b, l0, l1, left_top, ctx, stem)
+
+
 def _n_family_outline(
     m: NMetrics,
     *,
@@ -411,8 +455,8 @@ def _n_family_outline(
     s = _shoulder(m)
     b = PathBuilder()
     b.moveTo(s.l0, 0.0)
-    if ctx is not None and ctx.style.serif == "bracketed":
-        _n_bracketed_left_foot_detour(b, s.l0, s.l1, left_top, ctx, m.stem)
+    if ctx is not None and _stem_serif_inlined(ctx):
+        _n_left_stem_foot_detour(b, s.l0, s.l1, left_top, ctx, m.stem)
     else:
         b.lineTo(s.l0, left_top)
     b.lineTo(s.l1, left_top)
@@ -560,8 +604,8 @@ def _n_branching_outline(
     l0, l1, r0, r1 = 0.0, t, t + m.counter, m.width
     b = PathBuilder()
     b.moveTo(l0, 0.0)
-    if ctx is not None and ctx.style.serif == "bracketed":
-        _n_bracketed_left_foot_detour(b, l0, l1, stem_top, ctx, m.stem)
+    if ctx is not None and _stem_serif_inlined(ctx):
+        _n_left_stem_foot_detour(b, l0, l1, stem_top, ctx, m.stem)
     else:
         b.lineTo(l0, stem_top)
     b.lineTo(l1, stem_top)
@@ -590,7 +634,7 @@ def _n_stem_serif_anchors(
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
     anchors: dict[str, Pt] = {}
-    if not (inline_left_foot and ctx is not None and ctx.style.serif == "bracketed"):
+    if not (inline_left_foot and ctx is not None and _stem_serif_inlined(ctx)):
         anchors["stem_L_b"] = (half, 0.0)
     anchors["stem_L_t"] = (half, left_top)
     if right_foot:
@@ -620,7 +664,6 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     """Control ``n``: continuous cubic outline from its design record."""
     m = metrics or n_metrics(ctx)
     cx = m.width / 2.0
-    inline_foot = ctx.style.serif == "bracketed"
     anchors = {
         "top": (cx, m.x_height),
         "bottom": (cx, 0.0),
@@ -629,7 +672,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             left_top=m.x_height,
             right_top=None,
             ctx=ctx,
-            inline_left_foot=inline_foot,
+            inline_left_foot=_stem_serif_inlined(ctx),
         ),
     }
     if _italic_topology(ctx):
@@ -652,7 +695,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             left_top=m.ascender,
             right_top=m.x_height,
             ctx=ctx,
-            inline_left_foot=ctx.style.serif == "bracketed",
+            inline_left_foot=_stem_serif_inlined(ctx),
         ),
     }
     if _italic_topology(ctx):
