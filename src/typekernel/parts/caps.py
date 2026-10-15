@@ -1213,6 +1213,40 @@ def _u_parts(h: HMetrics, w: float, e: float, spring: float) -> tuple[Cubic, ...
     return q2, q3, i2, i3
 
 
+def _write_u_bracketed_outer(
+    b: PathBuilder,
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    cap: float,
+    y_s: float,
+    q2: Cubic,
+    q3: Cubic,
+    i2: Cubic,
+    i3: Cubic,
+) -> None:
+    t = h.stem
+    l, th, bracket_r = _h_cap_foot_dims(h, ctx)
+    b.moveTo(t + l, cap)
+    _append_upward_cap_foot_pad(b, -l, t + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(0.0, cap)
+    b.lineTo(0.0, y_s)
+    _curve(b, q2)
+    _curve(b, q3)
+    b.lineTo(w, cap)
+    b.lineTo(w + l, cap)
+    _append_upward_cap_foot_pad(b, w - t - l, w + l, cap, th, bracket_r, bracketed=True)
+    b.lineTo(w - t, cap)
+    b.lineTo(w - t, y_s)
+    _curve(b, _rev(i3))
+    _curve(b, _rev(i2))
+    b.lineTo(t, cap)
+    b.lineTo(t + l, cap)
+    b.lineTo(-l, cap)
+    b.closePath()
+
+
 def U_from_H(
     H: ComposedGlyph,
     O: ComposedGlyph | None = None,
@@ -1233,10 +1267,14 @@ def U_from_H(
     w = max(width * h.width, min_bowl_stems(t) * t)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
-    baked = _cap_serif_inlined(c)
+    inlined = _cap_serif_inlined(c)
 
     b = PathBuilder()
-    if baked:
+    if c.style.serif == "bracketed":
+        _write_u_bracketed_outer(
+            b, h, c, w=w, cap=cap, y_s=y_s, q2=q2, q3=q3, i2=i2, i3=i3
+        )
+    elif inlined:
         from typekernel.parts.serifs import serif_metrics
 
         length, thick, _ = serif_metrics(c)
@@ -1246,36 +1284,41 @@ def U_from_H(
         b.lineTo(t + l, cap + th)
         b.lineTo(t + l, cap)
         b.lineTo(0.0, cap)
-    else:
-        b.moveTo(0.0, cap)
-    b.lineTo(0.0, y_s)
-    _curve(b, q2)
-    _curve(b, q3)
-    if baked:
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
         b.lineTo(w, cap)
         b.lineTo(w + l, cap)
         b.lineTo(w + l, cap + th)
         b.lineTo(w - t - l, cap + th)
         b.lineTo(w - t - l, cap)
         b.lineTo(w - t, cap)
-    else:
-        b.lineTo(w, cap)
-        b.lineTo(w - t, cap)
-    b.lineTo(w - t, y_s)
-    _curve(b, _rev(i3))
-    _curve(b, _rev(i2))
-    b.lineTo(t, cap)
-    if baked:
+        b.lineTo(w - t, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(t, cap)
         b.lineTo(t + l, cap)
         b.lineTo(t + l, cap + th)
         b.lineTo(-l, cap + th)
-    b.closePath()
+        b.closePath()
+    else:
+        b.moveTo(0.0, cap)
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
+        b.lineTo(w, cap)
+        b.lineTo(w - t, cap)
+        b.lineTo(w - t, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(t, cap)
+        b.closePath()
     half = t / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, cap),
         "bottom": (w / 2.0, 0.0),
     }
-    if _cap_stem_serif_anchors_enabled(c, baked=baked):
+    if _cap_stem_serif_anchors_enabled(c, baked=inlined):
         anchors.update(
             {
                 "stem_L_b": (half, 0.0),
