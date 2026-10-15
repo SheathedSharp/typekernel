@@ -68,7 +68,7 @@ build_font(font, "out/")                          # MySans-Regular.ufo / .otf / 
 
 ![variable family proof](docs/images/variable-family-proof.png)
 
-**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口清单见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8（`tests/docs/test_development_plan_section8.py`）；衬线/斜体校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。合成 O 样品：
+**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_m5_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。合成 O 样品：
 
 ![合成 O 样品](docs/images/synthetic-O.png)
 
