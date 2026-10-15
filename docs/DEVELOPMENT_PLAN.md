@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1417 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- `pytest -q`：**1418 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -560,6 +560,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：待签 ``approvals/serif-*`` / ``italic-vf-construct`` 的 ``test_evidence`` 对齐 §8 / ``human_review_bundle`` / M3 退出测试；``test_repo_pending_human_review_templates`` 固化路径存在。
 - **本轮（部分）**：``human_review_bundle`` ``REVIEW_CHECKLIST`` 与 ``approvals/*.json`` ``test_evidence`` 同步；``test_human_review_bundle_checklist_matches_approval_test_evidence``。
 - **本轮（部分）**：``approvals/README.md`` 分 gate 签字 ``pytest`` 块；``test_approvals_readme_signoff_matches_test_evidence`` 与 JSON 双向一致。
+- **本轮（部分）**：``examples/run_m5_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list``）；``test_run_m5_program_exit``。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
 - **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
