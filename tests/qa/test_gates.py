@@ -128,7 +128,9 @@ def _readme_signoff_block(readme: str, gate_json: str) -> str:
     tail = readme[start + len(marker) :]
     next_gate = re.search(r"\n\*\*`[^`]+`\*\*", tail)
     end = start + len(marker) + (next_gate.start() if next_gate else len(tail))
-    return readme[start:end]
+    section = readme[start:end]
+    bash = re.search(r"```bash\n(.*?)```", section, re.DOTALL)
+    return bash.group(1) if bash else section
 
 
 def test_approvals_readme_signoff_matches_test_evidence() -> None:
