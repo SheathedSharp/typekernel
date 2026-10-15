@@ -319,6 +319,66 @@ def test_slab_apply_glyph_serifs_is_noop_on_supported() -> None:
     assert changed == []
 
 
+def test_bracketed_n_shoulder_cap_paths_self_intersect() -> None:
+    """Full/bracketed shoulder caps at ``x_height`` still need boolean ``stem_L_t``."""
+    from typekernel.geo.path_builder import PathBuilder
+    from typekernel.parts.compose import GlyphAssembler
+    from typekernel.parts.control import (
+        _ccw,
+        _curve,
+        _n_begin_left_stem,
+        _n_inline_left_stem_cap,
+        _n_inline_right_stem_foot,
+        _n_inline_shoulder_left_cap_slab,
+        _shoulder,
+        n_metrics,
+    )
+    from typekernel.qa.lint import lint_glyph
+
+    ctx = DesignContext.bracketed_serif()
+    m = n_metrics(ctx)
+    s = _shoulder(m)
+    xh = m.x_height
+
+    b = PathBuilder()
+    _n_begin_left_stem(b, s.l0, s.l1, xh, ctx, m.stem, shelf_foot=True)
+    b.lineTo(s.l1, xh)
+    _n_inline_left_stem_cap(b, s.l0, s.l1, xh, ctx, m.stem)
+    _curve(b, s.outer[0])
+    _curve(b, s.outer[1])
+    b.lineTo(s.r1, 0.0)
+    _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
+    b.lineTo(s.r0, 0.0)
+    b.lineTo(s.r0, m.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    g_full = GlyphAssembler(ctx).with_design(m).add(_ccw(b.build())).build()
+    assert "R3_self_intersect" in {
+        i.rule for i in lint_glyph(g_full, ctx, glyph_name="n") if i.severity == "error"
+    }
+    # Slab shoulder cap on bracketed ``n`` is lint-clean but not the shipped voice.
+    b = PathBuilder()
+    _n_begin_left_stem(b, s.l0, s.l1, xh, ctx, m.stem, shelf_foot=True)
+    _n_inline_shoulder_left_cap_slab(b, s.l0, xh, ctx, m.stem)
+    b.lineTo(s.l1, xh)
+    _curve(b, s.outer[0])
+    _curve(b, s.outer[1])
+    b.lineTo(s.r1, 0.0)
+    _n_inline_right_stem_foot(b, s.r1, ctx, m.stem)
+    b.lineTo(s.r0, 0.0)
+    b.lineTo(s.r0, m.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(s.l1, 0.0)
+    b.closePath()
+    g_slab = GlyphAssembler(ctx).with_design(m).add(_ccw(b.build())).build()
+    assert not [
+        i for i in lint_glyph(g_slab, ctx, glyph_name="n") if i.severity == "error"
+    ]
+
+
 def test_bracketed_n_pre_serif_outline_lint_clean() -> None:
     from typekernel.parts.control import build_n, n_metrics
 
