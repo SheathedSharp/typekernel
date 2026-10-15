@@ -35,6 +35,7 @@ Prefer plain names that describe the decision, for example:
 - `geo-public-api.json`
 - `optical-overshoot.json`
 - `specimen-synthetic-o.json`
-- `serif-slab-visual.json` / `serif-bracketed-visual.json` — after reviewing `examples/slab_serif` / `bracketed_serif` proof PNGs (see `docs/agent-recipes.md`)
+- `serif-slab-voice.json` / `serif-bracketed-voice.json` — after reviewing proofs from `examples/human_review_bundle.py` (see `docs/agent-recipes.md`)
+- `italic-vf-construct.json` — after reviewing `examples/italic_family` VF from the same bundle (`--only italic`)
 
 Avoid internal planner ticket codes in file names or field values.

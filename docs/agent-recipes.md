@@ -139,18 +139,15 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
-## 衬线 voice 校样（TK-306 人审）
+## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
-自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）。人审在本地跑示例脚本看 PNG：
+自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/examples/test_italic_family.py`（真斜体 VF）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
 
 ```bash
-cd examples/slab_serif && PYTHONPATH=../../src python build_family.py --out /tmp/slab
-cd examples/bracketed_serif && PYTHONPATH=../../src python build_family.py --out /tmp/bracket
-cd examples/slab_serif && PYTHONPATH=../../src python build_vf.py --out /tmp/slab-vf
-cd examples/bracketed_serif && PYTHONPATH=../../src python build_vf.py --out /tmp/bracket-vf
+PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review
 ```
 
-检查各目录下的 `proof.png`、`proof_brief.png`（静态三档）与 `proof_vf.png`（VF 阶梯）。满意后写入 `approvals/*.json`（见下节）；**不要**为通过 gate 改 `AGENT_SENTENCE`。
+仅衬线或仅斜体：`--only serif` / `--only italic`。打开输出目录内 `REVIEW_CHECKLIST.md` 所列 PNG/TTF；满意后由**人**写入 `approvals/serif-slab-voice.json`、`serif-bracketed-voice.json` 等（见 `approvals/README.md`）；**不要**为通过 gate 改 `AGENT_SENTENCE`。
 
 ## 人审
 

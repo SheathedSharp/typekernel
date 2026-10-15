@@ -423,7 +423,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
 - **本轮（部分）**：``agent-recipes`` 补衬线 ``build_family`` / ``build_vf`` 人审 PNG 命令。
 - **本轮（部分）**：``slab_serif`` / ``bracketed_serif`` 纳入 TK-207 字重阶梯 ``R8_counter_min`` 回归；衬线脚/对角在阶梯 stem 带加宽反挤压；``test_serif_voice_trial_snapshots`` 断言 ``weight_ladder_r8_failures==0``；``outline_hashes.json`` 更新受影响字形。
-- **待续**：**人审签字**（`approvals/*.json`）；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 楔形实验 G1 恶化已回退 ``rounded_rect``。
+- **本轮（部分）**：``examples/human_review_bundle.py`` 生成本地校样 + ``REVIEW_CHECKLIST.md``（不写 ``approvals``）；``test_human_review_bundle`` 烟测；``agent-recipes`` / ``approvals/README`` 对齐 gate 文件名。
+- **待续**：**人审签字**（`approvals/*.json`，须人设 ``approved: true``）；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。
@@ -448,7 +449,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-401～404 真斜体母版　〔M〕
 - **TK-401**：`italic_design(regular, ItalicStyle)`；`italic_controls` 弃用并 `DeprecationWarning`；`DesignContext.italic_slant_deg` 在 `build_all` 施加构造倾角；TK-002 xfail 已转正。
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
-- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；七内置 preset 斜体 R4 清零（见 TK-101 回归）。**人审**仍待。
+- **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；七内置 preset 斜体 R4 清零（见 TK-101 回归）。**人审**仍待（校样命令见 ``human_review_bundle.py``）。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。

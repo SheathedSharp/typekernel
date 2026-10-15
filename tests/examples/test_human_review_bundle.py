@@ -1,0 +1,30 @@
+"""Smoke: human review artifact bundle (TK-306 / TK-402)."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_human_review_bundle_italic_only(tmp_path: Path) -> None:
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples" / "human_review_bundle.py"),
+            "--only",
+            "italic",
+            "--out",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
+    assert list((tmp_path / "italic_family").glob("*.ttf"))
