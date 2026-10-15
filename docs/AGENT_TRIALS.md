@@ -41,13 +41,13 @@
 3. **每个 brief**：
    - 实现 `controls()`（Regular）并记录 API（`Style` / `tuned_glyph` / `with_glyph` / `with_stem_relief`）。
    - `PYTHONPATH=src python examples/agent_trial/snapshot_design.py --brief brief-N --design <你的模块.py> --out <dir>/brief-N`
-   - 审计已写 JSON：`PYTHONPATH=src python examples/agent_trial/validate_snapshot.py <dir>/brief-N/snapshot.json`
+   - 审计已写 JSON：`PYTHONPATH=src python examples/agent_trial/validate_snapshot.py <dir>/brief-N/snapshot.json`；整次试验目录：`validate_snapshot.py --recursive artifacts/trials/<run>/`
    - 检查 JSON：`program_pass_ok`（程序侧全过，含空 `cheating_flags`）、`family_gate_ok`、`metrics_ok`、`l3_voice_ok`（= `l3_voice_criteria_met`：距离 + 拓扑 + gate/lint，非纯 stem 缩放）、`topology_fraction`（≥ `L3_MIN_TOPOLOGY_FRACTION` 0.05 当 `l3_voice_ok`）、`weight_ladder_r8_failures==0`（阶梯 stem 与 TK-207 一致，含 **200**，且含试作上的改字）、`cheating_flags` 为空（纯 stem 缩放会写入 `stem_only_or_scale_voice`）。`snapshot_design.py` 在写 JSON 前跑 `validate_trial_snapshot`（拒 forged `l3_voice_ok`）；退出码 **5**=字段不一致、**6**=未达 L3、**7**=`cheating_flags` 非空。
    - 可选：`build_reference_family.py` 同 brief 产出 OTF + `proof.png`（**不得**改 `AGENT_SENTENCE`）。
 4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；视觉接受另写 `approvals/*.json`（见 `examples/human_review_bundle.py`）。
 5. **作废条件**：改过关句、改 L3/ gate 阈值、或 `cheating_flags` 非空。
 
-库维护者回归：`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`。
+库维护者回归：`tests/examples/test_agent_trial.py`、`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`。
 
 ## 跑预设基线快照（库维护者）
 

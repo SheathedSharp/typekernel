@@ -13,6 +13,19 @@ from typekernel.qa.trial_protocol import (
 )
 
 
+def _collect_snapshot_paths(items: tuple[Path, ...], *, recursive: bool) -> list[Path]:
+    paths: list[Path] = []
+    for item in items:
+        if item.is_dir():
+            if recursive:
+                paths.extend(sorted(item.rglob("snapshot.json")))
+            else:
+                paths.append(item / "snapshot.json")
+        else:
+            paths.append(item)
+    return paths
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -21,13 +34,13 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="paths to snapshot.json (or directories containing snapshot.json)",
     )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="when a path is a directory, validate every snapshot.json beneath it",
+    )
     args = parser.parse_args(argv)
-    paths: list[Path] = []
-    for item in args.snapshots:
-        if item.is_dir():
-            paths.append(item / "snapshot.json")
-        else:
-            paths.append(item)
+    paths = _collect_snapshot_paths(tuple(args.snapshots), recursive=args.recursive)
     worst = 0
     for path in paths:
         if not path.is_file():

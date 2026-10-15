@@ -11,7 +11,7 @@
 | `design_coding_clear.py` | brief-3 edited sheet. |
 | `snapshot_design.py` | Run `snapshot_trial` on any module that exports `controls()`. |
 | `snapshot_reference_trials.py` | All three `design_*.py` → `out/brief-*/snapshot.json` (same exit codes as below). |
-| `validate_snapshot.py` | Re-check saved `snapshot.json` (consistency + same exit codes as `snapshot_design.py`). |
+| `validate_snapshot.py` | Re-check saved `snapshot.json` (consistency + same exit codes as `snapshot_design.py`); `--recursive` on a trial run root. |
 | `build_reference_family.py` | `--brief brief-{1,2,3}` → Regular + Bold OTFs + `proof.png`. |
 | `build_brief1_reference.py` | Thin wrapper for brief-1 only. |
 

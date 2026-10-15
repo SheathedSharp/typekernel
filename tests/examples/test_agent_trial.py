@@ -73,6 +73,36 @@ def test_snapshot_serif_voices_script(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
 
 
+def test_validate_snapshot_recursive_on_reference_trials(tmp_path: Path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "snapshot_reference_trials.py",
+            "--out",
+            str(tmp_path),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=True,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "validate_snapshot.py",
+            "--recursive",
+            str(tmp_path),
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+
+
 def test_validate_snapshot_script_on_reference_trial(tmp_path: Path) -> None:
     subprocess.run(
         [
