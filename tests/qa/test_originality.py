@@ -7,6 +7,7 @@ import itertools
 import pytest
 
 from typekernel.parts import Controls, DesignContext
+from typekernel.parts.style import Style
 from typekernel.qa.originality import (
     BUILTIN_PRESET_FACTORIES,
     L3_VOICE_DISTANCE_THRESHOLD,
@@ -71,6 +72,16 @@ def test_l3_voice_criteria_not_met_for_unchanged_sans_preset() -> None:
     controls = Controls.from_context(DesignContext.humanist_sans())
     assert nearest_voice_distance(controls) < L3_VOICE_DISTANCE_THRESHOLD
     assert not l3_voice_criteria_met(controls)
+
+
+def test_l3_voice_criteria_met_when_style_adds_slab_serif() -> None:
+    """L3 must come from documented ``Style`` DNA, not an unchanged preset clone."""
+    controls = Controls.from_context(
+        DesignContext.humanist_sans(),
+        style=Style(serif="slab"),
+    )
+    assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
+    assert l3_voice_criteria_met(controls)
 
 
 def test_tuned_glyph_raises_nearest_distance() -> None:
