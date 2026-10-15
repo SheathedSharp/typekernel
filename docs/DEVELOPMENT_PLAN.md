@@ -325,6 +325,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``k_from_n`` 阶梯加宽（对齐 cap ``K``，含极轻 stem relief）；``k`` 纳入 charset；``test_k_passes_counter_floor_across_ladder``；golden ``k``（``humanist_sans``/``display``）。
 - **本轮（部分）**：小写 ``f``/``h``/``i``/``j``/``l``/``r``/``t``/``z`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）；``test_stem_lowercase_pass_counter_floor_across_ladder``。
 - **本轮（部分）**：默认 supported 标点（除 ``*``）纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报；无轮廓变更）。
+- **本轮（部分）**：``asterisk_from_n_o`` 外径 ``0.34→0.375`` 打开字腔；``*`` 纳入 charset；``test_asterisk_passes_counter_floor_across_ladder``；golden ``*`` 五 preset 更新。
 - **验收**：`stem ∈ {30,70,110,150,180}` 上 `COUNTER_PINCH_CHARSET`（`qa/counter.py`）零 R8；`stem ≥ STEM_RELIEF_ONSET`（85）时调用 `with_stem_relief()`；附 `weight_ladder_sheet`；人审。全 98 字 R8 仍待扩展（竖笔细缝误报）。
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 

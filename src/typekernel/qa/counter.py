@@ -11,7 +11,7 @@ from typekernel.parts.compose import ComposedGlyph
 COUNTER_PINCH_CHARSET = frozenset(
     "0123456789#%?&@acemnosu$bdgpqkvywxfhijlrtz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "!\"'()+,-./:;<=>[\\]_{}°–—‘’“”−"
+    "!\"'()*+,-./:;<=>[\\]_{}°–—‘’“”−"
 )
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]

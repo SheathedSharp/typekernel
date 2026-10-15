@@ -607,7 +607,7 @@ def asterisk_from_n_o(
     m = _n_record(n)
     cx = m.width / 2.0
     cy = m.x_height * 0.58
-    r_out = m.counter * 0.34
+    r_out = m.counter * 0.375
     r_in = r_out * 0.42
     pts: list[Pt] = []
     for k in range(6):
