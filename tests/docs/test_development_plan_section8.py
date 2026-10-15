@@ -243,6 +243,8 @@ def test_section8_plan_documents_program_vs_human_exit() -> None:
     text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
     assert "进度对照" in text
     assert "test_known_defects" in text
+    assert "test_b13_three_no_flat_top_shelf" in text
+    assert "test_b14_g_spur_cubic_join" in text
     assert "test_section8_family_gate_on_main_and_serif_voices" in text
     assert "approved: false" in text
     assert "终验" in text

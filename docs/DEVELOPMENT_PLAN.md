@@ -296,6 +296,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
+- **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-15 仍视觉低优先。
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试。
 - **本轮（部分）**：`s_from_o` 默认 `top_scale` 0.94→0.92，上环略收；golden `s`/`S` 三 preset 更新。
 - **本轮（部分）**：``G`` spur κ 圆角随 cap stem 略增（重字重仍 ``use≤0.34`` 防自交）；``test_g_outer_segment_count_fixed_across_stems`` / VF 阶梯回归；golden ``G`` 三 preset 更新。
@@ -737,10 +738,10 @@ M5：TK-501（贯穿）→ TK-502
 | B-10 | `u` | 左下重脚（类 slab） | **假设**：`n` 旋转 180° 后肩–腿接合变成重脚 | `control.py:604` | lint R9（待校准） |
 | B-11 | `t` | 横笔与钩根细如发丝 | **假设**：钩深/rise 参数 + `blend_corners` 圆角过大 | `control.py:492`、`_finish_hook_letter :432` | lint R9 |
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
-| B-13 | `3` | 平顶「Ʒ」形 | 视觉确认，根因未查 | `figures.py:389` | 视觉 |
-| B-14 | `G` | spur 生硬 | 视觉确认，根因未查 | `caps.py:278` | 视觉 |
-| B-15 | `s` | 偏生硬（可读） | 视觉确认；低优先 | `control.py:1037` | 视觉 |
-| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 仍为视觉/低优先；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
+| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；平顶几何回归 | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
+| B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；段型回归 | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
+| B-15 | `s` | 偏生硬（可读） | 视觉确认；低优先 | `control.py:s_from_o` | 视觉（``test_s_*`` VF 段数） |
+| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13/B-14 有几何/拓扑钩子，人审仍可继续；B-15 低优先；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
 | B-18 | `terminal_style` | 只影响 `c C ( ) ?` | 已确认 | 多处 | TK-107 |

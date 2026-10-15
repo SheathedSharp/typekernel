@@ -66,6 +66,14 @@ def test_b13_three_no_flat_top_shelf() -> None:
             raise AssertionError("horizontal shelf on 3 cap")
 
 
+def test_b14_g_spur_cubic_join() -> None:
+    """TK-206: spur bar meets bowl on a cubic, not a sharp chamfer (appendix B-14)."""
+    kinds = [s.kind for s in _glyph("G").solids[0].contours[0].segments]
+    idx = kinds.index("line")
+    spur = kinds[idx : idx + 4]
+    assert spur == ["line", "line", "cubic", "line"]
+
+
 def test_b09_m_thickness_band() -> None:
     report = lint_controls(_CONTROLS, "m", thickness=True)
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
