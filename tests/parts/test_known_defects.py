@@ -74,6 +74,18 @@ def test_b14_g_spur_cubic_join() -> None:
     assert spur == ["line", "line", "cubic", "line"]
 
 
+def test_b15_s_spine_ink_is_continuous_band() -> None:
+    """TK-206 / B-15: spine crossing stays one solid band (not a pinched waist)."""
+    from typekernel.optics.space import ink_intervals_at_y
+
+    s = _glyph("s")
+    y = 0.5 * _CTX.x_height
+    intervals = ink_intervals_at_y(list(s.solids), y)
+    assert len(intervals) == 1
+    width = intervals[0][1] - intervals[0][0]
+    assert width >= _CTX.stem * 0.8
+
+
 def test_b09_m_thickness_band() -> None:
     report = lint_controls(_CONTROLS, "m", thickness=True)
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
