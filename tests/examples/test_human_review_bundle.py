@@ -30,6 +30,12 @@ def test_human_review_bundle_serif_only(tmp_path: Path) -> None:
     assert (tmp_path / "slab_serif" / "proof.png").is_file()
     assert (tmp_path / "bracketed_serif" / "proof.png").is_file()
     assert (tmp_path / "weight_ladder_slab_serif.png").is_file()
+    assert (tmp_path / "weight_ladder_bracketed_serif.png").is_file()
+    assert (tmp_path / "slab_serif_vf" / "proof_vf.png").is_file()
+    assert (tmp_path / "bracketed_serif_vf" / "proof_vf.png").is_file()
+    checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
+    assert "serif-slab-voice" in checklist
+    assert "serif-bracketed-voice" in checklist
 
 
 def test_human_review_bundle_italic_only(tmp_path: Path) -> None:
@@ -50,3 +56,6 @@ def test_human_review_bundle_italic_only(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
     assert list((tmp_path / "italic_family").glob("*.ttf"))
+    checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
+    assert "italic-vf-construct" in checklist
+    assert "TK-402" in checklist
