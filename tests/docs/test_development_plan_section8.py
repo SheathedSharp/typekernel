@@ -152,6 +152,8 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_italic_program_acceptance" in text
     assert "test_development_plan_section8" in text
+    assert "contact_sheet.py" in text
+    assert "diff_overlay.py" in text
 
 
 def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
