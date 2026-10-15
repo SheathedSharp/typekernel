@@ -78,7 +78,7 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 | `cubic_centerline_to_polyline` | Chord-budget flatten → chain to `expand` (open multi-segment path) |
 | `expand_cubic` | `(Outline, CenterlineExpandReport)`; open path uses offset-rail cubics when `offset_fit_budget>0` (butt/round/square cap; miter/round/bevel join). Set `offset_fit_budget=0` to flatten midline + `expand`. |
 
-Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike.
+Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_tk308_program_acceptance.py`.
 
 ## Italic & oblique (M4)
 

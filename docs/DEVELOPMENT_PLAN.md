@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1401 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- `pytest -q`：**1402 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -519,6 +519,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：闭合环 ``_stitched_offset_rail_closed`` + segment 接头 join（``round`` join 与折线 ``expand`` bbox 回归）。
 - **本轮（部分）**：``Stroke.offset_fit_budget`` 允许 ``0``（强制弦高折线路径）；``test_trace_letter_closed_cubic_ring_has_counter``。
 - **本轮（部分）**：``Skeleton.from_mapping`` ``join``/``cap`` 键烟测。
+- **本轮（部分）**：``test_tk308_stroke_spike_meets_program_acceptance``（诚实 ``expand_cubic`` 报告、闭合 cubic 环 lint、``family.py`` 不引用 skeleton）；§8 钩子。
 
 ### M4 真斜体
 

@@ -59,6 +59,18 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_m3_serif_pair_differs_from_warm_humanist_reference",
         ),
     ),
+    (
+        "tests/qa/test_originality.py",
+        ("test_l3_rejects_context_only_stem_tweak",),
+    ),
+    (
+        "tests/parts/test_tk208_extended_latin.py",
+        ("test_extended_latin_not_in_default_supported",),
+    ),
+    (
+        "tests/parts/test_tk308_program_acceptance.py",
+        ("test_tk308_stroke_spike_meets_program_acceptance",),
+    ),
 )
 
 
