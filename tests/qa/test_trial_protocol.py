@@ -98,6 +98,7 @@ def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
     assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
     assert snap.cheating_flags == ("stem_only_or_scale_voice",)
     assert not validate_trial_snapshot(snap)
+    assert not snap.program_pass_ok
     assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 7
 
 
@@ -112,6 +113,8 @@ def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
     snap = snapshot_trial(mod.controls(), brief=FIXED_TRIAL_BRIEFS[0])
     path = write_trial_snapshot(tmp_path / "snapshot.json", snap)
     data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["program_pass_ok"] is True
+    assert data["cheating_flags"] == []
     assert not validate_trial_snapshot_record(data)
 
 

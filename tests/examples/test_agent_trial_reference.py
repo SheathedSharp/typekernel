@@ -60,6 +60,8 @@ def _assert_reference_trial(brief_id: str, design_path: Path) -> None:
     assert snap.l3_voice_ok
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert snap.glyph_spec_chars
+    assert not snap.cheating_flags
+    assert snap.program_pass_ok
     assert not validate_trial_snapshot(snap)
 
 
@@ -78,6 +80,8 @@ def test_reference_metrics_match_committed_fixture() -> None:
         assert snap.identity_error_count == row["identity_error_count"]
         assert abs(snap.voice_distance - row["voice_distance"]) < 1e-5
         assert abs(snap.topology_fraction - row["topology_fraction"]) < 1e-5
+        assert list(snap.cheating_flags) == row["cheating_flags"]
+        assert snap.program_pass_ok == row["program_pass_ok"]
         if row["l3_voice_ok"]:
             from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
 

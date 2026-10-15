@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1425 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- `pytest -q`：**1432 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -589,6 +589,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_section8_regression_test_hooks_present`` 锁定 §8.4/§8.5 与 TK-306/402 程序验收测试名仍在库中。
 - **本轮（部分）**：``TrialSnapshot.l3_voice_ok`` 与 ``l3_voice_criteria_met`` 对齐（含拓扑下限）；``topology_fraction`` 写入快照 JSON；``test_snapshot_l3_voice_ok_rejects_stem_only_tweak``；§8 钩子。
 - **本轮（部分）**：``validate_trial_snapshot`` / ``validate_trial_snapshot_record``（TK-502 快照一致性）；``trial_snapshot_exit_code`` 供 ``snapshot_design`` / ``snapshot_reference_trials``；退出码 5/6/7；``_infer_cheating_flags``（stem-only → ``stem_only_or_scale_voice``）；``test_stem_only_tweak_records_cheating_flag_and_exit_code_7`` / ``test_snapshot_design_stem_tweak_exit_code_7``。
+- **本轮（部分）**：``TrialSnapshot.program_pass_ok`` 写入快照 JSON；``tk502_reference_metrics`` 含 ``cheating_flags`` / ``program_pass_ok``。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 

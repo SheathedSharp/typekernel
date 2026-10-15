@@ -95,6 +95,17 @@ class TrialSnapshot:
     def metrics_ok(self) -> bool:
         return self.lint_error_count == 0 and self.identity_error_count == 0
 
+    @property
+    def program_pass_ok(self) -> bool:
+        """Program-side TK-502 pass (excludes ``validate_trial_snapshot`` JSON review)."""
+        return (
+            self.metrics_ok
+            and self.family_gate_ok
+            and self.weight_ladder_r8_failures == 0
+            and self.l3_voice_ok
+            and not self.cheating_flags
+        )
+
 
 def voice_distance(controls: Controls) -> float:
     """Distance to the nearest built-in preset (see ``qa.originality``)."""
@@ -251,6 +262,7 @@ def write_trial_snapshot(path: Path | str, snapshot: TrialSnapshot) -> Path:
     payload = asdict(snapshot)
     payload["family_gate_ok"] = snapshot.family_gate_ok
     payload["metrics_ok"] = snapshot.metrics_ok
+    payload["program_pass_ok"] = snapshot.program_pass_ok
     payload["l3_voice_ok"] = snapshot.l3_voice_ok
     destination.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return destination
