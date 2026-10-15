@@ -14,11 +14,13 @@ from typekernel.qa.thickness import (
     HOOK_MIN_THIN_RATIO,
     HOOK_MIN_THIN_RATIO_DISPLAY,
     HOOK_MIN_THIN_RATIO_SOFT,
+    M_CROTCH_SHELF_MIN_OVER_STEM,
     THICKNESS_OUTLIER_FACTOR,
     figure_bar_over_stem_ink_ratio,
     figure_nine_bar_over_stem_ink_ratio,
     figure_stacked_ring_ink_ratio,
     hook_min_thin_floor,
+    m_crotch_shelf_thickness_over_stem,
     max_local_thickness,
     min_hook_thickness,
     ometrics_ink_horizontal_over_vertical_ratio,
@@ -183,6 +185,19 @@ def test_m_thickness_within_control_band() -> None:
     rules = {(i.glyph, i.rule) for i in report.issues}
     assert ("m", "R9_thickness_outlier") not in rules
     assert ("n", "R9_thickness_outlier") not in rules
+
+
+@pytest.mark.parametrize("preset", ("humanist_sans", "code_clear", "geometric_sans"))
+def test_m_crotch_shelf_thickness_calibrated(preset: str) -> None:
+    """TK-102: ``m`` middle shelf reads as solid ink (B-09), not a hairline."""
+    ctx = getattr(DesignContext, preset)()
+    glyph = Controls.from_context(ctx).build("m")
+    ratio = m_crotch_shelf_thickness_over_stem(glyph)
+    assert ratio >= M_CROTCH_SHELF_MIN_OVER_STEM
+
+
+def test_m_crotch_shelf_min_ratio_frozen() -> None:
+    assert M_CROTCH_SHELF_MIN_OVER_STEM == 0.28
 
 
 def test_thickness_outlier_factor_frozen() -> None:

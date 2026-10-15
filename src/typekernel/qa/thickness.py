@@ -21,12 +21,15 @@ LINT_THICKNESS_GRID = 16
 HOOK_MIN_THIN_RATIO = 0.26
 HOOK_MIN_THIN_RATIO_SOFT = 0.22
 HOOK_MIN_THIN_RATIO_DISPLAY = 0.19
+# ``m`` crotch shelf (flat top between arches) horizontal ink ÷ stem (TK-102 / B-09).
+M_CROTCH_SHELF_MIN_OVER_STEM = 0.28
 
 __all__ = [
     "HOOK_MIN_THIN_RATIO",
     "HOOK_MIN_THIN_RATIO_DISPLAY",
     "HOOK_MIN_THIN_RATIO_SOFT",
     "LINT_THICKNESS_GRID",
+    "M_CROTCH_SHELF_MIN_OVER_STEM",
     "REFERENCE_THICKNESS_CHARS",
     "THICKNESS_OUTLIER_FACTOR",
     "control_max_thickness_ratio",
@@ -34,6 +37,7 @@ __all__ = [
     "figure_nine_bar_over_stem_ink_ratio",
     "figure_stacked_ring_ink_ratio",
     "hook_min_thin_floor",
+    "m_crotch_shelf_thickness_over_stem",
     "max_local_thickness",
     "measurement_outline",
     "min_hook_thickness",
@@ -52,6 +56,30 @@ def hook_min_thin_floor(ctx: DesignContext) -> float:
     else:
         ratio = HOOK_MIN_THIN_RATIO_DISPLAY
     return ctx.thin * ratio
+
+
+def m_crotch_shelf_thickness_over_stem(glyph: ComposedGlyph) -> float:
+    """Horizontal ink across the ``m`` middle crotch shelf ÷ ``context.stem``.
+
+    Probes the flat band between the first and second arch (B-09) so R9
+    calibration can distinguish a solid black bridge from a healthy ``n``-like gap.
+    """
+    from typekernel.parts.control import NMetrics, _shoulder
+
+    design = glyph.design
+    if not isinstance(design, NMetrics):
+        raise TypeError(f"expected NMetrics on ``m``, got {type(design)!r}")
+    ctx = glyph.context
+    s1 = _shoulder(design)
+    s2 = _shoulder(design, s1.r0)
+    xh = design.x_height
+    x = (s1.r1 + s2.l0) / 2.0
+    y = xh - ctx.stem * 0.035
+    outline = measurement_outline(glyph)
+    width = measure_oriented_stem(outline, (x, y), 0.0)
+    if width is None or width <= 0.0:
+        raise ValueError("m crotch shelf thickness probe missed ink")
+    return width / ctx.stem
 
 
 def control_max_thickness_ratio(controls: Controls) -> float:

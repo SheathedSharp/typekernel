@@ -201,6 +201,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - 合成单线圆环 → 最大厚度/stem ≤ 1.1（几何真值 1.05–1.08）。
   - 单根竖笔 `l` → 1.00 ± 0.02。
   - `m` 的黑块区域厚度应显著大于同字重 `n`（**待校准**）。
+- **本轮（部分）**：``m_crotch_shelf_thickness_over_stem`` + ``M_CROTCH_SHELF_MIN_OVER_STEM`` 冻结探针（三 preset 回归）。
 - **涉及文件**：`qa/lint.py` 或 `qa/thickness.py`；`tests/qa/test_thickness.py`。
 - **依赖**：TK-101。
 
