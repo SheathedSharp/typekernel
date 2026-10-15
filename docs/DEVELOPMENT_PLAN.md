@@ -424,9 +424,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
 - **本轮（部分）**：``agent-recipes`` 补衬线 ``build_family`` / ``build_vf`` 人审 PNG 命令。
 - **本轮（部分）**：``slab_serif`` / ``bracketed_serif`` 纳入 TK-207 字重阶梯 ``R8_counter_min`` 回归；衬线脚/对角在阶梯 stem 带加宽反挤压；``test_serif_voice_trial_snapshots`` 断言 ``weight_ladder_r8_failures==0``；``outline_hashes.json`` 更新受影响字形。
-- **本轮（部分）**：``examples/human_review_bundle.py`` 生成本地校样 + ``REVIEW_CHECKLIST.md``（不写 ``approvals``）；``test_human_review_bundle`` 烟测；``agent-recipes`` / ``approvals/README`` 对齐 gate 文件名。
+- **本轮（部分）**：``examples/human_review_bundle.py`` 生成本地校样 + ``REVIEW_CHECKLIST.md``（不写 ``approvals``）；``test_human_review_bundle`` 烟测（``--only serif`` / ``italic``）；``agent-recipes`` / ``approvals/README`` 对齐 gate 文件名。
 - **本轮（部分）**：``bracketed_stem_foot_dims`` 粗 stem 缩尺 + 降部 ``p``/``q`` 脚帽；``examples/bracketed_serif`` Bold 碗形 ``b``/``d``/``p``/``q`` R3 清零；golden ``p``/``q`` 更新。
 - **本轮（部分）**：``approvals/serif-*-voice.json``、``italic-vf-construct.json`` 占位（``approved: false``）；``test_repo_pending_human_review_templates``。
+- **本轮（部分）**：``test_human_review_bundle_serif_only`` 烟测。
 - **待续**：人设 ``approved: true`` 签字；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
@@ -450,7 +451,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``Stroke.beziers`` / ``from_beziers`` + ``Skeleton.from_mapping`` 的 ``beziers`` 键；``trace_letter`` 走 ``expand_cubic``。
 - **本轮（部分）**：单段开放 cubic + butt cap 走偏移轨道 cubic 链拟合（``max_offset_fit_error`` / ``offset_fit_budget``）；多段/圆角仍折线化。
 - **本轮（部分）**：闭合 cubic 中线（多段）偏移轨道拟合 → 双轮廓环（``_expand_closed_cubic_offset``）。
-- **待续**：多段开放 cubic 拐角（须先折线化偏移轨再 miter，或统一采样轨）；段间 C1、圆角 cap/join。
+- **本轮（部分）**：``cubic_centerline_to_polyline``（弦高折线 → ``expand``）；多段开放 ``expand_cubic`` 与该路径等价（``test_cubic_centerline_to_polyline_*``）。
+- **待续**：多段开放偏移轨 cubic 拟合（非仅中线折线化）；段间 C1、圆角 cap/join。
 
 ### M4 真斜体
 
