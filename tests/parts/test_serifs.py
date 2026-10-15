@@ -49,6 +49,25 @@ def test_bracketed_serif_changes_n_outline() -> None:
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
+def test_bracketed_b_inline_foot_extends_left_of_plain_stem() -> None:
+    """Inline bowl foot serifs must project past the stem (TK-306 bracketed)."""
+    from typekernel.optics.space import ink_intervals_at_y
+    from typekernel.parts import b_from_o, build_n, build_o
+
+    stem = 100.0
+    y_probe = 0.0
+    ctx_plain = DesignContext.code_clear().tuned(stem=stem)
+    ctx_br = DesignContext.bracketed_serif().tuned(stem=stem)
+
+    def left_ink(ctx: DesignContext) -> float:
+        glyph = b_from_o(build_o(ctx), build_n(ctx))
+        intervals = ink_intervals_at_y(list(glyph.solids), y_probe)
+        assert intervals
+        return intervals[0][0]
+
+    assert left_ink(ctx_br) < left_ink(ctx_plain) - 8.0
+
+
 def test_bracketed_serif_lint_clean_on_full_supported() -> None:
     ctx = DesignContext.bracketed_serif()
     report = lint_controls(Controls.from_context(ctx))
