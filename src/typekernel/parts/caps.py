@@ -1258,6 +1258,8 @@ def W_from_H(
             w_frac -= 0.02
     if 168.0 <= s <= 192.0:
         w_frac += 0.02
+    if c.style.serif == "bracketed" and s <= 78.0:
+        w_frac += 0.085
     w = w_frac * h.width
     bump = c.sharp_overshoot
     base = w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
@@ -1309,8 +1311,16 @@ def X_from_H(
     """``X``: two compensated diagonals crossing at mid cap height."""
     h, c = _h_record(H), ctx or H.context
     w_frac = width
-    if 100.0 <= c.stem <= 118.0:
+    s = c.stem
+    if 100.0 <= s <= 118.0:
         w_frac += 0.011
+    if c.style.serif in ("slab", "bracketed"):
+        if s <= 78.0:
+            w_frac += 0.07
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.04
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.05
     w = w_frac * h.width
     base = x_points(h.stem, h.cap_height, w, c.contrast)
     baked = _cap_serif_inlined(c)
@@ -1419,6 +1429,17 @@ def K_from_H(
         w_frac += 0.024
     if 168.0 <= s <= 192.0:
         w_frac += 0.042
+    if c.style.serif in ("slab", "bracketed"):
+        if s <= 40.0:
+            w_frac += 0.08
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.04
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.06
+            vertex_eff = max(vertex_eff, 0.44)
+        if 168.0 <= s <= 192.0:
+            w_frac += 0.03
+            vertex_eff = max(vertex_eff, 0.44)
     w = w_frac * h.width
     cap = h.cap_height
     base = k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex_eff)
@@ -1693,6 +1714,16 @@ def M_from_H(
         vertex_apex = max(vertex_apex, 0.38)
     if s >= 198.0:
         w_frac += 0.02
+    if c.style.serif in ("slab", "bracketed"):
+        if s <= 78.0:
+            w_frac += 0.06
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.05
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.04
+        if 168.0 <= s <= 192.0:
+            w_frac += 0.07 if c.style.serif == "bracketed" else 0.05
+            vertex_apex = max(vertex_apex, 0.38)
     w, cap, t = w_frac * h.width, h.cap_height, h.stem
     f = vertex_apex * t
     bx = w / 2.0 - f / 2.0  # left end of the flat vertex on the baseline

@@ -53,6 +53,7 @@ def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     )
     assert snap.family_gate_ok, snap.family_gate_failures
     assert snap.metrics_ok
+    assert snap.weight_ladder_r8_failures == 0
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
 
 

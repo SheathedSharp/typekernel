@@ -422,6 +422,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：大写 stem 锚点按字形跨度（``dual``/``left``/``none``）与 ``M``/``N``/``T``/``U`` 真实 stem 位；``bracketed`` 对角大写禁用假 stem 布尔；``f``/``t``/``j`` 与 ``b``/``d``/``p``/``q`` 钩脚/碗 stem 脚避免 VF 段数漂移；``test_bracketed_serif_masters_on_vf_stable_charset`` 全 ``supported`` 四档母版。
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
 - **本轮（部分）**：``agent-recipes`` 补衬线 ``build_family`` / ``build_vf`` 人审 PNG 命令。
+- **本轮（部分）**：``slab_serif`` / ``bracketed_serif`` 纳入 TK-207 字重阶梯 ``R8_counter_min`` 回归；衬线脚/对角在阶梯 stem 带加宽反挤压；``test_serif_voice_trial_snapshots`` 断言 ``weight_ladder_r8_failures==0``；``outline_hashes.json`` 更新受影响字形。
 - **待续**：**人审签字**（`approvals/*.json`）；``bracketed`` 钩形/对角真托架形；``primitives.serif_bracket`` 楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。

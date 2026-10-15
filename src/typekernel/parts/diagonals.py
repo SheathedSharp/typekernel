@@ -303,6 +303,7 @@ def y_from_n(
     """``y``: the ``v`` with its right stroke carried straight to the descender."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
+    apex_eff = apex
     w = m.width if width is None else width
     if width is None:
         s, scale = c.stem, 1.0
@@ -322,9 +323,21 @@ def y_from_n(
                 scale += 0.032
         if 142.0 <= s <= 158.0:
             scale += 0.048
+        if c.style.serif in ("slab", "bracketed"):
+            if 100.0 <= s <= 118.0:
+                scale += 0.07 if c.style.serif == "slab" else 0.055
+                apex_eff = min(apex_eff, 0.33)
+            if 138.0 <= s <= 162.0:
+                scale += 0.04
+            if 168.0 <= s <= 192.0:
+                scale += 0.05
+                apex_eff = min(apex_eff, 0.33)
+            if s >= 198.0:
+                scale += 0.04
+                apex_eff = min(apex_eff, 0.32)
         w = m.width * scale
     xh, desc = m.x_height, c.descender
-    _, hw, cy, tan = _v_geometry(m.stem, xh, w, c.contrast, apex)
+    _, hw, cy, tan = _v_geometry(m.stem, xh, w, c.contrast, apex_eff)
     # left outer edge x = (xh - y)·tan meets the right stroke's left edge
     # x = w - hw - (xh - y)·tan
     join_y = xh - (w - hw) / (2.0 * tan)
@@ -522,6 +535,13 @@ def k_from_n(
             scale += 0.02
         if s >= 198.0:
             scale += 0.012
+        if c.style.serif in ("slab", "bracketed"):
+            if 65.0 <= s <= 78.0:
+                scale += 0.045
+            if 138.0 <= s <= 162.0:
+                scale += 0.055 if c.style.serif == "bracketed" else 0.045
+            if 100.0 <= s <= 118.0:
+                scale += 0.035
         w = m.width * scale
     if c.terminal_style in ("angled", "flared", "ball") and width is None:
         w *= 1.026

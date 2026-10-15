@@ -28,6 +28,8 @@ _LADDER_STEMS = (30.0, 70.0, 110.0, 150.0, 180.0, 200.0)
         "display",
         "paper_ink",
         "open_print",
+        "slab_serif",
+        "bracketed_serif",
     ),
 )
 @pytest.mark.parametrize("stem", _LADDER_STEMS)

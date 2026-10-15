@@ -476,6 +476,12 @@ def five_from_O(
     w *= 1.028 + 0.15 * relief
     cx, rx = w / 2.0, w / 2.0
     bowl_eff = bowl - 0.035 * relief
+    if c.style.serif == "slab" and c.stem < 50.0:
+        bowl_eff += 0.03
+        w *= 1.035
+    if c.style.serif == "slab" and 100.0 <= c.stem <= 118.0:
+        bowl_eff += 0.02
+        w *= 1.02
     ry = (bowl_eff * cap + os_) / 2.0
     cy = ry - os_
     stroke_scale = (1.0 - 0.13 * relief) * (0.972 + 0.008 * relief)
