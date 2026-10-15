@@ -49,6 +49,36 @@ def test_bracketed_serif_changes_n_outline() -> None:
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
+def test_bracketed_n_left_stem_foot_uses_cubic_bracket_fillet() -> None:
+    plain = Controls.from_context(DesignContext.humanist_sans()).build("n")
+    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
+    pk = [s.kind for s in plain.solids[0].contours[0].segments]
+    bk = [s.kind for s in bracket.solids[0].contours[0].segments]
+    assert bk.count("cubic") >= pk.count("cubic") + 2
+
+
+def test_bracketed_nh_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.bracketed_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    for ch in "nh":
+        ref_n = len(
+            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+        )
+        fonts = []
+        for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            assert len(g.solids[0].contours[0].segments) == ref_n
+            font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
+            font.add_char(ch, g)
+            fonts.append(font)
+        masters = [
+            Master({"wght": wght}, font)
+            for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+        ]
+        assert check_masters(masters) == []
+
+
 def test_bracketed_hook_letters_cap_serif_adds_cubic_fillet() -> None:
     """``f``/``t``/``j`` hook cap feet: bracketed adds one cubic vs slab polyline."""
     slab_ctx = DesignContext.slab_serif()

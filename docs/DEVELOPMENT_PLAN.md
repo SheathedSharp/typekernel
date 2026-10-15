@@ -454,7 +454,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：小写 ``e`` ``slab`` 下开口内嵌（``e_from_o`` + ``_opening_bottom_slab_detour``）；``test_slab_e_opening_changes_outline``；golden ``slab_serif`` ``e``。
 - **本轮（部分）**：小写 ``s``/大写 ``S`` ``slab`` 上下开口内嵌（``s_from_o``）；``test_slab_s_*``；golden ``slab_serif`` ``s``/``S``。
 - **本轮（部分）**：``test_opening_glyph_masters_interpolate_on_weight_ladder`` 锁定 ``slab``/``bracketed`` 开口族 ``cCeEsSGQ()?`` VF 段数。
-- **本轮（部分）**：``test_bracketed_cap_inline_masters_interpolate_on_weight_ladder`` 锁定内嵌托架大写（除 ``O``）四档 VF 段数；小写 ``i``/``l`` 与 cap ``I`` 同配方内嵌托架；``n`` 等仍走锚点布尔。
+- **本轮（部分）**：``test_bracketed_cap_inline_masters_interpolate_on_weight_ladder`` 锁定内嵌托架大写（除 ``O``）四档 VF 段数；小写 ``i``/``l`` 与 cap ``I`` 同配方内嵌托架。
+- **本轮（部分）**：``n``/``h`` ``bracketed`` 左 stem 脚底内嵌（``_n_bracketed_left_foot_detour`` + stem 底圆角）；``u`` 仍右脚锚点；``test_bracketed_n_*`` / ``test_bracketed_nh_masters_*``；golden ``n``/``h``（``bracketed_serif``）。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。

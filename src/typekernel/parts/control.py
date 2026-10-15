@@ -366,7 +366,43 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
     return _ccw(b.build())
 
 
-def _n_family_outline(m: NMetrics, *, left_top: float, vf_compat: bool = False) -> Outline:
+def _n_bracketed_left_foot_detour(
+    b: PathBuilder,
+    l0: float,
+    l1: float,
+    left_top: float,
+    ctx: DesignContext,
+    stem: float,
+) -> None:
+    """Bracketed foot below baseline; ends on ``(l0, left_top)`` with a stem fillet."""
+    from typekernel.parts.caps import _finish_baseline_foot_pad
+    from typekernel.parts.serifs import (
+        _bracket_fillet_at_outer_corner,
+        bracketed_stem_foot_dims,
+        serif_metrics,
+    )
+
+    l, th = bracketed_stem_foot_dims(ctx, stem, 0.0)
+    _, _, bracket_r = serif_metrics(ctx)
+    b.lineTo(l0 - l, -th)
+    _finish_baseline_foot_pad(b, l0 - l, l1 + l, th, bracket_r, bracketed=True)
+    _bracket_fillet_at_outer_corner(
+        b,
+        x_corner=l0,
+        y_horiz=0.0,
+        y_vert_end=left_top,
+        x_from=l1 + l,
+        bracket_r=bracket_r,
+    )
+
+
+def _n_family_outline(
+    m: NMetrics,
+    *,
+    left_top: float,
+    vf_compat: bool = False,
+    ctx: DesignContext | None = None,
+) -> Outline:
     """One continuous outer contour: left stem + shoulder + right leg.
 
     No third ``arch`` mesh and no ``union``. The counter is the notch formed
@@ -375,7 +411,10 @@ def _n_family_outline(m: NMetrics, *, left_top: float, vf_compat: bool = False) 
     s = _shoulder(m)
     b = PathBuilder()
     b.moveTo(s.l0, 0.0)
-    b.lineTo(s.l0, left_top)
+    if ctx is not None and ctx.style.serif == "bracketed":
+        _n_bracketed_left_foot_detour(b, s.l0, s.l1, left_top, ctx, m.stem)
+    else:
+        b.lineTo(s.l0, left_top)
     b.lineTo(s.l1, left_top)
     if left_top > m.x_height + 0.5:
         # h: down the right face of the ascender stem to the shoulder spring
@@ -503,7 +542,9 @@ def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     return m.x_height * 0.5
 
 
-def _n_branching_outline(m: NMetrics, *, stem_top: float) -> Outline:
+def _n_branching_outline(
+    m: NMetrics, *, stem_top: float, ctx: DesignContext | None = None
+) -> Outline:
     """``n`` / ``h`` shoulder springing from the left stem mid-height (italic)."""
     branch_y = _italic_branch_y(m, stem_top)
     drop = stem_top - branch_y
@@ -519,7 +560,10 @@ def _n_branching_outline(m: NMetrics, *, stem_top: float) -> Outline:
     l0, l1, r0, r1 = 0.0, t, t + m.counter, m.width
     b = PathBuilder()
     b.moveTo(l0, 0.0)
-    b.lineTo(l0, stem_top)
+    if ctx is not None and ctx.style.serif == "bracketed":
+        _n_bracketed_left_foot_detour(b, l0, l1, stem_top, ctx, m.stem)
+    else:
+        b.lineTo(l0, stem_top)
     b.lineTo(l1, stem_top)
     b.lineTo(l1, branch_y)
     _curve(b, s.outer[0])
@@ -540,10 +584,15 @@ def _n_stem_serif_anchors(
     left_top: float,
     right_top: float | None = None,
     right_foot: bool = True,
+    ctx: DesignContext | None = None,
+    inline_left_foot: bool = False,
 ) -> dict[str, Pt]:
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
-    anchors: dict[str, Pt] = {"stem_L_b": (half, 0.0), "stem_L_t": (half, left_top)}
+    anchors: dict[str, Pt] = {}
+    if not (inline_left_foot and ctx is not None and ctx.style.serif == "bracketed"):
+        anchors["stem_L_b"] = (half, 0.0)
+    anchors["stem_L_t"] = (half, left_top)
     if right_foot:
         anchors["stem_R_b"] = (m.width - half, 0.0)
     if right_top is not None:
@@ -571,16 +620,23 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     """Control ``n``: continuous cubic outline from its design record."""
     m = metrics or n_metrics(ctx)
     cx = m.width / 2.0
+    inline_foot = ctx.style.serif == "bracketed"
     anchors = {
         "top": (cx, m.x_height),
         "bottom": (cx, 0.0),
-        **_n_stem_serif_anchors(m, left_top=m.x_height, right_top=None),
+        **_n_stem_serif_anchors(
+            m,
+            left_top=m.x_height,
+            right_top=None,
+            ctx=ctx,
+            inline_left_foot=inline_foot,
+        ),
     }
     if _italic_topology(ctx):
-        outline = _n_branching_outline(m, stem_top=m.x_height)
+        outline = _n_branching_outline(m, stem_top=m.x_height, ctx=ctx)
     else:
         outline = _n_family_outline(
-            m, left_top=m.x_height, vf_compat=_vf_compat_stem(ctx)
+            m, left_top=m.x_height, vf_compat=_vf_compat_stem(ctx), ctx=ctx
         )
     return _pack(ctx, m, anchors, outline)
 
@@ -595,13 +651,15 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             m,
             left_top=m.ascender,
             right_top=m.x_height,
+            ctx=ctx,
+            inline_left_foot=ctx.style.serif == "bracketed",
         ),
     }
     if _italic_topology(ctx):
-        outline = _n_branching_outline(m, stem_top=m.ascender)
+        outline = _n_branching_outline(m, stem_top=m.ascender, ctx=ctx)
     else:
         outline = _n_family_outline(
-            m, left_top=m.ascender, vf_compat=_vf_compat_stem(ctx)
+            m, left_top=m.ascender, vf_compat=_vf_compat_stem(ctx), ctx=ctx
         )
     return _pack(ctx, m, anchors, outline)
 
@@ -1241,6 +1299,7 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     half = m.stem / 2.0
+    stem_anchors: dict[str, Pt]
     if c.style.l_tail == "tailed":
         t = m.stem
         ext = t * 0.88
@@ -1253,21 +1312,21 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         b.lineTo(0.0, 0.0)
         b.closePath()
         outline = _ccw(b.build())
-        serif_anchors = _vertical_stem_serif_anchors(
+        stem_anchors = _vertical_stem_serif_anchors(
             m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
         )
     elif _stem_serif_inlined(c):
         outline = _inline_single_stem_outline(c, m.stem, m.ascender)
-        serif_anchors: dict[str, Pt] = {}
+        stem_anchors = {}
     else:
         outline = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)
-        serif_anchors = _vertical_stem_serif_anchors(
+        stem_anchors = _vertical_stem_serif_anchors(
             m.stem, half, bottom=0.0, top=m.ascender, side="L", include_top=False
         )
     anchors = {
         "top": (half, m.ascender),
         "bottom": (half, 0.0),
-        **serif_anchors,
+        **stem_anchors,
     }
     return _pack(c, m, anchors, outline)
 
