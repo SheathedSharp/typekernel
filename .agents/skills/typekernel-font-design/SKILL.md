@@ -73,7 +73,7 @@ Copy and track:
 Record: family name, target style (geometric sans / humanist / mono / …), axes (wght, wdth, ital), minimum charset (ASCII, Latin-1, punctuation), tabular nums, ligatures.
 
 **2 — DesignContext**  
-Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `paper_ink()`, `mono()`. Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset.
+Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `open_print()`, `paper_ink()`, `mono()`, or serif voices `slab_serif()` / `bracketed_serif()` (`Style.serif` slab / bracketed). Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset. New serif presets must pass `AGENT_SENTENCE` gate and L3 `voice_distance` (see `tests/qa/test_originality.py`).
 
 **3 — Controls**  
 `Controls.from_context(ctx)`. Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps A–Z except `H`/`I` have specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
@@ -195,6 +195,8 @@ Default punctuation/figures live in `Controls.supported` via `PUNCT_FORMS`, caps
 | `examples/zayju_letter/` | Hand-built `n` with `PathBuilder` when `Controls` is not enough |
 | `examples/variable_family/` | wght VF, designed counters |
 | `examples/italic_family/` | wght × ital, shared kern classes |
+| `examples/slab_serif/` | **L2 serif** — slab voice, static three masters + `build_vf.py` |
+| `examples/bracketed_serif/` | **L2 serif** — bracketed voice, same ladder as slab VF tests |
 | `examples/variable_width/build_vfwd.py` | wght × wdth |
 | `examples/oblique_font/` | slnt via shear only |
 

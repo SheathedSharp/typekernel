@@ -422,7 +422,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``U``/``G``/``Q`` 等 ``bracketed`` 与 ``slab`` 共用内嵌顶/脚几何以过 ``deep_check_masters``；碗形 ``b``/``d``/``p``/``q`` 内嵌脚路径保持 G1≤slab 水平；``examples/bracketed_serif`` 三档 + ``build_vf.py`` + 烟测。
 - **待续**：**人审签字**（slab/bracketed 自动化验收已齐）；``bracketed`` 钩形/对角真托架形（部分仍借用 slab 矩形内嵌）。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
-- **验收**：`serif="slab"` 构建全 98 字形 lint 零错误，并在 ≥ 3 个字重通过；人审；对应 preset（如 `slab_serif()`）与示例。
+- **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
 - **依赖**：TK-305。
 - **说明**：衬线是目前最大的拓扑缺口（无衬线之外没有任何品类）。若决策 D2 选择「暂不做衬线」，本任务顺延，M3 出口标准里的「3 种 voice」改由 TK-305 的选项组合满足。
 
@@ -463,7 +463,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮**：`AGENT_GOAL`、`SKILL`、`reference.md`、`VISION`、`README`、`examples/italic_family` 已对齐 `tuned_glyph`、`italic_design`、TK-301/304 状态；`VISION`/`AGENT_GOAL` 同步 M4 斜体与 TK-205 `f`/`t`。
 - **本轮（部分）**：SKILL / `reference.md` 补充 `charset_failures`、family gate、`snapshot_trial` 与 `agent_studio` 退出码行为；`agent-recipes` / SKILL / `reference.md` 同步 TK-303 cap `G R Y` 的 `tuned_glyph` 规格表。
 - **本轮（部分）**：``agent-recipes`` 增加 TK-207 ``weight_ladder_sheet`` 人审片段（本地 ``artifacts/specimens/``）。
-- **待续**：`Style`（TK-305）、L3 验收全文、与 `agent-recipes` 的最终统一核对。
+- **本轮（部分）**：SKILL preset 表补 ``slab_serif``/``bracketed_serif``、L3 指针与 ``examples/*_serif``；TK-306 验收行与 bracketed 对齐。
+- **待续**：`Style`（TK-305）选项全文、L3 在 ``AGENT_GOAL`` 的终稿核对、与 `agent-recipes` 的最终统一核对。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
