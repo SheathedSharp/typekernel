@@ -130,6 +130,26 @@ def test_snapshot_reference_trials_script(tmp_path: Path) -> None:
             (tmp_path / folder / "snapshot.json").read_text(encoding="utf-8")
         )
         assert data["l3_voice_ok"] is True
+        assert data["program_pass_ok"] is True
+    validate = subprocess.run(
+        [
+            sys.executable,
+            "validate_snapshot.py",
+            *[str(tmp_path / folder) for folder in (
+                "brief-1",
+                "brief-2",
+                "brief-2-slab",
+                "brief-2-bracketed",
+                "brief-3",
+            )],
+        ],
+        cwd=TRIAL,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert validate.returncode == 0, validate.stderr or validate.stdout
 
 
 def test_snapshot_design_stem_tweak_exit_code_7(tmp_path: Path) -> None:
