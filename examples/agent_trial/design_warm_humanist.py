@@ -1,8 +1,8 @@
 """Reference agent trial for brief-1 (TK-502): warm humanist UI sans.
 
-Not a preset snapshot: ``Style`` + ``terminal_style`` + ``tuned_glyph`` on
-documented fields. Iterate on this module until ``voice_distance`` ≥ L3 (0.35)
-while keeping ``weight_ladder_r8_failures == 0``.
+Not a preset snapshot: ``Style`` + ``terminal_style`` + context ``roundness``
++ ``tuned_glyph`` on documented fields. Snapshot must keep
+``weight_ladder_r8_failures == 0`` and ``voice_distance`` ≥ L3 (0.35).
 
 Run::
 
@@ -21,6 +21,7 @@ __all__ = ["controls"]
 def controls() -> Controls:
     """Regular master for brief-1 (pair with ``with_stem_relief()`` for Bold)."""
     ctx = DesignContext.humanist_sans().tuned(
+        roundness=0.40,
         terminal_style="ball",
         style=Style(
             a_form="single",
@@ -38,4 +39,5 @@ def controls() -> Controls:
         .tuned_glyph("s", top_scale=0.82)
         .tuned_glyph("e", bar_raise=0.35)
         .tuned_glyph("K", width=1.08)
+        .tuned_glyph("R", leg_at=0.90)
     )

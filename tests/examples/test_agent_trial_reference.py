@@ -10,15 +10,15 @@ import sys
 from pathlib import Path
 
 from typekernel.parts import Controls
-from typekernel.qa.trial_protocol import FIXED_TRIAL_BRIEFS, snapshot_trial
+from typekernel.qa.trial_protocol import (
+    FIXED_TRIAL_BRIEFS,
+    L3_VOICE_DISTANCE_THRESHOLD,
+    snapshot_trial,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
 DESIGN = TRIAL / "design_warm_humanist.py"
-
-# Below L3 (0.35) but well above unchanged preset (~0).
-_MIN_REFERENCE_VOICE_DISTANCE = 0.2
-
 
 def _load_controls() -> Controls:
     spec = importlib.util.spec_from_file_location("design_warm_humanist", DESIGN)
@@ -39,7 +39,8 @@ def test_reference_warm_humanist_passes_gate_and_r8() -> None:
     assert snap.family_gate_ok, snap.family_gate_failures
     assert snap.metrics_ok
     assert snap.weight_ladder_r8_failures == 0
-    assert snap.voice_distance >= _MIN_REFERENCE_VOICE_DISTANCE
+    assert snap.l3_voice_ok
+    assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert "f" in snap.glyph_spec_chars
 
 
@@ -64,5 +65,6 @@ def test_snapshot_design_script(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
     data = json.loads((tmp_path / "snapshot.json").read_text(encoding="utf-8"))
     assert data["brief_id"] == "brief-1"
-    assert data["voice_distance"] >= _MIN_REFERENCE_VOICE_DISTANCE
+    assert data["l3_voice_ok"] is True
+    assert data["voice_distance"] >= L3_VOICE_DISTANCE_THRESHOLD
     assert "tuned_glyph" in data["apis_used"]
