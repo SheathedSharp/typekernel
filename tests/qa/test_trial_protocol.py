@@ -56,6 +56,9 @@ def test_preset_brief_snapshots_pass_gate(brief) -> None:
     assert snap.lint_error_count == 0
     assert snap.identity_error_count == 0
     assert snap.weight_ladder_r8_failures == 0
+    assert not snap.cheating_flags
+    assert snap.voice_distance < 1e-5
+    assert not snap.l3_voice_ok
 
 
 @pytest.mark.parametrize(

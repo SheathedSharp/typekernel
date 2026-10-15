@@ -24,7 +24,9 @@ _CHECKLIST = """# Human review checklist (do not commit this folder)
 ## Automated gates (run from repo root)
 
 ```bash
+PYTHONPATH=src python examples/run_m5_program_exit.py --gate all
 pytest -q tests/docs/test_development_plan_section8.py
+pytest -q tests/examples/test_agent_trial_reference.py
 pytest -q tests/qa/test_m3_exit.py
 pytest -q tests/examples/test_human_review_bundle.py
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py

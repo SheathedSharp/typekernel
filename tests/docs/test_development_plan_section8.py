@@ -139,6 +139,7 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     assert "human_review_bundle" in text
     assert "snapshot_serif_voices" in text
     assert "validate_trial_snapshot" in text
+    assert "validate_snapshot.py" in text
     assert "trial_snapshot_exit_code" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_italic_program_acceptance" in text

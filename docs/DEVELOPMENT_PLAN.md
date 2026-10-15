@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1433 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
+- `pytest -q`：**1435 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -572,6 +572,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` / ``reference`` 对齐 TK-402 斜体 ``proof.png`` / ``proof_vf.png`` 与人审 gate 名。
 - **本轮（部分）**：``test_section8_family_gate_on_main_and_serif_voices`` 固化 §8.3 主 preset + TK-306 衬线 voice；``agent-recipes`` 补程序验收 pytest 指针。
 - **本轮（部分）**：``agent-recipes`` / ``agent_trial/README`` / ``reference.md`` 补 ``validate_trial_snapshot`` 与 ``trial_snapshot_exit_code`` 退出码表；``test_section8_agent_recipes_documents_trial_snapshot_exit_codes`` / ``test_written_snapshot_json_passes_validate_record``。
+- **本轮（部分）**：``human_review_bundle`` 清单补 ``run_m5_program_exit`` / ``test_agent_trial_reference``；``reference.md`` 补 ``validate_snapshot.py``；preset 基线 ``test_preset_brief_snapshots_pass_gate`` 断言无 ``cheating_flags``。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**

@@ -26,6 +26,8 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_italic_program_acceptance.py" in text
     assert "test_development_plan_section8.py" in text
+    assert "test_agent_trial_reference.py" in text
+    assert "run_m5_program_exit.py" in text
     assert "test_m3_exit.py" in text
 
 
