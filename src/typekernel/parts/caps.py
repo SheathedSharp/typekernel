@@ -1145,6 +1145,71 @@ def Y_from_H(
     return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
 
 
+def _m_cap_outline_points(
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    y_low: float,
+    y_v: float,
+    bx: float,
+) -> list[Pt]:
+    t, cap = h.stem, h.cap_height
+    if ctx.style.serif != "slab":
+        return [
+            (0.0, 0.0),
+            (t, 0.0),
+            (t, y_low),
+            (bx, 0.0),
+            (w - bx, 0.0),
+            (w - t, y_low),
+            (w - t, 0.0),
+            (w, 0.0),
+            (w, cap),
+            (w - t, cap),
+            (w / 2.0, y_v),
+            (t, cap),
+            (0.0, cap),
+        ]
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, _ = serif_metrics(ctx)
+    gap = max(w - 2.0 * t, t)
+    l = min(length, t * 0.48, gap * 0.32, max(bx - t, t) * 0.42)
+    th = min(thick, cap * 0.1, t * 0.18, gap * 0.14)
+    return [
+        (-l, -th),
+        (t + l, -th),
+        (t + l, 0.0),
+        (t, 0.0),
+        (t, y_low),
+        (bx, 0.0),
+        (w - bx, 0.0),
+        (w - t, y_low),
+        (w - t, 0.0),
+        (w - t - l, 0.0),
+        (w - t - l, -th),
+        (w + l, -th),
+        (w + l, 0.0),
+        (w, 0.0),
+        (w, cap),
+        (w + l, cap),
+        (w + l, cap + th),
+        (w - t - l, cap + th),
+        (w - t - l, cap),
+        (w - t, cap),
+        (w / 2.0, y_v),
+        (t, cap),
+        (t + l, cap),
+        (t + l, cap + th),
+        (-l, cap + th),
+        (-l, cap),
+        (0.0, cap),
+        (0.0, 0.0),
+        (-l, 0.0),
+    ]
+
+
 def M_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1183,22 +1248,14 @@ def M_from_H(
     y_v = slope * (f / 2.0 - hw)
     if not (0.0 < y_low < cap and 0.0 < y_v < cap and hw > f / 2.0):
         raise ValueError("M strokes do not fit this width; widen it or thin the stem")
-    pts = [
-        (0.0, 0.0),
-        (t, 0.0),
-        (t, y_low),
-        (bx, 0.0),
-        (w - bx, 0.0),
-        (w - t, y_low),
-        (w - t, 0.0),
-        (w, 0.0),
-        (w, cap),
-        (w - t, cap),
-        (w / 2.0, y_v),
-        (t, cap),
-        (0.0, cap),
-    ]
-    return _pack(c, h, _cap_anchors(w, h), _polygon(pts))
+    baked = c.style.serif == "slab"
+    pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not baked),
+        _polygon(pts),
+    )
 
 
 def _n_cap_outline_points(
