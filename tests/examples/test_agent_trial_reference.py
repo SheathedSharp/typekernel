@@ -32,6 +32,7 @@ _METRICS_DESIGNS: dict[str, tuple[str, Path]] = {
     "brief-1": ("brief-1", TRIAL / "design_warm_humanist.py"),
     "brief-2": ("brief-2", TRIAL / "design_editorial_geometric.py"),
     "brief-2-slab": ("brief-2", TRIAL / "design_editorial_slab.py"),
+    "brief-2-bracketed": ("brief-2", TRIAL / "design_editorial_bracketed.py"),
     "brief-3": ("brief-3", TRIAL / "design_coding_clear.py"),
 }
 
@@ -88,6 +89,10 @@ def test_reference_editorial_slab_passes_l3() -> None:
     _assert_reference_trial("brief-2", TRIAL / "design_editorial_slab.py")
 
 
+def test_reference_editorial_bracketed_passes_l3() -> None:
+    _assert_reference_trial("brief-2", TRIAL / "design_editorial_bracketed.py")
+
+
 def test_reference_coding_clear_passes_l3() -> None:
     _assert_reference_trial("brief-3", _REFERENCE_TRIALS[2][1])
 
@@ -102,7 +107,13 @@ def test_snapshot_reference_trials_script(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
-    for folder in ("brief-1", "brief-2", "brief-2-slab", "brief-3"):
+    for folder in (
+        "brief-1",
+        "brief-2",
+        "brief-2-slab",
+        "brief-2-bracketed",
+        "brief-3",
+    ):
         data = json.loads(
             (tmp_path / folder / "snapshot.json").read_text(encoding="utf-8")
         )

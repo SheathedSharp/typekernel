@@ -22,6 +22,7 @@ TRIAL = ROOT / "examples" / "agent_trial"
         ("brief-1", None),
         ("brief-2", None),
         ("brief-2", "slab"),
+        ("brief-2", "bracketed"),
         ("brief-3", None),
     ),
 )

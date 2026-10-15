@@ -22,6 +22,7 @@ _BRIEF_MODULES: dict[str, str] = {
 
 _BRIEF_VARIANTS: dict[tuple[str, str], str] = {
     ("brief-2", "slab"): "design_editorial_slab",
+    ("brief-2", "bracketed"): "design_editorial_bracketed",
 }
 
 
@@ -97,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--variant",
         default=None,
-        help="brief-2: slab → design_editorial_slab (default: geometric sans)",
+        help="brief-2: slab | bracketed serif modules (default: geometric sans)",
     )
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)

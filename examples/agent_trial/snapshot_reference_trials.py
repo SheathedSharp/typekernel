@@ -13,6 +13,11 @@ _REFERENCE: tuple[tuple[str, str, Path], ...] = (
     ("brief-1", "brief-1", Path(__file__).with_name("design_warm_humanist.py")),
     ("brief-2", "brief-2", Path(__file__).with_name("design_editorial_geometric.py")),
     ("brief-2-slab", "brief-2", Path(__file__).with_name("design_editorial_slab.py")),
+    (
+        "brief-2-bracketed",
+        "brief-2",
+        Path(__file__).with_name("design_editorial_bracketed.py"),
+    ),
     ("brief-3", "brief-3", Path(__file__).with_name("design_coding_clear.py")),
 )
 

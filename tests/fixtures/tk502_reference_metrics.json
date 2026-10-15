@@ -30,5 +30,13 @@
     "lint_error_count": 0,
     "voice_distance": 1.0,
     "weight_ladder_r8_failures": 0
+  },
+  "brief-2-bracketed": {
+    "family_gate_ok": true,
+    "identity_error_count": 0,
+    "l3_voice_ok": true,
+    "lint_error_count": 0,
+    "voice_distance": 0.387755,
+    "weight_ladder_r8_failures": 0
   }
 }
