@@ -1167,17 +1167,16 @@ def _v_cap_foot_dims(h: HMetrics, ctx: DesignContext, apex_x: float) -> tuple[fl
     return l, th, bracket_r
 
 
-def _append_v_cap_foot_pad(
+def _append_baseline_foot_pad(
     b: PathBuilder,
-    apex_x: float,
-    l: float,
+    xl: float,
+    xr: float,
     th: float,
     bracket_r: float,
     *,
     bracketed: bool,
 ) -> None:
-    """Bottom foot pad at one ``V`` apex (ends on ``(apex_x + l, 0)``)."""
-    xl, xr = apex_x - l, apex_x + l
+    """Foot pad below the baseline from ``xl`` to ``xr``; ends at ``(xr, 0)``."""
     b.lineTo(xl, -th)
     if not bracketed:
         b.lineTo(xr, -th)
@@ -1199,6 +1198,55 @@ def _append_v_cap_foot_pad(
         -th + r,
     )
     b.lineTo(xr, 0.0)
+
+
+def _append_upward_cap_foot_pad(
+    b: PathBuilder,
+    xl: float,
+    xr: float,
+    y: float,
+    th: float,
+    bracket_r: float,
+    *,
+    bracketed: bool,
+) -> None:
+    """Foot pad above ``y`` from ``xl`` to ``xr``; ends at ``(xl, y)`` (after ``(xr, y)``)."""
+    b.lineTo(xr, y + th)
+    if not bracketed:
+        b.lineTo(xl, y + th)
+        b.lineTo(xl, y)
+        return
+    span_x = xr - xl
+    r = min(bracket_r, span_x * 0.4, th * 0.45)
+    if r < 0.35:
+        b.lineTo(xl, y + th)
+        b.lineTo(xl, y)
+        return
+    b.lineTo(xl + r, y + th)
+    b.curveTo(
+        xl + r - r * KAPPA,
+        y + th,
+        xl,
+        y + th - r + r * KAPPA,
+        xl,
+        y + th - r,
+    )
+    b.lineTo(xl, y)
+
+
+def _append_v_cap_foot_pad(
+    b: PathBuilder,
+    apex_x: float,
+    l: float,
+    th: float,
+    bracket_r: float,
+    *,
+    bracketed: bool,
+) -> None:
+    """Bottom foot pad at one ``V`` apex (ends on ``(apex_x + l, 0)``)."""
+    _append_baseline_foot_pad(
+        b, apex_x - l, apex_x + l, th, bracket_r, bracketed=bracketed
+    )
 
 
 def _v_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
@@ -1270,16 +1318,21 @@ def V_from_H(
     return _pack(c, h, anchors, _polygon(pts))
 
 
+def _w_cap_foot_dims(h: HMetrics, ctx: DesignContext, apex_x: float) -> tuple[float, float, float]:
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    l = min(length * 0.35, apex_x * 0.28, h.stem * 0.28)
+    th = min(thick * 0.55, h.cap_height * 0.04, h.stem * 0.1)
+    return l, th, bracket_r
+
+
 def _w_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
     """Slab feet on the two outer ``W`` apex flats (bottom only)."""
     a1l = base[1][0]
     a1r = base[2][0]
     ww = base[6][0]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length * 0.35, a1l * 0.28, h.stem * 0.28)
-    th = min(thick * 0.55, h.cap_height * 0.04, h.stem * 0.1)
+    l, th, _ = _w_cap_foot_dims(h, ctx, a1l)
     return [
         base[0],
         base[1],
@@ -1303,6 +1356,24 @@ def _w_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[
     ]
 
 
+def _w_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> Outline:
+    a1l, a1r = base[1][0], base[2][0]
+    ww = base[6][0]
+    l, th, bracket_r = _w_cap_foot_dims(h, ctx, a1l)
+    b = PathBuilder()
+    b.moveTo(*base[0])
+    b.lineTo(*base[1])
+    _append_baseline_foot_pad(b, a1l - l, a1r + l, th, bracket_r, bracketed=True)
+    b.lineTo(*base[2])
+    for p in base[3:5]:
+        b.lineTo(*p)
+    _append_baseline_foot_pad(b, ww - a1r - l, ww - a1l + l, th, bracket_r, bracketed=True)
+    for p in base[5:]:
+        b.lineTo(*p)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def W_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.4
 ) -> ComposedGlyph:
@@ -1323,13 +1394,26 @@ def W_from_H(
     bump = c.sharp_overshoot
     base = w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
     baked = _cap_serif_inlined(c)
-    pts = _w_cap_slab_points(h, c, base) if baked else base
-    return _pack(
-        c,
+    anchors = _cap_anchors(
+        w,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
-        _polygon(pts),
+        stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
+    if baked and c.style.serif == "bracketed":
+        outline = _w_cap_bracketed_outline(h, c, base)
+        return _pack(c, h, anchors, outline)
+    pts = _w_cap_slab_points(h, c, base) if baked else base
+    return _pack(c, h, anchors, _polygon(pts))
+
+
+def _x_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
+    from typekernel.parts.serifs import serif_metrics
+
+    length, thick, bracket_r = serif_metrics(ctx)
+    cap = h.cap_height
+    l = min(length * 0.42, hw * 0.28, h.stem * 0.32)
+    th = min(thick * 0.65, cap * 0.05, h.stem * 0.12)
+    return l, th, bracket_r
 
 
 def _x_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:
@@ -1337,11 +1421,7 @@ def _x_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[
     cap = h.cap_height
     w = base[6][0]
     hw = base[3][0]
-    from typekernel.parts.serifs import serif_metrics
-
-    length, thick, _ = serif_metrics(ctx)
-    l = min(length * 0.42, hw * 0.28, h.stem * 0.32)
-    th = min(thick * 0.65, cap * 0.05, h.stem * 0.12)
+    l, th, _ = _x_cap_foot_dims(h, ctx, hw)
     return [
         base[0],
         base[1],
@@ -1364,6 +1444,25 @@ def _x_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[
     ]
 
 
+def _x_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> Outline:
+    cap = h.cap_height
+    w = base[6][0]
+    hw = base[3][0]
+    l, th, bracket_r = _x_cap_foot_dims(h, ctx, hw)
+    b = PathBuilder()
+    b.moveTo(*base[0])
+    b.lineTo(*base[1])
+    _append_baseline_foot_pad(b, -l, hw + l, th, bracket_r, bracketed=True)
+    for p in base[3:9]:
+        b.lineTo(*p)
+    b.lineTo(w + l, cap)
+    _append_upward_cap_foot_pad(b, w - hw - l, w + l, cap, th, bracket_r, bracketed=True)
+    for p in base[9:]:
+        b.lineTo(*p)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def X_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.92
 ) -> ComposedGlyph:
@@ -1383,13 +1482,16 @@ def X_from_H(
     w = w_frac * h.width
     base = x_points(h.stem, h.cap_height, w, c.contrast)
     baked = _cap_serif_inlined(c)
-    pts = _x_cap_slab_points(h, c, base) if baked else base
-    return _pack(
-        c,
+    anchors = _cap_anchors(
+        w,
         h,
-        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
-        _polygon(pts),
+        stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
+    if baked and c.style.serif == "bracketed":
+        outline = _x_cap_bracketed_outline(h, c, base)
+        return _pack(c, h, anchors, outline)
+    pts = _x_cap_slab_points(h, c, base) if baked else base
+    return _pack(c, h, anchors, _polygon(pts))
 
 
 def _z_cap_slab_points(h: HMetrics, ctx: DesignContext, base: list[Pt]) -> list[Pt]:

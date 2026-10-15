@@ -76,6 +76,35 @@ def test_bracketed_cap_v_foot_uses_cubic_bracket_fillet() -> None:
     assert kinds.count("cubic") == 2
 
 
+def test_bracketed_cap_w_and_x_use_cubic_bracket_fillets() -> None:
+    slab = Controls.from_context(DesignContext.slab_serif())
+    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    for ch in ("W", "X"):
+        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
+        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert kinds.count("cubic") == 2
+
+
+def test_bracketed_cap_wx_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.bracketed_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    for ch in ("W", "X"):
+        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        fonts = []
+        for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+            controls = Controls.from_context(ctx.tuned(stem=stem))
+            g = controls.build(ch)
+            assert len(g.solids[0].contours[0].segments) == ref_n
+            font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
+            font.add_char(ch, g)
+            fonts.append(font)
+        masters = [
+            Master({"wght": wght}, font)
+            for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+        ]
+        assert check_masters(masters) == []
+
+
 def test_bracketed_cap_v_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
