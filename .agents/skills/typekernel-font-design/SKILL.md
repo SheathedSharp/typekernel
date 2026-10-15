@@ -143,7 +143,7 @@ Use the locked sentence and the brief sentence at **body** size (24–36 px), `f
 
 **L0 trial** — edit **`examples/agent_studio/design.py`**, run **`python examples/agent_studio/build.py`**. One Regular voice. The gate scores `AGENT_SENTENCE`; `BRIEF_SENTENCE` is `sentence_brief.png` only. A failing review (sentence, L0 gaps, or **charset / family_gate**) exits non-zero. Built-in presets pass charset gate; agent deltas must keep it green. Read `out/review/` (deltas, worst pair, control PNGs) before a second pass.
 
-M5 trial metrics: `typekernel.qa.trial_protocol.snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (see `docs/AGENT_TRIALS.md`).
+M5 trial metrics: `snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (baselines) and `design_warm_humanist.py` / `design_editorial_geometric.py` / `design_coding_clear.py` (L3 reference edits; `snapshot_reference_trials.py`). See `docs/AGENT_TRIALS.md`.
 
 **L2 family** — copy **`examples/agent_family/`** to `examples/<family>/`. Implement `design_controls` / `design_light` / `design_bold` (or VF masters) and `build_family.py` (`compose_font_from_controls`, shared kern classes). Do not deliver Light/Bold inside `agent_studio`.
 
@@ -195,7 +195,7 @@ Default punctuation/figures live in `Controls.supported` via `PUNCT_FORMS`, caps
 | `examples/zayju_letter/` | Hand-built `n` with `PathBuilder` when `Controls` is not enough |
 | `examples/variable_family/` | wght VF, designed counters |
 | `examples/italic_family/` | wght × ital via `vf_italic_pair`, shared kern (`build_italic_vf.py`) |
-| `examples/agent_trial/` | TK-502 snapshots (`snapshot_*.py`) + reference design (`design_warm_humanist.py`, `snapshot_design.py`) |
+| `examples/agent_trial/` | TK-502 `snapshot_*.py` + three `design_*.py` reference trials |
 | `examples/slab_serif/` | **L2 serif** — slab voice, static three masters + `build_vf.py` |
 | `examples/bracketed_serif/` | **L2 serif** — bracketed voice, same ladder as slab VF tests |
 | `examples/variable_width/build_vfwd.py` | wght × wdth |

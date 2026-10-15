@@ -35,5 +35,6 @@ Prefer plain names that describe the decision, for example:
 - `geo-public-api.json`
 - `optical-overshoot.json`
 - `specimen-synthetic-o.json`
+- `serif-slab-visual.json` / `serif-bracketed-visual.json` — after reviewing `examples/slab_serif` / `bracketed_serif` proof PNGs (see `docs/agent-recipes.md`)
 
 Avoid internal planner ticket codes in file names or field values.
