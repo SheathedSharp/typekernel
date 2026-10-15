@@ -480,6 +480,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``snapshot_serif_voices.py`` + ``AGENT_TRIALS`` brief-2/衬线基线说明；``test_serif_voice_trial_snapshots_meet_l3`` + ``test_snapshot_serif_voices_script``。
 - **本轮（部分）**：三 brief 参考试作（``design_*`` + ``snapshot_design.py``，L3 + gate/R8）；``build_reference_family.py``（三 brief Regular+Bold）；``test_agent_trial_reference`` / ``test_agent_trial_build``。
 - **本轮（部分）**：三 brief 参考试作指标写入 ``AGENT_TRIALS.md`` 摘要表 + ``tests/fixtures/tk502_reference_metrics.json``（``test_reference_metrics_match_committed_fixture``）。
+- **本轮（部分）**：brief-2 衬线参考试作 ``design_editorial_slab.py``（``build_reference_family --variant slab``）；``snapshot_reference_trials`` 含 ``brief-2-slab``。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 

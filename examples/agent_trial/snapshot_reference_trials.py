@@ -9,10 +9,11 @@ from snapshot_design import _brief, _load_controls
 
 from typekernel.qa.trial_protocol import write_trial_snapshot
 
-_REFERENCE = (
-    ("brief-1", Path(__file__).with_name("design_warm_humanist.py")),
-    ("brief-2", Path(__file__).with_name("design_editorial_geometric.py")),
-    ("brief-3", Path(__file__).with_name("design_coding_clear.py")),
+_REFERENCE: tuple[tuple[str, str, Path], ...] = (
+    ("brief-1", "brief-1", Path(__file__).with_name("design_warm_humanist.py")),
+    ("brief-2", "brief-2", Path(__file__).with_name("design_editorial_geometric.py")),
+    ("brief-2-slab", "brief-2", Path(__file__).with_name("design_editorial_slab.py")),
+    ("brief-3", "brief-3", Path(__file__).with_name("design_coding_clear.py")),
 )
 
 
@@ -24,11 +25,11 @@ def main(argv: list[str] | None = None) -> int:
 
     apis = ("Style", "terminal_style", "tuned_glyph", "design_module")
     worst = 0
-    for brief_id, design_path in _REFERENCE:
+    for folder_id, brief_id, design_path in _REFERENCE:
         brief = _brief(brief_id)
         controls = _load_controls(design_path.resolve())
         snap = snapshot_trial(controls, brief=brief, round=1, apis_used=apis)
-        sub = args.out / brief_id
+        sub = args.out / folder_id
         sub.mkdir(parents=True, exist_ok=True)
         write_trial_snapshot(sub / "snapshot.json", snap)
         if not snap.metrics_ok:

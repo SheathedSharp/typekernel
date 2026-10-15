@@ -57,4 +57,11 @@ PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
   --brief brief-1 --out artifacts/trials/warm-humanist-family
 ```
 
-设计稿：`design_warm_humanist.py`（brief-1）、`design_editorial_geometric.py`（brief-2）、`design_coding_clear.py`（brief-3）——均达 L3 距离 + gate/R8。CI：`test_agent_trial_reference.py`；**人审**与终验摘要表仍须填写。
+设计稿：`design_warm_humanist.py`（brief-1）、`design_editorial_geometric.py`（brief-2 几何）、`design_editorial_slab.py`（brief-2 衬线）、`design_coding_clear.py`（brief-3）——均达 L3 距离 + gate/R8。CI：`test_agent_trial_reference.py`；**人审**与终验摘要表仍须填写。
+
+brief-2 衬线构建：
+
+```bash
+PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
+  --brief brief-2 --variant slab --out artifacts/trials/editorial-slab-family
+```

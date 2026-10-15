@@ -76,6 +76,10 @@ def test_reference_editorial_geometric_passes_l3() -> None:
     _assert_reference_trial("brief-2", _REFERENCE_TRIALS[1][1])
 
 
+def test_reference_editorial_slab_passes_l3() -> None:
+    _assert_reference_trial("brief-2", TRIAL / "design_editorial_slab.py")
+
+
 def test_reference_coding_clear_passes_l3() -> None:
     _assert_reference_trial("brief-3", _REFERENCE_TRIALS[2][1])
 
@@ -90,9 +94,9 @@ def test_snapshot_reference_trials_script(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
-    for brief_id, _ in _REFERENCE_TRIALS:
+    for folder in ("brief-1", "brief-2", "brief-2-slab", "brief-3"):
         data = json.loads(
-            (tmp_path / brief_id / "snapshot.json").read_text(encoding="utf-8")
+            (tmp_path / folder / "snapshot.json").read_text(encoding="utf-8")
         )
         assert data["l3_voice_ok"] is True
 

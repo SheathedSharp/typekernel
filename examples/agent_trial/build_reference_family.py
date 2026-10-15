@@ -20,16 +20,27 @@ _BRIEF_MODULES: dict[str, str] = {
     "brief-3": "design_coding_clear",
 }
 
+_BRIEF_VARIANTS: dict[tuple[str, str], str] = {
+    ("brief-2", "slab"): "design_editorial_slab",
+}
 
-def _load(brief_id: str) -> ModuleType:
+
+def _load(brief_id: str, variant: str | None = None) -> ModuleType:
+    if variant:
+        key = (brief_id, variant)
+        name = _BRIEF_VARIANTS.get(key)
+        if name is None:
+            known = sorted({f"{b}:{v}" for b, v in _BRIEF_VARIANTS})
+            raise SystemExit(f"unknown variant {variant!r} for {brief_id!r}; use {known}")
+        return importlib.import_module(name)
     name = _BRIEF_MODULES.get(brief_id)
     if name is None:
         raise SystemExit(f"unknown brief {brief_id!r}; use {sorted(_BRIEF_MODULES)}")
     return importlib.import_module(name)
 
 
-def build(brief_id: str, out: Path) -> int:
-    mod = _load(brief_id)
+def build(brief_id: str, out: Path, *, variant: str | None = None) -> int:
+    mod = _load(brief_id, variant)
     regular: Controls = mod.controls()
     bold: Controls = mod.design_bold()
     family: str = mod.FAMILY_NAME
@@ -83,10 +94,15 @@ def build(brief_id: str, out: Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--brief", required=True, choices=sorted(_BRIEF_MODULES))
+    parser.add_argument(
+        "--variant",
+        default=None,
+        help="brief-2: slab → design_editorial_slab (default: geometric sans)",
+    )
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
-    return build(args.brief, args.out)
+    return build(args.brief, args.out, variant=args.variant)
 
 
 if __name__ == "__main__":
