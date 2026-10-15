@@ -7,9 +7,11 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from typekernel.geo.contour import signed_area
+from typekernel.geo.extrema import cubic_has_off_node_axis_extrema
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.pens import draw_outline
+from typekernel.geo.segment import CubicSegment
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.family import Controls
@@ -165,6 +167,20 @@ def lint_glyph(
                         "R3_self_intersect",
                         "error",
                         f"{label} outline self-intersection or overlap",
+                    )
+                )
+            off_node = any(
+                isinstance(seg, CubicSegment) and cubic_has_off_node_axis_extrema(seg)
+                for contour in contours
+                for seg in contour.segments
+            )
+            if off_node:
+                issues.append(
+                    LintIssue(
+                        glyph_name,
+                        "R4_extrema",
+                        "warn",
+                        f"{label} cubic has axis extremum away from on-curve nodes",
                     )
                 )
 

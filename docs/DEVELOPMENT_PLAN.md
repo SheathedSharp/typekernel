@@ -179,6 +179,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-101 字形体检 `qa/lint.py`　〔M〕
 - **本轮（部分）**：R1 对「单 solid 多轮廓」按外轮廓 CCW 判定，内环负面积不再误报；`_pack` / `_pack_holes` 与标点镜像统一 solid CCW、孔 CW，`humanist_sans` 全字符 R1 error 清零。
+- **本轮（部分）**：R4 ``extrema``（warn）用 ``geo.extrema.cubic_has_off_node_axis_extrema``；合成夹具 + 七 preset 回归仍绿（约 20 字/ preset 为 warn，待 TK-402 绘制时重平衡）。
 - **做什么**：新增 `lint_glyph(glyph, ctx)` 与 `lint_controls(controls, chars=None) -> LintReport`；`LintIssue(glyph, rule, severity, detail)`。规则：
   | 规则 | 检查 | 严重度 |
   | --- | --- | --- |

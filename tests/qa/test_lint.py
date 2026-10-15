@@ -7,6 +7,8 @@ import importlib.util
 import pytest
 
 from typekernel.geo.path_builder import PathBuilder
+from typekernel.geo.point import Point
+from typekernel.geo.segment import CubicSegment
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.qa.lint import lint_controls, lint_glyph
@@ -48,6 +50,25 @@ def test_lint_multi_contour_solids_not_r1_false_positive() -> None:
     for ch in "aeobd":
         issues = lint_glyph(controls.build(ch), ctx, glyph_name=ch)
         assert not any(i.rule == "R1_winding" for i in issues), ch
+
+
+def test_lint_r4_interior_axis_extremum() -> None:
+    ctx = DesignContext.code_clear()
+    seg = CubicSegment(
+        Point(0.0, 0.0),
+        Point(40.0, 120.0),
+        Point(60.0, 120.0),
+        Point(100.0, 0.0),
+    )
+    b = PathBuilder()
+    b.moveTo(seg.p0.x, seg.p0.y)
+    b.curveTo(seg.p1.x, seg.p1.y, seg.p2.x, seg.p2.y, seg.p3.x, seg.p3.y)
+    b.lineTo(seg.p0.x, seg.p0.y)
+    b.closePath()
+    outline = b.build()
+    glyph = ComposedGlyph((outline,), (), 120.0, ctx)
+    issues = lint_glyph(glyph, ctx, glyph_name="x")
+    assert any(i.rule == "R4_extrema" for i in issues)
 
 
 def test_lint_control_n_ok() -> None:

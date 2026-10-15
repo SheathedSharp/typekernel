@@ -11,7 +11,10 @@ from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
 
-__all__ = ["outline_with_axis_extrema_on_curve"]
+__all__ = [
+    "cubic_has_off_node_axis_extrema",
+    "outline_with_axis_extrema_on_curve",
+]
 
 _EPS = 1e-9
 _MIN_INTERIOR_T = 1e-5
@@ -35,6 +38,33 @@ def _quad_roots_open_unit(a: float, b: float, c: float) -> list[float]:
         if _MIN_INTERIOR_T < t < 1.0 - _MIN_INTERIOR_T:
             out.append(t)
     return out
+
+
+def _cubic_at(seg: CubicSegment, t: float) -> Point:
+    u = 1.0 - t
+    p0, p1, p2, p3 = seg.p0, seg.p1, seg.p2, seg.p3
+    return Point(
+        u**3 * p0.x + 3 * u**2 * t * p1.x + 3 * u * t**2 * p2.x + t**3 * p3.x,
+        u**3 * p0.y + 3 * u**2 * t * p1.y + 3 * u * t**2 * p2.y + t**3 * p3.y,
+    )
+
+
+def cubic_has_off_node_axis_extrema(
+    seg: CubicSegment,
+    *,
+    endpoint_tol: float = 0.5,
+) -> bool:
+    """True when an axis-aligned turning point is not near ``p0`` or ``p3``."""
+    p0, p3 = seg.p0, seg.p3
+    chord = math.hypot(p3.x - p0.x, p3.y - p0.y)
+    tol = max(endpoint_tol, chord * 0.02)
+    for t in _cubic_axis_extrema_ts(seg):
+        pt = _cubic_at(seg, t)
+        d0 = math.hypot(pt.x - p0.x, pt.y - p0.y)
+        d3 = math.hypot(pt.x - p3.x, pt.y - p3.y)
+        if min(d0, d3) > tol:
+            return True
+    return False
 
 
 def _cubic_axis_extrema_ts(seg: CubicSegment) -> list[float]:
