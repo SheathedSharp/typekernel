@@ -61,3 +61,12 @@ def test_terminal_style_reaches_many_glyphs() -> None:
     b = _build(replace(base, terminal_style="horizontal"))
     changed = _shape_changed(a, b)
     assert len(changed) >= 20
+
+
+def test_terminal_style_angled_reaches_open_stroke_glyphs() -> None:
+    """TK-304: angled shear must move bowl / hook letters (caps ``F``/``T`` still vertical)."""
+    base = DesignContext.humanist_sans()
+    a = _build(base)
+    b = _build(replace(base, terminal_style="angled"))
+    changed = _shape_changed(a, b)
+    assert len(changed) >= 15

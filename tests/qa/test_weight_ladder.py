@@ -39,3 +39,29 @@ def test_counter_pinch_charset_passes_r8(preset: str, stem: float) -> None:
     report = lint_controls(controls, counter_min=True)
     r8 = [i for i in report.issues if i.rule == "R8_counter_min"]
     assert not r8, r8
+
+
+@pytest.mark.parametrize(
+    "preset",
+    (
+        "humanist_sans",
+        "code_clear",
+        "geometric_sans",
+        "mono",
+        "display",
+        "paper_ink",
+        "open_print",
+    ),
+)
+@pytest.mark.parametrize("stem", _LADDER_STEMS)
+def test_angled_terminal_counter_pinch_charset_passes_r8(
+    preset: str, stem: float
+) -> None:
+    """TK-304: ``terminal_style=angled`` must not re-open R8 pinches on the ladder."""
+    ctx = getattr(DesignContext, preset)().tuned(stem=stem, terminal_style="angled")
+    controls = Controls.from_context(ctx)
+    if stem >= STEM_RELIEF_ONSET:
+        controls = controls.with_stem_relief()
+    report = lint_controls(controls, counter_min=True)
+    r8 = [i for i in report.issues if i.rule == "R8_counter_min"]
+    assert not r8, r8
