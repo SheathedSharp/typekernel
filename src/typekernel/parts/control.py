@@ -688,6 +688,7 @@ def _n_stem_serif_anchors(
     *,
     left_top: float,
     right_top: float | None = None,
+    left_foot: bool = True,
     right_foot: bool = True,
     ctx: DesignContext | None = None,
     inline_left_foot: bool = False,
@@ -696,7 +697,9 @@ def _n_stem_serif_anchors(
     """Stem feet/caps for ``n``-family letters (TK-306)."""
     half = m.stem / 2.0
     anchors: dict[str, Pt] = {}
-    if not (inline_left_foot and ctx is not None and _stem_serif_inlined(ctx)):
+    if left_foot and not (
+        inline_left_foot and ctx is not None and _stem_serif_inlined(ctx)
+    ):
         anchors["stem_L_b"] = (half, 0.0)
     anchors["stem_L_t"] = (half, left_top)
     if right_foot and not (
@@ -1378,8 +1381,8 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             um,
             left_top=xh,
             right_top=None,
+            left_foot=False,
             ctx=c,
-            inline_left_foot=False,
             inline_right_foot=_stem_serif_inlined(c),
         ),
     }

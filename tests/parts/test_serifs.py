@@ -208,6 +208,15 @@ def test_bracketed_u_masters_interpolate_on_weight_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_serif_u_has_no_spurious_left_foot_anchor() -> None:
+    """``u`` only has a right stem foot; bowl side must not get ``stem_L_b``."""
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        g = Controls.from_context(factory()).build("u")
+        names = {a.name for a in g.anchors}
+        assert "stem_L_b" not in names
+        assert "stem_R_b" not in names
+
+
 def test_bracketed_nh_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
