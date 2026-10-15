@@ -49,6 +49,38 @@ def test_bracketed_serif_changes_n_outline() -> None:
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
+def test_bracketed_hook_letters_cap_serif_adds_cubic_fillet() -> None:
+    """``f``/``t``/``j`` hook cap feet: bracketed adds one cubic vs slab polyline."""
+    slab_ctx = DesignContext.slab_serif()
+    br_ctx = DesignContext.bracketed_serif()
+    for ch in "ftj":
+        slab = Controls.from_context(slab_ctx).build(ch)
+        br = Controls.from_context(br_ctx).build(ch)
+        assert composed_glyph_hash(slab) != composed_glyph_hash(br)
+        sk = [s.kind for s in slab.solids[0].contours[0].segments]
+        bk = [s.kind for s in br.solids[0].contours[0].segments]
+        assert bk.count("cubic") == sk.count("cubic") + 1
+
+
+def test_bracketed_ftj_masters_interpolate_on_weight_ladder() -> None:
+    ctx = DesignContext.bracketed_serif()
+    stems = (70.0, 100.0, 140.0, 180.0)
+    for ch in "ftj":
+        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        fonts = []
+        for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
+            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            assert len(g.solids[0].contours[0].segments) == ref_n
+            font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
+            font.add_char(ch, g)
+            fonts.append(font)
+        masters = [
+            Master({"wght": wght}, font)
+            for wght, font in zip((300.0, 400.0, 600.0, 700.0), fonts, strict=True)
+        ]
+        assert check_masters(masters) == []
+
+
 def test_bracketed_inline_bowl_foot_uses_cubic_bracket_corner() -> None:
     from typekernel.parts import b_from_o, build_n, build_o
 
