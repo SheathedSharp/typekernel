@@ -210,6 +210,8 @@ def test_width_spec_monotone_changes_outline(ch: str, low: float, high: float) -
 @pytest.mark.parametrize(
     ("ch", "field", "low", "high"),
     (
+        ("A", "width", 0.92, 1.12),
+        ("A", "apex", 0.22, 0.48),
         ("a", "join", 0.70, 0.95),
         ("B", "top_scale", 0.82, 0.98),
         ("B", "straight", 0.35, 0.55),
@@ -218,6 +220,7 @@ def test_width_spec_monotone_changes_outline(ch: str, low: float, high: float) -
         ("D", "straight", 0.30, 0.55),
         ("e", "aperture", 0.85, 1.15),
         ("j", "arm", 0.55, 0.95),
+        ("J", "hook", 0.40, 0.70),
         ("J", "spring", 0.30, 0.46),
         ("K", "vertex", 0.36, 0.52),
         ("P", "straight", 0.35, 0.55),
@@ -225,6 +228,7 @@ def test_width_spec_monotone_changes_outline(ch: str, low: float, high: float) -
         ("Q", "tail_drop", 0.06, 0.14),
         ("R", "straight", 0.35, 0.55),
         ("R", "leg_at", 0.22, 0.38),
+        ("s", "aperture", 0.85, 1.15),
         ("s", "top_scale", 0.82, 0.98),
         ("t", "rise", 0.15, 0.45),
         ("U", "spring", 0.30, 0.46),
@@ -237,6 +241,14 @@ def test_glyph_spec_field_monotone_changes_outline(
     narrow = Controls.from_context(ctx).tuned_glyph(ch, **{field: low}).build(ch)
     wide = Controls.from_context(ctx).tuned_glyph(ch, **{field: high}).build(ch)
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
+def test_m_apex_monotone_moves_baseline_vertex() -> None:
+    """``MSpec.apex`` is ladder-overridden on light stems (see ``M_from_H``)."""
+    ctx = DesignContext.humanist_sans().tuned(stem=150.0)
+    low = Controls.from_context(ctx).tuned_glyph("M", apex=0.30).build("M")
+    high = Controls.from_context(ctx).tuned_glyph("M", apex=0.48).build("M")
+    assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
 def test_merge_spec_rejects_unknown_fields() -> None:
