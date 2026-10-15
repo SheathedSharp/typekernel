@@ -29,9 +29,12 @@ __all__ = [
     "TrialSnapshot",
     "controls_at_ladder_stem",
     "l3_voice_criteria_met",
+    "read_trial_snapshot_json",
     "snapshot_trial",
     "trial_snapshot_exit_code",
+    "trial_snapshot_json_exit_code",
     "validate_trial_snapshot",
+    "validate_trial_snapshot_json",
     "validate_trial_snapshot_record",
     "voice_distance",
     "weight_ladder_r8_failures",
@@ -260,24 +263,54 @@ def validate_trial_snapshot(snapshot: TrialSnapshot) -> tuple[str, ...]:
     return validate_trial_snapshot_record(payload)
 
 
+def read_trial_snapshot_json(path: Path | str) -> dict[str, object]:
+    """Load a written ``snapshot.json`` for offline review."""
+    destination = Path(path)
+    raw = json.loads(destination.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise TypeError(f"{destination}: snapshot root must be a JSON object")
+    return raw
+
+
+def validate_trial_snapshot_json(path: Path | str) -> tuple[str, ...]:
+    """Validate a ``snapshot.json`` file (field consistency, anti-forgery)."""
+    return validate_trial_snapshot_record(read_trial_snapshot_json(path))
+
+
+def trial_snapshot_json_exit_code(
+    data: Mapping[str, object],
+    problems: tuple[str, ...] = (),
+) -> int:
+    """Exit codes for a JSON snapshot record (same semantics as ``trial_snapshot_exit_code``)."""
+    metrics_ok = (
+        _snapshot_int(data.get("lint_error_count"), 1) == 0
+        and _snapshot_int(data.get("identity_error_count"), 1) == 0
+    )
+    if not metrics_ok:
+        return 2
+    if not bool(data.get("family_gate_ok")):
+        return 3
+    if _snapshot_int(data.get("weight_ladder_r8_failures"), 0) != 0:
+        return 4
+    if problems:
+        return 5
+    flags = data.get("cheating_flags")
+    if flags:
+        return 7
+    if not _record_program_pass_ok(data):
+        return 6
+    return 0
+
+
 def trial_snapshot_exit_code(
     snapshot: TrialSnapshot,
     problems: tuple[str, ...] = (),
 ) -> int:
     """CLI exit codes for ``snapshot_design.py`` / ``snapshot_reference_trials.py``."""
-    if not snapshot.metrics_ok:
-        return 2
-    if not snapshot.family_gate_ok:
-        return 3
-    if snapshot.weight_ladder_r8_failures:
-        return 4
-    if problems:
-        return 5
-    if snapshot.cheating_flags:
-        return 7
-    if not snapshot.program_pass_ok:
-        return 6
-    return 0
+    payload = asdict(snapshot)
+    payload["family_gate_ok"] = snapshot.family_gate_ok
+    payload["l3_voice_ok"] = snapshot.l3_voice_ok
+    return trial_snapshot_json_exit_code(payload, problems)
 
 
 def write_trial_snapshot(path: Path | str, snapshot: TrialSnapshot) -> Path:

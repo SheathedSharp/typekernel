@@ -87,6 +87,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tests/examples/test_agent_trial_reference.py",
         ("test_snapshot_design_stem_tweak_exit_code_7",),
     ),
+    (
+        "tests/examples/test_agent_trial.py",
+        ("test_validate_snapshot_script_on_reference_trial",),
+    ),
 )
 
 
@@ -153,6 +157,7 @@ def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     text = (ROOT / "examples/agent_trial/README.md").read_text(encoding="utf-8")
     assert "trial_snapshot_exit_code" in text
     assert "validate_trial_snapshot" in text
+    assert "validate_snapshot.py" in text
     assert "AGENT_TRIALS.md" in text
 
 

@@ -17,7 +17,9 @@ from typekernel.qa.trial_protocol import (
     controls_at_ladder_stem,
     snapshot_trial,
     trial_snapshot_exit_code,
+    trial_snapshot_json_exit_code,
     validate_trial_snapshot,
+    validate_trial_snapshot_json,
     validate_trial_snapshot_record,
     voice_distance,
     weight_ladder_r8_failures,
@@ -118,6 +120,23 @@ def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
     assert not validate_trial_snapshot(snap)
     assert not snap.program_pass_ok
     assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 7
+
+
+def test_trial_snapshot_json_exit_code_matches_live_snapshot(tmp_path: Path) -> None:
+    spec = importlib.util.spec_from_file_location(
+        "warm",
+        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    snap = snapshot_trial(mod.controls(), brief=FIXED_TRIAL_BRIEFS[0])
+    path = write_trial_snapshot(tmp_path / "snapshot.json", snap)
+    problems = validate_trial_snapshot_json(path)
+    assert not problems
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert trial_snapshot_json_exit_code(data, problems) == 0
+    assert trial_snapshot_exit_code(snap, validate_trial_snapshot(snap)) == 0
 
 
 def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
