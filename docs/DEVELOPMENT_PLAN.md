@@ -317,7 +317,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   - 探针：`test_o_contrast_top_to_side_thickness_ratio`（`o` 顶/底 ÷ 侧边 ≈ `contrast` ± 0.05）。
   - `code_clear` / `geometric_sans` 哈希不变；`humanist_sans` 快照已更新。
   - **本轮（部分）**：`display` / `open_print` 纳入 `outline_hashes.json` 全字符回归；``o`` 横竖厚度比覆盖 ``display``/``open_print`` 默认 contrast；``3``/``5``/``8``/``9``/``G``/``Q``/``S`` contrast 响应探针。
-  - 待续：上述字形在 contrast 下的**定向厚度比**探针（非仅形状变化）。
+  - **本轮（部分）**：``0``/``G``/``Q``/``S`` 构建结果 ``OMetrics`` 横竖笔比； lining ``3``/``5``/``8``/``9`` ``HMetrics.bar``；小写 ``s`` ``OMetrics`` 回归。
+  - 待续：上述字形在墨迹上的定向 ``measure_oriented_stem`` 探针（数字环区探针点仍不稳）。
 
 #### TK-302 应力轴（stress）　〔M〕
 - **做什么**：圆形笔画的最细处不一定在顶/底。新增 `DesignContext.stress`（度，默认 0，加字段属公共 API 变更，先写签名草图），环构造按角度函数分配厚度。`humanist_sans` 是否采用非零值是设计决定，需人审。

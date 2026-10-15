@@ -6,8 +6,9 @@ import pytest
 
 from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts import Controls, DesignContext
+from typekernel.parts.caps import HMetrics
 from typekernel.parts.compose import ComposedGlyph
-from typekernel.parts.control import o_metrics
+from typekernel.parts.control import OMetrics, o_metrics
 from typekernel.parts.primitives import vertical_stem
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.thickness import (
@@ -75,6 +76,34 @@ def test_o_metrics_thickness_h_reflects_contrast(preset: str) -> None:
     ctx = getattr(DesignContext, preset)()
     m = o_metrics(ctx)
     assert abs(m.thickness_h / m.thickness_v - ctx.contrast) <= 1e-6
+
+
+@pytest.mark.parametrize("char", ("0", "G", "Q", "S"))
+def test_cap_round_glyph_ometrics_tracks_contrast(char: str) -> None:
+    """TK-301: built glyph ``OMetrics`` horizontal ÷ vertical stroke ≈ ``contrast``."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.73, stem=92.0)
+    glyph = Controls.from_context(ctx).build(char)
+    design = glyph.design
+    assert isinstance(design, OMetrics)
+    assert abs(design.thickness_h / design.thickness_v - ctx.contrast) <= 1e-5
+
+
+@pytest.mark.parametrize("char", ("3", "5", "8", "9"))
+def test_lining_figure_hmetrics_bar_tracks_contrast(char: str) -> None:
+    """TK-301: figure ``H`` record bar thickness follows ``stem * contrast * 0.92``."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.73, stem=92.0)
+    glyph = Controls.from_context(ctx).build(char)
+    design = glyph.design
+    assert isinstance(design, HMetrics)
+    assert abs(design.bar / design.stem - ctx.contrast * 0.92) <= 1e-5
+
+
+def test_lowercase_s_carries_o_contrast_in_design() -> None:
+    ctx = DesignContext.humanist_sans().tuned(contrast=0.58, stem=80.0)
+    glyph = Controls.from_context(ctx).build("s")
+    design = glyph.design
+    assert isinstance(design, OMetrics)
+    assert abs(design.thickness_h / design.thickness_v - ctx.contrast) <= 1e-5
 
 
 @pytest.mark.parametrize("char", ("3", "5", "8", "9", "G", "Q", "S"))
