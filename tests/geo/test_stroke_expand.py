@@ -131,6 +131,18 @@ def test_expand_cubic_closed_square_annulus() -> None:
     assert max_y == pytest.approx(100.0, abs=1.5)
 
 
+def test_expand_cubic_closed_square_matches_polyline_annulus_bbox() -> None:
+    cl = _square_cubic_centerline()
+    pen = Pen(thickness=20.0)
+    ring_c, _ = expand_cubic(cl, pen, offset_fit_budget=1.0)
+    poly, _ = flatten_cubic_centerline(cl, chord_budget=0.01)
+    ring_p = expand(poly, pen, join="miter")
+    bb_c = bounds(ring_c)
+    bb_p = bounds(ring_p)
+    for i in range(4):
+        assert bb_c[i] == pytest.approx(bb_p[i], abs=0.5)
+
+
 def test_cubic_centerline_to_polyline_matches_flatten() -> None:
     seg = CubicBezier.line((0.0, 0.0), (50.0, 0.0))
     cl = CubicCenterline.from_beziers([seg])
