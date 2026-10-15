@@ -7,17 +7,22 @@ from typing import Any
 
 from typekernel.parts.caps import (
     A_from_H,
+    B_from_H,
+    C_from_O,
     D_from_H,
     E_from_H,
     F_from_H,
     G_from_O,
+    J_from_H,
     K_from_H,
     L_from_H,
     M_from_H,
     N_from_H,
     P_from_H,
     R_from_H,
+    S_from_O,
     T_from_H,
+    U_from_H,
     V_from_H,
     W_from_H,
     X_from_H,
@@ -38,9 +43,13 @@ from typekernel.parts.control import (
 __all__ = [
     "WEAK_GLYPH_SPECS",
     "ASpec",
+    "BSpec",
     "CapASpec",
+    "CapCSpec",
     "CapESpec",
     "CapFSpec",
+    "CapJSpec",
+    "CapSSpec",
     "CapTSpec",
     "DSpec",
     "ESpec",
@@ -55,6 +64,7 @@ __all__ = [
     "RSpec",
     "SSpec",
     "TSpec",
+    "USpec",
     "VSpec",
     "WSpec",
     "XSpec",
@@ -152,6 +162,39 @@ class DSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class BSpec:
+    """``B``: double-bowl width, upper scale, shoulder run, and waist height."""
+
+    width: float = 0.92
+    top_scale: float = 0.9
+    straight: float = 0.45
+    waist: float = 0.53
+
+
+@dataclass(frozen=True, slots=True)
+class CapCSpec:
+    """``C``: optional aperture override on the cap ``O`` ring."""
+
+    aperture: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CapJSpec:
+    """``J``: bowl width, spring height, and terminal hook placement."""
+
+    width: float = 0.72
+    spring: float = 0.38
+    hook: float = 0.55
+
+
+@dataclass(frozen=True, slots=True)
+class CapSSpec:
+    """``S``: spine width fraction on the cap ``O`` construction."""
+
+    width: float = 0.86
+
+
+@dataclass(frozen=True, slots=True)
 class GSpec:
     """``G``: inward crossbar reach past the cap ``O`` centre."""
 
@@ -243,6 +286,14 @@ class ZSpec:
     width: float = 0.88
 
 
+@dataclass(frozen=True, slots=True)
+class USpec:
+    """``U``: cap width and bowl spring height (× cap)."""
+
+    width: float = 0.96
+    spring: float = 0.38
+
+
 WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "f": FSpec,
     "t": TSpec,
@@ -251,16 +302,21 @@ WEAK_GLYPH_SPECS: dict[str, type[Any]] = {
     "e": ESpec,
     "s": SSpec,
     "A": CapASpec,
+    "B": BSpec,
+    "C": CapCSpec,
     "D": DSpec,
     "E": CapESpec,
     "F": CapFSpec,
     "G": GSpec,
+    "J": CapJSpec,
     "K": KSpec,
     "L": LSpec,
     "M": MSpec,
     "N": NSpec,
     "P": PSpec,
     "R": RSpec,
+    "S": CapSSpec,
+    "U": USpec,
     "V": VSpec,
     "W": WSpec,
     "X": XSpec,
@@ -315,6 +371,20 @@ def build_from_spec(
         return A_from_H(
             n_glyph, ctx, width=spec.width, apex=spec.apex, bar=spec.bar
         )
+    if ch == "B" and isinstance(spec, BSpec):
+        return B_from_H(
+            n_glyph,
+            o_glyph,
+            ctx,
+            width=spec.width,
+            top_scale=spec.top_scale,
+            straight=spec.straight,
+            waist=spec.waist,
+        )
+    if ch == "C" and isinstance(spec, CapCSpec):
+        if spec.aperture is None:
+            return C_from_O(o_glyph, ctx)
+        return C_from_O(o_glyph, ctx, aperture=spec.aperture)
     if ch == "D" and isinstance(spec, DSpec):
         return D_from_H(
             n_glyph, o_glyph, ctx, width=spec.width, straight=spec.straight
@@ -325,6 +395,15 @@ def build_from_spec(
         return F_from_H(n_glyph, ctx, width=spec.width)
     if ch == "G" and isinstance(spec, GSpec):
         return G_from_O(o_glyph, n_glyph, ctx, bar_reach=spec.bar_reach)
+    if ch == "J" and isinstance(spec, CapJSpec):
+        return J_from_H(
+            n_glyph,
+            o_glyph,
+            ctx,
+            width=spec.width,
+            spring=spec.spring,
+            hook=spec.hook,
+        )
     if ch == "K" and isinstance(spec, KSpec):
         return K_from_H(n_glyph, ctx, width=spec.width, vertex=spec.vertex)
     if ch == "L" and isinstance(spec, LSpec):
@@ -358,8 +437,12 @@ def build_from_spec(
             bowl=spec.bowl,
             leg_at=spec.leg_at,
         )
+    if ch == "S" and isinstance(spec, CapSSpec):
+        return S_from_O(o_glyph, ctx, width=spec.width)
     if ch == "T" and isinstance(spec, CapTSpec):
         return T_from_H(n_glyph, ctx, width=spec.width)
+    if ch == "U" and isinstance(spec, USpec):
+        return U_from_H(n_glyph, o_glyph, ctx, width=spec.width, spring=spec.spring)
     if ch == "Y" and isinstance(spec, YSpec):
         return Y_from_H(n_glyph, ctx, width=spec.width, junction=spec.junction)
     if ch == "Z" and isinstance(spec, ZSpec):

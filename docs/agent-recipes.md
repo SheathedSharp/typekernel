@@ -60,7 +60,12 @@ controls = (
 | `e` | `ESpec` | `bar_raise` (0.25), `aperture` (None) |
 | `s` | `SSpec` | `width`, `top_scale`, `spine`, `aperture` |
 | `A` | `CapASpec` | `width` (1.02), `apex` (0.35), `bar` (0.28) |
+| `B` | `BSpec` | `width`, `top_scale`, `straight`, `waist` |
+| `C` | `CapCSpec` | `aperture` (None → preset) |
 | `D` | `DSpec` | `width` (1.05), `straight` (0.4) |
+| `J` | `CapJSpec` | `width`, `spring`, `hook` |
+| `S` | `CapSSpec` | `width` (0.86) |
+| `U` | `USpec` | `width` (0.96), `spring` (0.38) |
 | `E` | `CapESpec` | `width` (0.84) |
 | `F` | `CapFSpec` | `width` (0.82) |
 | `G` | `GSpec` | `bar_reach` (0.1) |

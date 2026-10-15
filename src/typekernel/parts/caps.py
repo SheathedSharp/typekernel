@@ -272,14 +272,26 @@ def _o_rec(O: ComposedGlyph) -> OMetrics:
     return O.design if isinstance(O.design, OMetrics) else cap_o_metrics(O.context)
 
 
-def C_from_O(O: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+def C_from_O(
+    O: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    aperture: float | None = None,
+) -> ComposedGlyph:
     """``C``: the lowercase ``c`` construction on the cap ``O``."""
-    return c_from_o(O, ctx)
+    if aperture is None:
+        return c_from_o(O, ctx)
+    return c_from_o(O, ctx, aperture=aperture)
 
 
-def S_from_O(O: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyph:
+def S_from_O(
+    O: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.86,
+) -> ComposedGlyph:
     """``S``: the lowercase ``s`` construction on the cap ``O``, a little wider."""
-    return s_from_o(O, ctx, width=0.86)
+    return s_from_o(O, ctx, width=width)
 
 
 def G_from_O(

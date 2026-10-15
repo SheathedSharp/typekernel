@@ -70,6 +70,27 @@ def test_k_width_monotone_opens_outline() -> None:
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
+def test_b_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("B", width=0.86).build("B")
+    wide = Controls.from_context(ctx).tuned_glyph("B", width=0.98).build("B")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
+def test_u_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("U", width=0.88).build("U")
+    wide = Controls.from_context(ctx).tuned_glyph("U", width=1.04).build("U")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
+def test_cap_s_width_monotone_opens_outline() -> None:
+    ctx = DesignContext.humanist_sans()
+    narrow = Controls.from_context(ctx).tuned_glyph("S", width=0.78).build("S")
+    wide = Controls.from_context(ctx).tuned_glyph("S", width=0.94).build("S")
+    assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
+
+
 def test_d_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
     narrow = Controls.from_context(ctx).tuned_glyph("D", width=0.98).build("D")
