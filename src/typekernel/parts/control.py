@@ -436,8 +436,9 @@ def _hook_slab_stem_foot(ctx: DesignContext, stem: float) -> tuple[float, float]
     length, thick, _ = serif_metrics(ctx)
     xh = ctx.x_height
     if ctx.style.serif == "bracketed":
-        l = min(length, stem * 0.48)
-        th = min(thick, xh * 0.1, stem * 0.18)
+        from typekernel.parts.serifs import bracketed_stem_foot_dims
+
+        l, th = bracketed_stem_foot_dims(ctx, stem, 0.0)
     else:
         l = min(length * 0.42, stem * 0.48)
         th = min(thick * 0.65, xh * 0.05, stem * 0.18)

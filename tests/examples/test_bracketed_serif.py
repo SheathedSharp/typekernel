@@ -42,6 +42,16 @@ def test_bracketed_voice_masters_interpolate_on_vf_ladder() -> None:
     assert check_masters(masters) == []
 
 
+def test_bracketed_bold_bowl_glyphs_no_self_intersect() -> None:
+    """Regression: bold stem + relief must not R3 on inline bowl feet (TK-306)."""
+    from typekernel.qa.family_gate import collect_family_gate_failures
+
+    design = _load_design()
+    failures = collect_family_gate_failures(design.design_bold())
+    bowl_r3 = [f for f in failures if any(ch in f for ch in ("b:", "d:", "p:", "q:"))]
+    assert bowl_r3 == [], failures
+
+
 def test_bracketed_preset_stems_order_light_regular_bold() -> None:
     design = _load_design()
     light = design.design_light()

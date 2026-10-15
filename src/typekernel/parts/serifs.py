@@ -16,6 +16,7 @@ from typekernel.parts.primitives import rounded_rect, serif_bracket
 __all__ = [
     "StemSerifSite",
     "apply_glyph_serifs",
+    "bracketed_stem_foot_dims",
     "inline_stem_foot_serif_path",
     "serif_metrics",
     "slab_serif_rect",
@@ -119,14 +120,12 @@ def _sites_from_anchors(glyph: ComposedGlyph) -> list[StemSerifSite]:
     return sites
 
 
-def inline_stem_foot_serif_path(
-    b: PathBuilder,
-    x_stem_left: float,
-    y_base: float,
+def bracketed_stem_foot_dims(
     ctx: DesignContext,
     stem_width: float,
-) -> None:
-    """Append a foot serif on the left face of a vertical stem (fixed segment count)."""
+    y_base: float,
+) -> tuple[float, float]:
+    """Foot serif length and thickness for inline bracketed stems (bowls, hooks)."""
     from typekernel.parts.weight_relief import stem_weight_fraction
 
     length, thick, _ = serif_metrics(ctx)
@@ -137,6 +136,18 @@ def inline_stem_foot_serif_path(
         # Descender bowl feet: short bracket so the foot does not re-enter the bowl.
         l = min(l, stem_width * (0.34 - 0.08 * heavy))
         th = min(th, ctx.x_height * (0.055 - 0.012 * heavy), abs(y_base) * 0.09)
+    return l, th
+
+
+def inline_stem_foot_serif_path(
+    b: PathBuilder,
+    x_stem_left: float,
+    y_base: float,
+    ctx: DesignContext,
+    stem_width: float,
+) -> None:
+    """Append a foot serif on the left face of a vertical stem (fixed segment count)."""
+    l, th = bracketed_stem_foot_dims(ctx, stem_width, y_base)
     b.lineTo(x_stem_left, y_base - th)
     b.lineTo(x_stem_left - l, y_base - th)
     b.lineTo(x_stem_left - l, y_base)
