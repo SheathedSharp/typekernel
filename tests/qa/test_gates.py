@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -112,6 +113,42 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
         assert "tests/qa/test_m3_exit.py" in serif_evidence
     italic_evidence = load_approval(root / "italic-vf-construct.json")["test_evidence"]
     assert "tests/parts/test_italic_program_acceptance.py" in italic_evidence
+
+
+_PENDING_GATE_JSON = (
+    "serif-slab-voice.json",
+    "serif-bracketed-voice.json",
+    "italic-vf-construct.json",
+)
+
+
+def _readme_signoff_block(readme: str, gate_json: str) -> str:
+    marker = f"**`{gate_json}`**"
+    start = readme.index(marker)
+    tail = readme[start + len(marker) :]
+    next_gate = re.search(r"\n\*\*`[^`]+`\*\*", tail)
+    end = start + len(marker) + (next_gate.start() if next_gate else len(tail))
+    return readme[start:end]
+
+
+def test_approvals_readme_signoff_matches_test_evidence() -> None:
+    """README copy-paste pytest blocks must list exactly each gate's test_evidence."""
+    repo = Path(__file__).resolve().parents[2]
+    readme = (repo / "approvals" / "README.md").read_text(encoding="utf-8")
+    approvals = repo / "approvals"
+    for name in _PENDING_GATE_JSON:
+        evidence = list(load_approval(approvals / name)["test_evidence"])
+        block = _readme_signoff_block(readme, name)
+        assert "pytest -q" in block
+        for rel in evidence:
+            assert rel in block, f"{name} README sign-off missing {rel!r}"
+        cited = {
+            m.split("::")[0]
+            for m in re.findall(r"tests/[\w./:_-]+", block)
+        }
+        for rel in evidence:
+            assert rel in cited, f"{name} README pytest block must cite {rel!r}"
+        assert cited <= set(evidence), f"{name} README cites extra test paths: {cited - set(evidence)}"
 
 
 def test_write_approval_does_not_force_true(tmp_path: Path) -> None:
