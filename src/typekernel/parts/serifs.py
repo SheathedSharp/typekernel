@@ -127,9 +127,16 @@ def inline_stem_foot_serif_path(
     stem_width: float,
 ) -> None:
     """Append a foot serif on the left face of a vertical stem (fixed segment count)."""
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
     length, thick, _ = serif_metrics(ctx)
-    l = min(length, stem_width * 0.48)
-    th = min(thick, ctx.x_height * 0.1, stem_width * 0.18)
+    heavy = stem_weight_fraction(stem_width)
+    l = min(length, stem_width * 0.48) * (1.0 - 0.22 * heavy)
+    th = min(thick, ctx.x_height * 0.1, stem_width * 0.18) * (1.0 - 0.18 * heavy)
+    if y_base < 0.0:
+        # Descender bowl feet: short bracket so the foot does not re-enter the bowl.
+        l = min(l, stem_width * (0.34 - 0.08 * heavy))
+        th = min(th, ctx.x_height * (0.055 - 0.012 * heavy), abs(y_base) * 0.09)
     b.lineTo(x_stem_left, y_base - th)
     b.lineTo(x_stem_left - l, y_base - th)
     b.lineTo(x_stem_left - l, y_base)
