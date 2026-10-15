@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from typekernel.geo.layout import union_bounds
+from typekernel.geo.outline import Outline, bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts.compose import ComposedGlyph
 
 # B-16 bowl letters, round figures, and punctuation rings (not ``h``/``k`` stem slivers).
 COUNTER_PINCH_CHARSET = frozenset(
-    "0236789#%?&@acemnos$CDEFOPQSTUZ"
+    "0236789#%?&@acemnos$bdgpqCDEFOPQSTUZ"
 )
 
 __all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]
@@ -23,7 +24,17 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
             best = min(best, x1 - x0, y1 - y0)
     if not glyph.solids:
         return best
-    x0, y0, x1, y1 = union_bounds(list(glyph.solids))
+    solids = list(glyph.solids)
+    for solid in solids:
+        if len(solid.contours) <= 1:
+            continue
+        for ct in solid.contours[1:]:
+            bx = bounds(Outline((ct,)))
+            best = min(best, bx[2] - bx[0], bx[3] - bx[1])
+    scan_solids = [s for s in solids if len(s.contours) <= 1]
+    if not scan_solids:
+        return best
+    x0, y0, x1, y1 = union_bounds(scan_solids)
     height = y1 - y0
     if height <= 0:
         return best
@@ -32,10 +43,9 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
     # ``p``/``q``/``g`` descenders: ignore stem–counter slivers below the x-height band.
     if y0 < 0.0:
         y_lo = max(y_lo, 0.12 * y1)
-    solids = list(glyph.solids)
     for iy in range(grid):
         y = y_lo + (iy + 0.5) / grid * (y_hi - y_lo)
-        runs = ink_intervals_at_y(solids, y)
+        runs = ink_intervals_at_y(scan_solids, y)
         if len(runs) < 2:
             continue
         for j in range(len(runs) - 1):

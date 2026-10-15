@@ -16,6 +16,12 @@ def test_descender_letters_skip_baseline_stem_pinch() -> None:
         assert min_counter_gap(controls.build(ch)) >= floor
 
 
+def test_bowl_stem_uses_inner_contour_not_even_odd_sliver() -> None:
+    ctx = DesignContext.humanist_sans().tuned(stem=30.0)
+    gap = min_counter_gap(Controls.from_context(ctx).build("b"))
+    assert gap >= counter_gap_floor(ctx.stem)
+
+
 def test_round_bowl_still_reports_counter_gap() -> None:
     ctx = DesignContext.humanist_sans().tuned(stem=110.0)
     controls = Controls.from_context(ctx).with_stem_relief()
