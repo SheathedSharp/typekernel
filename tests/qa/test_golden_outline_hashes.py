@@ -14,6 +14,8 @@ _PRESET_FACTORIES = {
     "humanist_sans": DesignContext.humanist_sans,
     "geometric_sans": DesignContext.geometric_sans,
     "code_clear": DesignContext.code_clear,
+    "display": DesignContext.display,
+    "open_print": DesignContext.open_print,
 }
 
 

@@ -48,9 +48,7 @@ def test_o_ring_thickness_near_stem(preset: str, max_ratio: float) -> None:
     assert ratio >= max_ratio * 0.98
 
 
-def test_o_contrast_top_to_side_thickness_ratio() -> None:
-    """TK-301: horizontal ring stroke ÷ vertical side stroke ≈ contrast."""
-    ctx = DesignContext.geometric_sans().tuned(contrast=0.5, stem=100.0)
+def _o_horizontal_over_vertical_thickness(ctx: DesignContext) -> float:
     glyph = Controls.from_context(ctx).build_all("o")["o"]
     m = o_metrics(ctx)
     outline = measurement_outline(glyph)
@@ -61,7 +59,35 @@ def test_o_contrast_top_to_side_thickness_ratio() -> None:
     top_w = measure_oriented_stem(outline, (cx, top_y - m.thickness_h * 0.5), 0.0)
     side_w = measure_oriented_stem(outline, (side_x, cy), 90.0)
     assert top_w is not None and side_w is not None
-    assert abs(top_w / side_w - ctx.contrast) <= 0.05
+    return top_w / side_w
+
+
+def test_o_contrast_top_to_side_thickness_ratio() -> None:
+    """TK-301: horizontal ring stroke ÷ vertical side stroke ≈ contrast."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.5, stem=100.0)
+    ratio = _o_horizontal_over_vertical_thickness(ctx)
+    assert abs(ratio - ctx.contrast) <= 0.05
+
+
+@pytest.mark.parametrize("preset", ("display", "open_print"))
+def test_o_metrics_thickness_h_reflects_contrast(preset: str) -> None:
+    """Wide-aperture presets: side ink probe misses mid-height; metrics still track contrast."""
+    ctx = getattr(DesignContext, preset)()
+    m = o_metrics(ctx)
+    assert abs(m.thickness_h / m.thickness_v - ctx.contrast) <= 1e-6
+
+
+@pytest.mark.parametrize("char", ("3", "5", "8", "9", "G", "Q", "S"))
+def test_contrast_moves_figures_and_round_caps(char: str) -> None:
+    """TK-301: digits and cap round forms must respond to contrast (not only via ``o`` probe)."""
+    from tests.parts.test_knob_coverage import _shape_changed
+
+    base = DesignContext.display()
+    controls = Controls.from_context(base)
+    tuned = Controls.from_context(base.tuned(contrast=0.55))
+    before = {char: controls.build(char)}
+    after = {char: tuned.build(char)}
+    assert char in _shape_changed(before, after)
 
 
 def test_vertical_stem_measures_stem_width() -> None:
