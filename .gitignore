@@ -127,6 +127,8 @@ examples/variable_family/out/**
 !examples/variable_family/out/proof.png
 
 # italic / width VF examples (build scripts only)
+examples/slab_serif/out/**
+examples/bracketed_serif/out/**
 examples/italic_family/out/**
 examples/variable_width/out/**
 examples/correspondence_script/out/**
