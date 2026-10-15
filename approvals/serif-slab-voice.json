@@ -3,7 +3,7 @@
   "approved": false,
   "approver": "",
   "date": "2026-10-15",
-  "notes": "Pending human review. Proofs: PYTHONPATH=src python examples/human_review_bundle.py --only serif --out artifacts/human-review",
+  "notes": "Pending human review. Bundle: PYTHONPATH=src python examples/human_review_bundle.py --only serif --out artifacts/human-review — slab_serif/proof.png, proof_brief.png; slab_serif_vf/proof_vf.png; weight_ladder_slab_serif.png",
   "scope": "DesignContext.slab_serif + examples/slab_serif",
   "test_evidence": [
     "tests/examples/test_slab_serif.py"

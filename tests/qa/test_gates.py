@@ -82,6 +82,12 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
         assert data["approver"] == ""
         with pytest.raises(ApprovalError, match="not approved"):
             require_approval(path)
+    slab = load_approval(root / "serif-slab-voice.json")
+    assert "slab_serif/proof.png" in slab["notes"]
+    assert "proof_vf.png" in slab["notes"]
+    bracketed = load_approval(root / "serif-bracketed-voice.json")
+    assert "bracketed_serif/proof.png" in bracketed["notes"]
+    assert "weight_ladder_bracketed_serif.png" in bracketed["notes"]
     italic = load_approval(root / "italic-vf-construct.json")
     assert "proof.png" in italic["notes"]
     assert "proof_vf.png" in italic["notes"]
