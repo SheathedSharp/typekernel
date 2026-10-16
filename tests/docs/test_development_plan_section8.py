@@ -165,6 +165,8 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "snapshot_design.py" in text
     assert "test_agent_trial_reference" in text
     assert "test_development_plan_section8" in text
+    assert "test_extended_latin_policy" in text
+    assert "test_zayju_script_sequential_style_gate_passes" in text
 
 
 def test_section8_skill_reference_documents_program_workflow() -> None:

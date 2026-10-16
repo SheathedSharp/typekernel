@@ -30,3 +30,7 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "test_known_defects" in text
     assert "test_gate_thresholds_locked" in text
     assert "test_b13_" in text
+    assert "test_extended_latin_policy" in text
+    assert "test_multi_voice_exit" in text
+    assert "test_zayju_script_sequential_style_gate_passes" in text
+    assert "test_knob_coverage" in text
