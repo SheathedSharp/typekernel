@@ -81,6 +81,13 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
+        "tests/qa/test_style_consistency.py",
+        (
+            "test_design_sequence_unlocks_control_first",
+            "test_script_a_e_pass_body_gate",
+        ),
+    ),
+    (
         "tests/qa/test_originality.py",
         (
             "test_l3_rejects_context_only_stem_tweak",
@@ -246,6 +253,7 @@ def test_section8_agent_recipes_documents_trace_letter_spike() -> None:
     assert "test_zayju_script.py" in text
     assert "build_charset_sequential" in text
     assert "style_consistency" in text
+    assert "test_style_consistency.py" in text
 
 
 def test_section8_agent_recipes_documents_stress() -> None:
@@ -398,6 +406,11 @@ def test_section8_run_program_exit_includes_extended_latin_policy() -> None:
 def test_section8_run_program_exit_includes_multi_voice_exit() -> None:
     text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/qa/test_multi_voice_exit.py" in text
+
+
+def test_section8_run_program_exit_includes_style_consistency() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/qa/test_style_consistency.py" in text
 
 
 def test_section8_run_program_exit_includes_glyph_specs() -> None:
