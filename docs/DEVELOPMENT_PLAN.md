@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1508 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1509 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -627,7 +627,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``AGENT_GOAL`` / ``approvals/README`` / SKILL 对齐 B-13–B-15 双校样 PNG；``test_agent_trials_doc`` / §8 钩子更新。
 - **本轮（部分）**：``README`` / ``agent_trial/README`` 补 ``--only tk206``；附录 B 登记说明对齐校样路径；``test_section8_readme`` / ``test_section8_agent_trial_readme`` 钩子。
-- **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1508**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
+- **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1509**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
 - **本轮（部分）**：``agent-recipes`` 补 TK-301/302 ``contrast``/``stress`` 段与 ``_cut_x`` 指针；``test_section8_agent_recipes_documents_tk302_stress``。
 - **本轮（部分）**：SKILL / ``reference.md`` 对齐 TK-302 ``stress``；``test_section8_skill_reference_documents_tk302_stress``。
 

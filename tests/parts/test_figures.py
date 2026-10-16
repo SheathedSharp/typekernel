@@ -133,3 +133,11 @@ def test_tabular_explicit_advance(figures) -> None:
     tab = tabular(figures, advance=700.0)
     assert {g.advance for g in tab.values()} == {700.0}
     assert tabular({}) == {}
+
+
+def test_all_lining_figures_build_under_stress() -> None:
+    """TK-302: every lining digit builds at high ``stress`` (``_cut_x`` / ``_ring_parts``)."""
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0, stress=42.0)
+    controls = Controls.from_context(ctx)
+    for ch in "0123456789":
+        controls.build(ch)
