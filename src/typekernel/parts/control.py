@@ -2527,8 +2527,8 @@ def _g1_tip_bridge(b: PathBuilder, incoming: Cubic, outgoing: Cubic, *, tension:
     # incoming is drawn as-is ending at its last point; we already drew it.
     # For lower opening we pass _rev(li_bot) as the cubic that was just drawn
     # and l_bot as next.
-    p0, p1, p2, p3 = incoming
-    q0, q1, q2, q3 = outgoing
+    _p0, _p1, p2, p3 = incoming
+    q0, q1, _q2, _q3 = outgoing
     # After drawing ``incoming``, pen is at p3. Bridge p3 → q0.
     # Arrival direction at p3 along incoming: p2 → p3
     inx, iny = p3[0] - p2[0], p3[1] - p2[1]

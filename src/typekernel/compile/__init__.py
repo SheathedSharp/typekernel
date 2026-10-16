@@ -39,15 +39,15 @@ from typekernel.compile.ufo_export import font_to_ufo, write_font_to_ufo, write_
 from typekernel.compile.ufo_import import read_font_from_ufo
 
 __all__ = [
+    "DEFAULT_PAIR_KERN_EXCEPTIONS",
     "STRUCTURAL_PROBLEMS",
     "BuildManifest",
-    "DEFAULT_PAIR_KERN_EXCEPTIONS",
     "FamilyBuildOptions",
     "FontBuild",
     "VariableFontBuild",
     "add_case_punctuation",
-    "add_ordn_forms",
     "add_fraction_forms",
+    "add_ordn_forms",
     "add_standard_ligatures",
     "add_tabular_alternates",
     "build_binary_from_ufo",

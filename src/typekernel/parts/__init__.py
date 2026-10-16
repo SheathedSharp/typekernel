@@ -60,7 +60,6 @@ from typekernel.parts.compose import (
     try_intersection,
     try_union,
 )
-from typekernel.parts.optical_size import context_for_opsz
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
@@ -114,13 +113,14 @@ from typekernel.parts.metrics import (
     RhythmSpec,
     auto_class_kern,
     auto_side_kern_classes,
-    fit_glyph_pair_kerns,
     default_latin_kern_classes,
     default_sans_kern,
+    fit_glyph_pair_kerns,
     layout_glyphs,
     rhythm_from_control_glyphs,
     sidebearing_for_width,
 )
+from typekernel.parts.optical_size import context_for_opsz
 from typekernel.parts.pen import (
     CapStyle,
     Centerline,
@@ -197,7 +197,6 @@ __all__ = [
     "Controls",
     "D_from_H",
     "DesignContext",
-    "context_for_opsz",
     "E_from_H",
     "EndTreatment",
     "F_from_H",
@@ -237,7 +236,6 @@ __all__ = [
     "arch",
     "auto_class_kern",
     "auto_side_kern_classes",
-    "fit_glyph_pair_kerns",
     "b_from_o",
     "ball_end",
     "ball_terminal_piece",
@@ -256,6 +254,7 @@ __all__ = [
     "c_from_o",
     "cap_o_metrics",
     "capsule",
+    "context_for_opsz",
     "counter",
     "crossbar",
     "crotch_join",
@@ -269,6 +268,7 @@ __all__ = [
     "expand_polyline",
     "f_from_n",
     "fillet_pad",
+    "fit_glyph_pair_kerns",
     "flat_end",
     "flat_terminal_piece",
     "g_from_o",

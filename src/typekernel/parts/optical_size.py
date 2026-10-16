@@ -41,7 +41,7 @@ def context_for_opsz(
     if display_opsz <= text_opsz:
         raise ValueError("display_opsz must be greater than text_opsz")
     t = (float(opsz) - text_opsz) / (display_opsz - text_opsz)
-    t = 0.0 if t < 0.0 else (1.0 if t > 1.0 else t)
+    t = 0.0 if t < 0.0 else (min(t, 1.0))
 
     # Text (t=0): heavier, opener, tighter. Display (t=1): lighter, looser, airier.
     stem = lerp(base.stem * 1.10, base.stem * 0.86, t)

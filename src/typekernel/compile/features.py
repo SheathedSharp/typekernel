@@ -7,6 +7,7 @@ from dataclasses import replace
 
 from typekernel.font import Font, Glyph, glyph_name_for_char
 from typekernel.geo.layout import union_bounds
+from typekernel.geo.outline import Outline
 from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.figures import tabular
 from typekernel.parts.ligatures import fi_from_n, fl_from_n
@@ -78,7 +79,7 @@ def _affine_glyph(
 ) -> ComposedGlyph:
     """Scale about ``origin``, then translate; advance defaults to ``sx`` times."""
 
-    def xf(outline):
+    def xf(outline: Outline) -> Outline:
         return translate(scale(outline, sx, sy, origin=origin), dx, dy)
 
     ox, oy = origin

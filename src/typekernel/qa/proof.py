@@ -13,13 +13,13 @@ from typing import Any
 __all__ = [
     "DEFAULT_KERN_PAIRS",
     "DEFAULT_SPACING_STRINGS",
+    "proof_axis_ladder",
     "proof_charset_grid",
     "proof_context",
     "proof_kern_pairs",
     "proof_labeled_waterfall",
     "proof_sheet",
     "proof_spacing_strings",
-    "proof_axis_ladder",
     "proof_weight_ladder",
 ]
 

@@ -7,8 +7,6 @@ from typekernel.optics.space import pair_gap_optical, space_font
 from typekernel.parts import (
     Controls,
     DesignContext,
-    auto_class_kern,
-    auto_side_kern_classes,
     fit_glyph_pair_kerns,
     rhythm_from_control_glyphs,
 )

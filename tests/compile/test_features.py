@@ -7,14 +7,13 @@ import pytest
 pytest.importorskip("ufoLib2")
 pytest.importorskip("ufo2ft")
 
-from typekernel.compile import build_font
+from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
 from typekernel.compile.features import (
     add_fraction_forms,
     add_ordn_forms,
     add_standard_ligatures,
     standard_feature_text,
 )
-from typekernel.compile import FamilyBuildOptions, compose_font_from_controls
 from typekernel.font import Font
 from typekernel.parts import Controls, DesignContext
 
