@@ -340,6 +340,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``AGENT_TRIALS`` / ``human_review_bundle`` 清单补 ``test_gate_thresholds_locked``；``test_agent_trials_doc`` / ``test_human_review_bundle`` 钩子。
 - **本轮（部分）**：``dev-standards`` / §8 计划钩子补 ``test_gate_thresholds_locked`` 与 ``run_m5`` 分工说明。
 - **本轮（部分）**：``COUNTER_GAP_FLOOR_OVER_STEM`` / ``COUNTER_GAP_FLOOR_BASE`` + ``test_counter_gap_floor_formula_frozen``（R8 字腔下限）。
+- **本轮（部分）**：``agent-recipes`` TK-207 段区分 ``counter_gap_floor`` 与 scan ``min_run_gap``；``test_section8_agent_recipes_documents_tk207_min_run_gap`` 钩子更新。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。

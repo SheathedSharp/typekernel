@@ -185,7 +185,8 @@ def test_section8_agent_recipes_documents_tk207_min_run_gap() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "TK-207" in text
     assert "0.09" in text
-    assert "test_gate_thresholds_locked" in text
+    assert "COUNTER_GAP_FLOOR_OVER_STEM" in text
+    assert "test_counter_gap_floor_formula_frozen" in text
     assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
 
 
