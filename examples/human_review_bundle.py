@@ -1,4 +1,4 @@
-"""Generate local PNG/TTF bundles for TK-306 / TK-402 human review.
+"""Generate local PNG/TTF bundles for TK-306 / TK-402 / TK-206 B-15 review.
 
 Does **not** write ``approvals/*.json`` — only artifacts under ``--out`` (gitignored).
 
@@ -6,6 +6,9 @@ Example::
 
     PYTHONPATH=src python examples/human_review_bundle.py \\
         --out artifacts/human-review
+
+    PYTHONPATH=src python examples/human_review_bundle.py \\
+        --only tk206 --out artifacts/human-review
 """
 
 from __future__ import annotations

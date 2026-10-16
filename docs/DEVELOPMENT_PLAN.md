@@ -619,6 +619,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``tests/docs/test_agent_trials_doc.py`` 固化 ``AGENT_TRIALS`` 终验与人审指针。
 - **本轮（部分）**：``tests/docs/test_development_plan_section8.py`` 固化 §8.2/§8.6/§8.7 可程序检项（xfail 空、文档在库、人审 gate 仍 ``approved: false``、终验文档指针）。
 - **本轮（部分）**：``AGENT_TRIALS.md`` 终验节前补 §8 / ``human_review_bundle`` 发布前程序条；``test_agent_trials_doc`` 固化 ``test_development_plan_section8`` 指针。
+- **本轮（部分）**：``AGENT_TRIALS`` 区分衬线/斜体 ``approvals`` 与 B-15 无 JSON 人审；``test_agent_trials_doc`` 补 TK-108/206 CLI 钩子。
 - **本轮（部分）**：``test_section8_regression_test_hooks_present`` 锁定 §8.4/§8.5 与 TK-306/402 程序验收测试名仍在库中。
 - **本轮（部分）**：``TrialSnapshot.l3_voice_ok`` 与 ``l3_voice_criteria_met`` 对齐（含拓扑下限）；``topology_fraction`` 写入快照 JSON；``test_snapshot_l3_voice_ok_rejects_stem_only_tweak``；§8 钩子。
 - **本轮（部分）**：``validate_trial_snapshot`` / ``validate_trial_snapshot_record``（TK-502 快照一致性）；``trial_snapshot_exit_code`` 供 ``snapshot_design`` / ``snapshot_reference_trials``；退出码 5/6/7；``_infer_cheating_flags``（stem-only → ``stem_only_or_scale_voice``）；``test_stem_only_tweak_records_cheating_flag_and_exit_code_7`` / ``test_snapshot_design_stem_tweak_exit_code_7``。

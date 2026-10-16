@@ -22,3 +22,7 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "validate_snapshot.py" in text
     assert "test_agent_trial.py" in text or "test_agent_trial" in text
     assert "contact_sheet.py" in text
+    assert "weight_ladder_sheet.py" in text
+    assert "regenerate_outline_hashes.py" in text
+    assert "--only tk206" in text
+    assert "B-15" in text
