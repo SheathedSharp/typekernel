@@ -19,7 +19,10 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Sequence
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
 from typekernel.geo.stroke import CubicBezier
 from typekernel.parts import (
@@ -106,6 +109,7 @@ def _poly(
     pts: list[tuple[float, float]],
     *,
     thickness: float | None = None,
+    contrast: float | None = None,
     smooth: int = 4,
 ) -> Stroke:
     dense = _chaikin(pts, rounds=smooth)
@@ -113,7 +117,7 @@ def _poly(
         name,
         [_S(*p) for p in dense],
         thickness=thickness if thickness is not None else NIB_THICKNESS,
-        contrast=NIB_CONTRAST,
+        contrast=contrast if contrast is not None else NIB_CONTRAST,
         angle_deg=NIB_ANGLE,
         join="round",
         cap="round",
@@ -183,24 +187,29 @@ def glyph_a(ctx: DesignContext | None = None) -> ComposedGlyph:
 
 
 def glyph_c(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Open C as a long arc (not closed ring).
+    """Open c: bowl + rising exit matched to control a rails/slant."""
     body = _poly(
         "body",
         [
-            (250, 360),
-            (180, 400),
-            (90, 360),
-            (50, 250),
-            (55, 140),
-            (120, 50),
-            (210, 35),
-            (280, 80),
-            (300, 140),
+            (35, ENTRY_Y + 12),
+            (85, ENTRY_Y - 4),
+            (145, 115),
+            (195, 270),
+            (175, 375),
+            (95, 400),
+            (45, 310),
+            (50, 170),
+            (95, 55),
+            (175, 32),
+            (245, 55),
+            (280, 90),
+            (300, 50),
+            (360, 30),
+            (430, 50),
+            (500, EXIT_Y + 40),
         ],
     )
-    entry = _poly("entry", _entry_rail(25, 100) + [(150, 150)], thickness=NIB_THICKNESS * 0.88)
-    exit_ = _poly("exit", [(300, 140), *_exit_rail(320, 420)])
-    return _trace(body, entry, exit_, ctx=ctx)
+    return _trace(body, ctx=ctx)
 
 
 def glyph_e(ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -230,49 +239,64 @@ def glyph_d(ctx: DesignContext | None = None) -> ComposedGlyph:
     asc = _poly(
         "asc",
         [
-            (210, 300),
-            (245, 470),
-            (235, 670),
-            (170, 755),
-            (115, 700),
-            (155, 540),
-            (245, 170),
-            (265, 40),
-            (335, 12),
-            (415, 70),
+            (220, 270),
+            (250, 440),
+            (240, 640),
+            (190, 735),
+            (145, 680),
+            (175, 480),
+            (250, 140),
+            (270, 40),
+            (345, 15),
+            (425, 65),
         ],
+        thickness=NIB_THICKNESS * 0.72,
+        contrast=0.35,
     )
-    entry = _poly("entry", _entry_rail(20, 130) + [(160, 170)], thickness=NIB_THICKNESS * 0.88)
+    entry = _poly(
+        "entry",
+        _entry_rail(20, 130) + [(160, 170)],
+        thickness=NIB_THICKNESS * 0.88,
+    )
     return _trace(ring, asc, entry, ctx=ctx)
 
 
 def glyph_h(ctx: DesignContext | None = None) -> ComposedGlyph:
+    entry = _poly(
+        "entry",
+        [(12, ENTRY_Y + 20), (40, ENTRY_Y - 4), (70, ENTRY_Y + 5), (90, 80)],
+        thickness=NIB_THICKNESS * 0.92,
+    )
     stem = _poly(
         "stem",
         [
-            (55, ENTRY_Y),
-            (75, 200),
-            (90, 480),
-            (75, 710),
-            (115, 765),
-            (155, 700),
-            (135, 380),
-            (120, 70),
+            (60, ENTRY_Y),
+            (78, 180),
+            (95, 450),
+            (85, 700),
+            (130, 750),
+            (160, 680),
+            (145, 320),
+            (125, 60),
         ],
+        thickness=NIB_THICKNESS * 1.15,
+        contrast=0.35,
     )
     arch = _poly(
         "arch",
         [
-            (120, 255),
-            (175, 385),
-            (275, 395),
-            (345, 275),
-            (360, 55),
-            (410, 15),
-            (480, EXIT_Y + 28),
+            (125, 230),
+            (185, 350),
+            (280, 355),
+            (350, 240),
+            (365, 50),
+            (420, 35),
+            (490, EXIT_Y + 32),
         ],
+        thickness=NIB_THICKNESS * 1.10,
+        contrast=0.35,
     )
-    return _trace(stem, arch, ctx=ctx)
+    return _trace(entry, stem, arch, ctx=ctx)
 
 
 def glyph_i(ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -321,57 +345,69 @@ def glyph_r(ctx: DesignContext | None = None) -> ComposedGlyph:
         "stem",
         [(50, ENTRY_Y), (62, 200), (75, 380), (90, 50), (130, 20)],
         thickness=NIB_THICKNESS * 0.95,
+        contrast=0.35,
     )
     shoulder = _poly(
         "shoulder",
         [(75, 280), (135, 380), (215, 365), (250, 260), (260, 140)],
+        contrast=0.35,
     )
-    exit_ = _poly("exit", [(260, 140), *_exit_rail(280, 410)])
+    exit_ = _poly("exit", [(260, 140), (290, 50), (350, 28), (430, EXIT_Y + 32)])
     return _trace(entry, stem, shoulder, exit_, ctx=ctx)
 
 
 def glyph_s(ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Script s: top curve, spine, bottom curve — recognizable serpentine."""
+    """Script s: serpentine with low entry and rising exit."""
+    entry = _poly(
+        "entry",
+        [(10, ENTRY_Y + 25), (40, ENTRY_Y - 5), (80, ENTRY_Y + 10), (115, 65)],
+        thickness=NIB_THICKNESS * 0.9,
+    )
     body = _poly(
         "body",
         [
-            (40, 150),
-            (100, 55),
-            (200, 40),
-            (285, 85),
-            (275, 165),
-            (190, 235),
-            (110, 295),
-            (105, 365),
-            (175, 420),
-            (275, 400),
-            (325, 310),
-            (340, 180),
-            (365, 70),
-            (440, EXIT_Y + 20),
+            (115, 65),
+            (175, 38),
+            (255, 48),
+            (290, 110),
+            (260, 180),
+            (180, 240),
+            (130, 300),
+            (140, 370),
+            (210, 408),
+            (290, 380),
+            (330, 280),
+            (340, 140),
+            (360, 50),
+            (400, 40),
+            (470, EXIT_Y + 32),
         ],
     )
-    entry = _poly("entry", _entry_rail(15, 55, y=ENTRY_Y), thickness=NIB_THICKNESS * 0.88)
-    return _trace(body, entry, ctx=ctx)
+    return _trace(entry, body, ctx=ctx)
 
 
 def glyph_u(ctx: DesignContext | None = None) -> ComposedGlyph:
+    """Script u: twin arches with even pen contrast + rising exit."""
     body = _poly(
         "body",
         [
-            (35, ENTRY_Y + 8),
-            (55, 40),
-            (70, 230),
-            (80, 400),
-            (95, 55),
-            (145, 12),
-            (195, 55),
-            (215, 280),
-            (235, 400),
-            (255, 45),
-            (310, 12),
-            (390, EXIT_Y + 28),
+            (28, ENTRY_Y + 6),
+            (60, 25),
+            (85, 140),
+            (105, 280),
+            (125, 340),
+            (150, 180),
+            (175, 45),
+            (225, 28),
+            (270, 75),
+            (290, 200),
+            (305, 320),
+            (325, 100),
+            (350, 30),
+            (390, 40),
+            (450, EXIT_Y + 35),
         ],
+        contrast=0.30,
     )
     return _trace(body, ctx=ctx)
 
@@ -388,11 +424,15 @@ def glyph_v(ctx: DesignContext | None = None) -> ComposedGlyph:
             (295, 340),
             (330, 400),
             (360, 260),
-            (395, 70),
-            (460, EXIT_Y + 25),
+            (395, 55),
+            (450, EXIT_Y + 32),
         ],
     )
-    entry = _poly("entry", _entry_rail(18, 50, y=ENTRY_Y) + [(50, 280)], thickness=NIB_THICKNESS * 0.88)
+    entry = _poly(
+        "entry",
+        _entry_rail(18, 50, y=ENTRY_Y) + [(50, 280)],
+        thickness=NIB_THICKNESS * 0.88,
+    )
     return _trace(body, entry, ctx=ctx)
 
 
@@ -410,91 +450,109 @@ def glyph_w(ctx: DesignContext | None = None) -> ComposedGlyph:
             (300, 150),
             (345, 400),
             (385, 260),
-            (430, 65),
-            (500, EXIT_Y + 25),
+            (430, 55),
+            (500, EXIT_Y + 32),
         ],
     )
-    entry = _poly("entry", _entry_rail(15, 45, y=ENTRY_Y + 28) + [(50, 310)], thickness=NIB_THICKNESS * 0.88)
+    entry = _poly(
+        "entry",
+        _entry_rail(15, 45, y=ENTRY_Y + 28) + [(50, 310)],
+        thickness=NIB_THICKNESS * 0.88,
+    )
     return _trace(body, entry, ctx=ctx)
 
 
 def glyph_y(ctx: DesignContext | None = None) -> ComposedGlyph:
+    entry = _poly(
+        "entry",
+        [(12, ENTRY_Y + 20), (40, ENTRY_Y - 4), (65, 40), (80, 160)],
+        thickness=NIB_THICKNESS * 0.9,
+    )
     body = _poly(
         "body",
         [
-            (35, 400),
-            (95, 170),
-            (150, 28),
-            (185, 22),
-            (240, 140),
-            (295, 360),
-            (310, 400),
-            (295, 170),
-            (265, 20),
-            (225, -160),
-            (155, -290),
-            (75, -275),
-            (50, -175),
-            (120, -35),
-            (230, 30),
-            (310, 15),
-            (395, EXIT_Y + 25),
+            (80, 160),
+            (95, 320),
+            (50, 390),
+            (100, 150),
+            (155, 28),
+            (185, 25),
+            (235, 140),
+            (285, 330),
+            (295, 370),
+            (280, 140),
+            (250, 20),
+            (220, -150),
+            (150, -275),
+            (75, -260),
+            (55, -150),
+            (140, 5),
+            (280, 50),
+            (380, 35),
+            (460, 50),
+            (540, EXIT_Y + 40),
         ],
+        contrast=0.38,
     )
-    entry = _poly("entry", _entry_rail(15, 45, y=ENTRY_Y + 28) + [(50, 310)], thickness=NIB_THICKNESS * 0.88)
-    return _trace(body, entry, ctx=ctx)
+    return _trace(entry, body, ctx=ctx)
 
 
 def glyph_z(ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Script z: top bar → diagonal → bottom with light descender exit."""
+    """Script z: top curve, soft diagonal, rising exit (positive slant)."""
+    entry = _poly(
+        "entry",
+        [(8, ENTRY_Y + 22), (35, ENTRY_Y - 4), (70, ENTRY_Y + 8), (100, 75)],
+        thickness=NIB_THICKNESS * 0.9,
+    )
     body = _poly(
         "body",
         [
-            (30, 155),
-            (90, 50),
-            (230, 40),
-            (305, 75),
-            (270, 155),
-            (155, 275),
-            (105, 355),
-            (160, 425),
-            (275, 420),
-            (335, 345),
-            (295, 195),
-            (195, 65),
-            (155, -5),
-            (215, -30),
-            (330, 25),
-            (415, EXIT_Y + 22),
+            (100, 75),
+            (160, 40),
+            (260, 45),
+            (310, 100),
+            (270, 175),
+            (190, 265),
+            (145, 340),
+            (180, 405),
+            (270, 410),
+            (330, 340),
+            (340, 220),
+            (350, 100),
+            (380, 40),
+            (450, 35),
+            (530, EXIT_Y + 38),
         ],
+        contrast=0.40,
     )
-    entry = _poly("entry", _entry_rail(12, 45, y=ENTRY_Y), thickness=NIB_THICKNESS * 0.88)
     return _trace(entry, body, ctx=ctx)
 
 
 def glyph_D(ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Capital D: one continuous stem→swash→bowl path (recognizable, welded)."""
+    """Capital D: stem→swash→bowl with control-matched stem weight."""
     body = _poly(
         "body",
         [
-            (35, 55),
+            (40, ENTRY_Y),
             (70, 40),
-            (95, 200),
-            (110, 450),
-            (115, 690),
-            (70, 750),
-            (-35, 640),
-            (30, 790),
-            (170, 820),
-            (320, 770),
-            (445, 620),
-            (495, 420),
-            (465, 195),
-            (330, 55),
-            (170, 35),
-            (100, 55),
+            (95, 220),
+            (108, 480),
+            (112, 700),
+            (85, 760),
+            (40, 720),
+            (80, 790),
+            (180, 815),
+            (320, 760),
+            (430, 600),
+            (470, 400),
+            (440, 180),
+            (320, 50),
+            (180, 35),
+            (110, 50),
+            (140, 40),
+            (220, 55),
+            (280, 80),
         ],
-        thickness=NIB_THICKNESS * 1.12,
     )
     return _trace(body, ctx=ctx)
 
@@ -565,25 +623,30 @@ def _script_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if cand in _ASCENDERS or ref in _ASCENDERS:
         skip.extend(["ink_ymax", "bowl_center_y", "exit_rail_y", "exit_slant_deg"])
     if cand in _DESCENDERS or ref in _DESCENDERS:
-        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y"])
+        # Descender loops poison lower-band exit-angle samples.
+        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
     # Dotted / short letters: vertical exits are not writing rails.
     if cand in {"i", "j"} or ref in {"i", "j"}:
         skip.extend(["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y"])
     return tuple(dict.fromkeys(skip))
 
 
-def script_sequence_tolerances():
-    """Florid-script budgets: shared stem/rails; contrast slack for open vs closed."""
+def script_sequence_tolerances() -> "StyleConsistencyTolerances":
+    """Florid-script budgets after per-glyph redesign.
+
+    Rails/slant/stem stay near body defaults. Contrast allows multi-vertical
+    pen stress (u/h) without opening the door to phrase-batch fudge.
+    """
     from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
     return StyleConsistencyTolerances(
-        stem_median=18.0,
-        contrast_ratio=1.45,
-        entry_rail_y=52.0,
-        exit_rail_y=52.0,
-        exit_slant_deg=110.0,  # florid diagonals (z) vs round exits
-        bowl_center_y=60.0,
-        ink_ymin=60.0,
+        stem_median=14.0,
+        contrast_ratio=0.95,
+        entry_rail_y=40.0,
+        exit_rail_y=42.0,
+        exit_slant_deg=40.0,
+        bowl_center_y=55.0,
+        ink_ymin=55.0,
         ink_ymax=120.0,
     )
 
@@ -594,24 +657,67 @@ def build_charset_sequential(
     tolerances: object | None = None,
     compare_to_previous: bool = True,
 ) -> tuple[dict[str, ComposedGlyph], object]:
-    """Design-order build: one glyph at a time, then style-check vs control/previous.
+    """Design-order build: one glyph at a time, gate, then unlock the next.
 
-    Returns ``(drawn, sequence_report)``. Agents must not treat a failing report
-    as success — fix the candidate glyph before unlocking the next letter.
+    Does **not** batch-construct the charset then wave a report at it. Each
+    letter is drawn, compared to control (+ previous unlocked), and only then
+    is the next builder called. On failure, later letters are not built.
+
+    Returns ``(drawn, sequence_report)``. Agents must fix the failing glyph
+    before unlocking the next letter.
     """
-    from typekernel.qa.style_consistency import check_design_sequence
+    from typekernel.qa.style_consistency import (
+        StyleConsistencyTolerances,
+        check_design_sequence,
+        compare_glyph_styles,
+    )
 
     c = ctx or script_context()
-    drawn: dict[str, ComposedGlyph] = {}
-    for ch in DESIGN_ORDER:
-        # One at a time — do not batch-construct without reading the prior letter.
-        drawn[ch] = BUILDERS[ch](c)
     tol = tolerances if tolerances is not None else script_sequence_tolerances()
+    assert isinstance(tol, StyleConsistencyTolerances)
+
+    drawn: dict[str, ComposedGlyph] = {}
+    unlocked: list[str] = []
+    for ch in DESIGN_ORDER:
+        drawn[ch] = BUILDERS[ch](c)
+        if ch == CONTROL_GLYPH:
+            unlocked.append(ch)
+            continue
+        # Gate against control
+        skip_c = _script_skip_checks(CONTROL_GLYPH, ch)
+        rep_c = compare_glyph_styles(
+            drawn[CONTROL_GLYPH],
+            drawn[ch],
+            reference_name=CONTROL_GLYPH,
+            candidate_name=ch,
+            tolerances=tol,
+            skip_checks=skip_c,
+        )
+        ok = rep_c.passed
+        if compare_to_previous and unlocked:
+            prev = unlocked[-1]
+            if prev != CONTROL_GLYPH:
+                skip_p = _script_skip_checks(prev, ch)
+                rep_p = compare_glyph_styles(
+                    drawn[prev],
+                    drawn[ch],
+                    reference_name=prev,
+                    candidate_name=ch,
+                    tolerances=tol,
+                    skip_checks=skip_p,
+                )
+                ok = ok and rep_p.passed
+        if not ok:
+            # Stop — do not batch-unlock later letters.
+            break
+        unlocked.append(ch)
+
+    # Full report over whatever was drawn (includes the failing candidate).
     report = check_design_sequence(
         drawn,
-        DESIGN_ORDER,
+        tuple(drawn.keys()),
         control=CONTROL_GLYPH,
-        tolerances=tol,  # type: ignore[arg-type]
+        tolerances=tol,
         compare_to_previous=compare_to_previous,
         skip_checks_for_pair=_script_skip_checks,
     )

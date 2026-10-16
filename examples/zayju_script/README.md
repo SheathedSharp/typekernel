@@ -50,6 +50,15 @@ Outputs under `out/`:
 | `grid.png` | Used-letter inventory |
 | `glyph_*.png` | Per-glyph checks |
 
+
+## Style gate budgets
+
+`script_sequence_tolerances()` keeps rails/slant/stem near body defaults.
+Contrast allows multi-vertical pen stress (`u`/`h`). Role skips omit metrics
+that topology makes meaningless (closed bowls, ascenders, descender loops,
+dotted `i`/`j`). Glyphs that failed those budgets were redesigned one letter at
+a time — not unlocked by widening the gate.
+
 ## Gates
 
 - **Required:** `build_charset_sequential` / `check_design_sequence` (style
