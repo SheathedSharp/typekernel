@@ -31,6 +31,10 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "test_m3_exit.py" in text
     assert "weight_ladder_sheet.py" in text
     assert "test_weight_ladder_sheet.py" in text
+    assert "tk206_s_opening_humanist.png" in text
+    assert "test_b15_s_spine_ink_is_continuous_band" in text
+    assert "test_s_opening_reach_relief_frozen" in text
+    assert "regenerate_outline_hashes.py" in text
 
 
 def test_human_review_bundle_checklist_matches_approval_test_evidence() -> None:
@@ -76,6 +80,29 @@ def test_human_review_bundle_serif_only(tmp_path: Path) -> None:
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
     assert "serif-slab-voice" in checklist
     assert "serif-bracketed-voice" in checklist
+
+
+def test_human_review_bundle_tk206_only(tmp_path: Path) -> None:
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples" / "human_review_bundle.py"),
+            "--only",
+            "tk206",
+            "--out",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
+    assert (tmp_path / "tk206_s_opening_humanist.png").is_file()
+    checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
+    assert "TK-206" in checklist
+    assert "tk206_s_opening_humanist.png" in checklist
 
 
 def test_human_review_bundle_italic_only(tmp_path: Path) -> None:

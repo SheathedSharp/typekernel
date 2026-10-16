@@ -30,6 +30,8 @@ pytest -q tests/examples/test_agent_trial_reference.py
 pytest -q tests/qa/test_m3_exit.py
 pytest -q tests/examples/test_human_review_bundle.py
 pytest -q tests/examples/test_weight_ladder_sheet.py
+pytest -q tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band
+pytest -q tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
 pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance
 pytest -q tests/qa/test_originality.py tests/qa/test_sentence_gate.py
@@ -47,6 +49,21 @@ pytest -q tests/parts/test_italic_program_acceptance.py
 Judge: serif feet/caps, counters at bold, brief sentence legibility, VF interpolation (no kinks).
 
 Other presets (TK-207): ``PYTHONPATH=src python examples/weight_ladder_sheet.py --preset humanist_sans --out artifacts/specimens/weight_ladder.png``
+
+## TK-206 appendix B-15 — `s` / `S` opening (no approvals JSON)
+
+| Artifact | Path |
+| --- | --- |
+| Humanist `sS` contact | `{out}/tk206_s_opening_humanist.png` |
+
+Judge: opening reach feels natural (not pinched); spine reads as one continuous band at bold weights.
+Program hooks: ``test_b15_s_spine_ink_is_continuous_band``, ``test_s_opening_reach_relief_frozen``; changing
+``S_OPENING_REACH_RELIEF`` requires ``examples/regenerate_outline_hashes.py --write`` and a new specimen.
+
+Regenerate only this PNG::
+
+    PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \\
+        --out artifacts/specimens/tk206_s_opening_humanist.png
 
 After **you** accept visually, record decisions (agent must not set ``approved: true`` without you):
 
@@ -174,6 +191,17 @@ def _italic_bundle(out: Path) -> None:
     )
 
 
+def _tk206_s_opening_bundle(out: Path) -> None:
+    from typekernel.parts import Controls, DesignContext
+    from typekernel.qa.sheet import contact_sheet
+
+    contact_sheet(
+        Controls.from_context(DesignContext.humanist_sans()),
+        out / "tk206_s_opening_humanist.png",
+        chars="sS",
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -184,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--only",
-        choices=("all", "serif", "italic"),
+        choices=("all", "serif", "italic", "tk206"),
         default="all",
         help="which bundle to render",
     )
@@ -196,6 +224,8 @@ def main(argv: list[str] | None = None) -> int:
         _serif_bundle(out)
     if args.only in ("all", "italic"):
         _italic_bundle(out)
+    if args.only in ("all", "tk206"):
+        _tk206_s_opening_bundle(out)
 
     checklist = out / "REVIEW_CHECKLIST.md"
     checklist.write_text(_CHECKLIST.format(out=out), encoding="utf-8")

@@ -162,6 +162,19 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
+## `s` 开口人审（TK-206 / 附录 B-15）
+
+程序侧已冻结 ``S_OPENING_REACH_RELIEF`` 与 ``test_b15_*``；视觉是否接受仍须人看图签字（无单独 ``approvals/*.json``）：
+
+```bash
+PYTHONPATH=src python examples/human_review_bundle.py --only tk206 --out artifacts/human-review
+# 或 contact_sheet 子集：
+PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \
+  --out artifacts/specimens/tk206_s_opening_humanist.png
+```
+
+改开口量后须 ``regenerate_outline_hashes.py --write`` 并更新校样 PNG。
+
 ## 轮廓哈希快照（TK-108）
 
 改 `parts` 轮廓后，在提交说明里列出变更字形，并刷新 golden：
