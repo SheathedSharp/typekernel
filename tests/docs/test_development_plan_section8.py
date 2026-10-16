@@ -35,7 +35,9 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tests/parts/test_knob_coverage.py",
         (
             "test_contrast_moves_round_letters",
+            "test_contrast_moves_many_glyphs_on_humanist",
             "test_terminal_style_reaches_many_glyphs",
+            "test_stress_reaches_many_glyphs_on_humanist",
         ),
     ),
     (
@@ -321,6 +323,11 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
     assert "program_pass_ok" in section
     assert "cheating_flags" in section
     assert "validate_snapshot.py" in section
+
+
+def test_section8_run_m5_program_exit_includes_tk107_knob_coverage() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_knob_coverage.py" in text
 
 
 def test_section8_run_m5_program_exit_includes_tk302_stress_regressions() -> None:

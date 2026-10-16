@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1516 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1517 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -248,7 +248,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-107 旋钮覆盖测试　〔S〕
 - **做什么**：`tests/parts/test_knob_coverage.py`，把附录 C 的敏感度实验固化：每个 `DesignContext` 字段改动后，受影响字形集合不得小于下限。`contrast` 与 `terminal_style` 两条 strict-xfail 已转正（TK-301、TK-304）。
-- **本轮（部分）**：附录 C 表对齐 TK-301/304/302 实测（``contrast``/``terminal_style``/``stress``）；``test_stress_reaches_many_glyphs_on_humanist``（``stress=25`` ≥20 字）；``test_contrast_moves_many_glyphs_on_humanist``（``contrast=0.5`` ≥80 字）。
+- **本轮（部分）**：附录 C 表对齐 TK-301/304/302 实测（``contrast``/``terminal_style``/``stress``）；``test_stress_reaches_many_glyphs_on_humanist``（``stress=25`` ≥20 字）；``test_contrast_moves_many_glyphs_on_humanist``（``contrast=0.5`` ≥80 字）；M5 烟测含 ``test_knob_coverage.py``。
 - **验收**：测试通过；xfail 条目与 TK-301/TK-304 对应。
 
 #### TK-108 字形哈希快照　〔S〕
@@ -599,6 +599,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含附录 B-13～B-15 ``test_known_defects`` + ``test_s_opening_reach_relief_frozen``；``AGENT_TRIALS`` 库维护者回归列表对齐。
 - **本轮（部分）**：``test_section8_run_m5_program_exit_includes_tk206_defect_regressions`` 固化程序出口与 B-13～B-15 钩子。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``（TK-302 程序回归）；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_knob_coverage.py``（TK-107 旋钮覆盖）；``test_section8_run_m5_program_exit_includes_tk107_knob_coverage``。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
