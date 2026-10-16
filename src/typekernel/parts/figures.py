@@ -32,6 +32,7 @@ from typekernel.parts.control import (
     _pack,
     _quarters,
     _rev,
+    _rotate_cubic,
     build_o,
 )
 from typekernel.parts.diagonals import _hwidth
@@ -234,7 +235,10 @@ def eight_from_O(
     _curve(b, l2)
     b.closePath()
     for qx, qy, rx, ry in ((cx, cy_l, rx_l - th, ry_l - tv), (cx, cy_u, rx_u - th, ry_u - tv)):
-        q = _quarters(qx, qy, rx, ry, e)
+        hole = _quarters(qx, qy, rx, ry, e)
+        if abs(c.stress) > 1e-9:
+            hole = tuple(_rotate_cubic(cubic, c.stress, qx, qy) for cubic in hole)
+        q = hole
         b.moveTo(*q[0][0])
         for cubic in q:
             _curve(b, cubic)
@@ -266,9 +270,20 @@ def _hit(c: Cubic, p: Pt, q: Pt, what: str, *, last: bool) -> float:
 
 
 def _ring_parts(
-    cx: float, cy: float, rx: float, ry: float, th: float, tv: float, e: float
-) -> tuple[list[Cubic], list[Cubic]]:
-    return _quarters(cx, cy, rx, ry, e), _quarters(cx, cy, rx - th, ry - tv, e)
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    th: float,
+    tv: float,
+    e: float,
+    ctx: DesignContext | None = None,
+) -> tuple[tuple[Cubic, Cubic, Cubic, Cubic], tuple[Cubic, Cubic, Cubic, Cubic]]:
+    outer: tuple[Cubic, Cubic, Cubic, Cubic] = _quarters(cx, cy, rx, ry, e)
+    inner: tuple[Cubic, Cubic, Cubic, Cubic] = _quarters(cx, cy, rx - th, ry - tv, e)
+    if ctx is not None and abs(ctx.stress) > 1e-9:
+        inner = tuple(_rotate_cubic(cubic, ctx.stress, cx, cy) for cubic in inner)
+    return outer, inner
 
 
 def six_from_O(
@@ -296,7 +311,7 @@ def six_from_O(
     cy = ry - os_
     tv = min(bar, 0.6 * ry)
     th = min(t, 0.6 * rx)
-    (q0, q1, q2, q3), inner = _ring_parts(cx, cy, rx, ry, th, tv, e)
+    (q0, q1, q2, q3), inner = _ring_parts(cx, cy, rx, ry, th, tv, e, c)
     ang = math.radians(140.0)
     start = (cx + (rx - th / 2.0) * math.cos(ang), cy + (ry - tv / 2.0) * math.sin(ang))
     hw = _hwidth(t, c.contrast, reach * w - start[0], cap - start[1])
@@ -362,7 +377,7 @@ def two_from_O(
     cy = cap + os_ - ry
     tv = min(bar, 0.6 * ry)
     th = min(t, 0.6 * rx)
-    (q0, q1, _, q3), (i0, i1, _, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e)
+    (q0, q1, _, q3), (i0, i1, _, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e, c)
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
     x_t = cx - (rx - th) * (0.95 - 0.5 * ap)
     top = _cut(q1, x_t, horizontal=False)[0]
@@ -423,8 +438,8 @@ def three_from_O(
     tv = min(tv, 0.6 * min(ry_l, ry_u))
     th = min(t, 0.6 * rx_u)
     cy_l, cy_u = ry_l - os_, cap + os_ - ry_u
-    (l0, _, l2, l3), (li0, li1, li2, li3) = _ring_parts(cx, cy_l, rx_l, ry_l, th, tv, e)
-    (u0, u1, _, u3), (ui0, ui1, ui2, ui3) = _ring_parts(cx, cy_u, rx_u, ry_u, th, tv, e)
+    (l0, _, l2, l3), (li0, li1, li2, li3) = _ring_parts(cx, cy_l, rx_l, ry_l, th, tv, e, c)
+    (u0, u1, _, u3), (ui0, ui1, ui2, ui3) = _ring_parts(cx, cy_u, rx_u, ry_u, th, tv, e, c)
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
     x_tu = cx - (rx_u - th) * (0.95 - 0.5 * ap)
     x_tl = cx - (rx_l - th) * (0.95 - 0.5 * ap)
@@ -491,7 +506,7 @@ def five_from_O(
         stroke_scale *= 0.84
     tv = min(bar, 0.6 * ry) * stroke_scale
     th = min(t, 0.6 * rx) * stroke_scale
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e, c)
     y_seat = cy + seat * (ry - tv)
     i_seat = _cut(i1, y_seat, horizontal=True)  # inner top → seat → inner left
     s1 = i_seat[0][3][0]

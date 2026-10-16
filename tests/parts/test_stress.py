@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 
+import pytest
+
 from typekernel.optics.stem import measure_oriented_stem
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.control import o_metrics
@@ -56,6 +58,26 @@ def test_stress_zero_preserves_lowercase_s_hashes() -> None:
         h0 = composed_glyph_hash(controls.build("s"))
         h1 = composed_glyph_hash(Controls.from_context(ctx.tuned(stress=0.0)).build("s"))
         assert h0 == h1
+
+
+@pytest.mark.parametrize("ch", ("3", "6", "8"))
+def test_stress_zero_preserves_lining_figure_hashes(ch: str) -> None:
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    for preset in ("humanist_sans", "geometric_sans", "code_clear"):
+        ctx = getattr(DesignContext, preset)()
+        h0 = composed_glyph_hash(Controls.from_context(ctx).build(ch))
+        h1 = composed_glyph_hash(Controls.from_context(ctx.tuned(stress=0.0)).build(ch))
+        assert h0 == h1
+
+
+def test_stress_moves_figure_eight_outline() -> None:
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0)
+    g0 = Controls.from_context(ctx).build("8")
+    g35 = Controls.from_context(ctx.tuned(stress=35.0)).build("8")
+    assert composed_glyph_hash(g0) != composed_glyph_hash(g35)
 
 
 def test_stress_moves_lowercase_s_outline() -> None:
