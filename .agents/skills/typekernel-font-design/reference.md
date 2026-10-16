@@ -139,3 +139,18 @@ After library changes: `uv run pytest -q`. Compile tests need `ufo2ft` (`[compil
 ## Approvals
 
 Human-reviewed areas: `approvals/*.json`. Respect listed constraints when changing compile or optics behavior.
+
+## Sequential style consistency
+
+For any face (Controls or skeleton), after each new glyph:
+
+```python
+from typekernel.qa import compare_glyph_styles, check_design_sequence
+
+report = compare_glyph_styles(control_glyph, candidate, reference_name="a", candidate_name="e")
+assert report.passed, report.failures
+```
+
+Phrase / `BRIEF_SENTENCE` proofs come **after** `check_design_sequence` unlocks
+the charset. See `examples/zayju_script/design.py` (`DESIGN_ORDER`,
+`build_charset_sequential`).

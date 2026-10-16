@@ -18,7 +18,10 @@ Canonical copy: [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md)
 
 ## Mindset
 
-Think **family**, not **single glyph**. One codepoint is done only with sidebearings, neighbors, and sentence proof—not an isolated outline.
+Design **one glyph at a time**, then check style consistency against the control
+and the previous unlocked letter(s). Think **family** when the letter is done
+(sidebearings, neighbors, specimen)—not by generating a whole phrase or charset
+in one shot.
 
 Do **not** simulate weight with stroke expand, script with oblique shear, or OpenType features without the referenced glyphs.
 
@@ -36,6 +39,7 @@ The pair check is inside `check_sentence_gate`, so L0's build already runs it. L
 
 ### Anti-patterns (these are not done)
 
+- Defining `BRIEF_SENTENCE` / a specimen phrase and **batch-building the whole charset** as the design method (Controls `build_all` without inspecting controls first, or skeleton `build_charset()` with no sequential style gate).
 - Editing the proof sentence, or passing the brief sentence into `check_sentence_gate`, until the gate prints ok.
 - Declaring success from `sentence gate ok` plus a PNG.
 - Untethered floats (`stem=78`, `x_height=520`) with no preset field to compare. Tune **one field** as a delta from the preset (its `sidebearing_ratio` is `0.10`; `0.11` is a decision). Stay near the preset on a Regular voice — large stem jumps belong on a **new master**, and they must not worsen that master's own baseline.
@@ -45,7 +49,9 @@ The pair check is inside `check_sentence_gate`, so L0's build already runs it. L
 
 ### Unsupported voices
 
-Copperplate and connected script need a **new topology** in `parts`, or a UFO import with typekernel doing spacing and features. Say so. Do not fake the voice.
+Copperplate and fully connected script still need honest topology (skeleton /
+`trace_letter`, or UFO import)—not oblique shear. Semi-connected script must
+still follow designer-order + `style_consistency` (see `examples/zayju_script/`).
 
 Recipes (patch shapes, when to leave `Controls` for a `PathBuilder`): [`docs/agent-recipes.md`](../../../docs/agent-recipes.md).
 
@@ -66,6 +72,24 @@ Copy and track:
 - [ ] 9. design_review + locked AGENT_SENTENCE gate; brief sentence is a second specimen
 - [ ] 10. pytest if touching library; example script committed
 ```
+
+### Skeleton / script faces (same discipline)
+
+`Controls` presets are not required, but **designer order is**. For
+`trace_letter` / skeleton examples (e.g. `examples/zayju_script/`):
+
+1. Pick control letter(s) appropriate to the voice (script: body rails + bowl,
+   typically `a` then `o` — not “whatever the brief phrase needs first”).
+2. Implement **one** glyph; run
+   `typekernel.qa.style_consistency.compare_glyph_styles` /
+   `check_design_sequence` against control and previous.
+3. Unlock the next letter only after the gate passes (or after a deliberate,
+   documented tolerance change for a role skip — ascenders vs body).
+4. `BRIEF_SENTENCE` is a **late specimen** after the gated charset exists.
+   `build.py` should fail if the sequential style gate fails.
+
+Library entry points: `extract_glyph_style_metrics`, `compare_glyph_styles`,
+`check_design_sequence`, `script_body_tolerances` in `typekernel.qa.style_consistency`.
 
 ### Step details
 

@@ -65,3 +65,14 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 3. Refresh only the showcase proofs that `.gitignore` explicitly un-ignores.
 4. Write conventional subjects; refuse `TK-…` style subjects even if history has them.
 5. Do not push unless the user explicitly asked to push.
+
+## Font design process (agents)
+
+When creating or extending faces in this repo:
+
+1. Follow `.agents/skills/typekernel-font-design/` **designer order**.
+2. Design **one glyph at a time**; gate with
+   `typekernel.qa.style_consistency` against control + previous.
+3. Do **not** use a brief phrase (`BRIEF_SENTENCE`) as the design driver — only
+   as a late specimen after the sequential gate passes.
+4. Skeleton / script examples must use the same discipline as Controls faces.
