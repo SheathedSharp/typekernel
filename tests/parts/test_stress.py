@@ -71,13 +71,18 @@ def test_stress_zero_preserves_lining_figure_hashes(ch: str) -> None:
         assert h0 == h1
 
 
-def test_stress_moves_figure_eight_outline() -> None:
+@pytest.mark.parametrize(
+    ("ch", "stress"),
+    (("3", 10.0), ("6", 35.0), ("8", 35.0)),
+)
+def test_stress_moves_lining_figure_outline(ch: str, stress: float) -> None:
+    """``3`` uses a lower probe angle — high stress breaks waist ``_cut`` stations."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
     ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0)
-    g0 = Controls.from_context(ctx).build("8")
-    g35 = Controls.from_context(ctx.tuned(stress=35.0)).build("8")
-    assert composed_glyph_hash(g0) != composed_glyph_hash(g35)
+    g0 = Controls.from_context(ctx).build(ch)
+    g1 = Controls.from_context(ctx.tuned(stress=stress)).build(ch)
+    assert composed_glyph_hash(g0) != composed_glyph_hash(g1)
 
 
 def test_stress_moves_lowercase_s_outline() -> None:
