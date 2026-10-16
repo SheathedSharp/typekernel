@@ -162,6 +162,17 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
+## 轮廓哈希快照（TK-108）
+
+改 `parts` 轮廓后，在提交说明里列出变更字形，并刷新 golden：
+
+```bash
+PYTHONPATH=src python examples/regenerate_outline_hashes.py          # 仅打印漂移
+PYTHONPATH=src python examples/regenerate_outline_hashes.py --write  # 写 tests/golden/outline_hashes.json
+```
+
+然后跑 `pytest -q tests/qa/test_golden_outline_hashes.py`。
+
 ## 骨架构造 spike（TK-308，非默认管线）
 
 **不要**用 `geo.stroke.expand` / `trace_letter` 做字重轴或替代 `Controls` 主路径。仅当在 `parts` 里试验新拓扑、或像 `zayju_letter` 那样手绘后再挂回 `with_glyph` 时，可选用骨架 + 对比笔：

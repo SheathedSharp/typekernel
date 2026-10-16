@@ -253,6 +253,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-108 字形哈希快照　〔S〕
 - **做什么**：用现有 `qa/outline_hash.py` 为 `humanist_sans / geometric_sans / code_clear` × 98 字形生成 `tests/golden/outline_hashes.json`，加回归测试。以后**每次字形变更，哪些字形的哈希变了就必须和任务声明一致**，更新快照的提交要在说明里列出变更字形。
 - **本轮（部分）**：``examples/regenerate_outline_hashes.py``（默认校验漂移、`--write` 重写）；``tests/examples/test_regenerate_outline_hashes.py`` 烟测。
+- **本轮（部分）**：``agent-recipes`` TK-108 刷新流程；``test_section8_agent_recipes_documents_tk108_golden_refresh``。
 - **验收**：快照存在；故意改一个字形能让测试失败。
 
 ### M2 修地板
@@ -753,7 +754,7 @@ M5：TK-501（贯穿）→ TK-502
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
 | B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；平顶几何回归 | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
 | B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；段型回归 | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
-| B-15 | `s` | 偏生硬（可读） | 视觉确认；低优先 | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
+| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签 | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
 | — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子，人审仍可继续；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |

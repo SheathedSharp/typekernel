@@ -172,6 +172,12 @@ def test_section8_agent_recipes_documents_tk104_review_clis() -> None:
     assert "diff_overlay.py" in text
 
 
+def test_section8_agent_recipes_documents_tk108_golden_refresh() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-108" in text
+    assert "regenerate_outline_hashes.py" in text
+
+
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     text = (ROOT / "examples/agent_trial/README.md").read_text(encoding="utf-8")
     assert "trial_snapshot_exit_code" in text
