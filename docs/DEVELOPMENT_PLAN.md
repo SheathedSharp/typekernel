@@ -646,6 +646,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1509**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
 - **本轮（部分）**：``agent-recipes`` 补 TK-301/302 ``contrast``/``stress`` 段与 ``_cut_x`` 指针；``test_section8_agent_recipes_documents_tk302_stress``。
 - **本轮（部分）**：SKILL / ``reference.md`` 对齐 TK-302 ``stress``；``test_section8_skill_reference_documents_tk302_stress``。
+- **本轮（部分）**：``dev-standards`` M5 烟测模块列表与 ``AGENT_GOAL`` / ``run_m5_program_exit`` 对齐；``test_section8_dev_standards_documents_program_exit`` 钩子更新。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**

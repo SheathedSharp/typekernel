@@ -321,6 +321,9 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "--only tk206" in text
     assert "test_gate_thresholds_locked" in text
     assert "AGENT_SENTENCE" in text
+    assert "test_knob_coverage.py" in text
+    assert "test_glyph_specs.py" in text
+    assert "test_stress.py" in text
 
 
 def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
