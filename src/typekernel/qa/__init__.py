@@ -28,6 +28,14 @@ from typekernel.qa.score import (
     word_report,
     zayju_report,
 )
+from typekernel.qa.sentence_gate import (
+    AGENT_PAIRS,
+    AGENT_SENTENCE,
+    SentenceGateLimits,
+    check_sentence_gate,
+    controls_pair_gaps,
+    controls_sentence_report,
+)
 from typekernel.qa.style_consistency import (
     GlyphStyleMetrics,
     SequenceStyleReport,
@@ -39,15 +47,6 @@ from typekernel.qa.style_consistency import (
     extract_glyph_style_metrics,
     script_body_tolerances,
 )
-from typekernel.qa.sentence_gate import (
-
-    AGENT_PAIRS,
-    AGENT_SENTENCE,
-    SentenceGateLimits,
-    check_sentence_gate,
-    controls_pair_gaps,
-    controls_sentence_report,
-)
 
 __all__ = [
     "AGENT_PAIRS",
@@ -55,33 +54,33 @@ __all__ = [
     "DEFAULT_FOCUS_GLYPHS",
     "WEAK_GLYPHS",
     "DesignReview",
+    "GlyphStyleMetrics",
     "Score",
     "SentenceGateLimits",
+    "SequenceStyleReport",
+    "StyleCheck",
+    "StyleConsistencyReport",
+    "StyleConsistencyTolerances",
     "WordReport",
     "build_glyph_preview",
     "charset_for_preview",
+    "check_design_sequence",
     "check_sentence_gate",
+    "compare_glyph_styles",
     "controls_pair_gaps",
     "controls_sentence_report",
     "design_review",
+    "extract_glyph_style_metrics",
     "join_smoothness",
     "load_approval",
     "outline_hash",
     "require_approval",
+    "script_body_tolerances",
     "stem_uniformity",
     "word_gap_spread",
     "word_report",
     "write_approval",
     "zayju_report",
-    "GlyphStyleMetrics",
-    "SequenceStyleReport",
-    "StyleCheck",
-    "StyleConsistencyReport",
-    "StyleConsistencyTolerances",
-    "check_design_sequence",
-    "compare_glyph_styles",
-    "extract_glyph_style_metrics",
-    "script_body_tolerances",
 ]
 
 # ``render_outline_png`` lives in ``specimen_png`` and needs the optional
