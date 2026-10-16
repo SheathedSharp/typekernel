@@ -74,6 +74,7 @@ __all__ = [
     "p_from_o",
     "q_from_o",
     "r_from_n",
+    "S_OPENING_REACH_RELIEF",
     "s_from_o",
     "t_from_n",
     "u_from_n",
@@ -2520,6 +2521,9 @@ def g_from_o(
     return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
 
 
+S_OPENING_REACH_RELIEF = 0.012  # TK-206 / appendix B-15 (golden-linked)
+
+
 def s_from_o(
     o_glyph: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -2560,7 +2564,7 @@ def s_from_o(
     li0, _, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
 
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
-    reach = min(0.99, s_opening_factor(c, ap) + 0.012)
+    reach = min(0.99, s_opening_factor(c, ap) + S_OPENING_REACH_RELIEF)
     x_tu = cx + (rx_u - th) * reach
     x_tl = cx - (rx_l - th) * reach
     u_top = _cut(u0, x_tu, horizontal=False)[1]

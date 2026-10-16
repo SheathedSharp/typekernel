@@ -18,7 +18,7 @@ from typekernel.parts import (
     o_metrics,
     s_from_o,
 )
-from typekernel.parts.control import _hook_shoulder_rise
+from typekernel.parts.control import S_OPENING_REACH_RELIEF, _hook_shoulder_rise
 
 
 @pytest.fixture
@@ -113,3 +113,8 @@ def test_s_interpolates_across_weight_ladder() -> None:
     bold_font.add_chars(bold.build_all("s"))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
+
+
+def test_s_opening_reach_relief_frozen() -> None:
+    """TK-206 B-15: changing relief requires golden refresh and human review."""
+    assert S_OPENING_REACH_RELIEF == 0.012
