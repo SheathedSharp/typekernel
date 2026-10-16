@@ -1,23 +1,25 @@
 """Florid English letter-writing script — hand-built stroke topologies.
 
-Brief phrase: ``zayju Discover everywhere``.
+Brief: ``zayju Discover everywhere``.
 
-This is **not** a slanted humanist sans. Each glyph is a calligraphy skeleton
-(oval / stem / entry-exit) expanded with a contrast broad-nib :class:`Pen`
-via :func:`~typekernel.parts.skeleton.trace_letter`. Slant lives in the
-centerline coordinates (shear while drawing), not in ``oblique_font``.
+Pipeline:
+1. Dense slanted centerlines → contrast-nib expand (``trace_letter``)
+2. Self-union heal (dissolves expand self-intersections / hollow joins)
+3. Strip tiny pathops sliver contours
 
-Charset (case-sensitive for the brief)::
-
-    a c d e h i j o r s u v w y z D  + space
+Slant is baked into coordinates — not ``oblique_font``.
 """
 
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from dataclasses import replace
 from typing import Final
 
+from typekernel.geo.boolean import boolean_op
+from typekernel.geo.contour import signed_area
+from typekernel.geo.outline import Outline
 from typekernel.geo.stroke import CubicBezier
 from typekernel.parts import (
     ComposedGlyph,
@@ -27,26 +29,26 @@ from typekernel.parts import (
     trace_letter,
 )
 
-# ---------------------------------------------------------------------------
-# Voice metrics (script proportions — documented deltas from display preset)
-# ---------------------------------------------------------------------------
 SLANT_DEG: Final = 28.0
 SHEAR: Final = math.tan(math.radians(SLANT_DEG))
 K: Final = 0.5523
 
-# Broad nib: thick on near-vertical downs, thin on horizontal connectors.
-NIB_THICKNESS: Final = 48.0
-NIB_CONTRAST: Final = 0.28
-NIB_ANGLE: Final = 52.0  # degrees — classic pointed-pen / roundhand bias
+NIB_THICKNESS: Final = 36.0
+NIB_CONTRAST: Final = 0.48
+NIB_ANGLE: Final = 38.0
 
 X_HEIGHT: Final = 420.0
 CAP_HEIGHT: Final = 700.0
 ASCENDER: Final = 780.0
 DESCENDER: Final = -300.0
 
+ENTRY_Y: Final = 58.0
+EXIT_Y: Final = 58.0
+RAIL_LIFT: Final = 100.0
+MIN_CONTOUR_AREA: Final = 350.0
+
 
 def script_context() -> DesignContext:
-    """Base metrics for packing; topology comes from skeletons, not Controls."""
     return DesignContext.display().tuned(
         stem=NIB_THICKNESS,
         x_height=X_HEIGHT,
@@ -54,15 +56,14 @@ def script_context() -> DesignContext:
         ascender=ASCENDER,
         descender=DESCENDER,
         overshoot=14.0,
-        sidebearing_ratio=0.05,
+        sidebearing_ratio=0.045,
         contrast=NIB_CONTRAST,
-        roundness=0.22,
+        roundness=0.2,
         aperture=0.55,
     )
 
 
 def _S(x: float, y: float) -> tuple[float, float]:
-    """Bake writing slant into the skeleton (not a post-export shear)."""
     return (x + y * SHEAR, y)
 
 
@@ -78,7 +79,6 @@ def _C(
 def _ellipse(
     cx: float, cy: float, rx: float, ry: float
 ) -> tuple[CubicBezier, CubicBezier, CubicBezier, CubicBezier]:
-    """Closed upright oval in design space; slant applied per control point."""
     return (
         _C((cx + rx, cy), (cx + rx, cy + K * ry), (cx + K * rx, cy + ry), (cx, cy + ry)),
         _C((cx, cy + ry), (cx - K * rx, cy + ry), (cx - rx, cy + K * ry), (cx - rx, cy)),
@@ -87,36 +87,30 @@ def _ellipse(
     )
 
 
-def _stroke(
-    name: str,
-    segs: tuple[CubicBezier, ...] | list[CubicBezier],
-    *,
-    closed: bool = False,
-    thickness: float | None = None,
-) -> Stroke:
-    return Stroke.from_beziers(
-        name,
-        tuple(segs),
-        closed=closed,
-        thickness=thickness if thickness is not None else NIB_THICKNESS,
-        contrast=NIB_CONTRAST,
-        angle_deg=NIB_ANGLE,
-        join="round",
-        cap="round",
-    )
+def _chaikin(pts: Sequence[tuple[float, float]], rounds: int = 4) -> list[tuple[float, float]]:
+    cur = [tuple(p) for p in pts]
+    for _ in range(rounds):
+        nxt: list[tuple[float, float]] = [cur[0]]
+        for i in range(len(cur) - 1):
+            a, b = cur[i], cur[i + 1]
+            nxt.append((0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]))
+            nxt.append((0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]))
+        nxt.append(cur[-1])
+        cur = nxt
+    return cur
 
 
 def _poly(
     name: str,
     pts: list[tuple[float, float]],
     *,
-    closed: bool = False,
     thickness: float | None = None,
+    smooth: int = 4,
 ) -> Stroke:
+    dense = _chaikin(pts, rounds=smooth)
     return Stroke.from_points(
         name,
-        [_S(*p) for p in pts],
-        closed=closed,
+        [_S(*p) for p in dense],
         thickness=thickness if thickness is not None else NIB_THICKNESS,
         contrast=NIB_CONTRAST,
         angle_deg=NIB_ANGLE,
@@ -125,308 +119,409 @@ def _poly(
     )
 
 
-def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
-    return trace_letter(
-        Skeleton.of(*strokes),
-        ctx or script_context(),
-        union=True,
-        blend=True,
-        ease=False,
+def _ring(
+    name: str,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    *,
+    thickness: float | None = None,
+) -> Stroke:
+    return Stroke.from_beziers(
+        name,
+        _ellipse(cx, cy, rx, ry),
+        closed=True,
+        thickness=thickness if thickness is not None else NIB_THICKNESS,
+        contrast=NIB_CONTRAST,
+        angle_deg=NIB_ANGLE,
         join="round",
         cap="round",
     )
 
 
+def _entry_rail(x0: float, x1: float, *, y: float = ENTRY_Y) -> list[tuple[float, float]]:
+    mid = (x0 + x1) / 2.0
+    return [(x0, y + 20.0), (mid, y - 6.0), (x1, RAIL_LIFT)]
+
+
+def _exit_rail(x0: float, x1: float, *, y: float = EXIT_Y) -> list[tuple[float, float]]:
+    mid = (x0 + x1) / 2.0
+    return [(x0, RAIL_LIFT * 0.5), (mid, y - 6.0), (x1, y + 28.0)]
+
+
+def _strip_tiny_contours(glyph: ComposedGlyph, *, min_area: float = MIN_CONTOUR_AREA) -> ComposedGlyph:
+    solids: list[Outline] = []
+    for solid in glyph.solids:
+        kept = tuple(c for c in solid.contours if abs(signed_area(c)) >= min_area)
+        if kept:
+            solids.append(Outline(kept))
+    holes: list[Outline] = []
+    for hole in glyph.holes:
+        kept = tuple(c for c in hole.contours if abs(signed_area(c)) >= min_area)
+        if kept:
+            holes.append(Outline(kept))
+    if not solids and glyph.solids:
+        best = max(
+            (c for s in glyph.solids for c in s.contours),
+            key=lambda c: abs(signed_area(c)),
+        )
+        solids = [Outline((best,))]
+    return replace(glyph, solids=tuple(solids), holes=tuple(holes))
+
+
+def _heal_self_union(glyph: ComposedGlyph) -> ComposedGlyph:
+    """Dissolve expand self-intersections that cause hollow even-odd fills."""
+    solids: list[Outline] = []
+    for solid in glyph.solids:
+        try:
+            solids.append(boolean_op(solid, solid, "union"))
+        except Exception:
+            solids.append(solid)
+    return replace(glyph, solids=tuple(solids))
+
+
+def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
+    raw = trace_letter(
+        Skeleton.of(*strokes),
+        ctx or script_context(),
+        union=True,
+        blend=False,
+        ease=False,
+        join="round",
+        cap="round",
+    )
+    return _strip_tiny_contours(_heal_self_union(raw))
+
+
 # ---------------------------------------------------------------------------
-# Glyph builders — cursive / semi-connected roundhand skeletons
+# Glyphs
 # ---------------------------------------------------------------------------
 
 
 def glyph_o(ctx: DesignContext | None = None) -> ComposedGlyph:
-    return _trace(_stroke("ring", _ellipse(175, 210, 100, 200), closed=True), ctx=ctx)
+    return _trace(_ring("ring", 175, 210, 100, 200), ctx=ctx)
 
 
 def glyph_a(ctx: DesignContext | None = None) -> ComposedGlyph:
-    ring = _stroke("ring", _ellipse(155, 210, 92, 195), closed=True)
-    # Right stem with exit flourish toward next letter.
-    stem = _poly(
-        "stem",
-        [(230, 380), (245, 220), (255, 40), (300, 12), (370, 55), (400, 90)],
-    )
-    entry = _poly("entry", [(20, 100), (70, 40), (120, 55), (150, 100)], thickness=NIB_THICKNESS * 0.85)
+    ring = _ring("ring", 155, 210, 92, 195)
+    stem = _poly("stem", [(208, 310), (240, 170), (255, 45), (310, 15), (390, 55), (430, 95)])
+    entry = _poly("entry", _entry_rail(18, 135) + [(168, 175)], thickness=NIB_THICKNESS * 0.9)
     return _trace(ring, stem, entry, ctx=ctx)
 
 
 def glyph_c(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Open bowl: most of an oval, gap on the right.
-    cx, cy, rx, ry = 165, 210, 100, 200
-    # From NE around to SE, leaving aperture.
-    segs = (
-        _C((cx + rx * 0.35, cy + ry * 0.85), (cx - K * rx, cy + ry), (cx - rx, cy + K * ry), (cx - rx, cy)),
-        _C((cx - rx, cy), (cx - rx, cy - K * ry), (cx - K * rx, cy - ry), (cx, cy - ry)),
-        _C((cx, cy - ry), (cx + K * rx, cy - ry), (cx + rx, cy - K * ry), (cx + rx * 0.45, cy - ry * 0.75)),
+    # Open C as a long arc (not closed ring).
+    body = _poly(
+        "body",
+        [
+            (250, 360),
+            (180, 400),
+            (90, 360),
+            (50, 250),
+            (55, 140),
+            (120, 50),
+            (210, 35),
+            (280, 80),
+            (300, 140),
+        ],
     )
-    entry = _poly("entry", [(30, 95), (80, 45), (130, 70)], thickness=NIB_THICKNESS * 0.85)
-    exit_ = _poly("exit", [(cx + rx * 0.45, cy - ry * 0.75), (cx + rx * 0.9, cy - 40), (cx + rx + 40, 70)])
-    return _trace(_stroke("bowl", segs), entry, exit_, ctx=ctx)
+    entry = _poly("entry", _entry_rail(25, 100) + [(150, 150)], thickness=NIB_THICKNESS * 0.88)
+    exit_ = _poly("exit", [(300, 140), *_exit_rail(320, 420)])
+    return _trace(body, entry, exit_, ctx=ctx)
 
 
 def glyph_e(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Script e: oval with eye cut by a bar through the bowl.
-    ring = _stroke("ring", _ellipse(160, 210, 95, 195), closed=True)
-    bar = _poly("bar", [(70, 230), (250, 245)], thickness=NIB_THICKNESS * 0.75)
-    entry = _poly("entry", [(25, 100), (80, 45), (130, 80)], thickness=NIB_THICKNESS * 0.85)
-    exit_ = _poly("exit", [(240, 80), (290, 30), (350, 55), (390, 95)])
-    return _trace(ring, bar, entry, exit_, ctx=ctx)
+    """Script e: left entry → small eye loop → right exit (single stroke)."""
+    body = _poly(
+        "body",
+        [
+            (25, ENTRY_Y + 15),
+            (80, ENTRY_Y - 5),
+            (140, 110),
+            (175, 210),
+            (150, 320),
+            (95, 365),
+            (55, 300),
+            (85, 210),
+            (155, 175),
+            (240, 120),
+            (310, 55),
+            (390, EXIT_Y + 25),
+        ],
+    )
+    return _trace(body, ctx=ctx)
 
 
 def glyph_d(ctx: DesignContext | None = None) -> ComposedGlyph:
-    ring = _stroke("ring", _ellipse(155, 210, 92, 195), closed=True)
-    # Ascender loop on the right (florid letter-writing d).
+    ring = _ring("ring", 155, 210, 92, 195)
     asc = _poly(
         "asc",
         [
-            (230, 360),
-            (250, 500),
-            (240, 680),
-            (180, 760),
-            (120, 720),
-            (150, 620),
-            (250, 200),
-            (270, 40),
-            (320, 15),
-            (390, 60),
+            (210, 300),
+            (245, 470),
+            (235, 670),
+            (170, 755),
+            (115, 700),
+            (155, 540),
+            (245, 170),
+            (265, 40),
+            (335, 12),
+            (415, 70),
         ],
     )
-    entry = _poly("entry", [(25, 95), (80, 40), (130, 70)], thickness=NIB_THICKNESS * 0.85)
+    entry = _poly("entry", _entry_rail(20, 130) + [(160, 170)], thickness=NIB_THICKNESS * 0.88)
     return _trace(ring, asc, entry, ctx=ctx)
 
 
 def glyph_h(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Ascender stem + arch to right exit (cursive h).
     stem = _poly(
         "stem",
-        [(60, 20), (80, 200), (90, 500), (70, 740), (120, 780), (160, 720), (140, 500), (120, 40)],
+        [
+            (55, ENTRY_Y),
+            (75, 200),
+            (90, 480),
+            (75, 710),
+            (115, 765),
+            (155, 700),
+            (135, 380),
+            (120, 70),
+        ],
     )
     arch = _poly(
         "arch",
-        [(120, 280), (180, 400), (280, 410), (340, 300), (350, 40), (400, 15), (460, 60)],
+        [
+            (120, 255),
+            (175, 385),
+            (275, 395),
+            (345, 275),
+            (360, 55),
+            (410, 15),
+            (480, EXIT_Y + 28),
+        ],
     )
-    entry = _poly("entry", [(10, 90), (40, 35), (70, 50)], thickness=NIB_THICKNESS * 0.85)
-    return _trace(stem, arch, entry, ctx=ctx)
+    return _trace(stem, arch, ctx=ctx)
 
 
 def glyph_i(ctx: DesignContext | None = None) -> ComposedGlyph:
-    stem = _poly("stem", [(50, 30), (70, 200), (90, 400), (100, 30), (150, 15), (210, 55)])
-    entry = _poly("entry", [(15, 85), (40, 40), (60, 55)], thickness=NIB_THICKNESS * 0.8)
-    # Tittle as a short stroke (not a sans ball).
-    dot = _poly("dot", [(95, 520), (110, 560), (95, 580), (80, 560), (95, 520)], thickness=NIB_THICKNESS * 0.9)
-    return _trace(stem, entry, dot, ctx=ctx)
+    stem = _poly(
+        "stem",
+        [
+            (45, ENTRY_Y + 12),
+            (65, 40),
+            (85, 230),
+            (100, 400),
+            (110, 45),
+            (160, 12),
+            (230, EXIT_Y + 25),
+        ],
+    )
+    dot = _ring("dot", 100, 555, 16, 20, thickness=NIB_THICKNESS * 0.65)
+    return _trace(stem, dot, ctx=ctx)
 
 
 def glyph_j(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Descender with loop; tittle above.
     body = _poly(
         "body",
         [
-            (40, 90),
-            (70, 40),
-            (100, 200),
-            (110, 400),
-            (100, 20),
-            (90, -120),
-            (40, -260),
-            (-20, -280),
-            (-40, -200),
-            (20, -80),
-            (90, 20),
-            (140, 15),
-            (200, 55),
+            (55, ENTRY_Y + 15),
+            (85, 40),
+            (110, 240),
+            (120, 400),
+            (105, 40),
+            (90, -140),
+            (45, -270),
+            (0, -285),
+            (-25, -200),
+            (40, -50),
+            (110, 20),
+            (170, 12),
+            (240, EXIT_Y + 25),
         ],
     )
-    dot = _poly("dot", [(100, 520), (115, 560), (100, 580), (85, 560), (100, 520)], thickness=NIB_THICKNESS * 0.9)
+    dot = _ring("dot", 110, 555, 16, 20, thickness=NIB_THICKNESS * 0.65)
     return _trace(body, dot, ctx=ctx)
 
 
 def glyph_r(ctx: DesignContext | None = None) -> ComposedGlyph:
-    stem = _poly("stem", [(40, 25), (55, 200), (70, 400), (80, 40), (120, 20)])
+    stem = _poly(
+        "stem",
+        [(50, ENTRY_Y), (65, 200), (80, 400), (95, 45), (140, 15)],
+    )
     shoulder = _poly(
         "shoulder",
-        [(70, 320), (120, 400), (200, 390), (240, 320), (250, 200)],
-        thickness=NIB_THICKNESS * 0.95,
+        [(80, 290), (140, 390), (220, 375), (255, 270), (265, 150)],
     )
-    entry = _poly("entry", [(10, 85), (30, 40), (50, 55)], thickness=NIB_THICKNESS * 0.8)
-    exit_ = _poly("exit", [(250, 200), (280, 80), (320, 30), (380, 60)])
-    return _trace(stem, shoulder, entry, exit_, ctx=ctx)
+    exit_ = _poly("exit", [(265, 150), *_exit_rail(285, 410)])
+    return _trace(stem, shoulder, exit_, ctx=ctx)
 
 
 def glyph_s(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Flowing script s (spine).
-    spine = _poly(
-        "spine",
+    """Script s: top curve, spine, bottom curve — recognizable serpentine."""
+    body = _poly(
+        "body",
         [
-            (40, 120),
-            (100, 50),
+            (40, 150),
+            (100, 55),
             (200, 40),
-            (280, 100),
-            (260, 200),
-            (160, 250),
-            (100, 300),
-            (120, 380),
-            (220, 410),
-            (300, 360),
-            (320, 280),
+            (285, 85),
+            (275, 165),
+            (190, 235),
+            (110, 295),
+            (105, 365),
+            (175, 420),
+            (275, 400),
+            (325, 310),
+            (340, 180),
+            (365, 70),
+            (440, EXIT_Y + 20),
         ],
     )
-    entry = _poly("entry", [(15, 160), (30, 100), (50, 120)], thickness=NIB_THICKNESS * 0.8)
-    exit_ = _poly("exit", [(320, 280), (350, 180), (380, 60), (430, 40)])
-    return _trace(spine, entry, exit_, ctx=ctx)
+    entry = _poly("entry", _entry_rail(15, 55, y=ENTRY_Y + 35), thickness=NIB_THICKNESS * 0.88)
+    return _trace(body, entry, ctx=ctx)
 
 
 def glyph_u(ctx: DesignContext | None = None) -> ComposedGlyph:
-    left = _poly("left", [(40, 400), (55, 200), (70, 40), (120, 15), (170, 50), (190, 120)])
-    right = _poly(
-        "right",
-        [(170, 120), (190, 280), (210, 400), (230, 40), (280, 12), (350, 55)],
+    body = _poly(
+        "body",
+        [
+            (35, ENTRY_Y + 8),
+            (55, 40),
+            (70, 230),
+            (80, 400),
+            (95, 55),
+            (145, 12),
+            (195, 55),
+            (215, 280),
+            (235, 400),
+            (255, 45),
+            (310, 12),
+            (390, EXIT_Y + 28),
+        ],
     )
-    entry = _poly("entry", [(15, 95), (35, 45), (55, 80)], thickness=NIB_THICKNESS * 0.8)
-    return _trace(left, right, entry, ctx=ctx)
+    return _trace(body, ctx=ctx)
 
 
 def glyph_v(ctx: DesignContext | None = None) -> ComposedGlyph:
     body = _poly(
         "body",
         [
-            (30, 400),
-            (80, 200),
-            (130, 30),
-            (160, 20),
-            (200, 80),
-            (260, 280),
-            (310, 400),
-            (340, 360),
+            (40, 400),
+            (100, 170),
+            (155, 25),
+            (185, 22),
+            (235, 130),
+            (295, 340),
+            (330, 400),
+            (360, 260),
+            (395, 70),
+            (460, EXIT_Y + 25),
         ],
     )
-    entry = _poly("entry", [(15, 100), (30, 50), (45, 90)], thickness=NIB_THICKNESS * 0.8)
-    exit_ = _poly("exit", [(340, 360), (360, 200), (390, 50), (440, 40)])
-    return _trace(body, entry, exit_, ctx=ctx)
+    entry = _poly("entry", _entry_rail(18, 50, y=ENTRY_Y + 28) + [(55, 310)], thickness=NIB_THICKNESS * 0.88)
+    return _trace(body, entry, ctx=ctx)
 
 
 def glyph_w(ctx: DesignContext | None = None) -> ComposedGlyph:
     body = _poly(
         "body",
         [
-            (30, 400),
-            (70, 180),
-            (110, 30),
-            (140, 25),
-            (180, 120),
-            (220, 30),
+            (35, 400),
+            (75, 150),
+            (115, 25),
+            (150, 25),
+            (185, 140),
+            (220, 25),
             (260, 25),
-            (300, 140),
-            (350, 400),
-            (390, 340),
+            (300, 150),
+            (345, 400),
+            (385, 260),
+            (430, 65),
+            (500, EXIT_Y + 25),
         ],
     )
-    entry = _poly("entry", [(15, 100), (30, 50), (45, 90)], thickness=NIB_THICKNESS * 0.8)
-    exit_ = _poly("exit", [(390, 340), (420, 180), (450, 50), (500, 40)])
-    return _trace(body, entry, exit_, ctx=ctx)
+    entry = _poly("entry", _entry_rail(15, 45, y=ENTRY_Y + 28) + [(50, 310)], thickness=NIB_THICKNESS * 0.88)
+    return _trace(body, entry, ctx=ctx)
 
 
 def glyph_y(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # v-like upper + descender loop.
     body = _poly(
         "body",
         [
-            (30, 400),
-            (80, 200),
-            (130, 40),
-            (170, 20),
-            (220, 100),
-            (280, 320),
-            (300, 400),
-            (290, 200),
-            (270, 20),
-            (240, -140),
-            (180, -280),
-            (100, -290),
-            (60, -200),
-            (120, -80),
-            (220, 40),
-            (300, 20),
-            (360, 55),
+            (35, 400),
+            (95, 170),
+            (150, 28),
+            (185, 22),
+            (240, 140),
+            (295, 360),
+            (310, 400),
+            (295, 170),
+            (265, 20),
+            (225, -160),
+            (155, -290),
+            (75, -275),
+            (50, -175),
+            (120, -35),
+            (230, 30),
+            (310, 15),
+            (395, EXIT_Y + 25),
         ],
     )
-    entry = _poly("entry", [(15, 100), (30, 50), (45, 90)], thickness=NIB_THICKNESS * 0.8)
+    entry = _poly("entry", _entry_rail(15, 45, y=ENTRY_Y + 28) + [(50, 310)], thickness=NIB_THICKNESS * 0.88)
     return _trace(body, entry, ctx=ctx)
 
 
 def glyph_z(ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Florid z with top entry and bottom exit.
+    """Script z: top bar → diagonal → bottom with light descender exit."""
     body = _poly(
         "body",
         [
-            (20, 140),
-            (80, 50),
-            (220, 40),
-            (320, 90),
-            (300, 180),
-            (120, 280),
-            (80, 340),
-            (140, 400),
-            (280, 410),
-            (340, 360),
-            (300, 200),
-            (200, 80),
-            (160, 20),
-            (120, -40),
-            (180, -20),
-            (280, 30),
-            (360, 60),
+            (30, 155),
+            (90, 50),
+            (230, 40),
+            (305, 75),
+            (270, 155),
+            (155, 275),
+            (105, 355),
+            (160, 425),
+            (275, 420),
+            (335, 345),
+            (295, 195),
+            (195, 65),
+            (155, -5),
+            (215, -30),
+            (330, 25),
+            (415, EXIT_Y + 22),
         ],
     )
     return _trace(body, ctx=ctx)
 
 
 def glyph_D(ctx: DesignContext | None = None) -> ComposedGlyph:
-    """Flourished capital D for ``Discover``."""
-    # Continuous stem + bowl + top swash as one calligraphy path where possible.
-    stem = _poly(
-        "stem",
+    """Capital D: one continuous stem→swash→bowl path (recognizable, welded)."""
+    body = _poly(
+        "body",
         [
-            (50, 20),
-            (70, 220),
-            (85, 480),
-            (95, 680),
-            (80, 720),
-            (50, 700),
-            (70, 520),
-            (85, 280),
-            (95, 60),
-            (130, 25),
+            (35, 55),
+            (70, 40),
+            (95, 200),
+            (110, 450),
+            (115, 690),
+            (70, 750),
+            (-35, 640),
+            (30, 790),
+            (170, 820),
+            (320, 770),
+            (445, 620),
+            (495, 420),
+            (465, 195),
+            (330, 55),
+            (170, 35),
+            (100, 55),
         ],
+        thickness=NIB_THICKNESS * 1.12,
     )
-    bowl = _poly(
-        "bowl",
-        [
-            (95, 680),
-            (220, 740),
-            (380, 680),
-            (460, 480),
-            (450, 260),
-            (340, 60),
-            (180, 30),
-            (110, 50),
-        ],
-        thickness=NIB_THICKNESS * 1.08,
-    )
-    swash = _poly(
-        "swash",
-        [(-60, 580), (-20, 720), (80, 800), (220, 790), (340, 720), (360, 660)],
-        thickness=NIB_THICKNESS * 0.72,
-    )
-    entry = _poly("entry", [(-20, 50), (20, 5), (55, 30)], thickness=NIB_THICKNESS * 0.7)
-    return _trace(stem, bowl, swash, entry, ctx=ctx)
+    return _trace(body, ctx=ctx)
 
 
 BUILDERS: dict[str, Callable[[DesignContext | None], ComposedGlyph]] = {
@@ -455,4 +550,4 @@ def build_charset(ctx: DesignContext | None = None) -> dict[str, ComposedGlyph]:
 
 
 BRIEF_SENTENCE = "zayju Discover everywhere"
-CHARSET = "".join(BUILDERS)  # letters only; space from Font
+CHARSET = "".join(BUILDERS)

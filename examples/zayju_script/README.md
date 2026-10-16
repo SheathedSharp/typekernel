@@ -7,10 +7,10 @@ Florid English **letter-writing script** (花体信件书写体) for the brief p
 ## Honest topology
 
 This is **not** a slanted humanist/sans with `lean` / `oblique_font` / tracking.
-Each glyph is a calligraphy **skeleton** (ovals, stems, entry/exit strokes)
-expanded with a contrast broad-nib pen via
-`typekernel.parts.skeleton.trace_letter`. Writing slant is baked into
-centerline coordinates while drawing.
+Each glyph is a calligraphy **skeleton** expanded with a contrast nib via
+`trace_letter`, then **self-union healed** and tiny sliver contours stripped
+(so expand self-intersections do not leave hollow joins). Writing slant is
+baked into centerline coordinates. Shared entry/exit rails aim at semi-connected writing.
 
 Charset: letters required by the brief (`a c d e h i j o r s u v w y z D`)
 plus space. Semi-connected flourishes — not a full connected copperplate family.

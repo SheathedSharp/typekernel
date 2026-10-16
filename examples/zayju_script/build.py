@@ -51,6 +51,7 @@ PHRASE_PAIRS = (
     ("o", "v"),
     ("v", "e"),
     ("e", "r"),
+    ("r", "e"),
     ("r", "y"),
     ("y", "w"),
     ("w", "h"),
@@ -80,6 +81,65 @@ def _sample_contour(contour, n_per_cubic: int = 12) -> list[tuple[float, float]]
     return pts
 
 
+
+def render_grid_png(
+    spaced: dict[str, ComposedGlyph],
+    chars: str,
+    out_path: Path,
+    *,
+    cell: int = 140,
+    cols: int = 8,
+    margin: int = 36,
+) -> Path:
+    """Filled glyph inventory (avoids OTF even-odd hollow look for proofs)."""
+    import math
+    rows = math.ceil(len(chars) / cols)
+    img = Image.new("RGB", (margin * 2 + cols * cell, margin * 2 + rows * cell + 20), (252, 250, 247))
+    draw = ImageDraw.Draw(img)
+    draw.text((margin, 8), f"{len(chars)} glyphs", fill=(140, 140, 145))
+    for i, ch in enumerate(chars):
+        if ch == " " or ch not in spaced:
+            continue
+        r, c = divmod(i, cols)
+        x0 = margin + c * cell
+        y0 = margin + 20 + r * cell
+        # render glyph into tile
+        g = spaced[ch]
+        tile = Image.new("L", (cell - 12, cell - 12), 0)
+        # reuse sample + winding fill
+        from typekernel.geo.contour import signed_area as _sa
+        pts_all = []
+        polys = []
+        for solid in g.solids:
+            for contour in solid.contours:
+                poly = _sample_contour(contour)
+                if len(poly) < 3:
+                    continue
+                pts_all.extend(poly)
+                polys.append((poly, _sa(contour)))
+        if not pts_all:
+            continue
+        xs = [p[0] for p in pts_all]
+        ys = [p[1] for p in pts_all]
+        minx, maxx, miny, maxy = min(xs), max(xs), min(ys), max(ys)
+        tw, th = tile.size
+        pad = 10
+        sc = min((tw - 2 * pad) / max(maxx - minx, 1), (th - 2 * pad) / max(maxy - miny, 1))
+        td = ImageDraw.Draw(tile)
+        for poly, area in polys:
+            local = [
+                (pad + (x - minx) * sc, th - pad - (y - miny) * sc) for x, y in poly
+            ]
+            td.polygon(local, fill=255 if area >= 0 else 0)
+        ink = Image.new("RGB", tile.size, (22, 20, 18))
+        cell_img = Image.new("RGB", tile.size, (252, 250, 247))
+        cell_img.paste(ink, (0, 0), tile)
+        img.paste(cell_img, (x0 + 6, y0 + 6))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out_path)
+    return out_path
+
+
 def render_phrase_png(
     spaced: dict[str, ComposedGlyph],
     kern: KernTable,
@@ -92,7 +152,7 @@ def render_phrase_png(
     """Rasterize the brief with winding-aware fills (acceptance specimen)."""
     ctx = next(iter(spaced.values())).context
     scale = px_per_em / ctx.units_per_em
-    space_adv = spaced["o"].advance * 0.42
+    space_adv = spaced["o"].advance * 0.55
 
     x = 0.0
     for i, ch in enumerate(text):
@@ -157,7 +217,7 @@ def main() -> int:
     kern = fit_glyph_pair_kerns(spaced, PHRASE_PAIRS, target=rhythm)
 
     font = Font.from_context(
-        ctx, FAMILY, STYLE, space_width=spaced["o"].advance * 0.42
+        ctx, FAMILY, STYLE, space_width=spaced["o"].advance * 0.55
     )
     font.add_chars(spaced)
     font.add_kern_table(kern)
@@ -182,10 +242,12 @@ def main() -> int:
     print("wrote", brief)
     print("wrote", display)
 
-    grid = proof_charset_grid(
-        otf, OUT_DIR / "grid.png", chars=CHARSET + " ", size=48, cols=8, cell=80
-    )
+    grid = render_grid_png(spaced, CHARSET, OUT_DIR / "grid.png")
     print("wrote", grid)
+    # Also keep FreeType grid for OTF sanity (optional side proof)
+    proof_charset_grid(
+        otf, OUT_DIR / "grid_otf.png", chars=CHARSET + " ", size=48, cols=8, cell=80
+    )
 
     for ch in ("D", "z", "y", "a", "o"):
         path = OUT_DIR / f"glyph_{ch}.png"
