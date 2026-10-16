@@ -426,6 +426,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   让 `Controls.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
 - **本轮（部分）**：``WEAK_GLYPH_SPECS`` 全字段单调性回归（含 ``M.apex`` 在 ``stem=150``）；默认 ``supported`` 哈希回归仍绿。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs`` / ``test_section8_agent_recipes_documents_tk303_tuned_glyph_specs``。
+- **本轮（部分）**：``agent-recipes`` 弱字段补 ``test_glyph_specs.py`` 回归指针；``test_section8_agent_recipes_documents_tk303_tuned_glyph_specs`` 钩子更新；§8 登记 ``test_zayju_script_charset_builds_and_lints_clean``（TK-308 示例，非 Controls 主路径）。
 - **验收**：每个字段有「单调效应」测试（改字段 → 对应测得量按预期变化）；默认值下 98 字形哈希不变；`docs/agent-recipes.md` 增加用法。
 - **依赖**：TK-108。
 

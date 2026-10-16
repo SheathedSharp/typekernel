@@ -92,6 +92,8 @@ controls = (
 
 `design_review` 的 `notes` 会列出 `spec f: {...}`。
 
+默认规格须与 stock 派生一致、字段单调性见 `tests/parts/test_glyph_specs.py`（M5 烟测含全文件）。
+
 仍可直接 `with_glyph` 挂自定义 builder：
 
 ```python

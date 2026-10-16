@@ -86,6 +86,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("test_tk308_stroke_spike_meets_program_acceptance",),
     ),
     (
+        "tests/examples/test_zayju_script.py",
+        ("test_zayju_script_charset_builds_and_lints_clean",),
+    ),
+    (
         "tests/qa/test_trial_protocol.py",
         (
             "test_snapshot_l3_voice_ok_rejects_stem_only_tweak",
@@ -385,6 +389,7 @@ def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:
     assert "YSpec" in text
     assert "spec_fields" in text
     assert "spec f:" in text
+    assert "test_glyph_specs.py" in text
 
 
 def test_section8_run_m5_program_exit_includes_tk302_stress_regressions() -> None:
