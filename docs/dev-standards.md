@@ -18,7 +18,10 @@ Rules:
 
 - Prefer `type(scope): summary` with scopes like `geo`, `optics`, `docs`, or omit scope.
 - Subjects describe the human change (“export frozen public API”), not an internal ticket code.
+- **Never** put ticket slang in the subject (`TK-123`, planner pack ids, private backlog codes).
 - Keep bodies short and free of private planner jargon.
+
+Agent-facing short form: [`.agents/skills/typekernel-dev-norms/SKILL.md`](../.agents/skills/typekernel-dev-norms/SKILL.md).
 
 ## Typing
 
@@ -76,3 +79,21 @@ Human visual or API gates leave a JSON record under `approvals/` (for example
 what was approved, by whom, and with what test evidence.
 
 Program exit hooks (before signing pending serif/italic gates): [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) §8 — `PYTHONPATH=src python examples/run_m5_program_exit.py` (includes `tests/qa/test_gate_thresholds_locked.py` for frozen `AGENT_SENTENCE` / gate limits / `COUNTER_SCAN_MIN_RUN_OVER_STEM`) (or `pytest -q tests/docs/test_development_plan_section8.py` plus each gate’s `test_evidence` in `approvals/*.json`). Generate review PNGs/TTFs with `examples/human_review_bundle.py` (`--only serif|italic` for pending gates; `--only tk206` for appendix B-13–B-15 `3G`/`sS` sheets — no `approvals` JSON); optional charset/ladder/golden: `examples/contact_sheet.py`, `examples/diff_overlay.py`, `examples/weight_ladder_sheet.py`, `examples/regenerate_outline_hashes.py` → local `artifacts/specimens/` or golden refresh. Agent trial protocol: [AGENT_TRIALS.md](AGENT_TRIALS.md) (`snapshot_design.py`, `validate_snapshot.py` on written `snapshot.json`). Never relax `AGENT_SENTENCE` or L3 thresholds to pass a gate.
+
+
+## Public repository contents
+
+This repo is meant to read as a normal open-source library. Commit:
+
+- README / VISION / AGENT_GOAL / API and recipe docs
+- Examples that teach the API (scripts + a few showcase proofs)
+- Tests, typed sources, and durable `approvals/*.json` gate records
+
+Do **not** commit:
+
+- Private planner notes, agent trial scratch, or personal briefs
+- Regenerable dumps under `artifacts/` (except folder `.gitkeep`s)
+- Ticket-named specimen PNGs (`artifacts/tk-*`)
+- Local example `out/` binaries beyond the showcase exceptions in `.gitignore`
+
+When adding a new example, ignore its `out/**` by default and un-ignore only the proofs worth showing in the README.
