@@ -355,6 +355,35 @@ def test_trace_letter_ball_terminal_grows_bbox() -> None:
     assert b1[2] - b1[0] > b0[2] - b0[0]
 
 
+def test_trace_letter_polyline_offset_fit_budget_uses_cubic_expand() -> None:
+    """Dense polylines with positive offset_fit_budget skip bristly LINE expand."""
+    import math
+
+    ctx = DesignContext.geometric_sans().tuned(stem=40.0)
+    pts = [(float(i * 6.0), 30.0 * math.sin(i * 0.4)) for i in range(20)]
+    skel = Skeleton.of(
+        Stroke.from_points(
+            "wave",
+            pts,
+            thickness=24.0,
+            offset_fit_budget=0.75,
+            cap="butt",
+        )
+    )
+    glyph = trace_letter(
+        skel,
+        ctx,
+        union=False,
+        blend=False,
+        heal=False,
+        refit=False,
+        cap="butt",
+    )
+    assert glyph.solids
+    segs = glyph.solids[0].contours[0].segments
+    assert any(type(s).__name__ == "CubicSegment" for s in segs)
+
+
 def test_trace_letter_accepts_skeleton_dict() -> None:
     ctx = DesignContext.geometric_sans().tuned(stem=50.0)
     glyph = trace_letter(

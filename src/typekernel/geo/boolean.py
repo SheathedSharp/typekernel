@@ -209,3 +209,36 @@ def _path_to_outline(path: object) -> Outline:
     if segments:
         flush(closed=False)
     return Outline(tuple(contours))
+
+
+def self_union(outline: Outline) -> Outline:
+    """Heal self-intersections by unioning an outline with itself.
+
+    Expand of dense or looping centerlines can leave overlapping rails that
+    render hollow under even-odd fill. A self-union dissolves those crossings
+    into a simple solid (requires ``typekernel[boolean]``).
+    """
+    return boolean_op(outline, outline, "union")
+
+
+def strip_tiny_contours(
+    outline: Outline,
+    *,
+    min_area: float = 25.0,
+) -> Outline:
+    """Drop debris contours whose absolute signed area is below ``min_area``.
+
+    Pathops expand/union can leave speck islands. When every contour is below
+    the threshold, the largest contour is kept so the outline stays non-empty.
+    """
+    from typekernel.geo.contour import signed_area
+
+    if min_area < 0:
+        raise ValueError(f"min_area must be >= 0, got {min_area!r}")
+    if not outline.contours:
+        return outline
+    kept = tuple(c for c in outline.contours if abs(signed_area(c)) >= min_area)
+    if kept:
+        return Outline(kept)
+    best = max(outline.contours, key=lambda c: abs(signed_area(c)))
+    return Outline((best,))

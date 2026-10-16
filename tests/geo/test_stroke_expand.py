@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 
 import pytest
@@ -16,6 +17,8 @@ from typekernel.geo.stroke import (
     expand,
     expand_cubic,
     flatten_cubic_centerline,
+    polyline_to_cubic_centerline,
+    refit_outline_to_cubics,
 )
 from typekernel.optics.stem import measure_oriented_stem, measure_vertical_stem
 
@@ -324,8 +327,64 @@ def test_expand_cubic_curved_centerline_within_chord_budget() -> None:
     assert bb[3] - bb[1] > 80.0
 
 
+def test_polyline_to_cubic_centerline_fits_dense_open_stroke() -> None:
+    pts = [(float(i * 8.0), 40.0 * math.sin(i * 0.35)) for i in range(24)]
+    cl = polyline_to_cubic_centerline(pts, closed=False, fit_budget=0.75)
+    assert cl.segments
+    outline, report = expand_cubic(cl, Pen(30.0), cap="butt", offset_fit_budget=0.75)
+    assert outline.contours
+    assert report.max_offset_fit_error <= 0.75 + 1e-6
+
+
 def test_expand_rejects_bad_styles() -> None:
     with pytest.raises(ValueError):
         expand([(0.0, 0.0), (1.0, 0.0)], Pen(10.0), join="spline")  # type: ignore[arg-type]
     with pytest.raises(ValueError):
         expand([(0.0, 0.0), (1.0, 0.0)], Pen(10.0), cap="arrow")  # type: ignore[arg-type]
+
+
+def test_polyline_to_cubic_centerline_fits_curve() -> None:
+    # Dense samples along a quarter-circle-ish polyline.
+    pts = [(100.0 * math.cos(t), 100.0 * math.sin(t)) for t in [i * math.pi / 40 for i in range(21)]]
+    cubic = polyline_to_cubic_centerline(pts, fit_budget=1.0, corner_deg=40.0)
+    assert len(cubic.segments) >= 1
+    assert len(cubic.segments) < len(pts)
+
+
+def test_polyline_expand_via_cubic_is_mostly_cubics() -> None:
+    from typekernel.geo.segment import CubicSegment, LineSegment
+    from typekernel.parts.context import DesignContext
+    from typekernel.parts.skeleton import Skeleton, Stroke, trace_letter
+
+    pts = [(0.0, 0.0), (40.0, 80.0), (120.0, 100.0), (200.0, 40.0)]
+    # densify
+    dense: list[tuple[float, float]] = []
+    for a, b in itertools.pairwise(pts):
+        for i in range(8):
+            t = i / 8.0
+            dense.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+    dense.append(pts[-1])
+    sk = Skeleton.of(Stroke.from_points("s", dense, join="round", cap="round"))
+    g = trace_letter(sk, DesignContext.geometric_sans(), blend=False, heal=False, refit=False)
+    # Pre-boolean cubic expand path: almost all cubics.
+    o = g.solids[0]
+    n_line = sum(1 for c in o.contours for s in c.segments if isinstance(s, LineSegment))
+    n_cub = sum(1 for c in o.contours for s in c.segments if isinstance(s, CubicSegment))
+    assert n_cub > n_line
+    assert n_cub >= 4
+
+
+def test_refit_outline_to_cubics_after_union() -> None:
+    from typekernel.geo.boolean import union_all
+    from typekernel.geo.segment import CubicSegment, LineSegment
+
+    a = expand([(0.0, 0.0), (0.0, 200.0)], Pen(60.0), join="round", cap="round")
+    b = expand([(0.0, 100.0), (180.0, 100.0)], Pen(50.0), join="round", cap="round")
+    merged = union_all([a, b])
+    fitted = refit_outline_to_cubics(merged, fit_budget=2.5, corner_deg=35.0, min_step=2.5)
+    n_line = sum(1 for c in fitted.contours for s in c.segments if isinstance(s, LineSegment))
+    n_cub = sum(1 for c in fitted.contours for s in c.segments if isinstance(s, CubicSegment))
+    assert n_cub > 0
+    assert n_line == 0
+    # Refit should not explode segment count relative to a sane cubic outline.
+    assert n_cub < 200

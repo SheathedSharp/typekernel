@@ -2,10 +2,9 @@
 
 Brief: ``zayju Discover everywhere``.
 
-Pipeline:
-1. Dense slanted centerlines → contrast-nib expand (``trace_letter``)
-2. Self-union heal (dissolves expand self-intersections / hollow joins)
-3. Strip tiny pathops sliver contours
+Pipeline (library-first):
+1. Dense slanted centerlines → polyline→cubic fit → contrast-nib expand
+2. ``trace_letter`` heal + strip + blend (typekernel base APIs)
 
 Slant is baked into coordinates — not ``oblique_font``.
 """
@@ -14,12 +13,8 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Sequence
-from dataclasses import replace
 from typing import Final
 
-from typekernel.geo.boolean import boolean_op
-from typekernel.geo.contour import signed_area
-from typekernel.geo.outline import Outline
 from typekernel.geo.stroke import CubicBezier
 from typekernel.parts import (
     ComposedGlyph,
@@ -150,48 +145,19 @@ def _exit_rail(x0: float, x1: float, *, y: float = EXIT_Y) -> list[tuple[float, 
     return [(x0, RAIL_LIFT * 0.5), (mid, y - 6.0), (x1, y + 28.0)]
 
 
-def _strip_tiny_contours(glyph: ComposedGlyph, *, min_area: float = MIN_CONTOUR_AREA) -> ComposedGlyph:
-    solids: list[Outline] = []
-    for solid in glyph.solids:
-        kept = tuple(c for c in solid.contours if abs(signed_area(c)) >= min_area)
-        if kept:
-            solids.append(Outline(kept))
-    holes: list[Outline] = []
-    for hole in glyph.holes:
-        kept = tuple(c for c in hole.contours if abs(signed_area(c)) >= min_area)
-        if kept:
-            holes.append(Outline(kept))
-    if not solids and glyph.solids:
-        best = max(
-            (c for s in glyph.solids for c in s.contours),
-            key=lambda c: abs(signed_area(c)),
-        )
-        solids = [Outline((best,))]
-    return replace(glyph, solids=tuple(solids), holes=tuple(holes))
-
-
-def _heal_self_union(glyph: ComposedGlyph) -> ComposedGlyph:
-    """Dissolve expand self-intersections that cause hollow even-odd fills."""
-    solids: list[Outline] = []
-    for solid in glyph.solids:
-        try:
-            solids.append(boolean_op(solid, solid, "union"))
-        except Exception:
-            solids.append(solid)
-    return replace(glyph, solids=tuple(solids))
-
-
 def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
-    raw = trace_letter(
+    # Library polyline→cubic expand + heal/strip/blend keep outlines smooth.
+    return trace_letter(
         Skeleton.of(*strokes),
         ctx or script_context(),
         union=True,
-        blend=False,
+        blend=True,
         ease=False,
         join="round",
         cap="round",
+        heal=True,
+        min_contour_area=MIN_CONTOUR_AREA,
     )
-    return _strip_tiny_contours(_heal_self_union(raw))
 
 
 # ---------------------------------------------------------------------------

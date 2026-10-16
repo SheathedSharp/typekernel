@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import typekernel.geo
-from typekernel.geo.boolean import BOOLEAN_OPS, boolean_op, union_all
+from typekernel.geo.boolean import BOOLEAN_OPS, boolean_op, strip_tiny_contours, union_all
 from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.path_builder import PathBuilder
 
@@ -89,6 +89,15 @@ def test_shapely_is_never_referenced() -> None:
     assert "shapely" not in modules
 
 
+def test_strip_tiny_contours_drops_speck_keeps_body() -> None:
+    body = _rect(0, 0, 100, 100)
+    speck = _rect(2, 2, 3, 3)
+    merged = Outline((*body.contours, *speck.contours))
+    stripped = strip_tiny_contours(merged, min_area=10.0)
+    assert len(stripped.contours) == 1
+    assert bounds(stripped)[2] == pytest.approx(100.0, abs=1e-3)
+
+
 def test_boolean_extra_is_declared_but_not_required() -> None:
     """pathops must stay optional; the core install must not need it."""
     import tomllib
@@ -100,3 +109,33 @@ def test_boolean_extra_is_declared_but_not_required() -> None:
     assert not any(
         "skia-pathops" in dep for dep in config["project"]["dependencies"]
     )
+
+
+def test_self_union_and_strip_tiny() -> None:
+    pytest.importorskip("pathops")
+    from typekernel.geo.boolean import self_union, strip_tiny_contours
+    from typekernel.geo.contour import Contour, signed_area
+    from typekernel.geo.outline import Outline
+    from typekernel.geo.point import Point
+    from typekernel.geo.segment import LineSegment
+
+    big = _rect(0, 0, 100, 100)
+    healed = self_union(big)
+    assert healed.contour_count >= 1
+    # Tiny square debris
+    tiny = Outline(
+        (
+            Contour(
+                (
+                    LineSegment(Point(0, 0), Point(1, 0)),
+                    LineSegment(Point(1, 0), Point(1, 1)),
+                    LineSegment(Point(1, 1), Point(0, 1)),
+                    LineSegment(Point(0, 1), Point(0, 0)),
+                ),
+                closed=True,
+            ),
+        )
+    )
+    merged = Outline(big.contours + tiny.contours)
+    stripped = strip_tiny_contours(merged, min_area=50.0)
+    assert all(abs(signed_area(c)) >= 50.0 for c in stripped.contours)

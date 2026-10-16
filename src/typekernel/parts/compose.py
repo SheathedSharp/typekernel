@@ -10,12 +10,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 
-from typekernel.geo.boolean import boolean_op, union_all
+from typekernel.geo.boolean import boolean_op, self_union, strip_tiny_contours, union_all
 from typekernel.geo.contour import Contour
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
+from typekernel.geo.stroke import refit_outline_to_cubics
 from typekernel.parts.context import DesignContext
 
 
@@ -84,6 +85,9 @@ class GlyphAssembler:
     _subtract_holes: bool = False
     _blend: tuple[float, object, float] | None = None
     _ease: tuple[float, float, bool] | None = None
+    _heal: bool = False
+    _min_contour_area: float | None = None
+    _refit: tuple[float, float] | None = None
     _anchors: list[Anchor] = field(default_factory=list)
     _design: object | None = None
 
@@ -127,6 +131,26 @@ class GlyphAssembler:
         exporting to UFO/TTF so winding stays unambiguous.
         """
         self._subtract_holes = True
+        return self
+
+    def heal_self_intersections(self) -> GlyphAssembler:
+        """Self-union solid outlines after union/subtract to dissolve crossings."""
+        self._heal = True
+        return self
+
+    def strip_tiny(self, min_area: float = 25.0) -> GlyphAssembler:
+        """Drop expand/union debris contours smaller than ``min_area``."""
+        self._min_contour_area = float(min_area)
+        return self
+
+    def refit_cubics(
+        self,
+        fit_budget: float = 2.5,
+        *,
+        corner_deg: float = 35.0,
+    ) -> GlyphAssembler:
+        """Re-fit pathops-flattened solids/holes to cubics before blend."""
+        self._refit = (float(fit_budget), float(corner_deg))
         return self
 
     def blend_joins(
@@ -178,6 +202,32 @@ class GlyphAssembler:
                 body = boolean_op(body, hole, "difference")
             solids = [body]
             holes = []
+        if self._heal:
+            healed: list[Outline] = []
+            for solid in solids:
+                try:
+                    healed.append(self_union(solid))
+                except RuntimeError:
+                    healed.append(solid)
+            solids = healed
+        if self._min_contour_area is not None:
+            solids = [
+                strip_tiny_contours(s, min_area=self._min_contour_area) for s in solids
+            ]
+            holes = [
+                strip_tiny_contours(h, min_area=self._min_contour_area) for h in holes
+            ]
+            holes = [h for h in holes if h.contours]
+        if self._refit is not None:
+            budget, corner = self._refit
+            solids = [
+                refit_outline_to_cubics(s, fit_budget=budget, corner_deg=corner)
+                for s in solids
+            ]
+            holes = [
+                refit_outline_to_cubics(h, fit_budget=budget, corner_deg=corner)
+                for h in holes
+            ]
         if self._blend is not None:
             from typekernel.geo.joins import blend_corners, default_selector
 

@@ -10,7 +10,8 @@ Agent-facing entry points:
 - :class:`Centerline` — open or closed polyline skeleton
 - :class:`CubicCenterline` — cubic Bézier midline (TK-308 spike)
 - :func:`expand` — offset the centerline by the pen with join/cap options
-- :func:`expand_cubic` — flatten a cubic midline, expand, and report chord error
+- :func:`expand_cubic` — cubic-rail offset (preferred; avoids bristly LINE facets)
+- :func:`polyline_to_cubic_centerline` — fit a polyline skeleton to cubics before expand
 """
 
 from __future__ import annotations
@@ -47,6 +48,8 @@ __all__ = [
     "expand",
     "expand_cubic",
     "flatten_cubic_centerline",
+    "polyline_to_cubic_centerline",
+    "refit_outline_to_cubics",
 ]
 
 
@@ -148,7 +151,7 @@ class CubicBezier:
 
 @dataclass(frozen=True, slots=True)
 class CubicCenterline:
-    """Cubic midline path (construction only; not wired into default glyph pipeline)."""
+    """Cubic midline path used by :func:`expand_cubic` and polyline→cubic expand."""
 
     segments: tuple[CubicBezier, ...]
     closed: bool = False
@@ -248,6 +251,230 @@ def cubic_centerline_to_polyline(
     """Polyline approximation of a cubic midline (for chaining to :func:`expand`)."""
     poly, _ = flatten_cubic_centerline(centerline, chord_budget)
     return poly
+
+
+def _dedupe_polyline(
+    points: Sequence[tuple[float, float]],
+    *,
+    eps: float = 1e-6,
+) -> list[tuple[float, float]]:
+    out: list[tuple[float, float]] = []
+    for p in points:
+        q = (float(p[0]), float(p[1]))
+        if not out or math.hypot(q[0] - out[-1][0], q[1] - out[-1][1]) > eps:
+            out.append(q)
+    return out
+
+
+def _turn_angle_deg(
+    a: tuple[float, float],
+    b: tuple[float, float],
+    c: tuple[float, float],
+) -> float:
+    """Exterior turn at ``b`` in degrees (0 = straight, 180 = reverse)."""
+    t0 = _unit(b[0] - a[0], b[1] - a[1])
+    t1 = _unit(c[0] - b[0], c[1] - b[1])
+    dot = max(-1.0, min(1.0, t0[0] * t1[0] + t0[1] * t1[1]))
+    return math.degrees(math.acos(dot))
+
+
+def _split_polyline_at_sharp_corners(
+    points: Sequence[tuple[float, float]],
+    *,
+    corner_deg: float = 28.0,
+    closed: bool = False,
+) -> list[list[tuple[float, float]]]:
+    """Split a dense polyline into smooth runs; keep intentional kinks as joins."""
+    pts = list(points)
+    if len(pts) < 3:
+        return [pts]
+    n = len(pts)
+    if closed:
+        # Drop duplicate closing vertex if present.
+        if math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < 1e-6:
+            pts = pts[:-1]
+            n = len(pts)
+        corners = []
+        for i in range(n):
+            a, b, c = pts[(i - 1) % n], pts[i], pts[(i + 1) % n]
+            if _turn_angle_deg(a, b, c) >= corner_deg:
+                corners.append(i)
+        if not corners:
+            return [pts + [pts[0]]]
+        # Start each run at a corner; wrap around the ring.
+        runs: list[list[tuple[float, float]]] = []
+        for i, start in enumerate(corners):
+            end = corners[(i + 1) % len(corners)]
+            run: list[tuple[float, float]] = [pts[start]]
+            j = (start + 1) % n
+            while j != end:
+                run.append(pts[j])
+                j = (j + 1) % n
+            run.append(pts[end])
+            if len(run) >= 2:
+                runs.append(run)
+        return runs if runs else [pts + [pts[0]]]
+
+    corner_indices = [0]
+    for i in range(1, n - 1):
+        if _turn_angle_deg(pts[i - 1], pts[i], pts[i + 1]) >= corner_deg:
+            corner_indices.append(i)
+    corner_indices.append(n - 1)
+    runs = []
+    for start, end in itertools.pairwise(corner_indices):
+        run = pts[start : end + 1]
+        if len(run) >= 2:
+            runs.append(run)
+    return runs if runs else [pts]
+
+
+def polyline_to_cubic_centerline(
+    points: Sequence[tuple[float, float]],
+    *,
+    closed: bool = False,
+    fit_budget: float = 0.75,
+    corner_deg: float = 28.0,
+) -> CubicCenterline:
+    """Fit a polyline skeleton to cubics for :func:`expand_cubic`.
+
+    Dense Chaikin / sample polylines expand into bristly LINE facets when fed
+    straight to :func:`expand`. Fitting cubics first lets the cubic-rail offset
+    emit smooth outline cubics while preserving sharp intentional corners as
+    separate midline segments (handled by join styles).
+
+    ``fit_budget`` is the max point-to-cubic distance (design units).
+    ``corner_deg`` splits the polyline when the turn exceeds that angle.
+    """
+    if fit_budget <= 0:
+        raise ValueError(f"fit_budget must be positive, got {fit_budget!r}")
+    pts = _dedupe_polyline(points)
+    if len(pts) < 2:
+        raise ValueError("polyline_to_cubic_centerline needs at least two points")
+    chain: list[CubicBezier] = []
+    for run in _split_polyline_at_sharp_corners(pts, corner_deg=corner_deg, closed=closed):
+        if len(run) < 2:
+            continue
+        if _polyline_colinear(run):
+            chain.append(CubicBezier.line(run[0], run[-1]))
+            continue
+        part, _err = _fit_offset_rail(run, fit_budget)
+        chain.extend(part)
+    if not chain:
+        raise ValueError("polyline_to_cubic_centerline produced no segments")
+    if closed and chain:
+        # Ensure ring endpoint meets start for expand_cubic closed path.
+        p0 = chain[0].p0
+        last = chain[-1]
+        if math.hypot(last.p3[0] - p0[0], last.p3[1] - p0[1]) > 1e-4:
+            chain.append(CubicBezier.line(last.p3, p0))
+    return CubicCenterline.from_beziers(chain, closed=closed)
+
+
+def _contour_sample_polyline(
+    contour: object,
+    *,
+    cubic_samples: int = 4,
+    min_step: float = 2.5,
+) -> list[tuple[float, float]]:
+    """On-curve samples from a contour, thinned for stable cubic refit.
+
+    Pathops often emits hundreds of short LINE segments. Keeping every vertex
+    makes the refit oscillate; ``min_step`` drops near-duplicates so cubics
+    stay long enough to look smooth when rasterized.
+    """
+    from typekernel.geo.segment import CubicSegment, LineSegment
+
+    pts: list[tuple[float, float]] = []
+    for seg in contour.segments:  # type: ignore[attr-defined]
+        if isinstance(seg, LineSegment):
+            if not pts:
+                pts.append((float(seg.p0.x), float(seg.p0.y)))
+            pts.append((float(seg.p1.x), float(seg.p1.y)))
+            continue
+        if isinstance(seg, CubicSegment):
+            bez = CubicBezier(
+                (float(seg.p0.x), float(seg.p0.y)),
+                (float(seg.p1.x), float(seg.p1.y)),
+                (float(seg.p2.x), float(seg.p2.y)),
+                (float(seg.p3.x), float(seg.p3.y)),
+            )
+            if not pts:
+                pts.append(bez.p0)
+            for i in range(1, cubic_samples + 1):
+                pts.append(_cubic_eval(bez, i / cubic_samples))
+            continue
+        ends = seg.points
+        if not pts:
+            pts.append((float(ends[0].x), float(ends[0].y)))
+        pts.append((float(ends[-1].x), float(ends[-1].y)))
+    if (
+        getattr(contour, "closed", False)
+        and len(pts) > 1
+        and math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < 1e-6
+    ):
+        pts = pts[:-1]
+    return _dedupe_polyline(pts, eps=min_step)
+
+
+
+def refit_outline_to_cubics(
+    outline: Outline,
+    *,
+    fit_budget: float = 2.5,
+    corner_deg: float = 35.0,
+    min_step: float = 2.5,
+) -> Outline:
+    """Re-fit flattened contours to cubics after pathops boolean ops.
+
+    ``skia-pathops`` often returns dense LINE polylines even when inputs were
+    cubic. Refitting restores smooth outlines without a silent ``simplify`` —
+    ``fit_budget`` is an explicit point-to-cubic error budget (design units),
+    ``min_step`` thins sample vertices before the fit, and ``corner_deg`` keeps
+    intentional kinks as separate midline joins. Winding is preserved.
+    """
+    from typekernel.geo.contour import Contour, reverse_contour, signed_area
+    from typekernel.geo.point import Point
+    from typekernel.geo.segment import CubicSegment
+
+    if fit_budget <= 0:
+        raise ValueError(f"fit_budget must be positive, got {fit_budget!r}")
+    out_contours = []
+    for contour in outline.contours:
+        pts = _contour_sample_polyline(contour, min_step=min_step)
+        if len(pts) < 3:
+            out_contours.append(contour)
+            continue
+        try:
+            cubic = polyline_to_cubic_centerline(
+                pts,
+                closed=bool(contour.closed),
+                fit_budget=fit_budget,
+                corner_deg=corner_deg,
+            )
+        except ValueError:
+            out_contours.append(contour)
+            continue
+        segs_list = []
+        for s in cubic.segments:
+            if math.hypot(s.p3[0] - s.p0[0], s.p3[1] - s.p0[1]) < min_step * 0.25:
+                continue
+            segs_list.append(
+                CubicSegment(
+                    Point(s.p0[0], s.p0[1]),
+                    Point(s.p1[0], s.p1[1]),
+                    Point(s.p2[0], s.p2[1]),
+                    Point(s.p3[0], s.p3[1]),
+                )
+            )
+        segs = tuple(segs_list)
+        if len(segs) < 2:
+            out_contours.append(contour)
+            continue
+        fitted = Contour(segs, closed=bool(contour.closed))
+        if signed_area(contour) * signed_area(fitted) < 0:
+            fitted = reverse_contour(fitted)
+        out_contours.append(fitted)
+    return Outline(tuple(out_contours))
 
 
 def flatten_cubic_centerline(

@@ -24,6 +24,7 @@ from typekernel.geo.stroke import (
     JoinStyle,
     expand,
     expand_cubic,
+    polyline_to_cubic_centerline,
 )
 from typekernel.parts.compose import ComposedGlyph, GlyphAssembler
 from typekernel.parts.context import DesignContext
@@ -412,6 +413,23 @@ def _expand_stroke(
             cap=cap,
             miter_limit=miter_limit,
         )
+    elif stroke.offset_fit_budget > 0:
+        # Fit dense polylines to cubics so expand_cubic emits smooth rails
+        # instead of bristly LINE facets from polyline expand.
+        cubic = polyline_to_cubic_centerline(
+            stroke.points,
+            closed=stroke.closed,
+            fit_budget=stroke.offset_fit_budget,
+        )
+        outline, _ = expand_cubic(
+            cubic,
+            pen,
+            chord_budget=stroke.chord_budget,
+            offset_fit_budget=stroke.offset_fit_budget,
+            join=join,
+            cap=cap,
+            miter_limit=miter_limit,
+        )
     else:
         cl = Centerline.from_points(stroke.points, closed=stroke.closed)
         outline = expand(cl, pen, join=join, cap=cap, miter_limit=miter_limit)
@@ -438,6 +456,9 @@ def trace_letter(
     cap: CapStyle = "round",
     miter_limit: float = 4.0,
     subtract_holes: bool = True,
+    heal: bool = True,
+    min_contour_area: float = 25.0,
+    refit: bool | float = True,
 ) -> ComposedGlyph:
     """Expand a stroke-graph skeleton into a metrics-bearing glyph.
 
@@ -451,6 +472,11 @@ def trace_letter(
         join / cap: Default pen join/cap for strokes that omit their own.
         miter_limit: Forwarded to :func:`~typekernel.geo.stroke.expand`.
         subtract_holes: Boolean-subtract closed-stroke holes from the body.
+        heal: Self-union solids after expand to dissolve self-crossings.
+        min_contour_area: Drop debris contours below this absolute area
+            (``0`` keeps all). Pathops expand often leaves speck islands.
+        refit: ``True`` → re-fit pathops LINE debris to cubics with budget
+            ``2.5``; ``float`` → that budget; ``False`` → skip.
 
     Returns:
         A :class:`~typekernel.parts.compose.ComposedGlyph` with packed
@@ -476,6 +502,14 @@ def trace_letter(
         asm.union_solids()
     if subtract_holes and any_holes:
         asm.subtract_holes()
+    if heal:
+        asm.heal_self_intersections()
+    if min_contour_area > 0:
+        asm.strip_tiny(min_contour_area)
+    if refit is not False:
+        budget = 2.5 if refit is True else float(refit)
+        if budget > 0:
+            asm.refit_cubics(budget)
     if blend is not False:
         radius = float(ctx.join_radius if blend is True else blend)
         if radius > 0:
@@ -506,6 +540,14 @@ def trace_letter(
         if subtract_holes and any_holes:
             # holes without union: keep as separate hole contours
             pass
+        if heal:
+            asm_fb.heal_self_intersections()
+        if min_contour_area > 0:
+            asm_fb.strip_tiny(min_contour_area)
+        if refit is not False:
+            budget = 2.5 if refit is True else float(refit)
+            if budget > 0:
+                asm_fb.refit_cubics(budget)
         if blend is not False:
             radius = float(ctx.join_radius if blend is True else blend)
             if radius > 0:
