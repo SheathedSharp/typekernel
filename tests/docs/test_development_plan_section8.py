@@ -323,6 +323,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "AGENT_SENTENCE" in text
     assert "test_knob_coverage.py" in text
     assert "test_extended_latin_policy.py" in text
+    assert "test_multi_voice_exit.py" in text
     assert "test_glyph_specs.py" in text
     assert "test_stress.py" in text
 
@@ -339,6 +340,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_knob_coverage" in text
     assert "test_extended_latin_policy" in text
+    assert "test_multi_voice_exit" in text
     assert "test_stress" in text
     assert "test_glyph_specs" in text
     assert "test_stroke_program_acceptance" in text
@@ -384,6 +386,11 @@ def test_section8_run_program_exit_includes_knob_coverage() -> None:
 def test_section8_run_program_exit_includes_extended_latin_policy() -> None:
     text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_extended_latin_policy.py" in text
+
+
+def test_section8_run_program_exit_includes_multi_voice_exit() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/qa/test_multi_voice_exit.py" in text
 
 
 def test_section8_run_program_exit_includes_glyph_specs() -> None:

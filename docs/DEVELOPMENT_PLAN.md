@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1533 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1541 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -540,6 +540,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
 - **本轮（部分）**：``l3_voice_criteria_met``（距离 + ``family_gate`` + lint）；``trial_protocol`` 再导出；``test_l3_voice_criteria_met_for_serif_presets`` / ``test_l3_voice_criteria_not_met_for_unchanged_sans_preset`` / ``test_l3_voice_criteria_met_when_style_adds_slab_serif``；TK-306 ``slab``/``bracketed`` 衬线 preset 达 L3、未改 sans preset 不达标。
 - **本轮（部分）**：``tests/qa/test_multi_voice_exit.py`` 锁定 M3「≥3 种 L3 voice」（``slab``/``bracketed`` + brief-1 参考试作）且两两 ``voice_distance`` 非零。
+- **本轮（部分）**：``run_program_exit --gate all`` 显式含 ``tests/qa/test_multi_voice_exit.py``；``test_section8_run_program_exit_includes_multi_voice_exit``。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
 - **本轮**：``l3_voice_criteria_met`` 要求相对最近 preset 的 ``topology_fraction`` ≥ ``L3_MIN_TOPOLOGY_FRACTION``（0.05）；``originality_report`` 在 combined=1.0 时仍选出最近邻；``test_l3_rejects_context_only_stem_tweak``。
 - **本轮（部分）**：``test_serif_voices_far_from_every_builtin_preset`` 锁定 TK-306 ``slab``/``bracketed`` 相对七 sans preset 的 ``voice_distance`` 与拓扑下限。
