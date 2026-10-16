@@ -66,6 +66,7 @@ def test_run_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert "tests/qa/test_trial_protocol.py" in lines
     assert "tests/qa/test_multi_voice_exit.py" in lines
     assert "tests/qa/test_style_consistency.py" in lines
+    assert "tests/qa/test_originality.py" in lines
     assert "tests/parts/test_serifs.py" in lines
     assert "tests/parts/test_italic_program_acceptance.py" in lines
     for rel in lines:

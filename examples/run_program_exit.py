@@ -50,6 +50,7 @@ _TRIAL_SMOKE = (
     "tests/qa/test_trial_protocol.py",
     "tests/qa/test_multi_voice_exit.py",
     "tests/qa/test_style_consistency.py",
+    "tests/qa/test_originality.py",
 )
 
 _GATE_FILES = {

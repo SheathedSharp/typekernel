@@ -35,3 +35,4 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "test_zayju_script_sequential_style_gate_passes" in text
     assert "test_knob_coverage" in text
     assert "test_style_consistency" in text
+    assert "test_originality" in text

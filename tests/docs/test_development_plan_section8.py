@@ -310,6 +310,7 @@ def test_section8_skill_documents_program_exit_workflow() -> None:
     assert "contact_sheet.py" in text
     assert "test_knob_coverage" in text
     assert "test_style_consistency" in text
+    assert "test_originality" in text
     assert "test_zayju_script" in text
 
 
@@ -341,6 +342,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "test_extended_latin_policy.py" in text
     assert "test_multi_voice_exit.py" in text
     assert "test_style_consistency.py" in text
+    assert "test_originality.py" in text
     assert "test_glyph_specs.py" in text
     assert "test_stress.py" in text
 
@@ -359,6 +361,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "test_extended_latin_policy" in text
     assert "test_multi_voice_exit" in text
     assert "test_style_consistency" in text
+    assert "test_originality" in text
     assert "test_stress" in text
     assert "test_glyph_specs" in text
     assert "test_stroke_program_acceptance" in text
@@ -414,6 +417,11 @@ def test_section8_run_program_exit_includes_multi_voice_exit() -> None:
 def test_section8_run_program_exit_includes_style_consistency() -> None:
     text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/qa/test_style_consistency.py" in text
+
+
+def test_section8_run_program_exit_includes_originality() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/qa/test_originality.py" in text
 
 
 def test_section8_run_program_exit_includes_glyph_specs() -> None:
