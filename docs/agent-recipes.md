@@ -216,6 +216,23 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 
 默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_tk208_extended_latin.py`。
 
+### OpenType `frac` / `ordn`
+
+默认关闭。需要分数与序数时：
+
+```python
+from typekernel.compile import FamilyBuildOptions, compose_font_from_controls
+
+font = compose_font_from_controls(
+    controls, "Family",
+    options=FamilyBuildOptions(frac=True, ordn=True),
+)
+# → zero.numr…nine.dnom、fraction、ordfeminine/ordmasculine + fea numr/dnom/frac/ordn
+```
+
+底层：`add_fraction_forms` / `add_ordn_forms`；回归 `tests/compile/test_features.py`。
+
+
 ## Agent 终验快照（TK-502，程序侧）
 
 参考试作 ≠ 终验：终验须从 brief 的 preset 自行改字并留痕，见 `docs/AGENT_TRIALS.md` §终验流程。

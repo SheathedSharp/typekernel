@@ -11,6 +11,8 @@ from dataclasses import dataclass
 
 from typekernel.compile.features import (
     add_case_punctuation,
+    add_fraction_forms,
+    add_ordn_forms,
     add_standard_ligatures,
     add_tabular_alternates,
     standard_feature_text,
@@ -42,6 +44,8 @@ class FamilyBuildOptions:
     liga: bool = False
     tnum: bool = False
     case: bool = False
+    frac: bool = False
+    ordn: bool = False
     extended_latin: str = ""
     chars: str | None = None
     space_width_factor: float = 0.45
@@ -55,7 +59,10 @@ class FamilyBuildOptions:
         )
 
     def feature_text(self) -> str:
-        return standard_feature_text(tnum=self.tnum, liga=self.liga, case=self.case)
+        return standard_feature_text(
+            tnum=self.tnum, liga=self.liga, case=self.case,
+            frac=self.frac, ordn=self.ordn,
+        )
 
 
 def reference_kern_classes(controls: Controls) -> tuple[KernClass, ...]:
@@ -115,6 +122,14 @@ def compose_font_from_controls(
         add_standard_ligatures(font, controls.control_glyphs())
     if opts.case:
         add_case_punctuation(font, spaced)
+    if opts.frac:
+        add_fraction_forms(
+            font,
+            {ch: spaced[ch] for ch in "0123456789" if ch in spaced},
+            slash=spaced.get("/"),
+        )
+    if opts.ordn:
+        add_ordn_forms(font, spaced)
     font.features = opts.feature_text()
     font.add_class_kern_table(kerning)
     return font

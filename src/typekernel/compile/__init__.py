@@ -27,6 +27,8 @@ from typekernel.compile.family_build import (
 )
 from typekernel.compile.features import (
     add_case_punctuation,
+    add_fraction_forms,
+    add_ordn_forms,
     add_standard_ligatures,
     add_tabular_alternates,
     standard_feature_text,
@@ -42,6 +44,8 @@ __all__ = [
     "FontBuild",
     "VariableFontBuild",
     "add_case_punctuation",
+    "add_ordn_forms",
+    "add_fraction_forms",
     "add_standard_ligatures",
     "add_tabular_alternates",
     "build_binary_from_ufo",
