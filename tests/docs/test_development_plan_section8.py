@@ -41,6 +41,13 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
+        "tests/parts/test_glyph_specs.py",
+        (
+            "test_tuned_glyph_defaults_preserve_supported_charset_hashes",
+            "test_tuned_glyph_defaults_match_stock_derivation",
+        ),
+    ),
+    (
         "tests/parts/test_italic_controls.py",
         ("test_italic_construct_slant_matches_target_within_half_degree",),
     ),
@@ -328,6 +335,21 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
 def test_section8_run_m5_program_exit_includes_tk107_knob_coverage() -> None:
     text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_knob_coverage.py" in text
+
+
+def test_section8_run_m5_program_exit_includes_tk303_glyph_specs() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_glyph_specs.py" in text
+
+
+def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "glyph_specs" in text
+    assert "GSpec" in text
+    assert "RSpec" in text
+    assert "YSpec" in text
+    assert "spec_fields" in text
+    assert "spec f:" in text
 
 
 def test_section8_run_m5_program_exit_includes_tk302_stress_regressions() -> None:

@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1517 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1519 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -425,6 +425,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   | `GSpec` / `RSpec` / `YSpec` | 尾深、耳、臂落差、尾形 |
   让 `Controls.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
 - **本轮（部分）**：``WEAK_GLYPH_SPECS`` 全字段单调性回归（含 ``M.apex`` 在 ``stem=150``）；默认 ``supported`` 哈希回归仍绿。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs`` / ``test_section8_agent_recipes_documents_tk303_tuned_glyph_specs``。
 - **验收**：每个字段有「单调效应」测试（改字段 → 对应测得量按预期变化）；默认值下 98 字形哈希不变；`docs/agent-recipes.md` 增加用法。
 - **依赖**：TK-108。
 
@@ -600,6 +601,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_section8_run_m5_program_exit_includes_tk206_defect_regressions`` 固化程序出口与 B-13～B-15 钩子。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``（TK-302 程序回归）；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_knob_coverage.py``（TK-107 旋钮覆盖）；``test_section8_run_m5_program_exit_includes_tk107_knob_coverage``。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``（TK-303）；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs``。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
