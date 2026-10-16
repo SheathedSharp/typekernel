@@ -39,4 +39,4 @@ def test_counter_scan_min_run_over_stem_frozen() -> None:
 def test_counter_gap_floor_formula_frozen() -> None:
     assert COUNTER_GAP_FLOOR_OVER_STEM == 0.08
     assert COUNTER_GAP_FLOOR_BASE == 2.5
-    assert counter_gap_floor(180.0) == 17.9
+    assert counter_gap_floor(180.0) == 16.9
