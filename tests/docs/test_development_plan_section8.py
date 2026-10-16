@@ -261,6 +261,8 @@ def test_section8_skill_documents_m5_exit_workflow() -> None:
     assert "test_development_plan_section8" in text
     assert "test_m3_exit" in text
     assert "contact_sheet.py" in text
+    assert "test_knob_coverage" in text
+    assert "test_zayju_script" in text
 
 
 def test_section8_readme_points_at_plan_and_review_bundle() -> None:
@@ -303,6 +305,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "test_stress" in text
     assert "test_glyph_specs" in text
     assert "test_tk308_program_acceptance" in text
+    assert "test_zayju_script" in text
 
 
 def test_section8_approvals_readme_documents_review_workflow() -> None:
@@ -349,6 +352,11 @@ def test_section8_run_m5_program_exit_includes_tk303_glyph_specs() -> None:
 def test_section8_run_m5_program_exit_includes_tk308_stroke_spike() -> None:
     text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_tk308_program_acceptance.py" in text
+
+
+def test_section8_run_m5_program_exit_includes_tk308_zayju_script_smoke() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "test_zayju_script_charset_builds_and_lints_clean" in text
 
 
 def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:

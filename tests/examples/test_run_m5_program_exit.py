@@ -41,6 +41,10 @@ def test_run_m5_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert "tests/parts/test_knob_coverage.py" in lines
     assert "tests/parts/test_glyph_specs.py" in lines
     assert "tests/parts/test_tk308_program_acceptance.py" in lines
+    assert (
+        "tests/examples/test_zayju_script.py::test_zayju_script_charset_builds_and_lints_clean"
+        in lines
+    )
     assert "tests/parts/test_stress.py" in lines
     assert (
         "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress" in lines
