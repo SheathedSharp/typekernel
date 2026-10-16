@@ -181,6 +181,13 @@ def test_section8_agent_recipes_documents_tk108_golden_refresh() -> None:
     assert "regenerate_outline_hashes.py" in text
 
 
+def test_section8_agent_recipes_documents_tk207_min_run_gap() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-207" in text
+    assert "0.09" in text
+    assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
+
+
 def test_section8_agent_recipes_documents_tk206_b15_human_review() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "TK-206" in text

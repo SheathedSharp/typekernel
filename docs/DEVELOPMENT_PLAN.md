@@ -334,6 +334,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_descender_micro_sliver_below_min_run_gap_ignored`` 固化 ``p``/``q`` 重字重 descender 发丝缝（``y≈-17.34``）低于 ``min_run_gap``、不驱动 R8。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_descender_micro_sliver_below_min_run_gap_ignored``。
 - **本轮（部分）**：``human_review_bundle`` 清单与 ``counter.min_counter_gap`` 注释对齐 descender 发丝缝回归。
+- **本轮（部分）**：``agent-recipes`` TK-207 段补 ``min_run_gap`` / descender 审计指针；``test_section8_agent_recipes_documents_tk207_min_run_gap``。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
