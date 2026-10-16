@@ -33,6 +33,10 @@ def test_run_m5_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert "tests/examples/test_diff_overlay.py" in lines
     assert "tests/examples/test_regenerate_outline_hashes.py" in lines
     assert (
+        "tests/examples/test_human_review_bundle.py::test_human_review_bundle_tk206_only"
+        in lines
+    )
+    assert (
         "tests/qa/test_sheet.py::test_contact_sheet_full_charset_width_at_most_1600" in lines
     )
     assert "tests/qa/test_sheet.py::test_diff_overlay_writes" in lines

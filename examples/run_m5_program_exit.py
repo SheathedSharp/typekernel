@@ -29,6 +29,8 @@ _TRIAL_SMOKE = (
     "tests/examples/test_contact_sheet.py",
     "tests/examples/test_diff_overlay.py",
     "tests/examples/test_regenerate_outline_hashes.py",
+    "tests/examples/test_human_review_bundle.py::test_human_review_bundle_source_documents_pending_gates",
+    "tests/examples/test_human_review_bundle.py::test_human_review_bundle_tk206_only",
     "tests/qa/test_sheet.py::test_contact_sheet_full_charset_width_at_most_1600",
     "tests/qa/test_sheet.py::test_diff_overlay_writes",
     "tests/qa/test_trial_protocol.py",

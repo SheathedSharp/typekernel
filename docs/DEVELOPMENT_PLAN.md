@@ -578,6 +578,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``approvals/README.md`` 分 gate 签字 ``pytest`` 块；``test_approvals_readme_signoff_matches_test_evidence`` 与 JSON 双向一致。
 - **本轮（部分）**：``examples/run_m5_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list`` / ``--with-linters``）；``test_run_m5_program_exit``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 默认含 ``test_agent_trial`` / ``test_agent_trial_reference`` / ``test_trial_protocol`` 烟测。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_human_review_bundle_tk206_only``（TK-206 校样路径烟测）；``test_run_m5_program_exit`` 固化。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
