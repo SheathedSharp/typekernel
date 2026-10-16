@@ -45,7 +45,8 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
     # ``p``/``q``/``g`` descenders: ignore stem–counter slivers below the x-height band.
     if y0 < 0.0:
         y_lo = max(y_lo, 0.12 * y1)
-    # Diagonal caps (``K``/``X``): ignore sub-stem slivers between ink runs on a scanline.
+    # Diagonal caps (``K``/``X``) and descender ``p``/``q`` stem–bowl hairlines: ignore
+    # sub-stem slivers between ink runs (see ``test_descender_micro_sliver_below_min_run_gap_ignored``).
     min_run_gap = max(1.0, 0.09 * glyph.context.stem)
     for iy in range(grid):
         y = y_lo + (iy + 0.5) / grid * (y_hi - y_lo)

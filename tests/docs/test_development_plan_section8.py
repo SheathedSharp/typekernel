@@ -304,6 +304,7 @@ def test_section8_plan_documents_program_vs_human_exit() -> None:
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
     assert "test_s_opening_reach_relief_frozen" in text
+    assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
     assert "七 preset" in text
     assert "human_review_bundle --only tk206" in text
     assert "tk206_three_g_humanist.png" in text

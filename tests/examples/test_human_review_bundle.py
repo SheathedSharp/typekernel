@@ -37,6 +37,7 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
     assert "test_s_opening_reach_relief_frozen" in text
+    assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
     assert "regenerate_outline_hashes.py" in text
 
 

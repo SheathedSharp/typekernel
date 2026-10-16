@@ -37,6 +37,7 @@ pytest -q tests/parts/test_known_defects.py::test_b13_three_no_flat_top_shelf
 pytest -q tests/parts/test_known_defects.py::test_b14_g_spur_cubic_join
 pytest -q tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band
 pytest -q tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen
+pytest -q tests/qa/test_counter.py::test_descender_micro_sliver_below_min_run_gap_ignored
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
 pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance
 pytest -q tests/qa/test_originality.py tests/qa/test_sentence_gate.py
