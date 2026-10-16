@@ -301,10 +301,9 @@ class Controls:
         Do **not** use :meth:`build_all` as the design method for new letters —
         ``build_all`` is stock derivation after controls are locked.
         """
-        from typekernel.qa.design_sequence import DesignSequence
-        from typekernel.qa.style_consistency import StyleConsistencyTolerances
+        from typekernel.qa.design_sequence import DesignSequence, controls_body_tolerances
 
-        tol = tolerances if tolerances is not None else StyleConsistencyTolerances()
+        tol = tolerances if tolerances is not None else controls_body_tolerances()
         return DesignSequence.from_controls(
             self,
             control=control,

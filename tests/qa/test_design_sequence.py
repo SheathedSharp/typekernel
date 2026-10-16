@@ -50,45 +50,44 @@ def test_try_add_unlocks_on_pass() -> None:
 
 def test_try_add_refuses_without_unlocking() -> None:
     c = Controls.from_context(DesignContext.geometric_sans())
-    # Very tight stem — o vs n often differs enough on some presets; use
-    # absurdly tight ink_ymax so a taller letter fails.
+    # ``w`` stem is narrower than control ``n``; absurdly tight stem band refuses.
     tight = StyleConsistencyTolerances(
         stem_median=0.01,
-        contrast_ratio=0.01,
-        entry_rail_y=0.01,
-        exit_rail_y=0.01,
-        exit_slant_deg=0.01,
-        bowl_center_y=0.01,
-        ink_ymin=0.01,
-        ink_ymax=0.01,
+        contrast_ratio=10.0,
+        entry_rail_y=600.0,
+        exit_rail_y=600.0,
+        exit_slant_deg=180.0,
+        bowl_center_y=300.0,
+        ink_ymin=300.0,
+        ink_ymax=500.0,
     )
     seq = DesignSequence.from_controls(
-        c, control="n", order=("n", "h"), tolerances=tight
+        c, control="n", order=("n", "w"), tolerances=tight
     )
-    rep = seq.try_add("h", c.build("h"))
+    rep = seq.try_add("w", c.build("w"))
     assert not rep.passed
     assert seq.unlocked == ("n",)
-    assert "h" not in seq.glyphs
+    assert "w" not in seq.glyphs
     hints = seq.hints_from_last()
     assert hints, "expected actionable fix hints"
-    assert any("stem" in h or "ink" in h or "contrast" in h or "rail" in h or "bowl" in h for h in hints)
+    assert any("stem" in h for h in hints)
 
 
 def test_add_raises_with_hints() -> None:
     c = Controls.from_context(DesignContext.geometric_sans())
     tight = StyleConsistencyTolerances(
         stem_median=0.01,
-        contrast_ratio=0.01,
-        entry_rail_y=0.01,
-        exit_rail_y=0.01,
-        exit_slant_deg=0.01,
-        bowl_center_y=0.01,
-        ink_ymin=0.01,
-        ink_ymax=0.01,
+        contrast_ratio=10.0,
+        entry_rail_y=600.0,
+        exit_rail_y=600.0,
+        exit_slant_deg=180.0,
+        bowl_center_y=300.0,
+        ink_ymin=300.0,
+        ink_ymax=500.0,
     )
-    seq = c.design_sequence(order=("n", "o"), control="n", tolerances=tight)
+    seq = c.design_sequence(order=("n", "w"), control="n", tolerances=tight)
     with pytest.raises(DesignSequenceError) as ei:
-        seq.add("o", c.build("o"))  # type: ignore[union-attr]
+        seq.add("w", c.build("w"))  # type: ignore[union-attr]
     assert ei.value.hints
 
 
@@ -122,3 +121,27 @@ def test_fix_hints_on_compare() -> None:
         hints = rep.fix_hints()
         assert hints
         assert all(isinstance(h, str) and len(h) > 10 for h in hints)
+
+
+def test_controls_body_design_sequence_completes() -> None:
+    """Stock geometric_sans body unlocks under DesignSequence (no build_all)."""
+    from typekernel.qa import default_body_design_order
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    order = default_body_design_order()
+    seq = c.design_sequence(order=order, control="n")
+    for ch in order:
+        if ch == seq.control:
+            continue
+        seq.add(ch, c.build(ch))  # type: ignore[union-attr]
+    glyphs = seq.export_glyphs(require_complete=True)  # type: ignore[union-attr]
+    assert set(glyphs) == set(order)
+    assert seq.is_complete  # type: ignore[union-attr]
+
+
+def test_controls_body_tolerances_stem_tight() -> None:
+    from typekernel.qa.design_sequence import controls_body_tolerances
+
+    tol = controls_body_tolerances()
+    assert tol.stem_median == 12.0
+    assert tol.contrast_ratio == 0.45

@@ -641,7 +641,10 @@ def _script_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
     # Dotted / short letters: vertical exits are not writing rails.
     if cand in {"i", "j"} or ref in {"i", "j"}:
-        skip.extend(["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y"])
+        # Single stem + tittle: vertical-stem probes are not comparable to dual-stem body.
+        skip.extend(
+            ["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y", "stem_median"]
+        )
     return tuple(dict.fromkeys(skip))
 
 

@@ -23,6 +23,7 @@ from typekernel.qa.design_sequence import (
     DesignSequenceError,
     default_body_design_order,
     latin_topology_skip_checks,
+    controls_body_tolerances,
 )
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
@@ -78,6 +79,7 @@ __all__ = [
     "check_design_sequence",
     "check_sentence_gate",
     "compare_glyph_styles",
+    "controls_body_tolerances",
     "controls_pair_gaps",
     "controls_sentence_report",
     "default_body_design_order",

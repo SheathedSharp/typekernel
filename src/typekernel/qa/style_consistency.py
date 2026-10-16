@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 from typekernel.geo.outline import Outline, bounds
-from typekernel.optics.stem import horizontal_vs_vertical_report, list_vertical_stems
+from typekernel.optics.stem import list_horizontal_stems, list_vertical_stems
 from typekernel.parts.compose import ComposedGlyph
 
 __all__ = [
@@ -255,17 +255,74 @@ class StyleConsistencyReport:
         )
 
 
+
+def _body_stem_median(outline: Outline) -> float | None:
+    """Median vertical-stem width in a body-safe Y band.
+
+    Mid-bounds probes on ascenders hit the shoulder join (false thick ``h``).
+    Short body letters use a mid-height band; tall glyphs stay in the lower
+    body. Hairline / ultra-wide join spans are filtered around the median.
+    """
+    try:
+        xmin, ymin, xmax, ymax = bounds(outline)
+    except ValueError:
+        return None
+    h = max(ymax - ymin, 1.0)
+    wmax = max(xmax - xmin, 1.0)
+    if h > 600.0:
+        fracs: tuple[float, ...] = (0.16, 0.22, 0.28, 0.34, 0.40)
+    else:
+        fracs = (0.35, 0.42, 0.50, 0.58)
+    widths: list[float] = []
+    for f in fracs:
+        y = ymin + f * h
+        for span in list_vertical_stems(outline, y=y, max_width=0.42 * wmax):
+            widths.append(float(span.width))
+    if not widths:
+        widths = [float(s.width) for s in list_vertical_stems(outline)]
+    if not widths:
+        return None
+    med = float(statistics.median(widths))
+    core = [w for w in widths if 0.55 * med <= w <= 1.40 * med]
+    return float(statistics.median(core)) if core else med
+
+
+
+def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float | None:
+    """Horizontal/vertical thickness ratio sampled in the body (not mid-ray noise).
+
+    Rejects hairline crotch / join spans so ``u`` / ``e`` / ``s`` are not
+    falsely marked high-contrast against a mono stem control.
+    """
+    if stem_median is None or stem_median <= 0.0:
+        return None
+    try:
+        xmin, _ymin, xmax, _ymax = bounds(outline)
+    except ValueError:
+        return None
+    w = max(xmax - xmin, 1.0)
+    hs: list[float] = []
+    for f in (0.30, 0.40, 0.50, 0.60, 0.70):
+        x = xmin + f * w
+        for span in list_horizontal_stems(
+            outline, x=x, max_width=1.8 * stem_median
+        ):
+            if 0.35 * stem_median <= span.width <= 1.8 * stem_median:
+                hs.append(float(span.width))
+    if not hs:
+        return None
+    return float(statistics.median(hs) / stem_median)
+
+
 def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
     """Derive style proxies from a composed glyph's solid ink."""
     outline = _ink_outline(glyph)
     xmin, ymin, xmax, ymax = bounds(outline)
     pts = _sample_oncurve_points(outline)
-    stems = list_vertical_stems(outline)
-    stem_median = (
-        float(statistics.median(s.width for s in stems)) if stems else None
-    )
-    report = horizontal_vs_vertical_report(outline)
-    contrast = report.contrast_ratio
+    stem_median = _body_stem_median(outline)
+    # Prefer body-band contrast. No mid-ray fallback: single-stem letters
+    # (l/i/v) yield bogus horizontal spans and must skip via missing.
+    contrast = _body_contrast_ratio(outline, stem_median)
     w = max(xmax - xmin, 1.0)
     mid_y = 0.5 * (ymin + ymax)
     entry = _band_rail_y(pts, x0=xmin, x1=xmin + 0.20 * w)

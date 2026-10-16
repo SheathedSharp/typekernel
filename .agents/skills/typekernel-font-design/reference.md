@@ -165,6 +165,8 @@ seq.add("h", controls.build("h"))
 glyphs = seq.export_glyphs(require_complete=True)
 ```
 
+Defaults: `controls_body_tolerances()` + `latin_topology_skip_checks` (stem band 12, contrast 0.45; rails/slant skipped for upright Latin).
+
 On refuse, `DesignSequenceError.hints` / `seq.hints_from_last()` name the
 metric and the redesign direction. Phrase / `BRIEF_SENTENCE` proofs come
 **after** export. See `examples/zayju_script/design.py` (`build_charset_sequential`
