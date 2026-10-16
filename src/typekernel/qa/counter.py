@@ -8,13 +8,20 @@ from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts.compose import ComposedGlyph
 
 # B-16 bowl letters, round figures, punctuation rings, and stem/diagonal lowercase.
+# Scanline gaps below this × stem are ignored (K/X wedges, p/q descender hairlines).
+COUNTER_SCAN_MIN_RUN_OVER_STEM = 0.09  # TK-207; see test_descender_micro_sliver_below_min_run_gap_ignored
+
 COUNTER_PINCH_CHARSET = frozenset(
     "0123456789#%?&@acemnosu$bdgpqkvywxfhijlrtz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "!\"'()*+,-./:;<=>[\\]_{}°–—‘’“”−"
 )
 
-__all__ = ["COUNTER_PINCH_CHARSET", "min_counter_gap"]
+__all__ = [
+    "COUNTER_PINCH_CHARSET",
+    "COUNTER_SCAN_MIN_RUN_OVER_STEM",
+    "min_counter_gap",
+]
 
 
 def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
@@ -47,7 +54,7 @@ def min_counter_gap(glyph: ComposedGlyph, *, grid: int = 28) -> float:
         y_lo = max(y_lo, 0.12 * y1)
     # Diagonal caps (``K``/``X``) and descender ``p``/``q`` stem–bowl hairlines: ignore
     # sub-stem slivers between ink runs (see ``test_descender_micro_sliver_below_min_run_gap_ignored``).
-    min_run_gap = max(1.0, 0.09 * glyph.context.stem)
+    min_run_gap = max(1.0, COUNTER_SCAN_MIN_RUN_OVER_STEM * glyph.context.stem)
     for iy in range(grid):
         y = y_lo + (iy + 0.5) / grid * (y_hi - y_lo)
         runs = ink_intervals_at_y(scan_solids, y)

@@ -6,7 +6,11 @@ import pytest
 
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.weight_relief import counter_gap_floor
-from typekernel.qa.counter import min_counter_gap
+from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM, min_counter_gap
+
+
+def test_counter_scan_min_run_over_stem_frozen() -> None:
+    assert COUNTER_SCAN_MIN_RUN_OVER_STEM == 0.09
 
 
 def test_descender_letters_skip_baseline_stem_pinch() -> None:
@@ -26,7 +30,7 @@ def test_descender_micro_sliver_below_min_run_gap_ignored(ch: str) -> None:
     ctx = DesignContext.humanist_sans().tuned(stem=180.0)
     controls = Controls.from_context(ctx).with_stem_relief()
     glyph = controls.build(ch)
-    min_run = max(1.0, 0.09 * ctx.stem)
+    min_run = max(1.0, COUNTER_SCAN_MIN_RUN_OVER_STEM * ctx.stem)
     # Grid-audit y where ink splits but gap is far below the R8 scan threshold.
     y_audit = -17.343161198288144
     runs = ink_intervals_at_y(list(glyph.solids), y_audit)
