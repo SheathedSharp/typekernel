@@ -285,6 +285,15 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
     assert "validate_snapshot.py" in section
 
 
+def test_section8_run_m5_program_exit_includes_tk206_defect_regressions() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "test_b13_three_no_flat_top_shelf" in text
+    assert "test_b14_g_spur_cubic_join" in text
+    assert "test_b15_s_spine_ink_is_continuous_band" in text
+    assert "test_s_opening_reach_relief_frozen" in text
+    assert "test_human_review_bundle_tk206_only" in text
+
+
 def test_section8_plan_documents_program_vs_human_exit() -> None:
     """Plan §8 progress table must not claim full M5 exit while gates stay pending."""
     text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
@@ -293,6 +302,8 @@ def test_section8_plan_documents_program_vs_human_exit() -> None:
     assert "test_b13_three_no_flat_top_shelf" in text
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
+    assert "test_s_opening_reach_relief_frozen" in text
+    assert "七 preset" in text
     assert "human_review_bundle --only tk206" in text
     assert "tk206_three_g_humanist.png" in text
     assert "test_human_review_bundle_tk206_only" in text
