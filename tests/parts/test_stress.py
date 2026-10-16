@@ -45,6 +45,28 @@ def test_stress_zero_preserves_preset_outline_hashes() -> None:
         assert hashes == hashes2
 
 
+def test_stress_zero_preserves_lowercase_s_hashes() -> None:
+    """Default stress must not move golden ``s`` on main presets."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    for preset in ("humanist_sans", "geometric_sans", "code_clear"):
+        ctx = getattr(DesignContext, preset)()
+        assert ctx.stress == 0.0
+        controls = Controls.from_context(ctx)
+        h0 = composed_glyph_hash(controls.build("s"))
+        h1 = composed_glyph_hash(Controls.from_context(ctx.tuned(stress=0.0)).build("s"))
+        assert h0 == h1
+
+
+def test_stress_moves_lowercase_s_outline() -> None:
+    ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0)
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    g0 = Controls.from_context(ctx).build("s")
+    g35 = Controls.from_context(ctx.tuned(stress=35.0)).build("s")
+    assert composed_glyph_hash(g0) != composed_glyph_hash(g35)
+
+
 def test_stress_moves_thinnest_point_on_o() -> None:
     ctx0 = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0, stress=0.0)
     ctx45 = ctx0.tuned(stress=45.0)

@@ -2559,9 +2559,16 @@ def s_from_o(
     cy_u, cy_l = xh + os_ - ry_u, ry_l - os_
 
     u0, u1, u2, _ = _quarters(cx, cy_u, rx_u, ry_u, e)
-    ui0, ui1, ui2, _ = _quarters(cx, cy_u, rx_u - th, ry_u - tv, e)
+    ui0, ui1, ui2, ui3 = _quarters(cx, cy_u, rx_u - th, ry_u - tv, e)
     l0, _, l2, l3 = _quarters(cx, cy_l, rx_l, ry_l, e)
-    li0, _, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
+    li0, li1, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
+    if abs(c.stress) > 1e-9:
+        ui0, ui1, ui2, ui3 = tuple(
+            _rotate_cubic(cubic, c.stress, cx, cy_u) for cubic in (ui0, ui1, ui2, ui3)
+        )
+        li0, li1, li2, li3 = tuple(
+            _rotate_cubic(cubic, c.stress, cx, cy_l) for cubic in (li0, li1, li2, li3)
+        )
 
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
     reach = min(0.99, s_opening_factor(c, ap) + S_OPENING_REACH_RELIEF)
