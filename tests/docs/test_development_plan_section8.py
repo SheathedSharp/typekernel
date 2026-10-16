@@ -342,6 +342,11 @@ def test_section8_run_m5_program_exit_includes_tk303_glyph_specs() -> None:
     assert "tests/parts/test_glyph_specs.py" in text
 
 
+def test_section8_run_m5_program_exit_includes_tk308_stroke_spike() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_tk308_program_acceptance.py" in text
+
+
 def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "glyph_specs" in text

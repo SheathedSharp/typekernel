@@ -37,6 +37,7 @@ _TRIAL_SMOKE = (
     "tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen",
     "tests/parts/test_knob_coverage.py",
     "tests/parts/test_glyph_specs.py",
+    "tests/parts/test_tk308_program_acceptance.py",
     "tests/parts/test_stress.py",
     "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress",
     "tests/qa/test_gate_thresholds_locked.py",
