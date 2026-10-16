@@ -39,7 +39,7 @@ The pair check is inside `check_sentence_gate`, so L0's build already runs it. L
 
 ### Anti-patterns (these are not done)
 
-- Defining `BRIEF_SENTENCE` / a specimen phrase and **batch-building the whole charset** as the design method (Controls `build_all` without inspecting controls first, or skeleton `build_charset()` with no sequential style gate).
+- Defining `BRIEF_SENTENCE` / a specimen phrase and **batch-building the whole charset** as the design method (Controls `build_all` without inspecting controls first, or skeleton `build_charset()` / any ungated batch without `DesignSequence`).
 - Editing the proof sentence, or passing the brief sentence into `check_sentence_gate`, until the gate prints ok.
 - Declaring success from `sentence gate ok` plus a PNG.
 - Untethered floats (`stem=78`, `x_height=520`) with no preset field to compare. Tune **one field** as a delta from the preset (its `sidebearing_ratio` is `0.10`; `0.11` is a decision). Stay near the preset on a Regular voice — large stem jumps belong on a **new master**, and they must not worsen that master's own baseline.
@@ -64,7 +64,7 @@ Copy and track:
 - [ ] 1. Brief (use, scripts, weights, italic yes/no, symbol set)
 - [ ] 2. DesignContext (named preset + documented deltas, not free floats)
 - [ ] 3. Control glyphs n/o (+ H/O for caps/figures) — inspect outlines, then edit
-- [ ] 4. Derive charset via Controls.build_all(subset or supported)
+- [ ] 4. Unlock charset via `DesignSequence` / `Controls.design_sequence` (one glyph → style-check → unlock); do **not** phrase-batch or ungated `build_all` as design
 - [ ] 5. Fix ≥2 weak letters (f,t,j,a,s,e) with with_glyph or a dedicated builder
 - [ ] 6. space_font + auto_class_kern (shared kern classes for VF)
 - [ ] 7. Font: names, space_width, features matching actual glyphs
@@ -73,23 +73,39 @@ Copy and track:
 - [ ] 10. pytest if touching library; example script committed
 ```
 
-### Skeleton / script faces (same discipline)
+### Designer-order session (required for every new face)
 
-`Controls` presets are not required, but **designer order is**. For
-`trace_letter` / skeleton examples (e.g. `examples/zayju_script/`):
+Use the library object — not an example-only helper:
 
-1. Pick control letter(s) appropriate to the voice (script: body rails + bowl,
-   typically `a` then `o` — not “whatever the brief phrase needs first”).
-2. Implement **one** glyph; run
-   `typekernel.qa.style_consistency.compare_glyph_styles` /
-   `check_design_sequence` against control and previous.
-3. Unlock the next letter only after the gate passes (or after a deliberate,
-   documented tolerance change for a role skip — ascenders vs body).
-4. `BRIEF_SENTENCE` is a **late specimen** after the gated charset exists.
-   `build.py` should fail if the sequential style gate fails.
+```python
+from typekernel.qa import DesignSequence, StyleConsistencyTolerances
 
-Library entry points: `extract_glyph_style_metrics`, `compare_glyph_styles`,
-`check_design_sequence`, `script_body_tolerances` in `typekernel.qa.style_consistency`.
+seq = controls.design_sequence(order=("n", "o", "h", "u"), control="n")
+# or DesignSequence.start("a", glyph_a(), planned_order=DESIGN_ORDER, ...)
+for ch in seq.planned_order:
+    if ch == seq.control:
+        continue
+    report = seq.try_add(ch, build_one(ch))  # Controls.build(ch) or skeleton builder
+    if not report.passed:
+        print(seq.hints_from_last())  # redesign this glyph — do not skip
+        break
+glyphs = seq.export_glyphs(require_complete=True)
+```
+
+Rules:
+
+1. Pick control letter(s) first (Controls: `n`/`o`; script: `a` then `o`).
+2. Design **one** glyph; `try_add` / `add` style-checks vs control + previous.
+3. Unlock only on pass. On refuse, read `fix_hints()` and redesign — never
+   widen tolerances to batch-unlock, never `build_all` / deprecated
+   `build_charset()` as the design method.
+4. `BRIEF_SENTENCE` is a **late specimen** after `export_glyphs`.
+5. `build.py` must exit non-zero if the sequence is incomplete / gate fails.
+
+APIs: `typekernel.qa.DesignSequence`, `Controls.design_sequence`,
+`compare_glyph_styles`, `fix_hint_for_check`, `script_body_tolerances`.
+`Controls.build_all` is stock derivation **after** controls are locked — not
+sequential design of new letters.
 
 ### Step details
 

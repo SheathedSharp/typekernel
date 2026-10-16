@@ -605,7 +605,21 @@ CHARSET: Final = "".join(DESIGN_ORDER)
 
 
 def build_charset(ctx: DesignContext | None = None) -> dict[str, ComposedGlyph]:
-    """Build every letter (no style gate). Prefer :func:`build_charset_sequential`."""
+    """Deprecated ungated batch build.
+
+    .. deprecated::
+        Agents must not use this as the design method. Use
+        :func:`build_charset_sequential` (library :class:`~typekernel.qa.design_sequence.DesignSequence`).
+        This wrapper emits :class:`DeprecationWarning` and will be removed.
+    """
+    import warnings
+
+    warnings.warn(
+        "build_charset() is ungated and deprecated; use build_charset_sequential() "
+        "/ typekernel.qa.DesignSequence",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     c = ctx or script_context()
     return {ch: BUILDERS[ch](c) for ch in DESIGN_ORDER}
 
@@ -631,7 +645,7 @@ def _script_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(skip))
 
 
-def script_sequence_tolerances() -> "StyleConsistencyTolerances":
+def script_sequence_tolerances() -> StyleConsistencyTolerances:
     """Florid-script budgets after per-glyph redesign.
 
     Rails/slant/stem stay near body defaults. Contrast allows multi-vertical
@@ -657,68 +671,51 @@ def build_charset_sequential(
     tolerances: object | None = None,
     compare_to_previous: bool = True,
 ) -> tuple[dict[str, ComposedGlyph], object]:
-    """Design-order build: one glyph at a time, gate, then unlock the next.
+    """Design-order build via library :class:`~typekernel.qa.DesignSequence`.
 
-    Does **not** batch-construct the charset then wave a report at it. Each
-    letter is drawn, compared to control (+ previous unlocked), and only then
-    is the next builder called. On failure, later letters are not built.
+    One glyph at a time: draw → style-check vs control/previous → unlock or stop.
+    Does **not** batch-construct then wave a report. On failure, later letters
+    are not built.
 
     Returns ``(drawn, sequence_report)``. Agents must fix the failing glyph
-    before unlocking the next letter.
+    (see ``report.failures`` / ``fix_hints``) before unlocking the next letter.
     """
-    from typekernel.qa.style_consistency import (
-        StyleConsistencyTolerances,
-        check_design_sequence,
-        compare_glyph_styles,
-    )
+    from typekernel.qa.design_sequence import DesignSequence
+    from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
     c = ctx or script_context()
     tol = tolerances if tolerances is not None else script_sequence_tolerances()
-    assert isinstance(tol, StyleConsistencyTolerances)
+    if not isinstance(tol, StyleConsistencyTolerances):
+        raise TypeError("tolerances must be StyleConsistencyTolerances")
 
-    drawn: dict[str, ComposedGlyph] = {}
-    unlocked: list[str] = []
-    for ch in DESIGN_ORDER:
-        drawn[ch] = BUILDERS[ch](c)
-        if ch == CONTROL_GLYPH:
-            unlocked.append(ch)
-            continue
-        # Gate against control
-        skip_c = _script_skip_checks(CONTROL_GLYPH, ch)
-        rep_c = compare_glyph_styles(
-            drawn[CONTROL_GLYPH],
-            drawn[ch],
-            reference_name=CONTROL_GLYPH,
-            candidate_name=ch,
-            tolerances=tol,
-            skip_checks=skip_c,
-        )
-        ok = rep_c.passed
-        if compare_to_previous and unlocked:
-            prev = unlocked[-1]
-            if prev != CONTROL_GLYPH:
-                skip_p = _script_skip_checks(prev, ch)
-                rep_p = compare_glyph_styles(
-                    drawn[prev],
-                    drawn[ch],
-                    reference_name=prev,
-                    candidate_name=ch,
-                    tolerances=tol,
-                    skip_checks=skip_p,
-                )
-                ok = ok and rep_p.passed
-        if not ok:
-            # Stop — do not batch-unlock later letters.
-            break
-        unlocked.append(ch)
-
-    # Full report over whatever was drawn (includes the failing candidate).
-    report = check_design_sequence(
-        drawn,
-        tuple(drawn.keys()),
-        control=CONTROL_GLYPH,
+    control_glyph = BUILDERS[CONTROL_GLYPH](c)
+    seq = DesignSequence.start(
+        CONTROL_GLYPH,
+        control_glyph,
         tolerances=tol,
         compare_to_previous=compare_to_previous,
         skip_checks_for_pair=_script_skip_checks,
+        planned_order=DESIGN_ORDER,
     )
-    return drawn, report
+    for ch in DESIGN_ORDER:
+        if ch == CONTROL_GLYPH:
+            continue
+        glyph = BUILDERS[ch](c)
+        report = seq.try_add(ch, glyph)
+        if not report.passed:
+            # Stop — do not batch-unlock later letters. Include refused candidate
+            # in the returned map for diagnostics only.
+            from typekernel.qa.style_consistency import check_design_sequence
+
+            drawn = dict(seq.glyphs)
+            drawn[ch] = glyph
+            full = check_design_sequence(
+                drawn,
+                tuple(drawn.keys()),
+                control=CONTROL_GLYPH,
+                tolerances=tol,
+                compare_to_previous=compare_to_previous,
+                skip_checks_for_pair=_script_skip_checks,
+            )
+            return drawn, full
+    return dict(seq.glyphs), seq.sequence_report()

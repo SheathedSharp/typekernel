@@ -8,7 +8,7 @@ moves the whole ``n`` family and ``tuned_o(rx=...)`` the ``o`` family.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -284,6 +284,36 @@ class Controls:
 
     def build(self, ch: str) -> ComposedGlyph:
         return self.build_all(ch)[ch]
+
+    def design_sequence(
+        self,
+        order: Sequence[str] | None = None,
+        *,
+        control: str = "n",
+        tolerances: object | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: object | None = None,
+    ) -> object:
+        """Start a gated :class:`~typekernel.qa.design_sequence.DesignSequence`.
+
+        Builds **only** the control glyph. Agents must ``try_add`` / ``add``
+        each next letter (typically ``self.build(ch)``) and redesign on refuse.
+        Do **not** use :meth:`build_all` as the design method for new letters —
+        ``build_all`` is stock derivation after controls are locked.
+        """
+        from typekernel.qa.design_sequence import DesignSequence
+        from typekernel.qa.style_consistency import StyleConsistencyTolerances
+
+        tol = tolerances if tolerances is not None else StyleConsistencyTolerances()
+        return DesignSequence.from_controls(
+            self,
+            control=control,
+            order=order,
+            tolerances=tol,  # type: ignore[arg-type]
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
+        )
+
 
     def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
         """Draw the controls once and derive ``chars`` (default: all supported)."""

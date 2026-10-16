@@ -17,6 +17,13 @@ from typekernel.qa.design_review import (
     DesignReview,
     design_review,
 )
+from typekernel.qa.design_sequence import (
+    DEFAULT_BODY_DESIGN_ORDER,
+    DesignSequence,
+    DesignSequenceError,
+    default_body_design_order,
+    latin_topology_skip_checks,
+)
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
 from typekernel.qa.score import (
@@ -45,15 +52,19 @@ from typekernel.qa.style_consistency import (
     check_design_sequence,
     compare_glyph_styles,
     extract_glyph_style_metrics,
+    fix_hint_for_check,
     script_body_tolerances,
 )
 
 __all__ = [
     "AGENT_PAIRS",
     "AGENT_SENTENCE",
+    "DEFAULT_BODY_DESIGN_ORDER",
     "DEFAULT_FOCUS_GLYPHS",
     "WEAK_GLYPHS",
     "DesignReview",
+    "DesignSequence",
+    "DesignSequenceError",
     "GlyphStyleMetrics",
     "Score",
     "SentenceGateLimits",
@@ -69,9 +80,12 @@ __all__ = [
     "compare_glyph_styles",
     "controls_pair_gaps",
     "controls_sentence_report",
+    "default_body_design_order",
     "design_review",
     "extract_glyph_style_metrics",
+    "fix_hint_for_check",
     "join_smoothness",
+    "latin_topology_skip_checks",
     "load_approval",
     "outline_hash",
     "require_approval",

@@ -151,6 +151,22 @@ report = compare_glyph_styles(control_glyph, candidate, reference_name="a", cand
 assert report.passed, report.failures
 ```
 
-Phrase / `BRIEF_SENTENCE` proofs come **after** `check_design_sequence` unlocks
-the charset. See `examples/zayju_script/design.py` (`DESIGN_ORDER`,
-`build_charset_sequential`).
+
+## Designer-order (`DesignSequence`)
+
+```python
+from typekernel.qa import DesignSequence
+from typekernel.parts import Controls, DesignContext
+
+controls = Controls.from_context(DesignContext.geometric_sans())
+seq = controls.design_sequence(order=("n", "o", "h"), control="n")
+seq.add("o", controls.build("o"))
+seq.add("h", controls.build("h"))
+glyphs = seq.export_glyphs(require_complete=True)
+```
+
+On refuse, `DesignSequenceError.hints` / `seq.hints_from_last()` name the
+metric and the redesign direction. Phrase / `BRIEF_SENTENCE` proofs come
+**after** export. See `examples/zayju_script/design.py` (`build_charset_sequential`
+wraps `DesignSequence`; ungated `build_charset` is deprecated).
+

@@ -1,0 +1,124 @@
+"""DesignSequence — first-class designer-order unlock gate."""
+
+from __future__ import annotations
+
+import pytest
+
+from typekernel.parts import Controls, DesignContext
+from typekernel.qa.design_sequence import (
+    DesignSequence,
+    DesignSequenceError,
+    default_body_design_order,
+)
+from typekernel.qa.style_consistency import StyleConsistencyTolerances
+
+
+def _loose() -> StyleConsistencyTolerances:
+    return StyleConsistencyTolerances(
+        stem_median=40.0,
+        contrast_ratio=10.0,
+        entry_rail_y=600.0,
+        exit_rail_y=600.0,
+        exit_slant_deg=180.0,
+        bowl_center_y=300.0,
+        ink_ymin=300.0,
+        ink_ymax=500.0,
+    )
+
+
+def test_start_unlocks_control_only() -> None:
+    c = Controls.from_context(DesignContext.geometric_sans())
+    seq = DesignSequence.start("n", c.build("n"), planned_order=("n", "o", "h"))
+    assert seq.unlocked == ("n",)
+    assert seq.next_planned() == "o"
+    assert not seq.is_complete
+
+
+def test_try_add_unlocks_on_pass() -> None:
+    c = Controls.from_context(DesignContext.geometric_sans())
+    seq = DesignSequence.from_controls(
+        c, control="n", order=("n", "o", "h"), tolerances=_loose()
+    )
+    rep = seq.try_add("o", c.build("o"))
+    assert rep.passed
+    assert "o" in seq.unlocked
+    seq.add("h", c.build("h"))
+    assert seq.is_complete
+    glyphs = seq.export_glyphs(require_complete=True)
+    assert set(glyphs) == {"n", "o", "h"}
+
+
+def test_try_add_refuses_without_unlocking() -> None:
+    c = Controls.from_context(DesignContext.geometric_sans())
+    # Very tight stem — o vs n often differs enough on some presets; use
+    # absurdly tight ink_ymax so a taller letter fails.
+    tight = StyleConsistencyTolerances(
+        stem_median=0.01,
+        contrast_ratio=0.01,
+        entry_rail_y=0.01,
+        exit_rail_y=0.01,
+        exit_slant_deg=0.01,
+        bowl_center_y=0.01,
+        ink_ymin=0.01,
+        ink_ymax=0.01,
+    )
+    seq = DesignSequence.from_controls(
+        c, control="n", order=("n", "h"), tolerances=tight
+    )
+    rep = seq.try_add("h", c.build("h"))
+    assert not rep.passed
+    assert seq.unlocked == ("n",)
+    assert "h" not in seq.glyphs
+    hints = seq.hints_from_last()
+    assert hints, "expected actionable fix hints"
+    assert any("stem" in h or "ink" in h or "contrast" in h or "rail" in h or "bowl" in h for h in hints)
+
+
+def test_add_raises_with_hints() -> None:
+    c = Controls.from_context(DesignContext.geometric_sans())
+    tight = StyleConsistencyTolerances(
+        stem_median=0.01,
+        contrast_ratio=0.01,
+        entry_rail_y=0.01,
+        exit_rail_y=0.01,
+        exit_slant_deg=0.01,
+        bowl_center_y=0.01,
+        ink_ymin=0.01,
+        ink_ymax=0.01,
+    )
+    seq = c.design_sequence(order=("n", "o"), control="n", tolerances=tight)
+    with pytest.raises(DesignSequenceError) as ei:
+        seq.add("o", c.build("o"))  # type: ignore[union-attr]
+    assert ei.value.hints
+
+
+def test_export_requires_complete() -> None:
+    c = Controls.from_context(DesignContext.geometric_sans())
+    seq = DesignSequence.from_controls(
+        c, control="n", order=("n", "o"), tolerances=_loose()
+    )
+    with pytest.raises(DesignSequenceError):
+        seq.export_glyphs(require_complete=True)
+    seq.add("o", c.build("o"))
+    assert seq.export_glyphs(require_complete=True)["o"]
+
+
+def test_default_body_order_starts_with_n_o() -> None:
+    order = default_body_design_order()
+    assert order[0] == "n"
+    assert order[1] == "o"
+
+
+def test_fix_hints_on_compare() -> None:
+    from typekernel.qa.style_consistency import compare_glyph_styles
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    drawn = c.build_all("nh")
+    tight = StyleConsistencyTolerances(stem_median=0.01, ink_ymax=0.01)
+    rep = compare_glyph_styles(
+        drawn["n"], drawn["h"], reference_name="n", candidate_name="h", tolerances=tight
+    )
+    if not rep.passed:
+        hints = rep.fix_hints()
+        assert hints
+        assert all(isinstance(h, str) and len(h) > 10 for h in hints)

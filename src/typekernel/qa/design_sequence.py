@@ -1,0 +1,343 @@
+"""First-class designer-order session: control → one glyph → gate → unlock.
+
+Coding agents must design like human type designers: pick control letter(s),
+draw **one** glyph, style-check against control and the previous unlocked
+letter, unlock only on pass, and treat a specimen phrase as a **late** proof.
+
+Use :class:`DesignSequence` for new faces (Controls-derived or skeleton).
+``Controls.build_all`` remains a stock derivation helper after controls are
+locked — it is not a substitute for sequential design of new letters.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+from typekernel.parts.compose import ComposedGlyph
+from typekernel.qa.style_consistency import (
+    SequenceStyleReport,
+    StyleConsistencyReport,
+    StyleConsistencyTolerances,
+    check_design_sequence,
+    compare_glyph_styles,
+)
+
+if TYPE_CHECKING:
+    from typekernel.parts.family import Controls
+
+__all__ = [
+    "DEFAULT_BODY_DESIGN_ORDER",
+    "DesignSequence",
+    "DesignSequenceError",
+    "default_body_design_order",
+    "latin_topology_skip_checks",
+]
+
+# Humanist / geometric body order: stem control, bowl control, then related.
+DEFAULT_BODY_DESIGN_ORDER: tuple[str, ...] = (
+    "n",
+    "o",
+    "h",
+    "u",
+    "m",
+    "r",
+    "a",
+    "e",
+    "c",
+    "d",
+    "b",
+    "p",
+    "q",
+    "g",
+    "i",
+    "l",
+    "f",
+    "t",
+    "j",
+    "s",
+    "v",
+    "w",
+    "y",
+    "x",
+    "z",
+    "k",
+)
+
+
+def default_body_design_order() -> tuple[str, ...]:
+    """Default lowercase designer order for Controls-derived Latin faces."""
+    return DEFAULT_BODY_DESIGN_ORDER
+
+# Topology roles where some style metrics are meaningless across letters.
+_CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O", "e", "c", "0", "Q", "C", "G"})
+_ASCENDERS: frozenset[str] = frozenset(
+    {"b", "d", "f", "h", "k", "l", "t", "B", "D", "F", "H", "K", "L", "P", "R", "T"}
+)
+_DESCENDERS: frozenset[str] = frozenset({"g", "j", "p", "q", "y", "J", "Q"})
+_DOTTED: frozenset[str] = frozenset({"i", "j"})
+
+
+def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Default metric skips across Latin topology roles (Controls path).
+
+    Closed bowls lack writing rails; ascenders/descenders shift ink extents;
+    dotted letters put exit mass on the tittle. Agents may pass a stricter
+    callable instead — do not use skips to hide a failed redesign.
+    """
+    skip: list[str] = []
+    if ref in _CLOSED_BOWLS or cand in _CLOSED_BOWLS:
+        skip.extend(["entry_rail_y", "exit_rail_y", "exit_slant_deg"])
+    if ref in _ASCENDERS or cand in _ASCENDERS:
+        skip.extend(["ink_ymax", "bowl_center_y"])
+    if ref in _DESCENDERS or cand in _DESCENDERS:
+        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
+    if ref in _DOTTED or cand in _DOTTED:
+        skip.extend(["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y"])
+    return tuple(dict.fromkeys(skip))
+
+
+
+class DesignSequenceError(ValueError):
+    """Raised when a glyph is refused or export is incomplete."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reports: Sequence[StyleConsistencyReport] = (),
+    ) -> None:
+        super().__init__(message)
+        self.reports = tuple(reports)
+
+    @property
+    def hints(self) -> tuple[str, ...]:
+        out: list[str] = []
+        for rep in self.reports:
+            out.extend(rep.fix_hints())
+        return tuple(out)
+
+
+@dataclass
+class DesignSequence:
+    """Mutable designer session with a hard unlock gate.
+
+    Typical agent loop::
+
+        seq = DesignSequence.start("n", controls.build("n"))
+        for ch in ("o", "h", "u"):
+            report = seq.try_add(ch, controls.build(ch))
+            if not report.passed:
+                # read report.fix_hints(), redesign, retry — do not skip
+                ...
+        glyphs = seq.export_glyphs(require_complete=False)
+    """
+
+    control: str
+    tolerances: StyleConsistencyTolerances = field(
+        default_factory=StyleConsistencyTolerances
+    )
+    compare_to_previous: bool = True
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None
+    planned_order: tuple[str, ...] = ()
+    _glyphs: MutableMapping[str, ComposedGlyph] = field(default_factory=dict)
+    _unlocked: list[str] = field(default_factory=list)
+    _last_reports: tuple[StyleConsistencyReport, ...] = ()
+
+    @classmethod
+    def start(
+        cls,
+        control_name: str,
+        control_glyph: ComposedGlyph,
+        *,
+        tolerances: StyleConsistencyTolerances | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+        planned_order: Sequence[str] = (),
+    ) -> DesignSequence:
+        """Open a session with the control glyph already unlocked."""
+        if not control_name:
+            raise ValueError("control_name must be non-empty")
+        planned = tuple(planned_order) if planned_order else ()
+        if planned and planned[0] != control_name and control_name not in planned:
+            planned = (control_name, *planned)
+        seq = cls(
+            control=control_name,
+            tolerances=tolerances or StyleConsistencyTolerances(),
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+            planned_order=planned,
+        )
+        seq._glyphs[control_name] = control_glyph
+        seq._unlocked.append(control_name)
+        return seq
+
+    @classmethod
+    def from_controls(
+        cls,
+        controls: Controls,
+        *,
+        control: str = "n",
+        order: Sequence[str] | None = None,
+        tolerances: StyleConsistencyTolerances | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+    ) -> DesignSequence:
+        """Start from a :class:`~typekernel.parts.family.Controls` sheet.
+
+        Builds **only** the control glyph. Remaining letters in ``order``
+        (default: :data:`DEFAULT_BODY_DESIGN_ORDER`) must be unlocked via
+        :meth:`try_add` / :meth:`add` — not via ``build_all``.
+        """
+        planned = tuple(order) if order is not None else default_body_design_order()
+        if control not in planned or planned[0] != control:
+            planned = (control, *[c for c in planned if c != control])
+        skips = skip_checks_for_pair
+        if skips is None:
+            skips = latin_topology_skip_checks
+        return cls.start(
+            control,
+            controls.build(control),
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skips,
+            planned_order=planned,
+        )
+
+    @property
+    def unlocked(self) -> tuple[str, ...]:
+        return tuple(self._unlocked)
+
+    @property
+    def glyphs(self) -> Mapping[str, ComposedGlyph]:
+        """Unlocked glyphs only (refused candidates are not kept)."""
+        return {ch: self._glyphs[ch] for ch in self._unlocked}
+
+    @property
+    def last_reports(self) -> tuple[StyleConsistencyReport, ...]:
+        return self._last_reports
+
+    @property
+    def is_complete(self) -> bool:
+        if not self.planned_order:
+            return False
+        return all(ch in self._unlocked for ch in self.planned_order)
+
+    def next_planned(self) -> str | None:
+        """Next letter in ``planned_order`` that is not yet unlocked."""
+        for ch in self.planned_order:
+            if ch not in self._unlocked:
+                return ch
+        return None
+
+    def _pair_reports(
+        self, name: str, glyph: ComposedGlyph
+    ) -> tuple[StyleConsistencyReport, ...]:
+        if name == self.control:
+            raise DesignSequenceError(
+                f"{name!r} is the control — already unlocked at start"
+            )
+        if self.control not in self._glyphs:
+            raise DesignSequenceError("session has no control glyph")
+        reports: list[StyleConsistencyReport] = []
+        skip_c: Sequence[str] = ()
+        if self.skip_checks_for_pair is not None:
+            skip_c = tuple(self.skip_checks_for_pair(self.control, name) or ())
+        reports.append(
+            compare_glyph_styles(
+                self._glyphs[self.control],
+                glyph,
+                reference_name=self.control,
+                candidate_name=name,
+                tolerances=self.tolerances,
+                skip_checks=skip_c,
+            )
+        )
+        if self.compare_to_previous and self._unlocked:
+            prev = self._unlocked[-1]
+            if prev != self.control:
+                skip_p: Sequence[str] = ()
+                if self.skip_checks_for_pair is not None:
+                    skip_p = tuple(self.skip_checks_for_pair(prev, name) or ())
+                reports.append(
+                    compare_glyph_styles(
+                        self._glyphs[prev],
+                        glyph,
+                        reference_name=prev,
+                        candidate_name=name,
+                        tolerances=self.tolerances,
+                        skip_checks=skip_p,
+                    )
+                )
+        return tuple(reports)
+
+    def try_add(self, name: str, glyph: ComposedGlyph) -> StyleConsistencyReport:
+        """Propose ``glyph`` as ``name``. Unlock only if every gate passes.
+
+        Returns the **control** comparison report (always). When a previous
+        letter exists, both control and previous must pass; the returned
+        report's ``passed`` is True only if all comparisons passed. Inspect
+        :attr:`last_reports` for every comparison and
+        :meth:`StyleConsistencyReport.fix_hints` for actionable text.
+        """
+        reports = self._pair_reports(name, glyph)
+        self._last_reports = reports
+        ok = all(r.passed for r in reports)
+        if ok:
+            self._glyphs[name] = glyph
+            if name not in self._unlocked:
+                self._unlocked.append(name)
+        # Primary report = vs control (first); annotate aggregate pass.
+        primary = reports[0]
+        if len(reports) > 1 and primary.passed and not reports[1].passed:
+            # Surface previous failure as the returned pass flag.
+            return StyleConsistencyReport(
+                reference_name=reports[1].reference_name,
+                candidate_name=reports[1].candidate_name,
+                checks=reports[1].checks,
+                passed=False,
+                reference=reports[1].reference,
+                candidate=reports[1].candidate,
+            )
+        return primary
+
+    def add(self, name: str, glyph: ComposedGlyph) -> ComposedGlyph:
+        """Like :meth:`try_add` but raise :exc:`DesignSequenceError` on refuse."""
+        report = self.try_add(name, glyph)
+        if not report.passed:
+            hints = "; ".join(self.last_reports and self.hints_from_last() or [])
+            raise DesignSequenceError(
+                f"refused glyph {name!r}: style gate failed"
+                + (f" — {hints}" if hints else ""),
+                reports=self._last_reports,
+            )
+        return glyph
+
+    def hints_from_last(self) -> tuple[str, ...]:
+        out: list[str] = []
+        for rep in self._last_reports:
+            out.extend(rep.fix_hints())
+        return tuple(out)
+
+    def export_glyphs(self, *, require_complete: bool = True) -> dict[str, ComposedGlyph]:
+        """Copy unlocked glyphs. Refuse if ``require_complete`` and plan unfinished."""
+        if require_complete and self.planned_order and not self.is_complete:
+            missing = [ch for ch in self.planned_order if ch not in self._unlocked]
+            raise DesignSequenceError(
+                f"sequence incomplete; still need {missing!r} "
+                f"(unlocked={list(self._unlocked)!r})"
+            )
+        return dict(self.glyphs)
+
+    def sequence_report(self) -> SequenceStyleReport:
+        """Re-run the batch gate over currently unlocked glyphs."""
+        order = self._unlocked if self._unlocked else (self.control,)
+        return check_design_sequence(
+            self.glyphs,
+            order,
+            control=self.control,
+            tolerances=self.tolerances,
+            compare_to_previous=self.compare_to_previous,
+            skip_checks_for_pair=self.skip_checks_for_pair,
+        )

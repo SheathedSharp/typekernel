@@ -9,12 +9,11 @@ Late specimen phrase (after the charset is designed under gates):
 ## Designer order (required)
 
 This example is **not** phrase-first. Agents must not define `BRIEF_SENTENCE` and
-then `build_charset()` as the design method.
+then `build_charset()` as the design method (that helper is **deprecated** and warns).
 
 1. **Control glyphs** — `a` (entry/exit rails + bowl), then `o` (bowl).
 2. **One letter at a time** along `DESIGN_ORDER` in `design.py`.
-3. After each letter, run `typekernel.qa.style_consistency` against the control
-   and the previous unlocked glyph (`build_charset_sequential`).
+3. After each letter, unlock via library `DesignSequence.try_add` (style-check vs control + previous).
 4. Only when the sequence unlocks the full charset compose spacing/kern and the
    brief PNG specimen.
 
@@ -61,7 +60,7 @@ a time — not unlocked by widening the gate.
 
 ## Gates
 
-- **Required:** `build_charset_sequential` / `check_design_sequence` (style
+- **Required:** `build_charset_sequential` → library `typekernel.qa.DesignSequence` (style
   consistency vs control + previous).
 - Controls `check_sentence_gate` does **not** apply — this face is not derived
   from `Controls.build_all`.

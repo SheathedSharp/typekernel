@@ -28,6 +28,7 @@ __all__ = [
     "check_design_sequence",
     "compare_glyph_styles",
     "extract_glyph_style_metrics",
+    "fix_hint_for_check",
     "script_body_tolerances",
 ]
 
@@ -103,6 +104,67 @@ def _exit_slant_deg(
     return math.degrees(math.atan2(dy, dx))
 
 
+
+_HINT_DIRECTION: dict[str, tuple[str, str]] = {
+    # metric → (when cand > ref, when cand < ref)
+    "stem_median": (
+        "reduce candidate stem thickness toward the reference",
+        "increase candidate stem thickness toward the reference",
+    ),
+    "contrast_ratio": (
+        "even candidate stroke contrast (less H/V disparity) toward the reference",
+        "increase candidate stroke contrast toward the reference",
+    ),
+    "entry_rail_y": (
+        "lower candidate entry / lead-in rail toward the reference Y",
+        "raise candidate entry / lead-in rail toward the reference Y",
+    ),
+    "exit_rail_y": (
+        "lower candidate exit / trail rail toward the reference Y",
+        "raise candidate exit / trail rail toward the reference Y",
+    ),
+    "exit_slant_deg": (
+        "rotate candidate exit flatter / more clockwise toward the reference slant",
+        "rotate candidate exit steeper / more counter-clockwise toward the reference slant",
+    ),
+    "bowl_center_y": (
+        "shift candidate bowl / body centre downward toward the reference",
+        "shift candidate bowl / body centre upward toward the reference",
+    ),
+    "ink_ymin": (
+        "raise candidate lowest ink (less deep descender / overshoot) toward the reference",
+        "lower candidate lowest ink toward the reference",
+    ),
+    "ink_ymax": (
+        "lower candidate highest ink (shorter ascender / less overshoot) toward the reference",
+        "raise candidate highest ink toward the reference",
+    ),
+}
+
+
+def fix_hint_for_check(
+    name: str,
+    reference: float | None,
+    candidate: float | None,
+    *,
+    ok: bool,
+) -> str:
+    """Actionable one-line hint for an agent redesigning the candidate glyph."""
+    if ok:
+        return ""
+    if reference is None or candidate is None:
+        return f"{name}: measurement missing — ensure the outline has sampleable ink"
+    pair = _HINT_DIRECTION.get(name)
+    if pair is None:
+        return f"{name}: move candidate ({candidate:.1f}) toward reference ({reference:.1f})"
+    hi, lo = pair
+    direction = hi if candidate > reference else lo
+    return (
+        f"{name}: candidate={candidate:.1f} reference={reference:.1f} "
+        f"(delta={abs(candidate - reference):.1f}) — {direction}"
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class GlyphStyleMetrics:
     """Measurable style proxies for one designed outline."""
@@ -166,6 +228,8 @@ class StyleCheck:
     limit: float
     ok: bool
     note: str = ""
+    hint: str = ""
+    """Empty when ok; otherwise an actionable redesign direction."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +246,13 @@ class StyleConsistencyReport:
     @property
     def failures(self) -> tuple[StyleCheck, ...]:
         return tuple(c for c in self.checks if not c.ok)
+
+    def fix_hints(self) -> tuple[str, ...]:
+        """Actionable redesign lines for every failing check."""
+        return tuple(
+            c.hint or fix_hint_for_check(c.name, c.reference, c.candidate, ok=False)
+            for c in self.failures
+        )
 
 
 def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
@@ -223,23 +294,27 @@ def _check(
     skip_if_missing: bool = True,
 ) -> StyleCheck:
     if ref is None or cand is None:
+        ok = bool(skip_if_missing)
         return StyleCheck(
             name=name,
             reference=ref,
             candidate=cand,
             delta=None,
             limit=limit,
-            ok=bool(skip_if_missing),
+            ok=ok,
             note="skipped (missing measurement)" if skip_if_missing else "missing",
+            hint="" if ok else fix_hint_for_check(name, ref, cand, ok=False),
         )
     delta = abs(cand - ref)
+    ok = delta <= limit
     return StyleCheck(
         name=name,
         reference=ref,
         candidate=cand,
         delta=delta,
         limit=limit,
-        ok=delta <= limit,
+        ok=ok,
+        hint=fix_hint_for_check(name, ref, cand, ok=ok),
     )
 
 

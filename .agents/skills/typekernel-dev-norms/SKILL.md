@@ -71,8 +71,9 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 When creating or extending faces in this repo:
 
 1. Follow `.agents/skills/typekernel-font-design/` **designer order**.
-2. Design **one glyph at a time**; gate with
-   `typekernel.qa.style_consistency` against control + previous.
+2. Design **one glyph at a time** via `typekernel.qa.DesignSequence` /
+   `Controls.design_sequence` (try_add → fix_hints → unlock). Do not
+   ungated `build_all` / deprecated `build_charset` as the design method.
 3. Do **not** use a brief phrase (`BRIEF_SENTENCE`) as the design driver — only
-   as a late specimen after the sequential gate passes.
+   as a late specimen after `export_glyphs`.
 4. Skeleton / script examples must use the same discipline as Controls faces.

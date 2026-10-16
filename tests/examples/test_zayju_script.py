@@ -1,4 +1,4 @@
-"""TK-308: zayju_script skeleton face smoke (trace_letter spike, not Controls pipeline)."""
+"""zayju_script skeleton face smoke (trace_letter, not Controls pipeline)."""
 
 from __future__ import annotations
 
@@ -27,10 +27,11 @@ def _load_design():
 
 
 def test_zayju_script_charset_builds_and_lints_clean() -> None:
-    """``trace_letter`` + library heal/refit builds the script charset without lint errors."""
+    """Sequential DesignSequence unlock builds the script charset without lint errors."""
     design = _load_design()
     ctx = design.script_context()
-    charset = design.build_charset(ctx)
+    charset, report = design.build_charset_sequential(ctx)
+    assert report.passed, list(report.failures)
     assert set(charset) == set(design.CHARSET)
     from typekernel.qa.lint import lint_glyph
 
