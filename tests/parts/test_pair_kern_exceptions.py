@@ -40,3 +40,12 @@ def test_compose_font_merges_pair_kern_exceptions() -> None:
     assert ("o", "w") in font.kerning or any(
         k == ("o", "w") for k in font.kerning
     )
+
+
+def test_compose_font_applies_default_pair_kern_exceptions() -> None:
+    from typekernel.compile import DEFAULT_PAIR_KERN_EXCEPTIONS
+
+    controls = Controls.from_context(DesignContext.humanist_sans())
+    font = compose_font_from_controls(controls, "KernDefault")
+    assert ("o", "w") in DEFAULT_PAIR_KERN_EXCEPTIONS
+    assert ("o", "w") in font.kerning or any(k == ("o", "w") for k in font.kerning)

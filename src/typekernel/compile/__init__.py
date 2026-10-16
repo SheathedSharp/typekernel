@@ -21,6 +21,7 @@ from typekernel.compile.build import (
     write_masters_designspace,
 )
 from typekernel.compile.family_build import (
+    DEFAULT_PAIR_KERN_EXCEPTIONS,
     FamilyBuildOptions,
     compose_font_from_controls,
     reference_kern_classes,
@@ -40,6 +41,7 @@ from typekernel.compile.ufo_import import read_font_from_ufo
 __all__ = [
     "STRUCTURAL_PROBLEMS",
     "BuildManifest",
+    "DEFAULT_PAIR_KERN_EXCEPTIONS",
     "FamilyBuildOptions",
     "FontBuild",
     "VariableFontBuild",

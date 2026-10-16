@@ -267,6 +267,7 @@ PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-revi
 After class kern, fit specific pairs that representatives miss:
 
 ```python
-FamilyBuildOptions(pair_kern_exceptions=(("o", "w"), ("a", "v")))
+FamilyBuildOptions()  # includes DEFAULT_PAIR_KERN_EXCEPTIONS (ow/av/Ta/LT)
+# override: FamilyBuildOptions(pair_kern_exceptions=(("o", "w"), ("a", "v")))
 # or: fit_glyph_pair_kerns(spaced, pairs, target=rhythm) → Font.add_kern_table
 ```

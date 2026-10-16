@@ -85,16 +85,13 @@ paths = build_glyph_preview(
 )
 ```
 
-## 库内仍未完成（脚手架替代不了）
+## 工程债已清、仍须人完成的
 
-下面这些 **不是** 再写一份 prompt 就能出现的。agent 调 `DesignContext` 也补不上。
+脚手架与默认构造（间距类 kern、`DEFAULT_PAIR_KERN_EXCEPTIONS`、sans `s`/`I`/`J` G1 软默认、`frac`/`ordn`、`opsz`、斜体 oblique 预切等）已在库内落地；agent 开局少拧 `tuned_glyph`。下面这些 **不是** 再写一份 prompt 就能出现的。
 
-- **间距 / 字偶**：缺 `H`/`O` 的子集现在仍会给大写分类并字偶，`AGENT_SENTENCE` 的 optical ratio 从约 1.34 收到约 1.02。类代表带不动的字形对可用 `fit_glyph_pair_kerns` / `FamilyBuildOptions(pair_kern_exceptions=(("o","w"), …))` 做光学例外字偶；pair gate 仍只抓撞字，不负责「好看」的全部审美。
-- **弱字默认质量**：sans 默认上 `s`/`S` 开口已用 G1 tip bridge，大写 `I` 为圆角（保留 contrast 锥度），`J` 钩端与顶角为 G1；斜体对 `J`/`s`/`S` 走 `OBLIQUE_PRE_EXTREMA` 以免 R4。Agent 仍可用 `tuned_glyph` 做声线/开口审美，但不再为「默认尖角 / 钩端折」被迫开局就改。`f`/`t` 横笔已是固定轮廓 detour。其余字形的 join / gap 仍可继续压。
-- **Designed deltas**：`with_stem_relief()`、`tuned_glyph`、`italic_design`、VF 共用 kern class 已有 API。斜体 oblique 预切与 `e_from_o` 内嵌切分（TK-402）已落地。`frac` / `ordn`（及 `numr`/`dnom`）经 `FamilyBuildOptions(frac=True, ordn=True)` 与 `add_fraction_forms` / `add_ordn_forms` 可用；**`opsz`** 经 `context_for_opsz` + `examples/optical_size/build_opsz_vf.py`（text 14 ↔ display 72）可用。
-- **程序级验收（M5）**：固定三 brief、`snapshot_trial` 指标与 L3 `voice_distance` 见 [AGENT_TRIALS.md](AGENT_TRIALS.md)；库内参考改字在 `examples/agent_trial/design_*.py`，构建 `build_reference_family.py`；写/审计快照：`snapshot_design.py`、`validate_snapshot.py`。§8 与待签 gate 程序条：`examples/run_m5_program_exit.py`（`--with-linters` 含 ruff/mypy）；衬线/斜体门槛见 `test_serif_voice_meets_tk306_program_acceptance`、`test_italic_program_acceptance.py`。视觉校样（不写 `approvals/`）：`examples/human_review_bundle.py`（衬线/斜体 gate + TK-206 B-13–B-15 `--only tk206` → `tk206_three_g_humanist.png` / `tk206_s_opening_humanist.png`）；全字符/叠图/字重阶梯/轮廓 golden：`examples/contact_sheet.py`、`examples/diff_overlay.py`、`examples/weight_ladder_sheet.py`、`examples/regenerate_outline_hashes.py` → 本地 `artifacts/specimens/`。B-13–B-15 无单独 `approvals/*.json`；衬线/斜体终验仍要人评与对应 JSON，不能单靠快照 JSON。
-- **视觉回归**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。试作被接受后才记 `approvals/`，防止「门槛过了但越改越丑」只靠 agent 自评。
-- **参考距离**：与 oh-my-font / zayJu 的对比是「离参考还有多远」，不是拷贝轮廓。手绘下沉见 `examples/zayju_letter/design_n.py`。
+- **视觉回归 / 终验**：数字刹车之外，人审 JSON（`qa.gates.write_approval`）必须由人写下。gate 不会自动批准。衬线/斜体 `approvals/*.json` 仍为 false，终验与 §8.6 人评不能单靠快照。试作被接受后才记 `approvals/`。
+- **程序级验收入口（M5）**：固定三 brief、`snapshot_trial`、L3 `voice_distance` 见 [AGENT_TRIALS.md](AGENT_TRIALS.md)；`examples/run_m5_program_exit.py`、`human_review_bundle.py`、contact/diff/weight/outline golden 已齐。剩的是人跑校样与签字，不是缺 API。
+- **审美余量**：pair gate 只抓撞字；开口松紧、字偶「好看」、与 oh-my-font / zayJu 的参考距离仍要人眼与 `tuned_glyph` / 手绘下沉（`examples/zayju_letter/design_n.py`）。
 
 配方与调参范围：[agent-recipes.md](agent-recipes.md)。
 

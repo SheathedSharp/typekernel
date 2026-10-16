@@ -32,10 +32,20 @@ from typekernel.parts.metrics import (
 )
 
 __all__ = [
+    "DEFAULT_PAIR_KERN_EXCEPTIONS",
     "FamilyBuildOptions",
     "compose_font_from_controls",
     "reference_kern_classes",
 ]
+
+
+# Class reps miss these diagonal/round pairs; optical fit closes the gap.
+DEFAULT_PAIR_KERN_EXCEPTIONS: tuple[tuple[str, str], ...] = (
+    ("o", "w"),
+    ("a", "v"),
+    ("T", "a"),
+    ("L", "T"),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,7 +60,7 @@ class FamilyBuildOptions:
     extended_latin: str = ""
     chars: str | None = None
     space_width_factor: float = 0.45
-    pair_kern_exceptions: tuple[tuple[str, str], ...] = ()
+    pair_kern_exceptions: tuple[tuple[str, str], ...] = DEFAULT_PAIR_KERN_EXCEPTIONS
     joins_policy: JoinPolicy = "tangent_fix"
     ease_curvature: bool = False
 
