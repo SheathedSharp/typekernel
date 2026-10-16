@@ -198,6 +198,9 @@ def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     assert "require-human-scores" in text
     assert "program-snapshot-only" in text
     assert "AGENT_TRIALS.md" in text
+    assert "human_review_bundle" in text
+    assert "--only tk206" in text
+    assert "tk206_three_g_humanist.png" in text
 
 
 def test_section8_skill_documents_m5_exit_workflow() -> None:
@@ -218,6 +221,7 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
+    assert "tk206" in text
     assert "weight_ladder_sheet.py" in text
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text

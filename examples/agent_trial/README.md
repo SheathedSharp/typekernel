@@ -53,4 +53,6 @@ PYTHONPATH=src python examples/agent_trial/validate_snapshot.py --recursive arti
 
 Full final-trial checklist: `docs/AGENT_TRIALS.md` §终验流程. Library program bar: `examples/run_m5_program_exit.py`.
 
-Serif/italic **visual** review (separate from trial snapshots): `examples/human_review_bundle.py` → `approvals/serif-*-voice.json`, `italic-vf-construct.json`.
+**Visual** review (separate from trial snapshots): `examples/human_review_bundle.py` — `--only serif|italic` →
+`approvals/serif-*-voice.json`, `italic-vf-construct.json`; `--only tk206` → `tk206_three_g_humanist.png` +
+`tk206_s_opening_humanist.png` (appendix B-13–B-15, no approval JSON).

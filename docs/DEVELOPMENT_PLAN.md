@@ -608,6 +608,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``human_review_bundle`` 含 TK-206 B-15 ``sS`` 校样与 ``regenerate_outline_hashes`` 指针；``test_human_review_bundle`` 固化。
 - **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``AGENT_GOAL`` / ``approvals/README`` / SKILL 对齐 B-13–B-15 双校样 PNG；``test_agent_trials_doc`` / §8 钩子更新。
+- **本轮（部分）**：``README`` / ``agent_trial/README`` 补 ``--only tk206``；附录 B 登记说明对齐校样路径；``test_section8_readme`` / ``test_section8_agent_trial_readme`` 钩子。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
@@ -763,8 +764,8 @@ M5：TK-501（贯穿）→ TK-502
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
 | B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；平顶几何回归 | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
 | B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；段型回归 | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
-| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签 | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
-| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子，人审仍可继续；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
+| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``tk206_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
+| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子 + ``human_review_bundle --only tk206`` 校样（无 JSON gate）；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
 | B-18 | `terminal_style` | 只影响 `c C ( ) ?` | 已确认 | 多处 | TK-107 |
