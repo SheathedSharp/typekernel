@@ -603,6 +603,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/_design_presets.py`` 共享 built-in preset 表（``contact_sheet`` / ``diff_overlay`` / ``weight_ladder_sheet``）。
 - **本轮（部分）**：``AGENT_GOAL`` / ``SKILL`` M5 段补 TK-104 校样 CLI；``run_m5_program_exit`` 含 ``test_diff_overlay_writes``。
 - **本轮（部分）**：``AGENT_TRIALS`` 发布前程序条补 TK-104/207 校样 CLI；``test_agent_trials_doc`` 固化。
+- **本轮（部分）**：``AGENT_TRIALS`` 终验流程补 B-15 ``--only tk206`` 与 TK-108 golden CLI；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：``human_review_bundle`` 含 TK-206 B-15 ``sS`` 校样与 ``regenerate_outline_hashes`` 指针；``test_human_review_bundle`` 固化。
 - **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
 
