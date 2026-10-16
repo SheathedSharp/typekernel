@@ -34,7 +34,7 @@
 
 与「参考试作」不同：终验必须由**执行试验的 agent/人**从对应 brief 的 preset 出发改字，不得只跑库内 `design_*.py` 并声称完成。
 
-**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + TK-502 试验烟测 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py`（`--only serif|italic`）校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。附录 B-15 `s` 开口：`human_review_bundle.py --only tk206` → `tk206_s_opening_humanist.png`（**无** `approvals` JSON，见 `agent-recipes.md` TK-206）。可选校样/ golden：`examples/contact_sheet.py`、`examples/diff_overlay.py`、`examples/weight_ladder_sheet.py`、`examples/regenerate_outline_hashes.py`（本地 `artifacts/specimens/` 或 `--write` 刷新 `outline_hashes.json`，见 TK-104/207/108）。
+**发布前程序条（库维护者，非终验本身）**：`PYTHONPATH=src python examples/run_m5_program_exit.py`（§8 + TK-502 试验烟测 + 待签 gate 的 `test_evidence`，见 `--list` / `--gate`）；或 `pytest -q tests/docs/test_development_plan_section8.py`。衬线/斜体视觉 gate 用 `examples/human_review_bundle.py`（`--only serif|italic`）校样后由人更新 `approvals/serif-*-voice.json`、`italic-vf-construct.json`（仍为 `approved: false` 时不得声称 M5 视觉验收完成）。附录 B-13–B-15（`3`/`G`/`s`）：`human_review_bundle.py --only tk206` → `tk206_three_g_humanist.png` + `tk206_s_opening_humanist.png`（**无** `approvals` JSON，见 `agent-recipes.md` TK-206）。可选校样/ golden：`examples/contact_sheet.py`、`examples/diff_overlay.py`、`examples/weight_ladder_sheet.py`、`examples/regenerate_outline_hashes.py`（本地 `artifacts/specimens/` 或 `--write` 刷新 `outline_hashes.json`，见 TK-104/207/108）。
 
 1. **固定 brief**（上表三行，文案不改）。
 2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。
@@ -44,7 +44,7 @@
    - 审计已写 JSON：`PYTHONPATH=src python examples/agent_trial/validate_snapshot.py <dir>/brief-N/snapshot.json`；整次试验目录：`validate_snapshot.py --recursive artifacts/trials/<run>/`；**程序阶段**（确认 agent 未预填人评）：`--program-snapshot-only`（退出码 **5**=已含 `human_review_scores`）；**终验归档**（人评已写入 JSON 后）：`--require-human-scores`（退出码 **8**=缺维度）。
    - 检查 JSON：`program_pass_ok`（程序侧全过，含空 `cheating_flags`）、`family_gate_ok`、`metrics_ok`、`l3_voice_ok`（= `l3_voice_criteria_met`：距离 + 拓扑 + gate/lint，非纯 stem 缩放）、`topology_fraction`（≥ `L3_MIN_TOPOLOGY_FRACTION` 0.05 当 `l3_voice_ok`）、`weight_ladder_r8_failures==0`（阶梯 stem 与 TK-207 一致，含 **200**，且含试作上的改字）、`cheating_flags` 为空（纯 stem 缩放会写入 `stem_only_or_scale_voice`）。`snapshot_design.py` 在写 JSON 前跑 `validate_trial_snapshot`（拒 forged `l3_voice_ok`）；退出码 **5**=字段不一致、**6**=未达 L3、**7**=`cheating_flags` 非空。
    - 可选：`build_reference_family.py` 同 brief 产出 OTF + `proof.png`（**不得**改 `AGENT_SENTENCE`）。
-4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；衬线/斜体视觉接受写 `approvals/*.json`（见 `human_review_bundle.py`）。附录 B-15 仅看图签字或笔记，不写 approval 文件。
+4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；衬线/斜体视觉接受写 `approvals/*.json`（见 `human_review_bundle.py`）。附录 B-13–B-15（`--only tk206`）仅看图签字或笔记，不写 approval 文件。
 5. **作废条件**：改过关句、改 L3/ gate 阈值、或 `cheating_flags` 非空；agent 在程序快照生成阶段写入 `human_review_scores`（须待人评后由人编辑 JSON 或摘要表）。
 
 库维护者回归：`tests/examples/test_agent_trial.py`、`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`。

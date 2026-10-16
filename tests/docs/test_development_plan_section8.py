@@ -146,6 +146,7 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     ).read_text(encoding="utf-8")
     assert "human_review_bundle" in text
     assert "--only tk206" in text
+    assert "tk206_three_g_humanist.png" in text
     assert "regenerate_outline_hashes.py" in text
     assert "snapshot_serif_voices" in text
     assert "validate_trial_snapshot" in text
@@ -245,13 +246,15 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
     assert "--only tk206" in text
+    assert "tk206_three_g_humanist.png" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
 
 
 def test_section8_approvals_readme_documents_review_workflow() -> None:
     text = (ROOT / "approvals/README.md").read_text(encoding="utf-8")
     assert "human_review_bundle" in text
-    assert "B-15" in text
+    assert "B-13" in text
+    assert "tk206_three_g_humanist.png" in text
     assert "--only tk206" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
     assert "test_development_plan_section8" in text

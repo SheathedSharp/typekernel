@@ -25,4 +25,5 @@ def test_agent_trials_documents_final_validation_and_human_review() -> None:
     assert "weight_ladder_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
     assert "--only tk206" in text
-    assert "B-15" in text
+    assert "B-13" in text or "B-13–B-15" in text
+    assert "tk206_three_g_humanist.png" in text

@@ -607,6 +607,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程补 B-15 ``--only tk206`` 与 TK-108 golden CLI；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：``human_review_bundle`` 含 TK-206 B-15 ``sS`` 校样与 ``regenerate_outline_hashes`` 指针；``test_human_review_bundle`` 固化。
 - **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
+- **本轮（部分）**：``AGENT_TRIALS`` / ``AGENT_GOAL`` / ``approvals/README`` / SKILL 对齐 B-13–B-15 双校样 PNG；``test_agent_trials_doc`` / §8 钩子更新。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
