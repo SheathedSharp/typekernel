@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from typekernel.parts.weight_relief import (
+    COUNTER_GAP_FLOOR_BASE,
+    COUNTER_GAP_FLOOR_OVER_STEM,
+    counter_gap_floor,
+)
 from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM
 from typekernel.qa.family_gate import FAMILY_GATE_VERSION
 from typekernel.qa.sentence_gate import (
@@ -29,3 +34,9 @@ def test_family_gate_version_frozen() -> None:
 
 def test_counter_scan_min_run_over_stem_frozen() -> None:
     assert COUNTER_SCAN_MIN_RUN_OVER_STEM == 0.09
+
+
+def test_counter_gap_floor_formula_frozen() -> None:
+    assert COUNTER_GAP_FLOOR_OVER_STEM == 0.08
+    assert COUNTER_GAP_FLOOR_BASE == 2.5
+    assert counter_gap_floor(180.0) == 17.9

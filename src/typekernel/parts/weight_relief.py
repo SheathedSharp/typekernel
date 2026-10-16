@@ -11,8 +11,12 @@ from typekernel.parts.control import NMetrics, OMetrics
 STEM_REF = 76.0
 STEM_BLACK = 220.0
 STEM_RELIEF_ONSET = 85.0
+COUNTER_GAP_FLOOR_OVER_STEM = 0.08  # R8 lint floor (see test_gate_thresholds_locked)
+COUNTER_GAP_FLOOR_BASE = 2.5
 
 __all__ = [
+    "COUNTER_GAP_FLOOR_BASE",
+    "COUNTER_GAP_FLOOR_OVER_STEM",
     "STEM_BLACK",
     "STEM_REF",
     "STEM_RELIEF_ONSET",
@@ -49,7 +53,7 @@ def relieve_n_o(n: NMetrics, o: OMetrics, stem: float) -> tuple[NMetrics, OMetri
 
 def counter_gap_floor(stem: float) -> float:
     """Minimum counter pinch (font units) for R8 at this stem weight."""
-    return 0.08 * stem + 2.5
+    return COUNTER_GAP_FLOOR_OVER_STEM * stem + COUNTER_GAP_FLOOR_BASE
 
 
 def m_counter_scale(stem: float, *, base: float = 0.92) -> float:
