@@ -170,6 +170,15 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     assert "diff_overlay.py" in text
 
 
+def test_section8_skill_reference_documents_tk308_trace_letter() -> None:
+    text = (
+        ROOT / ".agents/skills/typekernel-font-design/reference.md"
+    ).read_text(encoding="utf-8")
+    assert "TK-308" in text
+    assert "polyline_to_cubic_centerline" in text
+    assert "test_zayju_script.py" in text
+
+
 def test_section8_skill_reference_documents_tk302_stress() -> None:
     text = (
         ROOT / ".agents/skills/typekernel-font-design/reference.md"
@@ -207,6 +216,15 @@ def test_section8_plan_appendix_c_documents_stress_knob_sensitivity() -> None:
     assert "TK-301 后圆字母均动" in text
     assert "| `contrast` | 0.5 | 85 |" in text
     assert "test_contrast_moves_many_glyphs_on_humanist" in text
+
+
+def test_section8_agent_recipes_documents_tk308_trace_letter_spike() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-308" in text
+    assert "polyline_to_cubic_centerline" in text
+    assert "trace_letter" in text
+    assert "zayju_script" in text
+    assert "test_zayju_script.py" in text
 
 
 def test_section8_agent_recipes_documents_tk302_stress() -> None:

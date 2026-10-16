@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1530 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1532 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -561,6 +561,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_tk308_program_acceptance.py``；``test_section8_run_m5_program_exit_includes_tk308_stroke_spike``。
 - **本轮（部分）**：``tests/examples/test_zayju_script.py``（``build_charset`` lint 烟测 + ``build.py`` 烟测）；``examples/zayju_script`` 走库内 ``trace_letter`` heal/refit。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_zayju_script_charset_builds_and_lints_clean``；``test_section8_run_m5_program_exit_includes_tk308_zayju_script_smoke``。
+- **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_tk308_trace_letter_spike`` / ``test_section8_skill_reference_documents_tk308_trace_letter``。
 
 ### M4 真斜体
 

@@ -77,13 +77,14 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 
 | API | Role |
 | --- | --- |
-| `Stroke.from_points` | Polyline midline (default) |
+| `Stroke.from_points` | Polyline midline; with `offset_fit_budget>0`, `polyline_to_cubic_centerline` then `expand_cubic` |
 | `Stroke.from_beziers` | Cubic midline → `expand_cubic` |
 | `Skeleton.from_mapping` | Plan dict; stroke dict may include `beziers`, `chord_budget`, `offset_fit_budget`, `join`, `cap` |
 | `cubic_centerline_to_polyline` | Chord-budget flatten → chain to `expand` (open multi-segment path) |
+| `trace_letter` | Expand skeleton; default `heal` / `strip_tiny` / `refit_cubics` after union (see `examples/zayju_script/`) |
 | `expand_cubic` | `(Outline, CenterlineExpandReport)`; open path uses offset-rail cubics when `offset_fit_budget>0` (butt/round/square cap; miter/round/bevel join). Set `offset_fit_budget=0` to flatten midline + `expand`. |
 
-Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_tk308_program_acceptance.py`.
+Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_tk308_program_acceptance.py`, `tests/examples/test_zayju_script.py`.
 
 ## Italic & oblique (M4)
 
