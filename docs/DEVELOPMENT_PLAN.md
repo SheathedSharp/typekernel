@@ -580,6 +580,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``examples/run_m5_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list`` / ``--with-linters``）；``test_run_m5_program_exit``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 默认含 ``test_agent_trial`` / ``test_agent_trial_reference`` / ``test_trial_protocol`` 烟测。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_human_review_bundle_tk206_only``（TK-206 校样路径烟测）；``test_run_m5_program_exit`` 固化。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含附录 B-13～B-15 ``test_known_defects`` + ``test_s_opening_reach_relief_frozen``；``AGENT_TRIALS`` 库维护者回归列表对齐。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
@@ -765,9 +766,9 @@ M5：TK-501（贯穿）→ TK-502
 | B-10 | `u` | 左下重脚（类 slab） | **假设**：`n` 旋转 180° 后肩–腿接合变成重脚 | `control.py:604` | lint R9（待校准） |
 | B-11 | `t` | 横笔与钩根细如发丝 | **假设**：钩深/rise 参数 + `blend_corners` 圆角过大 | `control.py:492`、`_finish_hook_letter :432` | lint R9 |
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
-| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；人审待签（``tk206_three_g_humanist.png``） | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
-| B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；人审待签（同上校样） | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
-| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``tk206_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
+| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；人审待签（``tk206_three_g_humanist.png``） | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf`（七 preset） |
+| B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；人审待签（同上校样） | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join`（七 preset） |
+| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``tk206_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band`（七 preset）+ ``test_s_*`` VF |
 | — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子 + ``human_review_bundle --only tk206`` 校样（无 JSON gate）；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
