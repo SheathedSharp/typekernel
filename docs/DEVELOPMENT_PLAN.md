@@ -321,6 +321,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 - **本轮（部分）**：``human_review_bundle`` 写出 ``tk206_s_opening_humanist.png``（``--only tk206`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_tk206_only``。
+- **本轮（部分）**：``--only tk206`` 另写 ``tk206_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。

@@ -186,6 +186,7 @@ def test_section8_agent_recipes_documents_tk206_b15_human_review() -> None:
     assert "human_review_bundle.py" in text
     assert "--only tk206" in text
     assert "tk206_s_opening_humanist.png" in text
+    assert "tk206_three_g_humanist.png" in text
 
 
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
@@ -232,6 +233,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "human_review_bundle" in text
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
+    assert "--only tk206" in text
     assert "AGENT_SENTENCE" in text
 
 

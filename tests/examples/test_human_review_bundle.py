@@ -32,6 +32,9 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "weight_ladder_sheet.py" in text
     assert "test_weight_ladder_sheet.py" in text
     assert "tk206_s_opening_humanist.png" in text
+    assert "tk206_three_g_humanist.png" in text
+    assert "test_b13_three_no_flat_top_shelf" in text
+    assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
     assert "test_s_opening_reach_relief_frozen" in text
     assert "regenerate_outline_hashes.py" in text
@@ -99,6 +102,7 @@ def test_human_review_bundle_tk206_only(tmp_path: Path) -> None:
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
+    assert (tmp_path / "tk206_three_g_humanist.png").is_file()
     assert (tmp_path / "tk206_s_opening_humanist.png").is_file()
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
     assert "TK-206" in checklist

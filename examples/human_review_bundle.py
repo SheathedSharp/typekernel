@@ -33,6 +33,8 @@ pytest -q tests/examples/test_agent_trial_reference.py
 pytest -q tests/qa/test_m3_exit.py
 pytest -q tests/examples/test_human_review_bundle.py
 pytest -q tests/examples/test_weight_ladder_sheet.py
+pytest -q tests/parts/test_known_defects.py::test_b13_three_no_flat_top_shelf
+pytest -q tests/parts/test_known_defects.py::test_b14_g_spur_cubic_join
 pytest -q tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band
 pytest -q tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
@@ -53,18 +55,23 @@ Judge: serif feet/caps, counters at bold, brief sentence legibility, VF interpol
 
 Other presets (TK-207): ``PYTHONPATH=src python examples/weight_ladder_sheet.py --preset humanist_sans --out artifacts/specimens/weight_ladder.png``
 
-## TK-206 appendix B-15 — `s` / `S` opening (no approvals JSON)
+## TK-206 appendix B-13–B-15 (no approvals JSON)
 
-| Artifact | Path |
-| --- | --- |
-| Humanist `sS` contact | `{out}/tk206_s_opening_humanist.png` |
+| Defect | Artifact | Path |
+| --- | --- | --- |
+| B-13 `3` top | Humanist `3G` contact | `{out}/tk206_three_g_humanist.png` |
+| B-14 `G` spur | (same sheet) | |
+| B-15 `s` opening | Humanist `sS` contact | `{out}/tk206_s_opening_humanist.png` |
 
-Judge: opening reach feels natural (not pinched); spine reads as one continuous band at bold weights.
-Program hooks: ``test_b15_s_spine_ink_is_continuous_band``, ``test_s_opening_reach_relief_frozen``; changing
-``S_OPENING_REACH_RELIEF`` requires ``examples/regenerate_outline_hashes.py --write`` and a new specimen.
+Judge: `3` cap without a flat Ʒ shelf; `G` spur meets bowl on a smooth cubic; `s`/`S` opening natural with a
+continuous spine band at bold weights. Program hooks: ``test_b13_three_no_flat_top_shelf``,
+``test_b14_g_spur_cubic_join``, ``test_b15_s_spine_ink_is_continuous_band``, ``test_s_opening_reach_relief_frozen``.
+Changing ``S_OPENING_REACH_RELIEF`` or outline builders requires ``regenerate_outline_hashes.py --write`` and new specimens.
 
-Regenerate only this PNG::
+Regenerate PNGs::
 
+    PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars 3G \\
+        --out artifacts/specimens/tk206_three_g_humanist.png
     PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \\
         --out artifacts/specimens/tk206_s_opening_humanist.png
 
@@ -194,15 +201,13 @@ def _italic_bundle(out: Path) -> None:
     )
 
 
-def _tk206_s_opening_bundle(out: Path) -> None:
+def _tk206_review_bundle(out: Path) -> None:
     from typekernel.parts import Controls, DesignContext
     from typekernel.qa.sheet import contact_sheet
 
-    contact_sheet(
-        Controls.from_context(DesignContext.humanist_sans()),
-        out / "tk206_s_opening_humanist.png",
-        chars="sS",
-    )
+    controls = Controls.from_context(DesignContext.humanist_sans())
+    contact_sheet(controls, out / "tk206_three_g_humanist.png", chars="3G")
+    contact_sheet(controls, out / "tk206_s_opening_humanist.png", chars="sS")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -228,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.only in ("all", "italic"):
         _italic_bundle(out)
     if args.only in ("all", "tk206"):
-        _tk206_s_opening_bundle(out)
+        _tk206_review_bundle(out)
 
     checklist = out / "REVIEW_CHECKLIST.md"
     checklist.write_text(_CHECKLIST.format(out=out), encoding="utf-8")

@@ -164,11 +164,14 @@ weight_ladder_sheet(
 
 ## `s` 开口人审（TK-206 / 附录 B-15）
 
-程序侧已冻结 ``S_OPENING_REACH_RELIEF`` 与 ``test_b15_*``；视觉是否接受仍须人看图签字（无单独 ``approvals/*.json``）：
+程序侧已冻结 B-13～B-15 几何钩子（``test_b13_*`` / ``test_b14_*`` / ``test_b15_*``、``test_s_opening_reach_relief_frozen``）；视觉是否接受仍须人看图签字（无单独 ``approvals/*.json``）：
 
 ```bash
 PYTHONPATH=src python examples/human_review_bundle.py --only tk206 --out artifacts/human-review
+# 写出 tk206_three_g_humanist.png（3/G）与 tk206_s_opening_humanist.png（s/S）
 # 或 contact_sheet 子集：
+PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars 3G \
+  --out artifacts/specimens/tk206_three_g_humanist.png
 PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \
   --out artifacts/specimens/tk206_s_opening_humanist.png
 ```
