@@ -7,7 +7,7 @@
     "lint_error_count": 0,
     "program_pass_ok": true,
     "topology_fraction": 0.173469,
-    "voice_distance": 0.540816,
+    "voice_distance": 0.55102,
     "weight_ladder_r8_failures": 0
   },
   "brief-2": {
@@ -18,7 +18,7 @@
     "lint_error_count": 0,
     "program_pass_ok": true,
     "topology_fraction": 0.183673,
-    "voice_distance": 0.540816,
+    "voice_distance": 0.55102,
     "weight_ladder_r8_failures": 0
   },
   "brief-3": {
@@ -29,7 +29,7 @@
     "lint_error_count": 0,
     "program_pass_ok": true,
     "topology_fraction": 0.173469,
-    "voice_distance": 0.530612,
+    "voice_distance": 0.540816,
     "weight_ladder_r8_failures": 0
   },
   "brief-2-slab": {
