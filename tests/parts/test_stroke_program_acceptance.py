@@ -1,4 +1,4 @@
-"""TK-308: cubic stroke spike program acceptance (not the default glyph pipeline)."""
+"""Cubic stroke spike program acceptance (not the default glyph pipeline)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from typekernel.qa.lint import lint_glyph
 HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 
 
-def test_tk308_stroke_spike_meets_program_acceptance() -> None:
+def test_stroke_spike_meets_program_acceptance() -> None:
     """D3 spike: honest expand report, lint-clean cubic trace, no family wiring."""
     seg = CubicBezier.line((0.0, 0.0), (240.0, 0.0))
     centerline = CubicCenterline((seg,))

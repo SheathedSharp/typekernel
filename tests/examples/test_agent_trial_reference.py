@@ -20,7 +20,7 @@ from typekernel.qa.trial_protocol import (
 ROOT = Path(__file__).resolve().parents[2]
 TRIAL = ROOT / "examples" / "agent_trial"
 _METRICS_FIXTURE = (
-    Path(__file__).resolve().parents[1] / "fixtures" / "tk502_reference_metrics.json"
+    Path(__file__).resolve().parents[1] / "fixtures" / "reference_trial_metrics.json"
 )
 
 _REFERENCE_TRIALS = (

@@ -110,7 +110,7 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
     for serif_name in ("serif-slab-voice.json", "serif-bracketed-voice.json"):
         serif_evidence = load_approval(root / serif_name)["test_evidence"]
         assert "tests/parts/test_serifs.py" in serif_evidence
-        assert "tests/qa/test_m3_exit.py" in serif_evidence
+        assert "tests/qa/test_multi_voice_exit.py" in serif_evidence
     italic_evidence = load_approval(root / "italic-vf-construct.json")["test_evidence"]
     assert "tests/parts/test_italic_program_acceptance.py" in italic_evidence
 

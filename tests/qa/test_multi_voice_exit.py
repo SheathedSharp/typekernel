@@ -1,4 +1,4 @@
-"""M3 exit: multiple distinct L3-capable voices (DEVELOPMENT_PLAN stage table)."""
+"""Multi-voice exit: multiple distinct L3-capable voices (DEVELOPMENT_PLAN stage table)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def _load_controls(path: Path) -> Controls:
     return sheet
 
 
-def test_m3_three_l3_voices_slab_bracketed_and_reference_sans() -> None:
+def test_multi_voice_three_l3_voices_slab_bracketed_and_reference_sans() -> None:
     """Slab + bracketed presets and brief-1 reference edit all meet L3 program criteria."""
     slab = Controls.from_context(DesignContext.slab_serif())
     bracket = Controls.from_context(DesignContext.bracketed_serif())
@@ -30,7 +30,7 @@ def test_m3_three_l3_voices_slab_bracketed_and_reference_sans() -> None:
         assert l3_voice_criteria_met(sheet)
 
 
-def test_m3_serif_pair_differs_from_warm_humanist_reference() -> None:
+def test_multi_voice_serif_pair_differs_from_warm_humanist_reference() -> None:
     """Three voices are not mutually identical on the shared charset."""
     slab = Controls.from_context(DesignContext.slab_serif())
     bracket = Controls.from_context(DesignContext.bracketed_serif())

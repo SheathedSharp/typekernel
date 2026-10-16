@@ -1199,7 +1199,7 @@ def test_bracketed_serif_lint_clean_on_full_supported() -> None:
     "factory",
     (DesignContext.slab_serif, DesignContext.bracketed_serif),
 )
-def test_serif_voice_meets_tk306_program_acceptance(factory) -> None:
+def test_serif_voice_meets_program_acceptance(factory) -> None:
     """Lint + identity + family gate + L3 + inlined stem serifs (no boolean)."""
     from typekernel.parts.serifs import apply_glyph_serifs
 

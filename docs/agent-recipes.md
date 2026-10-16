@@ -177,13 +177,13 @@ weight_ladder_sheet(
 程序侧已冻结 B-13～B-15 几何钩子（``test_b13_*`` / ``test_b14_*`` / ``test_b15_*``、``test_s_opening_reach_relief_frozen``）；视觉是否接受仍须人看图签字（无单独 ``approvals/*.json``）：
 
 ```bash
-PYTHONPATH=src python examples/human_review_bundle.py --only tk206 --out artifacts/human-review
-# 写出 tk206_three_g_humanist.png（3/G）与 tk206_s_opening_humanist.png（s/S）
+PYTHONPATH=src python examples/human_review_bundle.py --only appendix-b --out artifacts/human-review
+# 写出 appendix_b_three_g_humanist.png（3/G）与 appendix_b_s_opening_humanist.png（s/S）
 # 或 contact_sheet 子集：
 PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars 3G \
-  --out artifacts/specimens/tk206_three_g_humanist.png
+  --out artifacts/specimens/appendix_b_three_g_humanist.png
 PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \
-  --out artifacts/specimens/tk206_s_opening_humanist.png
+  --out artifacts/specimens/appendix_b_s_opening_humanist.png
 ```
 
 改开口量后须 ``regenerate_outline_hashes.py --write`` 并更新校样 PNG。
@@ -223,7 +223,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 
 ## 扩展拉丁（TK-208，可选）
 
-默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_tk208_extended_latin.py`。
+默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_extended_latin_policy.py`。
 
 ### OpenType `frac` / `ordn`
 
@@ -255,11 +255,11 @@ PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
   --brief brief-1 --design path/to/your_design.py --out artifacts/trials/my-run/brief-1
 ```
 
-写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok` / `program_pass_ok` 等字段不一致）。`snapshot_trial` 会对纯 stem 缩放写入 `cheating_flags`（`stem_only_or_scale_voice`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3；**7** 作废条件（`cheating_flags` 非空）；**8** 终验归档缺全 `human_review_scores`（仅 `validate_snapshot.py --require-human-scores`）。`human_review_scores` 由**人**在程序快照写好后编辑 JSON，不得由 agent 在 `snapshot_design.py` 运行时写入。审计：`validate_snapshot.py --recursive artifacts/trials/<run>/`。库维护者程序条：`examples/run_m5_program_exit.py`（含 `test_agent_trial*` / `test_trial_protocol`；或 `pytest -q tests/docs/test_development_plan_section8.py`）。
+写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok` / `program_pass_ok` 等字段不一致）。`snapshot_trial` 会对纯 stem 缩放写入 `cheating_flags`（`stem_only_or_scale_voice`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3；**7** 作废条件（`cheating_flags` 非空）；**8** 终验归档缺全 `human_review_scores`（仅 `validate_snapshot.py --require-human-scores`）。`human_review_scores` 由**人**在程序快照写好后编辑 JSON，不得由 agent 在 `snapshot_design.py` 运行时写入。审计：`validate_snapshot.py --recursive artifacts/trials/<run>/`。库维护者程序条：`examples/run_program_exit.py`（含 `test_agent_trial*` / `test_trial_protocol`；或 `pytest -q tests/docs/test_development_plan_section8.py`）。
 
 ## 衬线 / 斜体人审 bundle（TK-306、TK-402）
 
-自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
+自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
 
 ```bash
 PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review

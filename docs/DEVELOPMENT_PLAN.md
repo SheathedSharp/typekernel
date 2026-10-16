@@ -74,7 +74,7 @@
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
 - `pytest -q`：**1532 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
-- §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
+- §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
 ### 2.4 三个结构性缺口
@@ -254,7 +254,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-108 字形哈希快照　〔S〕
 - **做什么**：用现有 `qa/outline_hash.py` 为 `humanist_sans / geometric_sans / code_clear` × 98 字形生成 `tests/golden/outline_hashes.json`，加回归测试。以后**每次字形变更，哪些字形的哈希变了就必须和任务声明一致**，更新快照的提交要在说明里列出变更字形。
 - **本轮（部分）**：``examples/regenerate_outline_hashes.py``（默认校验漂移、`--write` 重写）；``tests/examples/test_regenerate_outline_hashes.py`` 烟测。
-- **本轮（部分）**：``agent-recipes`` TK-108 刷新流程；``test_section8_agent_recipes_documents_tk108_golden_refresh``。
+- **本轮（部分）**：``agent-recipes`` TK-108 刷新流程；``test_section8_agent_recipes_documents_golden_refresh``。
 - **本轮（部分）**：``README`` 补 ``regenerate_outline_hashes.py``；``test_section8_readme_points_at_plan_and_review_bundle`` 固化。
 - **验收**：快照存在；故意改一个字形能让测试失败。
 
@@ -304,10 +304,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
-- **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-13～B-15 程序侧已绿，视觉签字见 ``human_review_bundle --only tk206``。
+- **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-13～B-15 程序侧已绿，视觉签字见 ``human_review_bundle --only appendix-b``。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band``（腰区单段墨迹 + 最小宽度）；附录 B 登记更新。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band`` 参数化七 preset（含衬线 voice）。
-- **本轮（部分）**：``s_from_o`` 开口 reach ``+0.012``（七 preset ``s``/``S``）；``outline_hashes.json`` 更新；本地校样 ``artifacts/specimens/tk206_s_opening_humanist.png``。
+- **本轮（部分）**：``s_from_o`` 开口 reach ``+0.012``（七 preset ``s``/``S``）；``outline_hashes.json`` 更新；本地校样 ``artifacts/specimens/appendix_b_s_opening_humanist.png``。
 - **本轮（部分）**：``S_OPENING_REACH_RELIEF`` 命名常量 + ``test_s_opening_reach_relief_frozen``。
 - **本轮（部分）**：`G_from_O` 内横杠转角改为 κ 圆角（替代折线 chamfer）；`3` 顶区 overshoot 回归测试。
 - **本轮（部分）**：`s_from_o` 默认 `top_scale` 0.94→0.92，上环略收；golden `s`/`S` 三 preset 更新。
@@ -321,9 +321,9 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``K_from_H`` 阶梯加宽与 junction 抬高（见 TK-207 ``K``）；golden ``K`` 更新。
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
-- **本轮（部分）**：``human_review_bundle`` 写出 ``tk206_s_opening_humanist.png``（``--only tk206`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_tk206_only``。
-- **本轮（部分）**：``--only tk206`` 另写 ``tk206_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
-- **本轮（部分）**：附录 B 表与 §8 人审说明对齐 ``--only tk206``；``test_section8_plan_documents_program_vs_human_exit`` 固化。
+- **本轮（部分）**：``human_review_bundle`` 写出 ``appendix_b_s_opening_humanist.png``（``--only appendix-b`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_appendix_b_only``。
+- **本轮（部分）**：``--only appendix-b`` 另写 ``appendix_b_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
+- **本轮（部分）**：附录 B 表与 §8 人审说明对齐 ``--only appendix-b``；``test_section8_plan_documents_program_vs_human_exit`` 固化。
 - **本轮（部分）**：``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join`` 参数化七 preset（B-14 断言 spur 前三段 ``line,line,cubic``）。
 
 #### TK-207 字重阶梯　〔M〕
@@ -333,15 +333,15 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：扩展 `COUNTER_PINCH_CHARSET`（`2`/`7`、`s`/`S`/`c`、大写 `CDEFOPQSTUZ`、`#`/`%`/`?`）；三 preset × 阶梯 R8 仍零报。
 - **本轮（部分）**：``min_counter_gap`` 在 ``y0<0`` 时将采样带下限抬至 ``0.12×y1``，避免 ``p``/``q`` descender 竖缝误报；``test_descender_letters_skip_baseline_stem_pinch``。
 - **本轮（部分）**：``test_descender_micro_sliver_below_min_run_gap_ignored`` 固化 ``p``/``q`` 重字重 descender 发丝缝（``y≈-17.34``）低于 ``min_run_gap``、不驱动 R8。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_descender_micro_sliver_below_min_run_gap_ignored``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_descender_micro_sliver_below_min_run_gap_ignored``。
 - **本轮（部分）**：``human_review_bundle`` 清单与 ``counter.min_counter_gap`` 注释对齐 descender 发丝缝回归。
-- **本轮（部分）**：``agent-recipes`` TK-207 段补 ``min_run_gap`` / descender 审计指针；``test_section8_agent_recipes_documents_tk207_min_run_gap``。
+- **本轮（部分）**：``agent-recipes`` TK-207 段补 ``min_run_gap`` / descender 审计指针；``test_section8_agent_recipes_documents_min_run_gap``。
 - **本轮（部分）**：``COUNTER_SCAN_MIN_RUN_OVER_STEM`` + ``test_gate_thresholds_locked`` 冻结（R8 scanline 发丝缝阈值）。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含完整 ``test_gate_thresholds_locked``（含 ``AGENT_SENTENCE`` / R8 扫描阈值）。
+- **本轮（部分）**：``run_program_exit --gate all`` 含完整 ``test_gate_thresholds_locked``（含 ``AGENT_SENTENCE`` / R8 扫描阈值）。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``human_review_bundle`` 清单补 ``test_gate_thresholds_locked``；``test_agent_trials_doc`` / ``test_human_review_bundle`` 钩子。
-- **本轮（部分）**：``dev-standards`` / §8 计划钩子补 ``test_gate_thresholds_locked`` 与 ``run_m5`` 分工说明。
+- **本轮（部分）**：``dev-standards`` / §8 计划钩子补 ``test_gate_thresholds_locked`` 与 ``run_program_exit`` 分工说明。
 - **本轮（部分）**：``COUNTER_GAP_FLOOR_OVER_STEM`` / ``COUNTER_GAP_FLOOR_BASE`` + ``test_counter_gap_floor_formula_frozen``（R8 字腔下限）。
-- **本轮（部分）**：``agent-recipes`` TK-207 段区分 ``counter_gap_floor`` 与 scan ``min_run_gap``；``test_section8_agent_recipes_documents_tk207_min_run_gap`` 钩子更新。
+- **本轮（部分）**：``agent-recipes`` TK-207 段区分 ``counter_gap_floor`` 与 scan ``min_run_gap``；``test_section8_agent_recipes_documents_min_run_gap`` 钩子更新。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
@@ -371,7 +371,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-208 扩展拉丁默认策略　〔S，可选〕
 - **决策（2026-10-16）**：`ç` `é` `ñ` 等 **预组合重音**与轮廓字母 `æøÆØ` **均不进** ``Controls.supported``；启用 ``FamilyBuildOptions.extended_latin``（非空）时 charset 追加轮廓字母，并由 ``add_composite_latin`` 注册整张 ``COMPOSITE_LATIN`` 表（与 ``first_font`` 示例一致）。
-- **本轮**：``ø``/``Ø`` 斜线第二 solid 经 ``_ccw`` 修正 R1；``qa/composite.composed_glyph_from_font`` + ``test_tk208_extended_latin``（九 preset 轮廓 lint + 烘焙 composite lint）。
+- **本轮**：``ø``/``Ø`` 斜线第二 solid 经 ``_ccw`` 修正 R1；``qa/composite.composed_glyph_from_font`` + ``test_extended_latin_policy``（九 preset 轮廓 lint + 烘焙 composite lint）。
 - 无论是否进默认集，composite 字形都必须过 lint（重音碰撞）；烘焙后逐字 ``lint_glyph`` 零 error。
 
 ### M3 抬天花板
@@ -395,7 +395,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``s_from_o`` 上下环内轮廓随 ``stress`` 绕各自 bowl 中心旋转（``stress=0`` 哈希不变）；``test_stress_moves_lowercase_s_outline`` / ``test_stress_zero_preserves_lowercase_s_hashes``。
 - **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``two_from_O``/``three_from_O``/``five_from_O`` 竖切用 ``_cut_x``（高 ``stress`` 内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``（``2``/``3``/``5``/``6``/``8``/``9``）；``test_all_lining_figures_build_under_stress``。
 - **本轮（部分）**：``figures._ring_parts`` 内环类型与 ``_quarters`` 对齐（mypy；``stress=0`` 哈希不变）。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``；``test_section8_run_program_exit_includes_stress_regressions``。
 - **本轮（部分）**：``control._cut`` 竖/横切在旋转 counter 上回退线交（``c``/``e``/``C``/标点开口等）；``test_supported_charset_builds_under_moderate_stress``（三 preset × ``stress=35`` 全 ``supported``）。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
@@ -425,8 +425,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   | `GSpec` / `RSpec` / `YSpec` | 尾深、耳、臂落差、尾形 |
   让 `Controls.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
 - **本轮（部分）**：``WEAK_GLYPH_SPECS`` 全字段单调性回归（含 ``M.apex`` 在 ``stem=150``）；默认 ``supported`` 哈希回归仍绿。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs`` / ``test_section8_agent_recipes_documents_tk303_tuned_glyph_specs``。
-- **本轮（部分）**：``agent-recipes`` 弱字段补 ``test_glyph_specs.py`` 回归指针；``test_section8_agent_recipes_documents_tk303_tuned_glyph_specs`` 钩子更新；§8 登记 ``test_zayju_script_charset_builds_and_lints_clean``（TK-308 示例，非 Controls 主路径）。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``；``test_section8_run_program_exit_includes_glyph_specs`` / ``test_section8_agent_recipes_documents_tuned_glyph_specs``。
+- **本轮（部分）**：``agent-recipes`` 弱字段补 ``test_glyph_specs.py`` 回归指针；``test_section8_agent_recipes_documents_tuned_glyph_specs`` 钩子更新；§8 登记 ``test_zayju_script_charset_builds_and_lints_clean``（TK-308 示例，非 Controls 主路径）。
 - **验收**：每个字段有「单调效应」测试（改字段 → 对应测得量按预期变化）；默认值下 98 字形哈希不变；`docs/agent-recipes.md` 增加用法。
 - **依赖**：TK-108。
 
@@ -478,7 +478,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_human_review_bundle_italic_only`` 断言 checklist 含 ``italic-vf-construct``。
 - **本轮（部分）**：``serif-*-voice`` 占位 ``notes`` 列出 bundle 内 ``proof``/``proof_vf``/阶梯 PNG；``test_gates`` 固化路径提示。
 - **本轮（部分）**：``human_review_bundle`` checklist 补斜体 ``write_approval`` 示例；``test_evidence`` 路径存在性回归。
-- **本轮（部分）**：``human_review_bundle`` checklist 对齐 TK-306/402 程序验收 pytest（``test_serif_voice_meets_tk306_program_acceptance`` / ``test_italic_vf_meets_tk402_program_acceptance_on_humanist``）与 ``approvals`` ``test_evidence`` 列表格式。
+- **本轮（部分）**：``human_review_bundle`` checklist 对齐 TK-306/402 程序验收 pytest（``test_serif_voice_meets_program_acceptance`` / ``test_italic_vf_meets_program_acceptance_on_humanist``）与 ``approvals`` ``test_evidence`` 列表格式。
 - **本轮（部分）**：``test_bracketed_bowl_glyphs_inline_foot_extends_left_of_plain_stem`` 固化 ``b``/``d``/``p``/``q`` 内嵌脚衬线外伸。
 - **本轮（部分）**：``inline_stem_foot_serif_path`` / ``inline_hook_cap_serif_path`` 外角 cubic 托架圆角（``f``/``t``/``j`` 顶脚 + 碗形脚底）；``test_bracketed_inline_bowl_foot_uses_cubic_bracket_corner``；golden ``b``/``d``/``f``/``j``/``p``/``q``/``t``。
 - **本轮（部分）**：大写 ``V`` 内嵌脚底托架圆角（``_v_cap_bracketed_outline``，``slab`` 仍折线）；``test_bracketed_cap_v_*``；golden ``V``。
@@ -523,7 +523,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``bracketed`` ``n`` 左肩口顶衬线内嵌（同 ``m``/``r`` 左缘配方，非全宽顶）；``test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor``；golden ``n``。
 - **本轮（部分）**：``bracketed`` ``h`` ``stem_R_t`` 阻塞期：未布尔前即 R3，托架顶 cap 与 slab 矩形 cap 对比；``test_bracketed_h_*`` 固化（已由内嵌 slab-rect 方案取代）。
 - **本轮（部分）**：``bracketed`` ``h`` 升部/右腿顶衬线内嵌（``inline_stem_cap_serif_path_slab_rect`` + shelf 脚 + 右腿 ``x_height`` 切分顶 cap，省略 ``stem_R_t``；阶梯 stem≤110 升部 cap 减厚保 R8）；``test_bracketed_apply_glyph_serifs_is_noop_on_supported`` / ``test_bracketed_h_pre_serif_outline_lint_clean`` / ``test_bracketed_h_from_n_right_leg_cap_inlined_without_boolean_serif``；golden ``h``（``bracketed_serif``）。
-- **本轮（部分）**：``test_serif_voice_meets_tk306_program_acceptance`` 单测锁定程序验收（lint/identity/gate/L3/``apply_glyph_serifs`` no-op）；``approvals/serif-*-voice.json`` ``test_evidence`` 补全。
+- **本轮（部分）**：``test_serif_voice_meets_program_acceptance`` 单测锁定程序验收（lint/identity/gate/L3/``apply_glyph_serifs`` no-op）；``approvals/serif-*-voice.json`` ``test_evidence`` 补全。
 - **待续**：人设 ``approved: true`` 签字；``primitives.serif_bracket`` 梯形/楔形实验 G1 恶化已回退 ``rounded_rect``。
 - **做什么**：新增 `parts/serifs.py`，以现有 `primitives.serif_bracket`（自述为 stub）为种子；让竖笔暴露「脚/顶」附着锚点；`Style.serif ∈ {none, slab, bracketed}`，参数含长度、厚度、托架半径。
 - **验收**：`slab_serif()` / `bracketed_serif()` 全 98 字 lint 零错误、四档 VF ``check_masters``、``AGENT_SENTENCE`` gate（``test_*_serif_passes_agent_sentence_gate``）与 L3 距离；人审；``examples/slab_serif`` + ``examples/bracketed_serif``。
@@ -538,10 +538,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   在 `AGENT_GOAL.md` 新增 **L3「独特声音」**：最近邻 `voice_distance` ≥ 阈值（待校准，初值建议 0.35）**且** lint+identity 全过**且**经人审。
 - **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
 - **本轮（部分）**：``l3_voice_criteria_met``（距离 + ``family_gate`` + lint）；``trial_protocol`` 再导出；``test_l3_voice_criteria_met_for_serif_presets`` / ``test_l3_voice_criteria_not_met_for_unchanged_sans_preset`` / ``test_l3_voice_criteria_met_when_style_adds_slab_serif``；TK-306 ``slab``/``bracketed`` 衬线 preset 达 L3、未改 sans preset 不达标。
-- **本轮（部分）**：``tests/qa/test_m3_exit.py`` 锁定 M3「≥3 种 L3 voice」（``slab``/``bracketed`` + brief-1 参考试作）且两两 ``voice_distance`` 非零。
+- **本轮（部分）**：``tests/qa/test_multi_voice_exit.py`` 锁定 M3「≥3 种 L3 voice」（``slab``/``bracketed`` + brief-1 参考试作）且两两 ``voice_distance`` 非零。
 - **防钻空子**：随机噪声、纯缩放不能通过——必须先过 lint/identity，并要求拓扑差异来自 `Style` 或 `tuned_glyph`/`with_glyph`，而不是数值抖动。
 - **本轮**：``l3_voice_criteria_met`` 要求相对最近 preset 的 ``topology_fraction`` ≥ ``L3_MIN_TOPOLOGY_FRACTION``（0.05）；``originality_report`` 在 combined=1.0 时仍选出最近邻；``test_l3_rejects_context_only_stem_tweak``。
-- **本轮（部分）**：``test_tk307_serif_voices_far_from_every_builtin_preset`` 锁定 TK-306 ``slab``/``bracketed`` 相对七 sans preset 的 ``voice_distance`` 与拓扑下限。
+- **本轮（部分）**：``test_serif_voices_far_from_every_builtin_preset`` 锁定 TK-306 ``slab``/``bracketed`` 相对七 sans preset 的 ``voice_distance`` 与拓扑下限。
 - **验收**：当前 7 个 preset 两两**拓扑**距离为 0（形状距离 > 0）；TK-305/306 产出的 voice 与所有 preset 的距离 ≥ 阈值。
 
 #### TK-308 曲线感知的笔偏移（可选 spike，默认不做）　〔L〕
@@ -558,12 +558,12 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：闭合环 ``_stitched_offset_rail_closed`` + segment 接头 join（``round`` join 与折线 ``expand`` bbox 回归）。
 - **本轮（部分）**：``Stroke.offset_fit_budget`` 允许 ``0``（强制弦高折线路径）；``test_trace_letter_closed_cubic_ring_has_counter``。
 - **本轮（部分）**：``Skeleton.from_mapping`` ``join``/``cap`` 键烟测。
-- **本轮（部分）**：``test_tk308_stroke_spike_meets_program_acceptance``（诚实 ``expand_cubic`` 报告、闭合 cubic 环 lint、``family.py`` 不引用 skeleton）；§8 钩子。
+- **本轮（部分）**：``test_stroke_spike_meets_program_acceptance``（诚实 ``expand_cubic`` 报告、闭合 cubic 环 lint、``family.py`` 不引用 skeleton）；§8 钩子。
 - **本轮（部分）**：``polyline_to_cubic_centerline`` + ``_expand_stroke`` 正 ``offset_fit_budget`` 走 cubic 偏移；``GlyphAssembler.heal_self_intersections`` / ``strip_tiny`` / ``refit_cubics``；``trace_letter`` 默认 heal+strip+refit；``examples/zayju_script`` 改用库 API。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_tk308_program_acceptance.py``；``test_section8_run_m5_program_exit_includes_tk308_stroke_spike``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_stroke_program_acceptance.py``；``test_section8_run_program_exit_includes_stroke_spike``。
 - **本轮（部分）**：``tests/examples/test_zayju_script.py``（``build_charset`` lint 烟测 + ``build.py`` 烟测）；``examples/zayju_script`` 走库内 ``trace_letter`` heal/refit。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_zayju_script_charset_builds_and_lints_clean``；``test_section8_run_m5_program_exit_includes_tk308_zayju_script_smoke``。
-- **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_tk308_trace_letter_spike`` / ``test_section8_skill_reference_documents_tk308_trace_letter``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_zayju_script_charset_builds_and_lints_clean``；``test_section8_run_program_exit_includes_zayju_script_smoke``。
+- **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_trace_letter_spike`` / ``test_section8_skill_reference_documents_trace_letter``。
 
 ### M4 真斜体
 
@@ -572,7 +572,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **TK-402**：倾角作为**重画母版时的构造参数**（不是对输出做 shear）：竖笔倾角、笔画厚度补偿（倾斜后水平厚度会变）、曲线极值点重平衡。
 - **本轮（部分）**：`horizontal_slant_compensation` 用于 `o` 环 `thickness_h`、`f`/`t`/`e` 横笔、`#` 横杠；竖笔倾角 ±0.5° 回归测试；``OBLIQUE_COMPAT_EXCLUDE`` 仅 ``e``（预切在 ``e_from_o`` / ``outline_e_oblique_splits``，含 bold eye 段数对齐）；``hmnru`` oblique 预切 + ``mu`` ``OBLIQUE_PRE_EXTREMA``；VF 直立 ``vf_compat_oblique_splits`` 分支拱；七内置 preset 斜体 R4 清零（见 TK-101 回归）。**人审**仍待（校样命令见 ``human_review_bundle.py``）。
 - **本轮（部分）**：``examples/italic_family/build_italic_vf.py`` 产出 ``proof.png`` / ``proof_vf.png``（``AGENT_SENTENCE`` + 字重阶梯）；人审 bundle / 烟测断言。
-- **本轮（部分）**：``test_italic_vf_meets_tk402_program_acceptance_on_humanist`` 锁定程序验收；``approvals/italic-vf-construct.json`` ``test_evidence`` 补全。
+- **本轮（部分）**：``test_italic_vf_meets_program_acceptance_on_humanist`` 锁定程序验收；``approvals/italic-vf-construct.json`` ``test_evidence`` 补全。
 - **TK-403**：拓扑差异：`n m h r u` 的拱从竖笔中段分出（branching）、`f` 可下伸、`a` 保持单层、宽度收窄。
 - **本轮**：`n`/`h`/`r`/`u`/`m` 分支拱；单层 `a` 略收窄；斜体 `f` 下伸（inline 横笔、无 blend）；`tests/parts/test_italic_topology.py`。
 - **TK-404**：`wght×ital` VF 示例改用真斜体；`check_masters` 通过。直立母版设 `vf_compat_stem_segments=True` 与分支斜体对齐段数（不影响 preset 哈希）。
@@ -596,21 +596,21 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。
 - **本轮（部分）**：SKILL Step 3 补 ``Style`` 指针（与 ``agent-recipes`` / ``reference`` 对齐）。
 - **本轮（部分）**：``reference.md`` M5 agent trial 工具链（``build_reference_family`` / ``design_*``）。
-- **本轮（部分）**：``reference.md`` / ``README.md`` 补 §8、程序验收 pytest 与 ``human_review_bundle`` 指针；``test_section8_skill_reference_documents_m5_workflow`` / ``test_section8_readme_points_at_plan_and_review_bundle``。
+- **本轮（部分）**：``reference.md`` / ``README.md`` 补 §8、程序验收 pytest 与 ``human_review_bundle`` 指针；``test_section8_skill_reference_documents_program_workflow`` / ``test_section8_readme_points_at_plan_and_review_bundle``。
 - **本轮（部分）**：``approvals/README.md`` 补 bundle 命令与签字前程序验收指针；``test_section8_approvals_readme_documents_review_workflow``。
 - **本轮（部分）**：待签 ``approvals/serif-*`` / ``italic-vf-construct`` 的 ``test_evidence`` 对齐 §8 / ``human_review_bundle`` / M3 退出测试；``test_repo_pending_human_review_templates`` 固化路径存在。
 - **本轮（部分）**：``human_review_bundle`` ``REVIEW_CHECKLIST`` 与 ``approvals/*.json`` ``test_evidence`` 同步；``test_human_review_bundle_checklist_matches_approval_test_evidence``。
 - **本轮（部分）**：``approvals/README.md`` 分 gate 签字 ``pytest`` 块；``test_approvals_readme_signoff_matches_test_evidence`` 与 JSON 双向一致。
-- **本轮（部分）**：``examples/run_m5_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list`` / ``--with-linters``）；``test_run_m5_program_exit``。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 默认含 ``test_agent_trial`` / ``test_agent_trial_reference`` / ``test_trial_protocol`` 烟测。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_human_review_bundle_tk206_only``（TK-206 校样路径烟测）；``test_run_m5_program_exit`` 固化。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含附录 B-13～B-15 ``test_known_defects`` + ``test_s_opening_reach_relief_frozen``；``AGENT_TRIALS`` 库维护者回归列表对齐。
-- **本轮（部分）**：``test_section8_run_m5_program_exit_includes_tk206_defect_regressions`` 固化程序出口与 B-13～B-15 钩子。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``（TK-302 程序回归）；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_knob_coverage.py``（TK-107 旋钮覆盖）；``test_section8_run_m5_program_exit_includes_tk107_knob_coverage``。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``（TK-303）；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs``。
-- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_tk308_program_acceptance``（TK-308 spike）；``test_section8_run_m5_program_exit_includes_tk308_stroke_spike``。
-- **本轮（部分）**：``AGENT_GOAL`` M5 段列出 ``run_m5`` 烟测模块（knob/stress/glyph_specs/tk308/zayju_script）；``test_section8_agent_goal_documents_program_vs_human_gates`` / ``test_section8_skill_documents_m5_exit_workflow`` 钩子更新。
+- **本轮（部分）**：``examples/run_program_exit.py``（§8 + 待签 gate ``test_evidence``，``--gate`` / ``--list`` / ``--with-linters``）；``test_run_program_exit``。
+- **本轮（部分）**：``run_program_exit --gate all`` 默认含 ``test_agent_trial`` / ``test_agent_trial_reference`` / ``test_trial_protocol`` 烟测。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_human_review_bundle_appendix_b_only``（TK-206 校样路径烟测）；``test_run_program_exit`` 固化。
+- **本轮（部分）**：``run_program_exit --gate all`` 含附录 B-13～B-15 ``test_known_defects`` + ``test_s_opening_reach_relief_frozen``；``AGENT_TRIALS`` 库维护者回归列表对齐。
+- **本轮（部分）**：``test_section8_run_program_exit_includes_appendix_b_defect_regressions`` 固化程序出口与 B-13～B-15 钩子。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``（TK-302 程序回归）；``test_section8_run_program_exit_includes_stress_regressions``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_knob_coverage.py``（TK-107 旋钮覆盖）；``test_section8_run_program_exit_includes_knob_coverage``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``（TK-303）；``test_section8_run_program_exit_includes_glyph_specs``。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_stroke_program_acceptance``（TK-308 spike）；``test_section8_run_program_exit_includes_stroke_spike``。
+- **本轮（部分）**：``AGENT_GOAL`` M5 段列出 ``run_program_exit`` 烟测模块（knob/stress/glyph_specs/tk308/zayju_script）；``test_section8_agent_goal_documents_program_vs_human_gates`` / ``test_section8_skill_documents_program_exit_workflow`` 钩子更新。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。
@@ -618,7 +618,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：作废条件与 ``agent-recipes`` / ``reference`` 明确 ``human_review_scores`` 仅人后可写；程序写出 JSON 不含该键。
 - **本轮（部分）**：``validate_snapshot.py --program-snapshot-only``（预填人评 → 退出码 5）；``test_validate_snapshot_program_only_rejects_premature_human_scores``。
 - **本轮（部分）**：``approvals/README.md`` 补签字后维护步骤（更新 ``_PENDING_HUMAN_GATES``，全签后改写 §8 人审测试）。
-- **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_m3_exit`` 指针；``test_section8_skill_documents_m5_exit_workflow``。
+- **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_multi_voice_exit`` 指针；``test_section8_skill_documents_program_exit_workflow``。
 - **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
@@ -628,36 +628,36 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` / ``reference`` 对齐 TK-402 斜体 ``proof.png`` / ``proof_vf.png`` 与人审 gate 名。
 - **本轮（部分）**：``test_section8_family_gate_on_main_and_serif_voices`` 固化 §8.3 主 preset + TK-306 衬线 voice；``agent-recipes`` 补程序验收 pytest 指针。
 - **本轮（部分）**：``agent-recipes`` / ``agent_trial/README`` / ``reference.md`` 补 ``validate_trial_snapshot`` 与 ``trial_snapshot_exit_code`` 退出码表；``test_section8_agent_recipes_documents_trial_snapshot_exit_codes`` / ``test_written_snapshot_json_passes_validate_record``。
-- **本轮（部分）**：``human_review_bundle`` 清单补 ``run_m5_program_exit`` / ``test_agent_trial_reference``；``reference.md`` 补 ``validate_snapshot.py``；preset 基线 ``test_preset_brief_snapshots_pass_gate`` 断言无 ``cheating_flags``。
+- **本轮（部分）**：``human_review_bundle`` 清单补 ``run_program_exit`` / ``test_agent_trial_reference``；``reference.md`` 补 ``validate_snapshot.py``；preset 基线 ``test_preset_brief_snapshots_pass_gate`` 断言无 ``cheating_flags``。
 - **本轮（部分）**：``test_snapshot_presets_script_writes_gate_baseline``（preset JSON 退出码 6）；衬线基线 ``validate_snapshot`` 烟测；``AGENT_GOAL`` / ``SKILL`` 补 ``validate_snapshot.py``。
 - **本轮（部分）**：``test_snapshot_reference_trials_script`` 后接 ``validate_snapshot`` 五目录；``README`` / ``dev-standards`` 补试验审计指针。
 - **本轮（部分）**：``validate_snapshot.py --recursive`` 审计整棵试验目录；``test_validate_snapshot_recursive_on_reference_trials``；``AGENT_TRIALS`` 库维护者回归列表补 ``test_agent_trial.py``。
-- **本轮（部分）**：``agent_trial/README`` 补 ``validate_snapshot`` 旗标与退出码 5/8 分工；``run_m5_program_exit --gate all`` 含 ``test_weight_ladder_sheet``；``human_review_bundle`` 清单补 TK-207 CLI 指针。
+- **本轮（部分）**：``agent_trial/README`` 补 ``validate_snapshot`` 旗标与退出码 5/8 分工；``run_program_exit --gate all`` 含 ``test_weight_ladder_sheet``；``human_review_bundle`` 清单补 TK-207 CLI 指针。
 - **本轮（部分）**：``README`` / ``reference.md`` 补 ``weight_ladder_sheet.py``；``test_section8_readme_points_at_plan_and_review_bundle`` 固化。
-- **本轮（部分）**：SKILL ``reference.md`` 补 TK-104 CLI；``run_m5_program_exit`` 含 ``test_contact_sheet_full_charset_width_at_most_1600``。
+- **本轮（部分）**：SKILL ``reference.md`` 补 TK-104 CLI；``run_program_exit`` 含 ``test_contact_sheet_full_charset_width_at_most_1600``。
 - **本轮（部分）**：``examples/_design_presets.py`` 共享 built-in preset 表（``contact_sheet`` / ``diff_overlay`` / ``weight_ladder_sheet``）。
-- **本轮（部分）**：``AGENT_GOAL`` / ``SKILL`` M5 段补 TK-104 校样 CLI；``run_m5_program_exit`` 含 ``test_diff_overlay_writes``。
+- **本轮（部分）**：``AGENT_GOAL`` / ``SKILL`` M5 段补 TK-104 校样 CLI；``run_program_exit`` 含 ``test_diff_overlay_writes``。
 - **本轮（部分）**：``AGENT_TRIALS`` 发布前程序条补 TK-104/207 校样 CLI；``test_agent_trials_doc`` 固化。
-- **本轮（部分）**：``AGENT_TRIALS`` 终验流程补 B-15 ``--only tk206`` 与 TK-108 golden CLI；``test_agent_trials_doc`` 固化。
+- **本轮（部分）**：``AGENT_TRIALS`` 终验流程补 B-15 ``--only appendix-b`` 与 TK-108 golden CLI；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：``human_review_bundle`` 含 TK-206 B-15 ``sS`` 校样与 ``regenerate_outline_hashes`` 指针；``test_human_review_bundle`` 固化。
-- **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
+- **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_appendix_b_human_review`` 等 §8 钩子。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``AGENT_GOAL`` / ``approvals/README`` / SKILL 对齐 B-13–B-15 双校样 PNG；``test_agent_trials_doc`` / §8 钩子更新。
-- **本轮（部分）**：``README`` / ``agent_trial/README`` 补 ``--only tk206``；附录 B 登记说明对齐校样路径；``test_section8_readme`` / ``test_section8_agent_trial_readme`` 钩子。
+- **本轮（部分）**：``README`` / ``agent_trial/README`` 补 ``--only appendix-b``；附录 B 登记说明对齐校样路径；``test_section8_readme`` / ``test_section8_agent_trial_readme`` 钩子。
 - **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1509**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
-- **本轮（部分）**：``agent-recipes`` 补 TK-301/302 ``contrast``/``stress`` 段与 ``_cut_x`` 指针；``test_section8_agent_recipes_documents_tk302_stress``。
-- **本轮（部分）**：SKILL / ``reference.md`` 对齐 TK-302 ``stress``；``test_section8_skill_reference_documents_tk302_stress``。
-- **本轮（部分）**：``dev-standards`` M5 烟测模块列表与 ``AGENT_GOAL`` / ``run_m5_program_exit`` 对齐；``test_section8_dev_standards_documents_program_exit`` 钩子更新。
+- **本轮（部分）**：``agent-recipes`` 补 TK-301/302 ``contrast``/``stress`` 段与 ``_cut_x`` 指针；``test_section8_agent_recipes_documents_stress``。
+- **本轮（部分）**：SKILL / ``reference.md`` 对齐 TK-302 ``stress``；``test_section8_skill_reference_documents_stress``。
+- **本轮（部分）**：``dev-standards`` M5 烟测模块列表与 ``AGENT_GOAL`` / ``run_program_exit`` 对齐；``test_section8_dev_standards_documents_program_exit`` 钩子更新。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
 - **本轮**：`docs/AGENT_TRIALS.md`、`qa/trial_protocol.py`（`voice_distance`、快照 JSON）、`examples/agent_trial/snapshot_presets.py`、`artifacts/trials/` gitignore。
 - **本轮（部分）**：``snapshot_serif_voices.py`` + ``AGENT_TRIALS`` brief-2/衬线基线说明；``test_serif_voice_trial_snapshots_meet_l3`` + ``test_snapshot_serif_voices_script``。
 - **本轮（部分）**：三 brief 参考试作（``design_*`` + ``snapshot_design.py``，L3 + gate/R8）；``build_reference_family.py``（三 brief Regular+Bold）；``test_agent_trial_reference`` / ``test_agent_trial_build``。
-- **本轮（部分）**：三 brief 参考试作指标写入 ``AGENT_TRIALS.md`` 摘要表 + ``tests/fixtures/tk502_reference_metrics.json``（``test_reference_metrics_match_committed_fixture``）。
+- **本轮（部分）**：三 brief 参考试作指标写入 ``AGENT_TRIALS.md`` 摘要表 + ``tests/fixtures/reference_trial_metrics.json``（``test_reference_metrics_match_committed_fixture``）。
 - **本轮（部分）**：brief-2 衬线参考试作 ``design_editorial_slab.py`` / ``design_editorial_bracketed.py``（``--variant slab|bracketed``）；``snapshot_reference_trials`` 含 ``brief-2-slab`` / ``brief-2-bracketed``。
 - **本轮（部分）**：``weight_ladder_r8_failures`` / ``snapshot_trial`` 在字重阶梯上保留 trial ``Controls`` 的 ``Style``、``tuned_glyph``、``with_glyph``（``controls_at_ladder_stem``）。
 - **本轮（部分）**：``WEIGHT_LADDER_STEMS`` 与 TK-207 对齐（含 stem 200）；``test_weight_ladder_stems_match_tk207_regression``。
-- **本轮（部分）**：``AGENT_TRIALS.md`` §终验流程（程序侧步骤、作废条件）；``tk502_reference_metrics`` 含 ``brief-2-slab``；SKILL/reference 同步。
+- **本轮（部分）**：``AGENT_TRIALS.md`` §终验流程（程序侧步骤、作废条件）；``reference_trial_metrics`` 含 ``brief-2-slab``；SKILL/reference 同步。
 - **本轮（部分）**：``tests/docs/test_agent_trials_doc.py`` 固化 ``AGENT_TRIALS`` 终验与人审指针。
 - **本轮（部分）**：``tests/docs/test_development_plan_section8.py`` 固化 §8.2/§8.6/§8.7 可程序检项（xfail 空、文档在库、人审 gate 仍 ``approved: false``、终验文档指针）。
 - **本轮（部分）**：``AGENT_TRIALS.md`` 终验节前补 §8 / ``human_review_bundle`` 发布前程序条；``test_agent_trials_doc`` 固化 ``test_development_plan_section8`` 指针。
@@ -665,7 +665,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``test_section8_regression_test_hooks_present`` 锁定 §8.4/§8.5 与 TK-306/402 程序验收测试名仍在库中。
 - **本轮（部分）**：``TrialSnapshot.l3_voice_ok`` 与 ``l3_voice_criteria_met`` 对齐（含拓扑下限）；``topology_fraction`` 写入快照 JSON；``test_snapshot_l3_voice_ok_rejects_stem_only_tweak``；§8 钩子。
 - **本轮（部分）**：``validate_trial_snapshot`` / ``validate_trial_snapshot_record``（TK-502 快照一致性）；``trial_snapshot_exit_code`` 供 ``snapshot_design`` / ``snapshot_reference_trials``；退出码 5/6/7；``_infer_cheating_flags``（stem-only → ``stem_only_or_scale_voice``）；``test_stem_only_tweak_records_cheating_flag_and_exit_code_7`` / ``test_snapshot_design_stem_tweak_exit_code_7``。
-- **本轮（部分）**：``TrialSnapshot.program_pass_ok`` 写入快照 JSON；``tk502_reference_metrics`` 含 ``cheating_flags`` / ``program_pass_ok``。
+- **本轮（部分）**：``TrialSnapshot.program_pass_ok`` 写入快照 JSON；``reference_trial_metrics`` 含 ``cheating_flags`` / ``program_pass_ok``。
 - **本轮（部分）**：``validate_trial_snapshot_record`` 校验 ``program_pass_ok`` 与字段一致；``test_validate_trial_snapshot_record_rejects_forged_program_pass_ok``。
 - **本轮（部分）**：``read_trial_snapshot_json`` / ``validate_trial_snapshot_json`` / ``trial_snapshot_json_exit_code``；``examples/agent_trial/validate_snapshot.py``；``test_validate_snapshot_script``。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
@@ -740,14 +740,14 @@ M5：TK-501（贯穿）→ TK-502
 | §8 条 | 程序侧证据 | 状态 |
 | --- | --- | --- |
 | 1 | 本地 `pytest`/`ruff`/`mypy`；CI `.github/workflows/ci.yml` 同命令 | 已满足 |
-| 2 | `test_section8_tk106_has_no_strict_xfail_markers` | 已满足 |
+| 2 | `test_section8_has_no_strict_xfail_markers` | 已满足 |
 | 3 | `test_section8_family_gate_on_main_and_serif_voices` | 已满足 |
 | 4 | `tests/parts/test_knob_coverage.py`（§8.4 钩子） | 已满足 |
 | 5 | `tests/parts/test_italic_controls.py` / `test_italic_topology.py`（§8.5 钩子） | 已满足 |
 | 6 | `docs/AGENT_TRIALS.md` 终验摘要表 + 独立 agent 试验 | **未完成** |
 | 7 | `test_section8_required_docs_exist` 等文档钩子 | 已满足（人审签字除外） |
 
-人审视觉 gate（衬线两 voice + 斜体 VF）：`examples/human_review_bundle.py`（`--only serif|italic`）→ 人更新 `approvals/*.json`；附录 B-13～B-15 用 `--only tk206`（无 JSON）。在 `approved: false` 时不得声称 M5 视觉验收完成。
+人审视觉 gate（衬线两 voice + 斜体 VF）：`examples/human_review_bundle.py`（`--only serif|italic`）→ 人更新 `approvals/*.json`；附录 B-13～B-15 用 `--only appendix-b`（无 JSON）。在 `approved: false` 时不得声称 M5 视觉验收完成。
 
 ---
 
@@ -800,10 +800,10 @@ M5：TK-501（贯穿）→ TK-502
 | B-10 | `u` | 左下重脚（类 slab） | **假设**：`n` 旋转 180° 后肩–腿接合变成重脚 | `control.py:604` | lint R9（待校准） |
 | B-11 | `t` | 横笔与钩根细如发丝 | **假设**：钩深/rise 参数 + `blend_corners` 圆角过大 | `control.py:492`、`_finish_hook_letter :432` | lint R9 |
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
-| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；人审待签（``tk206_three_g_humanist.png``） | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf`（七 preset） |
+| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；人审待签（``appendix_b_three_g_humanist.png``） | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf`（七 preset） |
 | B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；人审待签（同上校样） | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join`（七 preset） |
-| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``tk206_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band`（七 preset）+ ``test_s_*`` VF |
-| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子 + ``human_review_bundle --only tk206`` 校样（无 JSON gate）；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
+| B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``appendix_b_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band`（七 preset）+ ``test_s_*`` VF |
+| — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子 + ``human_review_bundle --only appendix-b`` 校样（无 JSON gate）；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
 | B-17 | `contrast` | 对圆形字母无效 | **已修**（TK-301） | `OMetrics` 横竖厚度 | — |
 | B-18 | `terminal_style` | 只影响 `c C ( ) ?` | 已确认 | 多处 | TK-107 |

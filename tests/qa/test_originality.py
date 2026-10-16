@@ -114,7 +114,7 @@ def test_slab_serif_preset_has_nearest_builtin_neighbor() -> None:
     "serif_factory",
     (DesignContext.slab_serif, DesignContext.bracketed_serif),
 )
-def test_tk307_serif_voices_far_from_every_builtin_preset(
+def test_serif_voices_far_from_every_builtin_preset(
     preset_name: str,
     serif_factory,
 ) -> None:

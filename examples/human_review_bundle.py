@@ -8,7 +8,7 @@ Example::
         --out artifacts/human-review
 
     PYTHONPATH=src python examples/human_review_bundle.py \\
-        --only tk206 --out artifacts/human-review
+        --only appendix-b --out artifacts/human-review
 """
 
 from __future__ import annotations
@@ -27,11 +27,11 @@ _CHECKLIST = """# Human review checklist (do not commit this folder)
 ## Automated gates (run from repo root)
 
 ```bash
-PYTHONPATH=src python examples/run_m5_program_exit.py --gate all
+PYTHONPATH=src python examples/run_program_exit.py --gate all
 pytest -q tests/qa/test_gate_thresholds_locked.py
 pytest -q tests/docs/test_development_plan_section8.py
 pytest -q tests/examples/test_agent_trial_reference.py
-pytest -q tests/qa/test_m3_exit.py
+pytest -q tests/qa/test_multi_voice_exit.py
 pytest -q tests/examples/test_human_review_bundle.py
 pytest -q tests/examples/test_weight_ladder_sheet.py
 pytest -q tests/parts/test_known_defects.py::test_b13_three_no_flat_top_shelf
@@ -40,7 +40,7 @@ pytest -q tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_
 pytest -q tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen
 pytest -q tests/qa/test_counter.py::test_descender_micro_sliver_below_min_run_gap_ignored
 pytest -q tests/examples/test_slab_serif.py tests/examples/test_bracketed_serif.py
-pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance
+pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance
 pytest -q tests/qa/test_originality.py tests/qa/test_sentence_gate.py
 pytest -q tests/examples/test_italic_family.py
 pytest -q tests/parts/test_italic_program_acceptance.py
@@ -61,9 +61,9 @@ Other presets (TK-207): ``PYTHONPATH=src python examples/weight_ladder_sheet.py 
 
 | Defect | Artifact | Path |
 | --- | --- | --- |
-| B-13 `3` top | Humanist `3G` contact | `{out}/tk206_three_g_humanist.png` |
+| B-13 `3` top | Humanist `3G` contact | `{out}/appendix_b_three_g_humanist.png` |
 | B-14 `G` spur | (same sheet) | |
-| B-15 `s` opening | Humanist `sS` contact | `{out}/tk206_s_opening_humanist.png` |
+| B-15 `s` opening | Humanist `sS` contact | `{out}/appendix_b_s_opening_humanist.png` |
 
 Judge: `3` cap without a flat Ʒ shelf; `G` spur meets bowl on a smooth cubic; `s`/`S` opening natural with a
 continuous spine band at bold weights. Program hooks: ``test_b13_three_no_flat_top_shelf``,
@@ -73,9 +73,9 @@ Changing ``S_OPENING_REACH_RELIEF`` or outline builders requires ``regenerate_ou
 Regenerate PNGs::
 
     PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars 3G \\
-        --out artifacts/specimens/tk206_three_g_humanist.png
+        --out artifacts/specimens/appendix_b_three_g_humanist.png
     PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars sS \\
-        --out artifacts/specimens/tk206_s_opening_humanist.png
+        --out artifacts/specimens/appendix_b_s_opening_humanist.png
 
 After **you** accept visually, record decisions (agent must not set ``approved: true`` without you):
 
@@ -94,7 +94,7 @@ write_approval(
         "tests/examples/test_slab_serif.py",
         "tests/examples/test_human_review_bundle.py",
         "tests/parts/test_serifs.py",
-        "tests/qa/test_m3_exit.py",
+        "tests/qa/test_multi_voice_exit.py",
         "tests/qa/test_originality.py",
         "tests/qa/test_sentence_gate.py",
         "tests/docs/test_development_plan_section8.py",
@@ -113,7 +113,7 @@ write_approval(
         "tests/examples/test_bracketed_serif.py",
         "tests/examples/test_human_review_bundle.py",
         "tests/parts/test_serifs.py",
-        "tests/qa/test_m3_exit.py",
+        "tests/qa/test_multi_voice_exit.py",
         "tests/qa/test_originality.py",
         "tests/qa/test_sentence_gate.py",
         "tests/docs/test_development_plan_section8.py",
@@ -203,13 +203,13 @@ def _italic_bundle(out: Path) -> None:
     )
 
 
-def _tk206_review_bundle(out: Path) -> None:
+def _appendix_b_review_bundle(out: Path) -> None:
     from typekernel.parts import Controls, DesignContext
     from typekernel.qa.sheet import contact_sheet
 
     controls = Controls.from_context(DesignContext.humanist_sans())
-    contact_sheet(controls, out / "tk206_three_g_humanist.png", chars="3G")
-    contact_sheet(controls, out / "tk206_s_opening_humanist.png", chars="sS")
+    contact_sheet(controls, out / "appendix_b_three_g_humanist.png", chars="3G")
+    contact_sheet(controls, out / "appendix_b_s_opening_humanist.png", chars="sS")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--only",
-        choices=("all", "serif", "italic", "tk206"),
+        choices=("all", "serif", "italic", "appendix-b"),
         default="all",
         help="which bundle to render",
     )
@@ -234,8 +234,8 @@ def main(argv: list[str] | None = None) -> int:
         _serif_bundle(out)
     if args.only in ("all", "italic"):
         _italic_bundle(out)
-    if args.only in ("all", "tk206"):
-        _tk206_review_bundle(out)
+    if args.only in ("all", "appendix-b"):
+        _appendix_b_review_bundle(out)
 
     checklist = out / "REVIEW_CHECKLIST.md"
     checklist.write_text(_CHECKLIST.format(out=out), encoding="utf-8")

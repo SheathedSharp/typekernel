@@ -84,7 +84,7 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 | `trace_letter` | Expand skeleton; default `heal` / `strip_tiny` / `refit_cubics` after union (see `examples/zayju_script/`) |
 | `expand_cubic` | `(Outline, CenterlineExpandReport)`; open path uses offset-rail cubics when `offset_fit_budget>0` (butt/round/square cap; miter/round/bevel join). Set `offset_fit_budget=0` to flatten midline + `expand`. |
 
-Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_tk308_program_acceptance.py`, `tests/examples/test_zayju_script.py`.
+Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_stroke_program_acceptance.py`, `tests/examples/test_zayju_script.py`.
 
 ## Italic & oblique (M4)
 
@@ -126,15 +126,15 @@ Fails if:
 - Metrics JSON: `snapshot_design.py --brief … --design …` or `snapshot_reference_trials.py` (includes `brief-2-slab/`). Both run `validate_trial_snapshot` then exit via `trial_snapshot_exit_code` (0 ok; 2 metrics; 3 gate; 4 R8 ladder; 5 inconsistent JSON fields; 6 not L3; 7 `cheating_flags` e.g. stem-only scale). Audit saved JSON: `validate_snapshot.py path/to/snapshot.json` or `validate_snapshot.py --recursive artifacts/trials/<run>/`; after human scores are in JSON, `validate_snapshot.py --require-human-scores` (exit 8 if incomplete). Program snapshots from `snapshot_design.py` must not include `human_review_scores` until a human adds them.
 - `snapshot_trial` → `weight_ladder_r8_failures` uses full trial `Controls` on `WEIGHT_LADDER_STEMS` (30–200) via `controls_at_ladder_stem`.
 - Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} [--variant slab] --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). End-to-end checklist: `docs/AGENT_TRIALS.md` §终验流程.
-- Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py` (serif VF proofs + italic `proof.png` / `proof_vf.png`; `--only tk206` → `tk206_three_g_humanist.png` + `tk206_s_opening_humanist.png` for appendix B-13–B-15).
+- Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py` (serif VF proofs + italic `proof.png` / `proof_vf.png`; `--only appendix-b` → `appendix_b_three_g_humanist.png` + `appendix_b_s_opening_humanist.png` for appendix B-13–B-15).
 - TK-207 weight ladder (local `artifacts/specimens/`): `examples/weight_ladder_sheet.py --preset humanist_sans --out …`.
 - TK-104 charset review (width ≤ 1600px): `examples/contact_sheet.py --preset … --out …`; voice diff: `examples/diff_overlay.py --trial-preset … --baseline-preset …` (same as `design_review` `contact.png` / `diff_overlay.png` under `out/review/`).
 - TK-108 outline golden: `examples/regenerate_outline_hashes.py` (check drift; `--write` updates `tests/golden/outline_hashes.json` after intentional outline edits).
-- Program acceptance (before human `approvals/`): `PYTHONPATH=src python examples/run_m5_program_exit.py` (`--gate slab|bracketed|italic|all`, `--with-linters`); or `pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance`, `tests/parts/test_italic_program_acceptance.py`, `tests/docs/test_development_plan_section8.py`.
+- Program acceptance (before human `approvals/`): `PYTHONPATH=src python examples/run_program_exit.py` (`--gate slab|bracketed|italic|all`, `--with-linters`); or `pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance`, `tests/parts/test_italic_program_acceptance.py`, `tests/docs/test_development_plan_section8.py`.
 
 ## Tests
 
-After library changes: `uv run pytest -q`. Compile tests need `ufo2ft` (`[compile]` extra). M5 partial exit: `examples/run_m5_program_exit.py` or `pytest -q tests/docs/test_development_plan_section8.py`.
+After library changes: `uv run pytest -q`. Compile tests need `ufo2ft` (`[compile]` extra). Program exit: `examples/run_program_exit.py` or `pytest -q tests/docs/test_development_plan_section8.py`.
 
 ## Approvals
 

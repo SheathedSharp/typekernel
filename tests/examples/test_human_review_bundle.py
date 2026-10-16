@@ -23,17 +23,17 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "serif-bracketed-voice" in text
     assert "italic-vf-construct" in text
     assert "proof_vf.png" in text
-    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_italic_program_acceptance.py" in text
     assert "test_development_plan_section8.py" in text
     assert "test_agent_trial_reference.py" in text
-    assert "run_m5_program_exit.py" in text
+    assert "run_program_exit.py" in text
     assert "test_gate_thresholds_locked.py" in text
-    assert "test_m3_exit.py" in text
+    assert "test_multi_voice_exit.py" in text
     assert "weight_ladder_sheet.py" in text
     assert "test_weight_ladder_sheet.py" in text
-    assert "tk206_s_opening_humanist.png" in text
-    assert "tk206_three_g_humanist.png" in text
+    assert "appendix_b_s_opening_humanist.png" in text
+    assert "appendix_b_three_g_humanist.png" in text
     assert "test_b13_three_no_flat_top_shelf" in text
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
@@ -87,13 +87,13 @@ def test_human_review_bundle_serif_only(tmp_path: Path) -> None:
     assert "serif-bracketed-voice" in checklist
 
 
-def test_human_review_bundle_tk206_only(tmp_path: Path) -> None:
+def test_human_review_bundle_appendix_b_only(tmp_path: Path) -> None:
     proc = subprocess.run(
         [
             sys.executable,
             str(ROOT / "examples" / "human_review_bundle.py"),
             "--only",
-            "tk206",
+            "appendix-b",
             "--out",
             str(tmp_path),
         ],
@@ -104,11 +104,11 @@ def test_human_review_bundle_tk206_only(tmp_path: Path) -> None:
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert (tmp_path / "REVIEW_CHECKLIST.md").is_file()
-    assert (tmp_path / "tk206_three_g_humanist.png").is_file()
-    assert (tmp_path / "tk206_s_opening_humanist.png").is_file()
+    assert (tmp_path / "appendix_b_three_g_humanist.png").is_file()
+    assert (tmp_path / "appendix_b_s_opening_humanist.png").is_file()
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
     assert "TK-206" in checklist
-    assert "tk206_s_opening_humanist.png" in checklist
+    assert "appendix_b_s_opening_humanist.png" in checklist
 
 
 def test_human_review_bundle_italic_only(tmp_path: Path) -> None:

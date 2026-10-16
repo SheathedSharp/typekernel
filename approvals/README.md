@@ -48,8 +48,8 @@ These ship with ``approved: false`` until a human updates them after review:
 - `italic-vf-construct.json` — `--only italic` (review `proof.png`, `proof_vf.png`, VF `.ttf` under `italic_family/`)
 
 **Appendix B-13–B-15** (`3` / `G` / `s` opening) have no JSON gate: review
-`tk206_three_g_humanist.png` and `tk206_s_opening_humanist.png` from
-`human_review_bundle.py --only tk206` (or `contact_sheet.py --chars 3G` / `sS`). Record acceptance in
+`appendix_b_three_g_humanist.png` and `appendix_b_s_opening_humanist.png` from
+`human_review_bundle.py --only appendix-b` (or `contact_sheet.py --chars 3G` / `sS`). Record acceptance in
 notes or a design log only; changing outline builders or `S_OPENING_REACH_RELIEF` requires golden
 refresh per `docs/agent-recipes.md`.
 
@@ -59,7 +59,7 @@ Generate local proofs (does not write this folder):
 PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review
 ```
 
-Before signing, run the `test_evidence` paths on each JSON file and the programmatic checks in `REVIEW_CHECKLIST.md` (for example `tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance` and `tests/parts/test_italic_program_acceptance.py`). See `tests/docs/test_development_plan_section8.py` for `DEVELOPMENT_PLAN` §8 hooks.
+Before signing, run the `test_evidence` paths on each JSON file and the programmatic checks in `REVIEW_CHECKLIST.md` (for example `tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance` and `tests/parts/test_italic_program_acceptance.py`). See `tests/docs/test_development_plan_section8.py` for `DEVELOPMENT_PLAN` §8 hooks.
 
 ### Copy-paste program checks (pending gates)
 
@@ -71,8 +71,8 @@ From repo root, after opening `artifacts/human-review/` (or your `--out` path):
 pytest -q \
   tests/examples/test_slab_serif.py \
   tests/examples/test_human_review_bundle.py \
-  tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance \
-  tests/qa/test_m3_exit.py \
+  tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance \
+  tests/qa/test_multi_voice_exit.py \
   tests/qa/test_originality.py \
   tests/qa/test_sentence_gate.py \
   tests/docs/test_development_plan_section8.py
@@ -84,8 +84,8 @@ pytest -q \
 pytest -q \
   tests/examples/test_bracketed_serif.py \
   tests/examples/test_human_review_bundle.py \
-  tests/parts/test_serifs.py::test_serif_voice_meets_tk306_program_acceptance \
-  tests/qa/test_m3_exit.py \
+  tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance \
+  tests/qa/test_multi_voice_exit.py \
   tests/qa/test_originality.py \
   tests/qa/test_sentence_gate.py \
   tests/docs/test_development_plan_section8.py
@@ -111,6 +111,6 @@ Then update the JSON (`approved`, `approver`, `date`, `notes`) or use `write_app
 1. Re-run that gate’s program checks (above) so evidence matches the commit you are on.
 2. Set `approved: true`, fill `approver` / `date` / `notes` (keep `test_evidence` paths accurate).
 3. Update `tests/docs/test_development_plan_section8.py`: remove the signed gate from `_PENDING_HUMAN_GATES` (and mirror any `_PENDING_GATE_JSON` lists in `tests/qa/test_gates.py`) so CI no longer expects `approved: false` for that file. When **all three** visual gates are signed, `test_section8_human_gates_remain_pending_until_review` should be removed or rewritten to assert the approved records instead.
-4. Run `PYTHONPATH=src python examples/run_m5_program_exit.py --full-suite --with-linters` (or `pytest -q` + ruff + mypy) before pushing — do not relax `AGENT_SENTENCE` or L3 thresholds.
+4. Run `PYTHONPATH=src python examples/run_program_exit.py --full-suite --with-linters` (or `pytest -q` + ruff + mypy) before pushing — do not relax `AGENT_SENTENCE` or L3 thresholds.
 
 Agents must not flip ``approved`` to ``true`` without explicit human instruction.

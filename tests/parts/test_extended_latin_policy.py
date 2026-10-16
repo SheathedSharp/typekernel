@@ -1,4 +1,4 @@
-"""TK-208: extended Latin opt-in policy and composite lint."""
+"""Extended Latin opt-in policy and composite lint."""
 
 from __future__ import annotations
 

@@ -1,14 +1,14 @@
-"""Run M5 *program* exit checks (DEVELOPMENT_PLAN §8 hooks + pending gate tests).
+"""Run program exit checks (DEVELOPMENT_PLAN §8 hooks + pending gate tests).
 
-This is **not** TK-502 final agent validation and does not write ``approvals/*.json``.
+This is **not** final agent validation and does not write ``approvals/*.json``.
 
 Example::
 
-    PYTHONPATH=src python examples/run_m5_program_exit.py
-    PYTHONPATH=src python examples/run_m5_program_exit.py --gate slab
-    PYTHONPATH=src python examples/run_m5_program_exit.py --list
-    PYTHONPATH=src python examples/run_m5_program_exit.py --with-linters
-    PYTHONPATH=src python examples/run_m5_program_exit.py --full-suite --with-linters
+    PYTHONPATH=src python examples/run_program_exit.py
+    PYTHONPATH=src python examples/run_program_exit.py --gate slab
+    PYTHONPATH=src python examples/run_program_exit.py --list
+    PYTHONPATH=src python examples/run_program_exit.py --with-linters
+    PYTHONPATH=src python examples/run_program_exit.py --full-suite --with-linters
 """
 
 from __future__ import annotations
@@ -30,14 +30,14 @@ _TRIAL_SMOKE = (
     "tests/examples/test_diff_overlay.py",
     "tests/examples/test_regenerate_outline_hashes.py",
     "tests/examples/test_human_review_bundle.py::test_human_review_bundle_source_documents_pending_gates",
-    "tests/examples/test_human_review_bundle.py::test_human_review_bundle_tk206_only",
+    "tests/examples/test_human_review_bundle.py::test_human_review_bundle_appendix_b_only",
     "tests/parts/test_known_defects.py::test_b13_three_no_flat_top_shelf",
     "tests/parts/test_known_defects.py::test_b14_g_spur_cubic_join",
     "tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band",
     "tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen",
     "tests/parts/test_knob_coverage.py",
     "tests/parts/test_glyph_specs.py",
-    "tests/parts/test_tk308_program_acceptance.py",
+    "tests/parts/test_stroke_program_acceptance.py",
     "tests/examples/test_zayju_script.py::test_zayju_script_charset_builds_and_lints_clean",
     "tests/parts/test_stress.py",
     "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress",

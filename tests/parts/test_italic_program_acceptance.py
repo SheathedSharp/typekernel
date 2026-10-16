@@ -43,7 +43,7 @@ def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
     return font
 
 
-def test_italic_vf_meets_tk402_program_acceptance_on_humanist() -> None:
+def test_italic_vf_meets_program_acceptance_on_humanist() -> None:
     """Lint/identity, construct slant, oblique delta, wght×ital ``check_masters``."""
     reg = Controls.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)

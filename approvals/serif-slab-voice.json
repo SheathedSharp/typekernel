@@ -9,7 +9,7 @@
     "tests/examples/test_slab_serif.py",
     "tests/examples/test_human_review_bundle.py",
     "tests/parts/test_serifs.py",
-    "tests/qa/test_m3_exit.py",
+    "tests/qa/test_multi_voice_exit.py",
     "tests/qa/test_originality.py",
     "tests/qa/test_sentence_gate.py",
     "tests/docs/test_development_plan_section8.py"

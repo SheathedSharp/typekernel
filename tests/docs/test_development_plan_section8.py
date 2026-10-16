@@ -67,33 +67,33 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "tests/parts/test_serifs.py",
-        ("test_serif_voice_meets_tk306_program_acceptance",),
+        ("test_serif_voice_meets_program_acceptance",),
     ),
     (
         "tests/parts/test_italic_program_acceptance.py",
-        ("test_italic_vf_meets_tk402_program_acceptance_on_humanist",),
+        ("test_italic_vf_meets_program_acceptance_on_humanist",),
     ),
     (
-        "tests/qa/test_m3_exit.py",
+        "tests/qa/test_multi_voice_exit.py",
         (
-            "test_m3_three_l3_voices_slab_bracketed_and_reference_sans",
-            "test_m3_serif_pair_differs_from_warm_humanist_reference",
+            "test_multi_voice_three_l3_voices_slab_bracketed_and_reference_sans",
+            "test_multi_voice_serif_pair_differs_from_warm_humanist_reference",
         ),
     ),
     (
         "tests/qa/test_originality.py",
         (
             "test_l3_rejects_context_only_stem_tweak",
-            "test_tk307_serif_voices_far_from_every_builtin_preset",
+            "test_serif_voices_far_from_every_builtin_preset",
         ),
     ),
     (
-        "tests/parts/test_tk208_extended_latin.py",
+        "tests/parts/test_extended_latin_policy.py",
         ("test_extended_latin_not_in_default_supported",),
     ),
     (
-        "tests/parts/test_tk308_program_acceptance.py",
-        ("test_tk308_stroke_spike_meets_program_acceptance",),
+        "tests/parts/test_stroke_program_acceptance.py",
+        ("test_stroke_spike_meets_program_acceptance",),
     ),
     (
         "tests/examples/test_zayju_script.py",
@@ -127,7 +127,7 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
-def test_section8_tk106_has_no_strict_xfail_markers() -> None:
+def test_section8_has_no_strict_xfail_markers() -> None:
     """§8.2: defect registry tests must not use strict xfail."""
     tests_root = ROOT / "tests"
     for path in tests_root.rglob("*.py"):
@@ -144,7 +144,7 @@ def test_section8_required_docs_exist() -> None:
 
 
 def test_section8_human_gates_remain_pending_until_review() -> None:
-    """§8.6 / TK-306 / TK-402: agents must not ship with auto-approved visual gates."""
+    """§8.6: agents must not ship with auto-approved visual gates."""
     for rel in _PENDING_HUMAN_GATES:
         data = load_approval(ROOT / rel)
         assert data["approved"] is False
@@ -164,108 +164,108 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "test_development_plan_section8" in text
 
 
-def test_section8_skill_reference_documents_m5_workflow() -> None:
+def test_section8_skill_reference_documents_program_workflow() -> None:
     """§8.7: skill reference points at trials, review bundle, and acceptance tests."""
     text = (
         ROOT / ".agents/skills/typekernel-font-design/reference.md"
     ).read_text(encoding="utf-8")
     assert "human_review_bundle" in text
-    assert "--only tk206" in text
-    assert "tk206_three_g_humanist.png" in text
+    assert "--only appendix-b" in text
+    assert "appendix_b_three_g_humanist.png" in text
     assert "regenerate_outline_hashes.py" in text
     assert "snapshot_serif_voices" in text
     assert "validate_trial_snapshot" in text
     assert "validate_snapshot.py" in text
     assert "trial_snapshot_exit_code" in text
-    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_italic_program_acceptance" in text
     assert "test_development_plan_section8" in text
     assert "contact_sheet.py" in text
     assert "diff_overlay.py" in text
 
 
-def test_section8_skill_reference_documents_tk308_trace_letter() -> None:
+def test_section8_skill_reference_documents_trace_letter() -> None:
     text = (
         ROOT / ".agents/skills/typekernel-font-design/reference.md"
     ).read_text(encoding="utf-8")
-    assert "TK-308" in text
+    assert "trace_letter" in text
     assert "polyline_to_cubic_centerline" in text
     assert "test_zayju_script.py" in text
 
 
-def test_section8_skill_reference_documents_tk302_stress() -> None:
+def test_section8_skill_reference_documents_stress() -> None:
     text = (
         ROOT / ".agents/skills/typekernel-font-design/reference.md"
     ).read_text(encoding="utf-8")
-    assert "TK-302" in text
+    assert "stress" in text.lower()
     assert "stress" in text
     assert "test_stress.py" in text
 
 
 def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-502" in text
+    assert "snapshot_trial" in text or "voice_distance" in text
     assert "validate_trial_snapshot" in text
     assert "trial_snapshot_exit_code" in text
     assert "require-human-scores" in text
-    assert "run_m5_program_exit" in text
+    assert "run_program_exit" in text
 
 
-def test_section8_agent_recipes_documents_tk104_review_clis() -> None:
+def test_section8_agent_recipes_documents_review_clis() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-104" in text
+    assert "contact_sheet" in text
     assert "contact_sheet.py" in text
     assert "diff_overlay.py" in text
 
 
-def test_section8_agent_recipes_documents_tk108_golden_refresh() -> None:
+def test_section8_agent_recipes_documents_golden_refresh() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-108" in text
+    assert "regenerate_outline_hashes" in text or "outline_hashes" in text
     assert "regenerate_outline_hashes.py" in text
 
 
 def test_section8_plan_appendix_c_documents_stress_knob_sensitivity() -> None:
     text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
     assert "| `stress` | 25 | 23 |" in text
-    assert "TK-301 后圆字母均动" in text
+    assert "后圆" in text or "equalize" in text.lower()
     assert "| `contrast` | 0.5 | 85 |" in text
     assert "test_contrast_moves_many_glyphs_on_humanist" in text
 
 
-def test_section8_agent_recipes_documents_tk308_trace_letter_spike() -> None:
+def test_section8_agent_recipes_documents_trace_letter_spike() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-308" in text
+    assert "trace_letter" in text
     assert "polyline_to_cubic_centerline" in text
     assert "trace_letter" in text
     assert "zayju_script" in text
     assert "test_zayju_script.py" in text
 
 
-def test_section8_agent_recipes_documents_tk302_stress() -> None:
+def test_section8_agent_recipes_documents_stress() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-302" in text
+    assert "stress" in text.lower()
     assert "stress" in text
     assert "test_stress.py" in text
     assert "_cut_x" in text
     assert "control._cut" in text
 
 
-def test_section8_agent_recipes_documents_tk207_min_run_gap() -> None:
+def test_section8_agent_recipes_documents_min_run_gap() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-207" in text
+    assert "min_run_gap" in text or "weight_ladder" in text
     assert "0.09" in text
     assert "COUNTER_GAP_FLOOR_OVER_STEM" in text
     assert "test_counter_gap_floor_formula_frozen" in text
     assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
 
 
-def test_section8_agent_recipes_documents_tk206_b15_human_review() -> None:
+def test_section8_agent_recipes_documents_appendix_b_human_review() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
-    assert "TK-206" in text
+    assert "appendix-b" in text or "B-13" in text
     assert "human_review_bundle.py" in text
-    assert "--only tk206" in text
-    assert "tk206_s_opening_humanist.png" in text
-    assert "tk206_three_g_humanist.png" in text
+    assert "--only appendix-b" in text
+    assert "appendix_b_s_opening_humanist.png" in text
+    assert "appendix_b_three_g_humanist.png" in text
 
 
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
@@ -277,21 +277,21 @@ def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
     assert "program-snapshot-only" in text
     assert "AGENT_TRIALS.md" in text
     assert "human_review_bundle" in text
-    assert "--only tk206" in text
-    assert "tk206_three_g_humanist.png" in text
+    assert "--only appendix-b" in text
+    assert "appendix_b_three_g_humanist.png" in text
 
 
-def test_section8_skill_documents_m5_exit_workflow() -> None:
+def test_section8_skill_documents_program_exit_workflow() -> None:
     text = (
         ROOT / ".agents/skills/typekernel-font-design/SKILL.md"
     ).read_text(encoding="utf-8")
     assert "human_review_bundle" in text
-    assert "--only tk206" in text
+    assert "--only appendix-b" in text
     assert "regenerate_outline_hashes.py" in text
-    assert "run_m5_program_exit" in text
+    assert "run_program_exit" in text
     assert "validate_snapshot.py" in text
     assert "test_development_plan_section8" in text
-    assert "test_m3_exit" in text
+    assert "test_multi_voice_exit" in text
     assert "contact_sheet.py" in text
     assert "test_knob_coverage" in text
     assert "test_zayju_script" in text
@@ -301,11 +301,11 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "DEVELOPMENT_PLAN.md" in text
     assert "human_review_bundle.py" in text
-    assert "tk206" in text
+    assert "appendix-b" in text
     assert "weight_ladder_sheet.py" in text
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
-    assert "run_m5_program_exit.py" in text
+    assert "run_program_exit.py" in text
     assert "validate_snapshot.py" in text
     assert "test_development_plan_section8" in text
 
@@ -313,12 +313,12 @@ def test_section8_readme_points_at_plan_and_review_bundle() -> None:
 def test_section8_dev_standards_documents_program_exit() -> None:
     text = (ROOT / "docs/dev-standards.md").read_text(encoding="utf-8")
     assert "test_development_plan_section8" in text
-    assert "run_m5_program_exit" in text
+    assert "run_program_exit" in text
     assert "validate_snapshot.py" in text
     assert "human_review_bundle" in text
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
-    assert "--only tk206" in text
+    assert "--only appendix-b" in text
     assert "test_gate_thresholds_locked" in text
     assert "AGENT_SENTENCE" in text
     assert "test_knob_coverage.py" in text
@@ -329,17 +329,17 @@ def test_section8_dev_standards_documents_program_exit() -> None:
 def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     text = (ROOT / "docs/AGENT_GOAL.md").read_text(encoding="utf-8")
     assert "human_review_bundle" in text
-    assert "run_m5_program_exit" in text
+    assert "run_program_exit" in text
     assert "validate_snapshot.py" in text
     assert "contact_sheet.py" in text
     assert "regenerate_outline_hashes.py" in text
-    assert "--only tk206" in text
-    assert "tk206_three_g_humanist.png" in text
-    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "--only appendix-b" in text
+    assert "appendix_b_three_g_humanist.png" in text
+    assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_knob_coverage" in text
     assert "test_stress" in text
     assert "test_glyph_specs" in text
-    assert "test_tk308_program_acceptance" in text
+    assert "test_stroke_program_acceptance" in text
     assert "test_zayju_script" in text
 
 
@@ -347,9 +347,9 @@ def test_section8_approvals_readme_documents_review_workflow() -> None:
     text = (ROOT / "approvals/README.md").read_text(encoding="utf-8")
     assert "human_review_bundle" in text
     assert "B-13" in text
-    assert "tk206_three_g_humanist.png" in text
-    assert "--only tk206" in text
-    assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "appendix_b_three_g_humanist.png" in text
+    assert "--only appendix-b" in text
+    assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_development_plan_section8" in text
     for gate_file in _PENDING_HUMAN_GATES:
         assert Path(gate_file).name in text
@@ -357,7 +357,7 @@ def test_section8_approvals_readme_documents_review_workflow() -> None:
 
 
 def test_section8_regression_test_hooks_present() -> None:
-    """§8.4–§8.5 / TK-306–402: named acceptance tests stay in the tree."""
+    """§8.4–§8.5: named acceptance tests stay in the tree."""
     for rel, test_names in _SECTION8_REGRESSION_TESTS:
         path = ROOT / rel
         assert path.is_file(), rel
@@ -374,27 +374,27 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
     assert "validate_snapshot.py" in section
 
 
-def test_section8_run_m5_program_exit_includes_tk107_knob_coverage() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+def test_section8_run_program_exit_includes_knob_coverage() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_knob_coverage.py" in text
 
 
-def test_section8_run_m5_program_exit_includes_tk303_glyph_specs() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+def test_section8_run_program_exit_includes_glyph_specs() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_glyph_specs.py" in text
 
 
-def test_section8_run_m5_program_exit_includes_tk308_stroke_spike() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
-    assert "tests/parts/test_tk308_program_acceptance.py" in text
+def test_section8_run_program_exit_includes_stroke_spike() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_stroke_program_acceptance.py" in text
 
 
-def test_section8_run_m5_program_exit_includes_tk308_zayju_script_smoke() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+def test_section8_run_program_exit_includes_zayju_script_smoke() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "test_zayju_script_charset_builds_and_lints_clean" in text
 
 
-def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:
+def test_section8_agent_recipes_documents_tuned_glyph_specs() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "glyph_specs" in text
     assert "GSpec" in text
@@ -405,21 +405,21 @@ def test_section8_agent_recipes_documents_tk303_tuned_glyph_specs() -> None:
     assert "test_glyph_specs.py" in text
 
 
-def test_section8_run_m5_program_exit_includes_tk302_stress_regressions() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+def test_section8_run_program_exit_includes_stress_regressions() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_stress.py" in text
     assert "test_all_lining_figures_build_under_stress" in text
 
 
-def test_section8_run_m5_program_exit_includes_tk206_defect_regressions() -> None:
-    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+def test_section8_run_program_exit_includes_appendix_b_defect_regressions() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "test_b13_three_no_flat_top_shelf" in text
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
     assert "test_s_opening_reach_relief_frozen" in text
     assert "tests/qa/test_gate_thresholds_locked.py" in text
     assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
-    assert "test_human_review_bundle_tk206_only" in text
+    assert "test_human_review_bundle_appendix_b_only" in text
 
 
 def test_section8_plan_quality_gate_pytest_count_matches_suite() -> None:
@@ -452,9 +452,9 @@ def test_section8_plan_documents_program_vs_human_exit() -> None:
     assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
     assert "test_gate_thresholds_locked" in text
     assert "七 preset" in text
-    assert "human_review_bundle --only tk206" in text
-    assert "tk206_three_g_humanist.png" in text
-    assert "test_human_review_bundle_tk206_only" in text
+    assert "human_review_bundle --only appendix-b" in text
+    assert "appendix_b_three_g_humanist.png" in text
+    assert "test_human_review_bundle_appendix_b_only" in text
     assert "test_section8_family_gate_on_main_and_serif_voices" in text
     assert "approved: false" in text
     assert "终验" in text
