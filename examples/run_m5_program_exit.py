@@ -35,6 +35,8 @@ _TRIAL_SMOKE = (
     "tests/parts/test_known_defects.py::test_b14_g_spur_cubic_join",
     "tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band",
     "tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen",
+    "tests/parts/test_stress.py",
+    "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress",
     "tests/qa/test_gate_thresholds_locked.py",
     "tests/qa/test_counter.py::test_descender_micro_sliver_below_min_run_gap_ignored",
     "tests/qa/test_sheet.py::test_contact_sheet_full_charset_width_at_most_1600",

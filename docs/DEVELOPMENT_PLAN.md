@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1509 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1510 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -394,6 +394,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``s_from_o`` 上下环内轮廓随 ``stress`` 绕各自 bowl 中心旋转（``stress=0`` 哈希不变）；``test_stress_moves_lowercase_s_outline`` / ``test_stress_zero_preserves_lowercase_s_hashes``。
 - **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``two_from_O``/``three_from_O``/``five_from_O`` 竖切用 ``_cut_x``（高 ``stress`` 内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``（``2``/``3``/``5``/``6``/``8``/``9``）；``test_all_lining_figures_build_under_stress``。
 - **本轮（部分）**：``figures._ring_parts`` 内环类型与 ``_quarters`` 对齐（mypy；``stress=0`` 哈希不变）。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
 
@@ -595,6 +596,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_human_review_bundle_tk206_only``（TK-206 校样路径烟测）；``test_run_m5_program_exit`` 固化。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含附录 B-13～B-15 ``test_known_defects`` + ``test_s_opening_reach_relief_frozen``；``AGENT_TRIALS`` 库维护者回归列表对齐。
 - **本轮（部分）**：``test_section8_run_m5_program_exit_includes_tk206_defect_regressions`` 固化程序出口与 B-13～B-15 钩子。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``（TK-302 程序回归）；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。

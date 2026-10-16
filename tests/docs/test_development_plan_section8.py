@@ -314,6 +314,12 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
     assert "validate_snapshot.py" in section
 
 
+def test_section8_run_m5_program_exit_includes_tk302_stress_regressions() -> None:
+    text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_stress.py" in text
+    assert "test_all_lining_figures_build_under_stress" in text
+
+
 def test_section8_run_m5_program_exit_includes_tk206_defect_regressions() -> None:
     text = (ROOT / "examples/run_m5_program_exit.py").read_text(encoding="utf-8")
     assert "test_b13_three_no_flat_top_shelf" in text
