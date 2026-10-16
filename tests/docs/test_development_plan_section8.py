@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -304,6 +306,24 @@ def test_section8_run_m5_program_exit_includes_tk206_defect_regressions() -> Non
     assert "tests/qa/test_gate_thresholds_locked.py" in text
     assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
     assert "test_human_review_bundle_tk206_only" in text
+
+
+def test_section8_plan_quality_gate_pytest_count_matches_suite() -> None:
+    """§2.3.1 documented pytest count must match ``pytest --collect-only``."""
+    text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
+    doc_match = re.search(r"pytest -q`：\*\*(\d+) passed\*\*", text)
+    assert doc_match is not None, "§2.3.1 missing pytest passed count"
+    doc_count = int(doc_match.group(1))
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    coll_match = re.search(r"(\d+) tests collected", proc.stdout)
+    assert coll_match is not None, proc.stdout[-800:]
+    assert doc_count == int(coll_match.group(1))
 
 
 def test_section8_plan_documents_program_vs_human_exit() -> None:
