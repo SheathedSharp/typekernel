@@ -44,6 +44,7 @@ from typekernel.parts.terminal_openings import (
 from typekernel.parts.transforms import mirror_x, mirror_y, translate
 
 __all__ = [
+    "S_OPENING_REACH_RELIEF",
     "NMetrics",
     "OMetrics",
     "a_from_o",
@@ -74,7 +75,6 @@ __all__ = [
     "p_from_o",
     "q_from_o",
     "r_from_n",
-    "S_OPENING_REACH_RELIEF",
     "s_from_o",
     "t_from_n",
     "u_from_n",
