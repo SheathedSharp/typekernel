@@ -60,7 +60,7 @@ def test_stress_zero_preserves_lowercase_s_hashes() -> None:
         assert h0 == h1
 
 
-@pytest.mark.parametrize("ch", ("3", "6", "8"))
+@pytest.mark.parametrize("ch", ("2", "3", "5", "6", "8", "9"))
 def test_stress_zero_preserves_lining_figure_hashes(ch: str) -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 
@@ -71,7 +71,7 @@ def test_stress_zero_preserves_lining_figure_hashes(ch: str) -> None:
         assert h0 == h1
 
 
-@pytest.mark.parametrize("ch", ("3", "6", "8"))
+@pytest.mark.parametrize("ch", ("2", "3", "5", "6", "8", "9"))
 def test_stress_moves_lining_figure_outline(ch: str) -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 

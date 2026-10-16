@@ -400,8 +400,8 @@ def two_from_O(
     (q0, q1, _, q3), (i0, i1, _, i3) = _ring_parts(cx, cy, rx, ry, th, tv, e, c)
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
     x_t = cx - (rx - th) * (0.95 - 0.5 * ap)
-    top = _cut(q1, x_t, horizontal=False)[0]
-    itop = _cut(i1, x_t, horizontal=False)[0]
+    top = _cut_x(q1, x_t, 0)
+    itop = _cut_x(i1, x_t, 0)
     # The diagonal's upper edge meets the counter exactly at ``join`` along its
     # lower-right quarter; the lower edge, one compensated stroke to the right,
     # is cut into the outer curve (q3 runs from the bottom to the right, and
@@ -535,8 +535,8 @@ def five_from_O(
     ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
     ap_eff = min(1.0, ap + 0.12 * relief)
     x_t = cx - (rx - th) * (0.95 - 0.5 * ap_eff)
-    l_bot = _cut(q2, x_t, horizontal=False)[1]
-    li_bot = _cut(i2, x_t, horizontal=False)[1]
+    l_bot = _cut_x(q2, x_t, 1)
+    li_bot = _cut_x(i2, x_t, 1)
     if not o_join[0][3][1] < cap - bar:
         raise ValueError("5 bowl reaches the top bar; lower the bowl")
 

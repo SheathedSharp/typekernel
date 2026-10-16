@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1500 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1506 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -392,7 +392,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮**：`stress` 字段；`bowl` / `_ring` 对 counter 施加绕 bowl 中心的旋转（`stress=0` 与改造前一致）；`tests/parts/test_stress.py` 探针。
 - **本轮（部分）**：``test_knob_coverage`` 补 ``stress`` 旋钮覆盖（``ocCO0`` 形状响应）。
 - **本轮（部分）**：``s_from_o`` 上下环内轮廓随 ``stress`` 绕各自 bowl 中心旋转（``stress=0`` 哈希不变）；``test_stress_moves_lowercase_s_outline`` / ``test_stress_zero_preserves_lowercase_s_hashes``。
-- **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``three_from_O`` 竖切用 ``_cut_x`` 回退（高 ``stress`` 下内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``。
+- **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``two_from_O``/``three_from_O``/``five_from_O`` 竖切用 ``_cut_x``（高 ``stress`` 内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``（``2``/``3``/``5``/``6``/``8``/``9``）。
 - **本轮（部分）**：``figures._ring_parts`` 内环类型与 ``_quarters`` 对齐（mypy；``stress=0`` 哈希不变）。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
@@ -627,7 +627,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``AGENT_GOAL`` / SKILL / ``reference.md`` / ``approvals/README`` 对齐 B-15（无 JSON gate）与 golden CLI；``test_section8_agent_recipes_documents_tk206_b15_human_review`` 等 §8 钩子。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``AGENT_GOAL`` / ``approvals/README`` / SKILL 对齐 B-13–B-15 双校样 PNG；``test_agent_trials_doc`` / §8 钩子更新。
 - **本轮（部分）**：``README`` / ``agent_trial/README`` 补 ``--only tk206``；附录 B 登记说明对齐校样路径；``test_section8_readme`` / ``test_section8_agent_trial_readme`` 钩子。
-- **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1500**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
+- **本轮（部分）**：§2.3.1 ``pytest`` 通过数更新为 **1506**；``test_section8_plan_quality_gate_pytest_count_matches_suite`` 与 ``pytest --collect-only`` 对齐。
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
