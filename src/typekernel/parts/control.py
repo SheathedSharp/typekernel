@@ -2521,6 +2521,33 @@ def g_from_o(
     return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
 
 
+
+def _g1_tip_bridge(b: PathBuilder, incoming: Cubic, outgoing: Cubic, *, tension: float = 0.38) -> None:
+    """Curve from end of ``incoming`` to start of ``outgoing`` with G1 handles."""
+    # incoming is drawn as-is ending at its last point; we already drew it.
+    # For lower opening we pass _rev(li_bot) as the cubic that was just drawn
+    # and l_bot as next.
+    p0, p1, p2, p3 = incoming
+    q0, q1, q2, q3 = outgoing
+    # After drawing ``incoming``, pen is at p3. Bridge p3 → q0.
+    # Arrival direction at p3 along incoming: p2 → p3
+    inx, iny = p3[0] - p2[0], p3[1] - p2[1]
+    outx, outy = q1[0] - q0[0], q1[1] - q0[1]
+    lin = math.hypot(inx, iny) or 1.0
+    lout = math.hypot(outx, outy) or 1.0
+    inx, iny = inx / lin, iny / lin
+    outx, outy = outx / lout, outy / lout
+    dist = math.hypot(q0[0] - p3[0], q0[1] - p3[1])
+    b.curveTo(
+        p3[0] + inx * dist * tension,
+        p3[1] + iny * dist * tension,
+        q0[0] - outx * dist * tension,
+        q0[1] - outy * dist * tension,
+        q0[0],
+        q0[1],
+    )
+
+
 S_OPENING_REACH_RELIEF = 0.012  # TK-206 / appendix B-15 (golden-linked)
 
 
@@ -2595,13 +2622,20 @@ def s_from_o(
         b.moveTo(*u_top[0])
     for cubic in (u_top, u1, u2, _rev(li0), _rev(li3), _rev(li_bot)):
         _curve(b, cubic)
-    b.lineTo(*l_bot[0])
     if c.style.serif == "bracketed":
+        b.lineTo(*l_bot[0])
         _opening_bottom_bracketed_detour(b, l_bot[0], slab_l, slab_th, bracket_r)
     elif c.style.serif == "slab":
+        b.lineTo(*l_bot[0])
         _opening_bottom_slab_detour(b, l_bot[0], slab_l, slab_th)
+    else:
+        # G1 tip across the lower opening instead of a hard line stub.
+        _g1_tip_bridge(b, _rev(li_bot), l_bot)
     for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
         _curve(b, cubic)
+    if c.style.serif not in ("slab", "bracketed"):
+        # Close upper opening with G1 tip (path ends at ui_top start after reverse).
+        _g1_tip_bridge(b, _rev(ui_top), u_top)
     b.closePath()
     anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
     return _pack(c, o, anchors, _ccw(b.build()))

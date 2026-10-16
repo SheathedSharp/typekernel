@@ -389,9 +389,31 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
         _write_i_bracketed_outer(b, h, c)
         anchors = {"top": (half, cap), "bottom": (half, 0.0)}
         return _pack(c, h, anchors, _ccw(b.build()))
-    from typekernel.parts.primitives import contrast_stem_caps
+    from typekernel.parts.primitives import rounded_rect
 
-    stem = contrast_stem_caps(c, 0.0, 0.0, cap, width=h.stem)
+    # Soft corner fillets on sans ``I`` so defaults are G1 without ``tuned_glyph``.
+    # Preserve contrast taper (knob reach) via a lightly rounded trapezoid.
+    radius = min(c.join_radius * 0.4, h.stem * 0.16)
+    r = max(radius, 1.0)
+    if abs(c.contrast - 1.0) < 1e-9:
+        stem = rounded_rect(c, 0.0, 0.0, h.stem, cap, radius=r)
+    else:
+        inset = (h.stem - h.stem * c.contrast) / 2.0
+        x0, x1 = 0.0, h.stem
+        xt0, xt1 = inset, h.stem - inset
+        r = min(r, (x1 - x0) * 0.45, (xt1 - xt0) * 0.45, cap * 0.45)
+        b = PathBuilder()
+        b.moveTo(x0 + r, 0.0)
+        b.lineTo(x1 - r, 0.0)
+        b.curveTo(x1 - r + r * KAPPA, 0.0, x1, r - r * KAPPA, x1, r)
+        b.lineTo(xt1, cap - r)
+        b.curveTo(xt1, cap - r + r * KAPPA, xt1 - r + r * KAPPA, cap, xt1 - r, cap)
+        b.lineTo(xt0 + r, cap)
+        b.curveTo(xt0 + r - r * KAPPA, cap, xt0, cap - r + r * KAPPA, xt0, cap - r)
+        b.lineTo(x0, r)
+        b.curveTo(x0, r - r * KAPPA, x0 + r - r * KAPPA, 0.0, x0 + r, 0.0)
+        b.closePath()
+        stem = b.build()
     anchors = {
         **_cap_anchors(h.stem, h),
         "stem_L_b": (half, 0.0),
@@ -1388,18 +1410,33 @@ def J_from_H(
         b.lineTo(w - t - l, cap)
         b.lineTo(w - t, cap)
     else:
-        b.moveTo(w, cap)
-        b.lineTo(w - t, cap)
+        # Tiny top fillets so sans ``J`` stem corners are G1 by default.
+        fr = min(c.join_radius * 0.35, t * 0.14)
+        fr = max(fr, 1.0)
+        b.moveTo(w, cap - fr)
+        b.curveTo(w, cap - fr + fr * KAPPA, w - fr + fr * KAPPA, cap, w - fr, cap)
+        b.lineTo(w - t + fr, cap)
+        b.curveTo(w - t + fr - fr * KAPPA, cap, w - t, cap - fr + fr * KAPPA, w - t, cap - fr)
     b.lineTo(w - t, y_s)
     _curve(b, _rev(i3))
     _curve(b, _rev(inner))
-    bulge = max(t * 0.09, 5.0)
-    ji, jo = inner[0], outer[0]
+    # G1 bridge between inner/outer hook terminals (class-rep bulge was ~60–70°).
+    p0, p1, _, _ = inner
+    q0, q1, _, _ = outer
+    ji, jo = p0, q0
+    inx, iny = ji[0] - p1[0], ji[1] - p1[1]
+    outx, outy = q1[0] - jo[0], q1[1] - jo[1]
+    lin = math.hypot(inx, iny) or 1.0
+    lout = math.hypot(outx, outy) or 1.0
+    inx, iny = inx / lin, iny / lin
+    outx, outy = outx / lout, outy / lout
+    dist = math.hypot(jo[0] - ji[0], jo[1] - ji[1])
+    tension = 0.38
     b.curveTo(
-        ji[0] - bulge * 0.4,
-        ji[1] - bulge * 0.12,
-        jo[0],
-        jo[1] + bulge * 0.18,
+        ji[0] + inx * dist * tension,
+        ji[1] + iny * dist * tension,
+        jo[0] - outx * dist * tension,
+        jo[1] - outy * dist * tension,
         jo[0],
         jo[1],
     )

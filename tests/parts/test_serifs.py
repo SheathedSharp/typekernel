@@ -595,9 +595,10 @@ def test_bracketed_cap_j_uses_cubic_bracket_fillet() -> None:
     h_g, s_g, b_g = sans.build("J"), slab.build("J"), bracket.build("J")
     assert composed_glyph_hash(h_g) != composed_glyph_hash(b_g)
     assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
-    h_k = [s.kind for s in h_g.solids[0].contours[0].segments]
+    s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
     b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
-    assert b_k.count("cubic") == h_k.count("cubic") + 1
+    # Bracket top pad adds one cubic vs square slab pad (sans has its own soft fillets).
+    assert b_k.count("cubic") == s_k.count("cubic") + 1
 
 
 def test_bracketed_cap_j_masters_interpolate_on_weight_ladder() -> None:
@@ -620,13 +621,16 @@ def test_bracketed_cap_j_masters_interpolate_on_weight_ladder() -> None:
 
 def test_bracketed_s_opening_uses_cubic_bracket_fillets() -> None:
     sans = Controls.from_context(DesignContext.humanist_sans())
+    slab = Controls.from_context(DesignContext.slab_serif())
     bracket = Controls.from_context(DesignContext.bracketed_serif())
     for ch in ("s", "S"):
-        h_g, b_g = sans.build(ch), bracket.build(ch)
+        h_g, s_g, b_g = sans.build(ch), slab.build(ch), bracket.build(ch)
         assert composed_glyph_hash(h_g) != composed_glyph_hash(b_g)
-        h_k = [s.kind for s in h_g.solids[0].contours[0].segments]
+        assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
+        s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
         b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
-        assert b_k.count("cubic") == h_k.count("cubic") + 2
+        # Two opening brackets vs slab shelves (sans uses G1 tip bridges instead).
+        assert b_k.count("cubic") == s_k.count("cubic") + 2
 
 
 def test_bracketed_s_masters_interpolate_on_weight_ladder() -> None:

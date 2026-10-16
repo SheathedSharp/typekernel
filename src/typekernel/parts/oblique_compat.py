@@ -13,7 +13,7 @@ from typekernel.parts.compose import ComposedGlyph
 # ``e`` bakes oblique pre-splits in :func:`~typekernel.parts.control.e_from_o` (TK-402).
 OBLIQUE_COMPAT_EXCLUDE = frozenset("e")
 # Branching ``m`` / ``u`` need on-curve axis extrema before oblique pre-split (TK-402).
-OBLIQUE_PRE_EXTREMA = frozenset("mu")
+OBLIQUE_PRE_EXTREMA = frozenset("muJsS")  # tip/hook G1 bridges need on-curve extrema
 
 __all__ = [
     "OBLIQUE_COMPAT_EXCLUDE",
