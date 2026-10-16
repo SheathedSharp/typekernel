@@ -104,3 +104,13 @@ def test_stress_moves_round_stroke_counters() -> None:
     assert "s" in changed
     assert {"3", "6", "8"}.issubset(changed)
     assert len(changed) >= 6
+
+
+def test_stress_reaches_many_glyphs_on_humanist() -> None:
+    """TK-107 / appendix C: ``stress=25`` on ``humanist_sans`` moves many bowl/ring glyphs."""
+    base = DesignContext.humanist_sans()
+    a = _build(base)
+    b = _build(base.tuned(stress=25.0))
+    changed = _shape_changed(a, b)
+    assert len(changed) >= 20
+    assert {"o", "e", "c", "0"}.issubset(set(changed))

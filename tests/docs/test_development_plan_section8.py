@@ -192,6 +192,12 @@ def test_section8_agent_recipes_documents_tk108_golden_refresh() -> None:
     assert "regenerate_outline_hashes.py" in text
 
 
+def test_section8_plan_appendix_c_documents_stress_knob_sensitivity() -> None:
+    text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
+    assert "| `stress` | 25 | 23 |" in text
+    assert "TK-301 后圆字母均动" in text
+
+
 def test_section8_agent_recipes_documents_tk302_stress() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "TK-302" in text
