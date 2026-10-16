@@ -1,0 +1,387 @@
+"""Adjacent / sequential glyph style consistency (designer-order gate).
+
+Human type design proceeds **one glyph at a time**, checking the new letter
+against control and previously unlocked letters. A brief phrase is a late
+specimen — not the design method.
+
+This module works on abstract :class:`~typekernel.parts.compose.ComposedGlyph`
+outlines (Controls-derived **or** skeleton / ``trace_letter`` faces).
+"""
+
+from __future__ import annotations
+
+import math
+import statistics
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+
+from typekernel.geo.outline import Outline, bounds
+from typekernel.optics.stem import horizontal_vs_vertical_report, list_vertical_stems
+from typekernel.parts.compose import ComposedGlyph
+
+__all__ = [
+    "GlyphStyleMetrics",
+    "SequenceStyleReport",
+    "StyleCheck",
+    "StyleConsistencyReport",
+    "StyleConsistencyTolerances",
+    "check_design_sequence",
+    "compare_glyph_styles",
+    "extract_glyph_style_metrics",
+    "script_body_tolerances",
+]
+
+
+def _ink_outline(glyph: ComposedGlyph) -> Outline:
+    if not glyph.solids:
+        raise ValueError("glyph has no solid outlines")
+    if len(glyph.solids) == 1:
+        return glyph.solids[0]
+    from typekernel.geo.boolean import union_all
+
+    try:
+        return union_all(list(glyph.solids))
+    except (RuntimeError, ValueError, TypeError):
+        return glyph.solids[0]
+
+
+def _sample_oncurve_points(outline: Outline) -> list[tuple[float, float]]:
+    pts: list[tuple[float, float]] = []
+    for contour in outline.contours:
+        for seg in contour.segments:
+            p0 = seg.points[0]
+            p1 = seg.points[-1]
+            if not pts or pts[-1] != (p0.x, p0.y):
+                pts.append((float(p0.x), float(p0.y)))
+            pts.append((float(p1.x), float(p1.y)))
+    return pts
+
+
+def _band_rail_y(
+    pts: Sequence[tuple[float, float]],
+    *,
+    x0: float,
+    x1: float,
+) -> float | None:
+    """Mean Y of the lowest quartile of points in an x-band (entry/exit rails)."""
+    band = [p[1] for p in pts if x0 <= p[0] <= x1]
+    if len(band) < 2:
+        return float(band[0]) if band else None
+    band = sorted(band)
+    n = max(1, len(band) // 4)
+    return float(statistics.fmean(band[:n]))
+
+
+def _exit_slant_deg(
+    pts: Sequence[tuple[float, float]],
+    *,
+    xmin: float,
+    xmax: float,
+    ymin: float,
+    ymax: float,
+) -> float | None:
+    """Rough stroke angle (degrees from +x) in the lower-right exit region."""
+    w = xmax - xmin
+    h = ymax - ymin
+    if w < 1.0 or h < 1.0:
+        return None
+    region = [
+        p
+        for p in pts
+        if p[0] >= xmax - 0.22 * w and p[1] <= ymin + 0.45 * h
+    ]
+    if len(region) < 3:
+        region = [p for p in pts if p[0] >= xmax - 0.18 * w]
+    if len(region) < 3:
+        return None
+    region = sorted(region, key=lambda p: p[0])
+    x0, y0 = region[0]
+    x1, y1 = region[-1]
+    dx, dy = x1 - x0, y1 - y0
+    if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+        return None
+    return math.degrees(math.atan2(dy, dx))
+
+
+@dataclass(frozen=True, slots=True)
+class GlyphStyleMetrics:
+    """Measurable style proxies for one designed outline."""
+
+    stem_median: float | None
+    contrast_ratio: float | None
+    ink_ymin: float
+    ink_ymax: float
+    ink_xmin: float
+    ink_xmax: float
+    entry_rail_y: float | None
+    """Mean Y of lower-left ink (entry / lead-in band)."""
+    exit_rail_y: float | None
+    """Mean Y of lower-right ink (exit / trail band)."""
+    exit_slant_deg: float | None
+    bowl_center_y: float
+    """Vertical centre of ink bounds (bowl / body alignment proxy)."""
+
+
+@dataclass(frozen=True, slots=True)
+class StyleConsistencyTolerances:
+    """Absolute deltas (design units / degrees / ratio) allowed between glyphs.
+
+    ``ink_ymax`` defaults wide so ascenders/descenders can be gated on rails and
+    stems against a body control without failing on height alone. Tighten it when
+    comparing same-role letters (e.g. ``a`` vs ``e``).
+    """
+
+    stem_median: float = 12.0
+    contrast_ratio: float = 0.35
+    entry_rail_y: float = 36.0
+    exit_rail_y: float = 36.0
+    exit_slant_deg: float = 35.0
+    bowl_center_y: float = 55.0
+    ink_ymin: float = 55.0
+    ink_ymax: float = 400.0
+
+
+def script_body_tolerances() -> StyleConsistencyTolerances:
+    """Tighter budgets for same-role script letters (no ascender/descender jump)."""
+    return StyleConsistencyTolerances(
+        stem_median=12.0,
+        contrast_ratio=0.32,
+        entry_rail_y=32.0,
+        exit_rail_y=32.0,
+        exit_slant_deg=32.0,
+        bowl_center_y=48.0,
+        ink_ymin=55.0,
+        ink_ymax=100.0,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class StyleCheck:
+    """One named metric comparison."""
+
+    name: str
+    reference: float | None
+    candidate: float | None
+    delta: float | None
+    limit: float
+    ok: bool
+    note: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class StyleConsistencyReport:
+    """Pass/fail report comparing a candidate glyph to a reference."""
+
+    reference_name: str
+    candidate_name: str
+    checks: tuple[StyleCheck, ...]
+    passed: bool
+    reference: GlyphStyleMetrics
+    candidate: GlyphStyleMetrics
+
+    @property
+    def failures(self) -> tuple[StyleCheck, ...]:
+        return tuple(c for c in self.checks if not c.ok)
+
+
+def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
+    """Derive style proxies from a composed glyph's solid ink."""
+    outline = _ink_outline(glyph)
+    xmin, ymin, xmax, ymax = bounds(outline)
+    pts = _sample_oncurve_points(outline)
+    stems = list_vertical_stems(outline)
+    stem_median = (
+        float(statistics.median(s.width for s in stems)) if stems else None
+    )
+    report = horizontal_vs_vertical_report(outline)
+    contrast = report.contrast_ratio
+    w = max(xmax - xmin, 1.0)
+    mid_y = 0.5 * (ymin + ymax)
+    entry = _band_rail_y(pts, x0=xmin, x1=xmin + 0.20 * w)
+    exit_y = _band_rail_y(pts, x0=xmax - 0.20 * w, x1=xmax)
+    slant = _exit_slant_deg(pts, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+    return GlyphStyleMetrics(
+        stem_median=stem_median,
+        contrast_ratio=contrast,
+        ink_ymin=float(ymin),
+        ink_ymax=float(ymax),
+        ink_xmin=float(xmin),
+        ink_xmax=float(xmax),
+        entry_rail_y=entry,
+        exit_rail_y=exit_y,
+        exit_slant_deg=slant,
+        bowl_center_y=float(mid_y),
+    )
+
+
+def _check(
+    name: str,
+    ref: float | None,
+    cand: float | None,
+    limit: float,
+    *,
+    skip_if_missing: bool = True,
+) -> StyleCheck:
+    if ref is None or cand is None:
+        return StyleCheck(
+            name=name,
+            reference=ref,
+            candidate=cand,
+            delta=None,
+            limit=limit,
+            ok=bool(skip_if_missing),
+            note="skipped (missing measurement)" if skip_if_missing else "missing",
+        )
+    delta = abs(cand - ref)
+    return StyleCheck(
+        name=name,
+        reference=ref,
+        candidate=cand,
+        delta=delta,
+        limit=limit,
+        ok=delta <= limit,
+    )
+
+
+def compare_glyph_styles(
+    reference: ComposedGlyph,
+    candidate: ComposedGlyph,
+    *,
+    reference_name: str = "ref",
+    candidate_name: str = "cand",
+    tolerances: StyleConsistencyTolerances | None = None,
+    skip_checks: Sequence[str] = (),
+) -> StyleConsistencyReport:
+    """Compare style proxies of ``candidate`` against ``reference``.
+
+    Returns a structured report an agent can act on (which metric drifted).
+    ``skip_checks`` names metrics to omit (e.g. rail Y when comparing a closed
+    bowl ``o`` to an open script ``a``).
+    """
+    tol = tolerances or StyleConsistencyTolerances()
+    ref_m = extract_glyph_style_metrics(reference)
+    cand_m = extract_glyph_style_metrics(candidate)
+    skip = frozenset(skip_checks)
+    checks_list: list[StyleCheck] = [
+        _check("stem_median", ref_m.stem_median, cand_m.stem_median, tol.stem_median),
+        _check(
+            "contrast_ratio",
+            ref_m.contrast_ratio,
+            cand_m.contrast_ratio,
+            tol.contrast_ratio,
+        ),
+        _check("entry_rail_y", ref_m.entry_rail_y, cand_m.entry_rail_y, tol.entry_rail_y),
+        _check("exit_rail_y", ref_m.exit_rail_y, cand_m.exit_rail_y, tol.exit_rail_y),
+        _check(
+            "exit_slant_deg",
+            ref_m.exit_slant_deg,
+            cand_m.exit_slant_deg,
+            tol.exit_slant_deg,
+        ),
+        _check(
+            "bowl_center_y",
+            ref_m.bowl_center_y,
+            cand_m.bowl_center_y,
+            tol.bowl_center_y,
+        ),
+        _check("ink_ymin", ref_m.ink_ymin, cand_m.ink_ymin, tol.ink_ymin),
+        # Caps / ascenders may exceed control x-height — wider budget.
+        _check("ink_ymax", ref_m.ink_ymax, cand_m.ink_ymax, tol.ink_ymax),
+    ]
+    if skip:
+        checks_list = [c for c in checks_list if c.name not in skip]
+    checks = tuple(checks_list)
+    return StyleConsistencyReport(
+        reference_name=reference_name,
+        candidate_name=candidate_name,
+        checks=checks,
+        passed=all(c.ok for c in checks),
+        reference=ref_m,
+        candidate=cand_m,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SequenceStyleReport:
+    """Results of walking a designer-order glyph sequence."""
+
+    order: tuple[str, ...]
+    control: str
+    reports: tuple[StyleConsistencyReport, ...]
+    passed: bool
+    unlocked: tuple[str, ...]
+
+    @property
+    def failures(self) -> tuple[StyleConsistencyReport, ...]:
+        return tuple(r for r in self.reports if not r.passed)
+
+
+def check_design_sequence(
+    glyphs: Mapping[str, ComposedGlyph],
+    order: Sequence[str],
+    *,
+    control: str | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> SequenceStyleReport:
+    """Gate a charset built in designer order.
+
+    For each glyph after the control, compare against the **control** and
+    (when ``compare_to_previous``) the immediately previous unlocked glyph.
+    Both comparisons must pass to unlock the letter.
+
+    ``skip_checks_for_pair`` if set is ``(ref_name, cand_name) -> skip names``.
+    """
+    if not order:
+        raise ValueError("design order is empty")
+    missing = [ch for ch in order if ch not in glyphs]
+    if missing:
+        raise KeyError(f"glyphs missing from map: {missing!r}")
+    control_ch = control if control is not None else order[0]
+    if control_ch not in glyphs:
+        raise KeyError(f"control glyph {control_ch!r} not in map")
+    tol = tolerances or StyleConsistencyTolerances()
+    reports: list[StyleConsistencyReport] = []
+    unlocked: list[str] = [control_ch]
+    for ch in order:
+        if ch == control_ch:
+            continue
+        skip_c: Sequence[str] = ()
+        if skip_checks_for_pair is not None:
+            skip_c = tuple(skip_checks_for_pair(control_ch, ch) or ())
+        ref_control = compare_glyph_styles(
+            glyphs[control_ch],
+            glyphs[ch],
+            reference_name=control_ch,
+            candidate_name=ch,
+            tolerances=tol,
+            skip_checks=skip_c,
+        )
+        reports.append(ref_control)
+        ok = ref_control.passed
+        if compare_to_previous and unlocked:
+            prev = unlocked[-1]
+            if prev != control_ch:
+                skip_p: Sequence[str] = ()
+                if skip_checks_for_pair is not None:
+                    skip_p = tuple(skip_checks_for_pair(prev, ch) or ())
+                ref_prev = compare_glyph_styles(
+                    glyphs[prev],
+                    glyphs[ch],
+                    reference_name=prev,
+                    candidate_name=ch,
+                    tolerances=tol,
+                    skip_checks=skip_p,
+                )
+                reports.append(ref_prev)
+                ok = ok and ref_prev.passed
+        if ok:
+            unlocked.append(ch)
+    return SequenceStyleReport(
+        order=tuple(order),
+        control=control_ch,
+        reports=tuple(reports),
+        passed=all(r.passed for r in reports),
+        unlocked=tuple(unlocked),
+    )

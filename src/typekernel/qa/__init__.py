@@ -28,7 +28,19 @@ from typekernel.qa.score import (
     word_report,
     zayju_report,
 )
+from typekernel.qa.style_consistency import (
+    GlyphStyleMetrics,
+    SequenceStyleReport,
+    StyleCheck,
+    StyleConsistencyReport,
+    StyleConsistencyTolerances,
+    check_design_sequence,
+    compare_glyph_styles,
+    extract_glyph_style_metrics,
+    script_body_tolerances,
+)
 from typekernel.qa.sentence_gate import (
+
     AGENT_PAIRS,
     AGENT_SENTENCE,
     SentenceGateLimits,
@@ -61,6 +73,15 @@ __all__ = [
     "word_report",
     "write_approval",
     "zayju_report",
+    "GlyphStyleMetrics",
+    "SequenceStyleReport",
+    "StyleCheck",
+    "StyleConsistencyReport",
+    "StyleConsistencyTolerances",
+    "check_design_sequence",
+    "compare_glyph_styles",
+    "extract_glyph_style_metrics",
+    "script_body_tolerances",
 ]
 
 # ``render_outline_png`` lives in ``specimen_png`` and needs the optional
