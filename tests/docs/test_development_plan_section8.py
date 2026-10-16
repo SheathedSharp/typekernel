@@ -37,7 +37,17 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_contrast_moves_round_letters",
             "test_contrast_moves_many_glyphs_on_humanist",
             "test_terminal_style_reaches_many_glyphs",
+            "test_terminal_style_angled_reaches_open_stroke_glyphs",
+            "test_terminal_style_ball_reaches_open_stroke_glyphs",
+            "test_terminal_style_flared_reaches_open_stroke_glyphs",
             "test_stress_reaches_many_glyphs_on_humanist",
+        ),
+    ),
+    (
+        "tests/qa/test_weight_ladder.py",
+        (
+            "test_angled_terminal_counter_pinch_charset_passes_r8",
+            "test_alt_terminal_counter_pinch_charset_passes_r8",
         ),
     ),
     (

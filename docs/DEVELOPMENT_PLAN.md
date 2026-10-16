@@ -436,6 +436,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：cap ``F``/``T`` 在 ``angled`` 下用 ``shear_end``（``along=x``）替代 flat cut，避免 R8 细缝；``horizontal`` 仍 flat cut。
 - **本轮（部分）**：``k`` 在 ``angled`` 下臂端 ``apply_terminal_shear``（``along=x``）+ 略加 advance（``w`` 约 +2.6%，轻字重再 +0.4%）以保住阶梯 R8。
 - **本轮（部分）**：``terminal_style`` 扩展 ``ball``（``ball_end`` + 开口 closure）与 ``flared``（外扩 shear +18°）；``test_alt_terminal_counter_pinch_charset_passes_r8``（ball/flared × 七 preset × 阶梯）；旋钮覆盖 ``ball``/``flared`` ≥20 字。
+- **本轮（部分）**：§8 ``_SECTION8_REGRESSION_TESTS`` 登记 ``test_knob_coverage`` 四档 ``terminal_style`` 覆盖与 ``test_weight_ladder`` 阶梯 R8 烟测名。
 - **验收**：TK-107 `terminal_style` xfail 已转正（``horizontal`` ≥20 字形）；默认 `vertical` 下 golden 哈希不变；``angled``/``ball``/``flared`` 字重阶梯 R8 零报（见本轮测试）。
 
 #### TK-305 风格 DNA：离散拓扑选项　〔L〕
