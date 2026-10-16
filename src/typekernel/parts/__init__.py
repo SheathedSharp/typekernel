@@ -60,6 +60,7 @@ from typekernel.parts.compose import (
     try_intersection,
     try_union,
 )
+from typekernel.parts.optical_size import context_for_opsz
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import (
     NMetrics,
@@ -195,6 +196,7 @@ __all__ = [
     "Controls",
     "D_from_H",
     "DesignContext",
+    "context_for_opsz",
     "E_from_H",
     "EndTreatment",
     "F_from_H",

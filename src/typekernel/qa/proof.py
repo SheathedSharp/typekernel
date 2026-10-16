@@ -19,6 +19,7 @@ __all__ = [
     "proof_labeled_waterfall",
     "proof_sheet",
     "proof_spacing_strings",
+    "proof_axis_ladder",
     "proof_weight_ladder",
 ]
 
@@ -111,6 +112,45 @@ def proof_labeled_waterfall(
     return _save(img, out)
 
 
+def proof_axis_ladder(
+    font_path: str | Path,
+    text: str,
+    out: str | Path,
+    *,
+    axis_values: Sequence[float],
+    size: int = 56,
+    width: int = 1500,
+    margin: int = 40,
+    label_w: int = 70,
+    label_fmt: str = "{:g}",
+) -> Path:
+    """Variable font: one line per instance along **axis 0** (fvar order).
+
+    Use for ``wght``, ``opsz``, or any single leading axis. Multi-axis fonts
+    still set only the first axis; other axes stay at their default.
+    """
+    Image, ImageDraw, ImageFont = _require_pil()
+    label_font = ImageFont.load_default(size=16)
+    values = tuple(axis_values)
+    img = Image.new("RGB", (width, margin * 2 + len(values) * int(size * 1.35)), _BG)
+    draw = ImageDraw.Draw(img)
+    face = ImageFont.truetype(str(font_path), size)
+    y = margin
+    x = margin + label_w
+    for value in values:
+        face.set_variation_by_axes([float(value)])
+        line = _fit_line(draw, text, face, width - x - margin)
+        draw.text(
+            (margin, y + size * 0.4),
+            label_fmt.format(value),
+            font=label_font,
+            fill=_LABEL,
+        )
+        draw.text((x, y), line, font=face, fill=_INK, features=["kern"])
+        y += int(size * 1.35)
+    return _save(img, out)
+
+
 def proof_weight_ladder(
     font_path: str | Path,
     text: str,
@@ -123,20 +163,17 @@ def proof_weight_ladder(
     label_w: int = 70,
 ) -> Path:
     """Variable font: one line per ``wght`` instance (axis 0)."""
-    Image, ImageDraw, ImageFont = _require_pil()
-    label_font = ImageFont.load_default(size=16)
-    img = Image.new("RGB", (width, margin * 2 + len(weights) * int(size * 1.35)), _BG)
-    draw = ImageDraw.Draw(img)
-    face = ImageFont.truetype(str(font_path), size)
-    y = margin
-    x = margin + label_w
-    for w in weights:
-        face.set_variation_by_axes([w])
-        line = _fit_line(draw, text, face, width - x - margin)
-        draw.text((margin, y + size * 0.4), str(w), font=label_font, fill=_LABEL)
-        draw.text((x, y), line, font=face, fill=_INK, features=["kern"])
-        y += int(size * 1.35)
-    return _save(img, out)
+    return proof_axis_ladder(
+        font_path,
+        text,
+        out,
+        axis_values=tuple(float(w) for w in weights),
+        size=size,
+        width=width,
+        margin=margin,
+        label_w=label_w,
+        label_fmt="{:.0f}",
+    )
 
 
 def proof_spacing_strings(

@@ -232,6 +232,10 @@ font = compose_font_from_controls(
 
 底层：`add_fraction_forms` / `add_ordn_forms`；回归 `tests/compile/test_features.py`。
 
+### Optical size (`opsz`)
+
+Text↔display deltas via `context_for_opsz(base, opsz)` (defaults 14 / 72). Example VF: `examples/optical_size/build_opsz_vf.py` (shared kern classes, `proof_axis_ladder`). Regression: `tests/parts/test_optical_size.py`, `tests/examples/test_optical_size.py`.
+
 
 ## Agent 终验快照（TK-502，程序侧）
 
