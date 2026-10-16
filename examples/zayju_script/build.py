@@ -1,4 +1,4 @@
-"""Build ZayJu Letter Script Regular — brief phrase proofs + OTF.
+"""Build ZayJu Letter Script Regular — sequential style gate, then specimen proofs + OTF.
 
 Run from repo root::
 
@@ -21,6 +21,14 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from design import (
+    BRIEF_SENTENCE,
+    CHARSET,
+    CONTROL_GLYPH,
+    DESIGN_ORDER,
+    build_charset_sequential,
+    script_context,
+)
 from PIL import Image, ImageDraw
 
 from typekernel.compile import build_font
@@ -32,8 +40,6 @@ from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.metrics import KernTable, fit_glyph_pair_kerns, rhythm_from_control_glyphs
 from typekernel.qa.proof import proof_charset_grid
 from typekernel.qa.specimen_png import render_outline_png
-
-from design import BRIEF_SENTENCE, CHARSET, build_charset, script_context
 
 OUT_DIR = Path(__file__).resolve().parent / "out"
 FAMILY = "ZayJu Letter Script"
@@ -211,8 +217,25 @@ def render_phrase_png(
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ctx = script_context()
-    drawn = build_charset(ctx)
-    rhythm = rhythm_from_control_glyphs(drawn["u"], drawn["o"])
+    # Designer order: one glyph at a time + style gate (not phrase-first).
+    drawn, style_report = build_charset_sequential(ctx)
+    print(
+        f"style sequence control={CONTROL_GLYPH} "
+        f"order={''.join(DESIGN_ORDER)} "
+        f"passed={style_report.passed} "
+        f"unlocked={''.join(style_report.unlocked)}"
+    )
+    if not style_report.passed:
+        for rep in style_report.failures:
+            bits = ", ".join(
+                f"{c.name} Δ={c.delta:.1f}>{c.limit}"
+                for c in rep.failures
+                if c.delta is not None
+            )
+            print(f"  FAIL {rep.reference_name}->{rep.candidate_name}: {bits}")
+        print("Fix failing glyphs before treating the brief PNG as a design success.")
+        return 1
+    rhythm = rhythm_from_control_glyphs(drawn["a"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kern = fit_glyph_pair_kerns(spaced, PHRASE_PAIRS, target=rhythm)
 
@@ -266,7 +289,7 @@ def main() -> int:
         print(f"worst pair: {worst[1]}{worst[2]} gap={worst[0]:.1f} kern={worst[3]:.1f}")
 
     print("NOTE: Controls sentence_gate does not apply to this skeleton face.")
-    print("Accept visually via sentence_brief*.png (filled composition).")
+    print("Style sequence gate passed; brief PNG is a late specimen only.")
     return 0
 
 

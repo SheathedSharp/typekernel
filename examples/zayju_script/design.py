@@ -1,10 +1,16 @@
 """Florid English letter-writing script — hand-built stroke topologies.
 
-Brief: ``zayju Discover everywhere``.
+Late specimen phrase (not the design driver): ``zayju Discover everywhere``.
 
-Pipeline (library-first):
-1. Dense slanted centerlines → polyline→cubic fit → contrast-nib expand
-2. ``trace_letter`` heal + strip + blend (typekernel base APIs)
+Designer order (required):
+1. Control glyphs first (``a`` body + ``o`` bowl), then one letter at a time
+2. Each new glyph is style-checked against control / previous via
+   ``typekernel.qa.style_consistency``
+3. Only after the gated sequence unlocks the charset do we compose the brief PNG
+
+Pipeline (library-first per glyph):
+- Dense slanted centerlines → polyline→cubic fit → contrast-nib expand
+- ``trace_letter`` heal + strip + blend
 
 Slant is baked into coordinates — not ``oblique_font``.
 """
@@ -310,16 +316,18 @@ def glyph_j(ctx: DesignContext | None = None) -> ComposedGlyph:
 
 
 def glyph_r(ctx: DesignContext | None = None) -> ComposedGlyph:
+    entry = _poly("entry", _entry_rail(12, 48), thickness=NIB_THICKNESS * 0.88)
     stem = _poly(
         "stem",
-        [(50, ENTRY_Y), (65, 200), (80, 400), (95, 45), (140, 15)],
+        [(50, ENTRY_Y), (62, 200), (75, 380), (90, 50), (130, 20)],
+        thickness=NIB_THICKNESS * 0.95,
     )
     shoulder = _poly(
         "shoulder",
-        [(80, 290), (140, 390), (220, 375), (255, 270), (265, 150)],
+        [(75, 280), (135, 380), (215, 365), (250, 260), (260, 140)],
     )
-    exit_ = _poly("exit", [(265, 150), *_exit_rail(285, 410)])
-    return _trace(stem, shoulder, exit_, ctx=ctx)
+    exit_ = _poly("exit", [(260, 140), *_exit_rail(280, 410)])
+    return _trace(entry, stem, shoulder, exit_, ctx=ctx)
 
 
 def glyph_s(ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -343,7 +351,7 @@ def glyph_s(ctx: DesignContext | None = None) -> ComposedGlyph:
             (440, EXIT_Y + 20),
         ],
     )
-    entry = _poly("entry", _entry_rail(15, 55, y=ENTRY_Y + 35), thickness=NIB_THICKNESS * 0.88)
+    entry = _poly("entry", _entry_rail(15, 55, y=ENTRY_Y), thickness=NIB_THICKNESS * 0.88)
     return _trace(body, entry, ctx=ctx)
 
 
@@ -384,7 +392,7 @@ def glyph_v(ctx: DesignContext | None = None) -> ComposedGlyph:
             (460, EXIT_Y + 25),
         ],
     )
-    entry = _poly("entry", _entry_rail(18, 50, y=ENTRY_Y + 28) + [(55, 310)], thickness=NIB_THICKNESS * 0.88)
+    entry = _poly("entry", _entry_rail(18, 50, y=ENTRY_Y) + [(50, 280)], thickness=NIB_THICKNESS * 0.88)
     return _trace(body, entry, ctx=ctx)
 
 
@@ -460,7 +468,8 @@ def glyph_z(ctx: DesignContext | None = None) -> ComposedGlyph:
             (415, EXIT_Y + 22),
         ],
     )
-    return _trace(body, ctx=ctx)
+    entry = _poly("entry", _entry_rail(12, 45, y=ENTRY_Y), thickness=NIB_THICKNESS * 0.88)
+    return _trace(entry, body, ctx=ctx)
 
 
 def glyph_D(ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -510,10 +519,100 @@ BUILDERS: dict[str, Callable[[DesignContext | None], ComposedGlyph]] = {
 }
 
 
+# Control first (body rails + bowl), then remaining letters one at a time.
+# Ascenders/descenders/caps come after body letters share stem/rail language.
+DESIGN_ORDER: Final[tuple[str, ...]] = (
+    "a",  # control: entry/exit rails + bowl
+    "o",  # bowl control
+    "e",
+    "c",
+    "u",
+    "r",
+    "v",
+    "w",
+    "s",
+    "i",
+    "y",
+    "z",
+    "d",
+    "h",
+    "j",
+    "D",
+)
+CONTROL_GLYPH: Final = "a"
+
+# Late specimen only — never the design method.
+BRIEF_SENTENCE: Final = "zayju Discover everywhere"
+CHARSET: Final = "".join(DESIGN_ORDER)
+
+
 def build_charset(ctx: DesignContext | None = None) -> dict[str, ComposedGlyph]:
+    """Build every letter (no style gate). Prefer :func:`build_charset_sequential`."""
     c = ctx or script_context()
-    return {ch: fn(c) for ch, fn in BUILDERS.items()}
+    return {ch: BUILDERS[ch](c) for ch in DESIGN_ORDER}
 
 
-BRIEF_SENTENCE = "zayju Discover everywhere"
-CHARSET = "".join(BUILDERS)
+_CLOSED_BOWLS: Final = frozenset({"o", "O"})
+_ASCENDERS: Final = frozenset({"d", "h", "D", "l", "b", "k", "f", "t"})
+_DESCENDERS: Final = frozenset({"j", "y", "g", "p", "q"})
+
+
+def _script_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Omit metrics that are meaningless across topology roles."""
+    skip: list[str] = []
+    if ref in _CLOSED_BOWLS or cand in _CLOSED_BOWLS:
+        skip.extend(["entry_rail_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _ASCENDERS or ref in _ASCENDERS:
+        skip.extend(["ink_ymax", "bowl_center_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _DESCENDERS or ref in _DESCENDERS:
+        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y"])
+    # Dotted / short letters: vertical exits are not writing rails.
+    if cand in {"i", "j"} or ref in {"i", "j"}:
+        skip.extend(["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y"])
+    return tuple(dict.fromkeys(skip))
+
+
+def script_sequence_tolerances():
+    """Florid-script budgets: shared stem/rails; contrast slack for open vs closed."""
+    from typekernel.qa.style_consistency import StyleConsistencyTolerances
+
+    return StyleConsistencyTolerances(
+        stem_median=18.0,
+        contrast_ratio=1.45,
+        entry_rail_y=52.0,
+        exit_rail_y=52.0,
+        exit_slant_deg=110.0,  # florid diagonals (z) vs round exits
+        bowl_center_y=60.0,
+        ink_ymin=60.0,
+        ink_ymax=120.0,
+    )
+
+
+def build_charset_sequential(
+    ctx: DesignContext | None = None,
+    *,
+    tolerances: object | None = None,
+    compare_to_previous: bool = True,
+) -> tuple[dict[str, ComposedGlyph], object]:
+    """Design-order build: one glyph at a time, then style-check vs control/previous.
+
+    Returns ``(drawn, sequence_report)``. Agents must not treat a failing report
+    as success — fix the candidate glyph before unlocking the next letter.
+    """
+    from typekernel.qa.style_consistency import check_design_sequence
+
+    c = ctx or script_context()
+    drawn: dict[str, ComposedGlyph] = {}
+    for ch in DESIGN_ORDER:
+        # One at a time — do not batch-construct without reading the prior letter.
+        drawn[ch] = BUILDERS[ch](c)
+    tol = tolerances if tolerances is not None else script_sequence_tolerances()
+    report = check_design_sequence(
+        drawn,
+        DESIGN_ORDER,
+        control=CONTROL_GLYPH,
+        tolerances=tol,  # type: ignore[arg-type]
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=_script_skip_checks,
+    )
+    return drawn, report

@@ -55,3 +55,15 @@ def test_zayju_script_build_script() -> None:
     assert proc.returncode == 0, proc.stderr or proc.stdout
     assert "sentence_brief.png" in proc.stdout
     assert (EXAMPLE / "out" / "sentence_brief.png").is_file()
+
+
+def test_zayju_script_sequential_style_gate_passes() -> None:
+    """Charset must unlock under designer-order style consistency."""
+    from examples.zayju_script import design
+
+    _drawn, report = design.build_charset_sequential()
+    assert report.passed, [
+        (r.reference_name, r.candidate_name, [c.name for c in r.failures])
+        for r in report.failures
+    ]
+    assert "".join(report.unlocked) == "".join(design.DESIGN_ORDER)

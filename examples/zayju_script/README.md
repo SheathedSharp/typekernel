@@ -1,19 +1,35 @@
 # ZayJu Letter Script
 
-Florid English **letter-writing script** (花体信件书写体) for the brief phrase:
+Florid English **letter-writing script** (花体信件书写体).
+
+Late specimen phrase (after the charset is designed under gates):
 
 > zayju Discover everywhere
+
+## Designer order (required)
+
+This example is **not** phrase-first. Agents must not define `BRIEF_SENTENCE` and
+then `build_charset()` as the design method.
+
+1. **Control glyphs** — `a` (entry/exit rails + bowl), then `o` (bowl).
+2. **One letter at a time** along `DESIGN_ORDER` in `design.py`.
+3. After each letter, run `typekernel.qa.style_consistency` against the control
+   and the previous unlocked glyph (`build_charset_sequential`).
+4. Only when the sequence unlocks the full charset compose spacing/kern and the
+   brief PNG specimen.
+
+Shared constants (`NIB_*`, `ENTRY_Y` / `EXIT_Y`) are necessary but **not
+sufficient** — adjacent style checks catch drift the constants miss.
 
 ## Honest topology
 
 This is **not** a slanted humanist/sans with `lean` / `oblique_font` / tracking.
 Each glyph is a calligraphy **skeleton** expanded with a contrast nib via
-`trace_letter`, then **self-union healed** and tiny sliver contours stripped
-(so expand self-intersections do not leave hollow joins). Writing slant is
-baked into centerline coordinates. Shared entry/exit rails aim at semi-connected writing.
+`trace_letter` (library heal / strip / cubic refit). Writing slant is baked into
+centerline coordinates. Shared entry/exit rails aim at semi-connected writing.
 
-Charset: letters required by the brief (`a c d e h i j o r s u v w y z D`)
-plus space. Semi-connected flourishes — not a full connected copperplate family.
+Charset: letters in `DESIGN_ORDER` plus space. Semi-connected flourishes — not a
+full connected copperplate family.
 
 ## Build
 
@@ -22,23 +38,26 @@ pip install -e ".[compile,specimen,boolean]"
 PYTHONPATH=src python examples/zayju_script/build.py
 ```
 
+`build.py` exits non-zero if the sequential style gate fails.
+
 Outputs under `out/`:
 
 | File | Role |
 | --- | --- |
 | `ZayJuLetterScript-Regular.otf` / `.ttf` | Installable Regular |
-| `sentence_brief.png` | Brief phrase (filled composition, body) |
-| `sentence_brief_display.png` | Brief phrase (filled composition, display) |
-| `grid.png` | Used-letter inventory (from OTF) |
-| `glyph_D.png` / `glyph_a.png` | Flourish / bowl checks |
-| `ZayJuLetterScript-Regular.otf` | Installable; some apps rasterize dense expand outlines coarsely — prefer PNG proofs for review |
+| `sentence_brief.png` | Late specimen phrase (filled composition) |
+| `sentence_brief_display.png` | Late specimen (display size) |
+| `grid.png` | Used-letter inventory |
+| `glyph_*.png` | Per-glyph checks |
 
 ## Gates
 
-`check_sentence_gate` / Controls L0 **do not apply** — this face is not derived
-from `Controls.build_all`. Acceptance is visual (brief PNGs + OTF).
+- **Required:** `build_charset_sequential` / `check_design_sequence` (style
+  consistency vs control + previous).
+- Controls `check_sentence_gate` does **not** apply — this face is not derived
+  from `Controls.build_all`.
 
 ## Files
 
-- `design.py` — metrics + per-glyph skeletons
-- `build.py` — space, phrase kern, compile, proofs
+- `design.py` — metrics, `DESIGN_ORDER`, per-glyph skeletons, sequential builder
+- `build.py` — style gate, space, phrase kern, compile, proofs
