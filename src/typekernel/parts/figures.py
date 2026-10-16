@@ -237,10 +237,9 @@ def eight_from_O(
     for qx, qy, rx, ry in ((cx, cy_l, rx_l - th, ry_l - tv), (cx, cy_u, rx_u - th, ry_u - tv)):
         hole = _quarters(qx, qy, rx, ry, e)
         if abs(c.stress) > 1e-9:
-            hole = tuple(_rotate_cubic(cubic, c.stress, qx, qy) for cubic in hole)
-        q = hole
-        b.moveTo(*q[0][0])
-        for cubic in q:
+            hole = [_rotate_cubic(cubic, c.stress, qx, qy) for cubic in hole]
+        b.moveTo(*hole[0][0])
+        for cubic in hole:
             _curve(b, cubic)
         b.closePath()
     return _pack(c, h, _anchors(w, cap), _outer_and_counters(b.build()))
@@ -278,11 +277,11 @@ def _ring_parts(
     tv: float,
     e: float,
     ctx: DesignContext | None = None,
-) -> tuple[tuple[Cubic, Cubic, Cubic, Cubic], tuple[Cubic, Cubic, Cubic, Cubic]]:
-    outer: tuple[Cubic, Cubic, Cubic, Cubic] = _quarters(cx, cy, rx, ry, e)
-    inner: tuple[Cubic, Cubic, Cubic, Cubic] = _quarters(cx, cy, rx - th, ry - tv, e)
+) -> tuple[list[Cubic], list[Cubic]]:
+    outer = _quarters(cx, cy, rx, ry, e)
+    inner = _quarters(cx, cy, rx - th, ry - tv, e)
     if ctx is not None and abs(ctx.stress) > 1e-9:
-        inner = tuple(_rotate_cubic(cubic, ctx.stress, cx, cy) for cubic in inner)
+        inner = [_rotate_cubic(cubic, ctx.stress, cx, cy) for cubic in inner]
     return outer, inner
 
 
