@@ -137,3 +137,11 @@ examples/agent_family/out/**
 examples/agent_glyph_preview/out/**
 
 uploads/
+
+# zayju florid letter-writing script (key proofs)
+examples/zayju_script/out/**
+!examples/zayju_script/out/.gitkeep
+!examples/zayju_script/out/sentence_brief.png
+!examples/zayju_script/out/sentence_brief_display.png
+!examples/zayju_script/out/grid.png
+!examples/zayju_script/out/glyph_D.png
