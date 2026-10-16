@@ -605,6 +605,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_knob_coverage.py``（TK-107 旋钮覆盖）；``test_section8_run_m5_program_exit_includes_tk107_knob_coverage``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``（TK-303）；``test_section8_run_m5_program_exit_includes_tk303_glyph_specs``。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_tk308_program_acceptance``（TK-308 spike）；``test_section8_run_m5_program_exit_includes_tk308_stroke_spike``。
+- **本轮（部分）**：``AGENT_GOAL`` M5 段列出 ``run_m5`` 烟测模块（knob/stress/glyph_specs/tk308）；``test_section8_agent_goal_documents_program_vs_human_gates`` 钩子更新。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``agent-recipes`` 试验记录字段对齐 ``program_pass_ok`` / ``cheating_flags`` / ``validate_snapshot --recursive``；``test_agent_trials_doc`` 固化。
 - **本轮（部分）**：计划 §6 / 附录 B 与 ``test_known_defects``、快照 JSON 字段对齐；``test_section8_plan_section6_documents_trial_snapshot_fields``。
 - **本轮（部分）**：可选 ``human_review_scores``（1–5）JSON 校验；``HUMAN_REVIEW_SCORE_KEYS``；不影响 ``program_pass_ok``。

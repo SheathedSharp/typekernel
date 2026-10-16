@@ -299,6 +299,10 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "--only tk206" in text
     assert "tk206_three_g_humanist.png" in text
     assert "test_serif_voice_meets_tk306_program_acceptance" in text
+    assert "test_knob_coverage" in text
+    assert "test_stress" in text
+    assert "test_glyph_specs" in text
+    assert "test_tk308_program_acceptance" in text
 
 
 def test_section8_approvals_readme_documents_review_workflow() -> None:
