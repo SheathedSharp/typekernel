@@ -323,6 +323,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``human_review_bundle`` 写出 ``tk206_s_opening_humanist.png``（``--only tk206`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_tk206_only``。
 - **本轮（部分）**：``--only tk206`` 另写 ``tk206_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
 - **本轮（部分）**：附录 B 表与 §8 人审说明对齐 ``--only tk206``；``test_section8_plan_documents_program_vs_human_exit`` 固化。
+- **本轮（部分）**：``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join`` 参数化七 preset（B-14 断言 spur 前三段 ``line,line,cubic``）。
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。
