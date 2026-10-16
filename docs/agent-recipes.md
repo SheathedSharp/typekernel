@@ -261,3 +261,12 @@ PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-revi
 ## 人审
 
 数字门槛通过之后，视觉接受必须由人写入 `approvals/*.json`（`typekernel.qa.gates.write_approval`）。gate 与 `design_review` 都不会自动批准。没有这份记录，就还不是被接受的试作。
+
+### Pair kern exceptions
+
+After class kern, fit specific pairs that representatives miss:
+
+```python
+FamilyBuildOptions(pair_kern_exceptions=(("o", "w"), ("a", "v")))
+# or: fit_glyph_pair_kerns(spaced, pairs, target=rhythm) → Font.add_kern_table
+```

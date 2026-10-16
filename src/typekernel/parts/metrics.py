@@ -371,6 +371,35 @@ def auto_class_kern(
     return ClassKernTable(classes_t, tuple(pairs))
 
 
+
+def fit_glyph_pair_kerns(
+    glyphs: Mapping[str, ComposedGlyph],
+    pairs: Sequence[tuple[str, str]],
+    *,
+    target: RhythmSpec | float,
+    samples: int = 17,
+) -> KernTable:
+    """Fit glyph-pair kerns so each named pair hits ``target`` optically.
+
+    Use after :func:`auto_class_kern` for shapes that class representatives
+    cannot represent (for example diagonal ``w`` against round ``o``). Merge
+    the result with :meth:`~typekernel.font.Font.add_kern_table`.
+    """
+    from typekernel.optics.space import fit_kern_pair
+
+    target_gap = target.target_gap if isinstance(target, RhythmSpec) else float(target)
+    out: list[KernPair] = []
+    for left, right in pairs:
+        if left not in glyphs or right not in glyphs:
+            continue
+        value = fit_kern_pair(
+            glyphs[left], glyphs[right], target_gap, samples=samples
+        )
+        out.append(KernPair(left, right, value))
+    return KernTable(tuple(out))
+
+
+
 def auto_side_kern_classes(
     glyphs: Mapping[str, ComposedGlyph],
     ctx: DesignContext,

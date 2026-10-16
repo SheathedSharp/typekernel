@@ -27,6 +27,7 @@ from typekernel.parts.metrics import (
     KernClass,
     auto_class_kern,
     auto_side_kern_classes,
+    fit_glyph_pair_kerns,
     rhythm_from_control_glyphs,
 )
 
@@ -49,6 +50,7 @@ class FamilyBuildOptions:
     extended_latin: str = ""
     chars: str | None = None
     space_width_factor: float = 0.45
+    pair_kern_exceptions: tuple[tuple[str, str], ...] = ()
     joins_policy: JoinPolicy = "tangent_fix"
     ease_curvature: bool = False
 
@@ -132,4 +134,8 @@ def compose_font_from_controls(
         add_ordn_forms(font, spaced)
     font.features = opts.feature_text()
     font.add_class_kern_table(kerning)
+    if opts.pair_kern_exceptions:
+        font.add_kern_table(
+            fit_glyph_pair_kerns(spaced, opts.pair_kern_exceptions, target=rhythm)
+        )
     return font
