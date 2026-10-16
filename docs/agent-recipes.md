@@ -39,6 +39,12 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 
 `g_form=double` 在 `code_clear` 字重阶梯上已通过四母版 `check_masters`。`a_form=double` 在 `code_clear` stem **70–180** 六母版阶梯上已通过 `check_masters`（见 `test_double_a_form_masters_interpolate_on_weight_ladder`）。各 Style 选项与典型组合在七 preset 上已通过 identity 抽检（`test_style_option_identity_spot_check_on_preset`、`test_styled_voice_identity_core_charset_on_preset`）。其余非拓扑 Style 在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
 
+## 对比度与应力（TK-301 / TK-302）
+
+- **`contrast`**（默认各 preset 已设好）：控制圆笔横竖厚度比；`bowl` / `o` / 数字环等会响应。探针见 `tests/parts/test_knob_coverage.py::test_contrast_moves_round_letters`、`tests/qa/test_thickness.py`。
+- **`stress`**（默认 **0**，勿在 golden preset 上擅自设非零）：绕圆碗中心 **逆时针** 旋转内 counter，把最细点从顶/底挪到侧面；影响 `o` `c` `s`、cap `S`、lining `2` `3` `5` `6` `8` `9` 等。`stress=0` 时七 preset 哈希不变；形变回归见 `tests/parts/test_stress.py`。高 `stress` 下 lining `2`/`3`/`5` 用 `figures._cut_x` 竖切，不要为过关改切割阈值。
+- 若要在 shipping preset 上采用非零 `stress`，需人审并更新 `outline_hashes.json`（同 contrast 大改流程）。
+
 ## 弱字
 
 默认派生经常先在这些字上露馅：`f` `t` `j` `a` `s` `e`。L0 至少对其中两个 `with_glyph`。builder 签名是 `(n_glyph, o_glyph, ctx)`。

@@ -183,6 +183,14 @@ def test_section8_agent_recipes_documents_tk108_golden_refresh() -> None:
     assert "regenerate_outline_hashes.py" in text
 
 
+def test_section8_agent_recipes_documents_tk302_stress() -> None:
+    text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "TK-302" in text
+    assert "stress" in text
+    assert "test_stress.py" in text
+    assert "_cut_x" in text
+
+
 def test_section8_agent_recipes_documents_tk207_min_run_gap() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "TK-207" in text
