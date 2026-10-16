@@ -46,6 +46,10 @@ def test_run_program_exit_list_includes_section8_and_gate_evidence() -> None:
         "tests/examples/test_zayju_script.py::test_zayju_script_charset_builds_and_lints_clean"
         in lines
     )
+    assert (
+        "tests/examples/test_zayju_script.py::test_zayju_script_sequential_style_gate_passes"
+        in lines
+    )
     assert "tests/parts/test_stress.py" in lines
     assert (
         "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress" in lines

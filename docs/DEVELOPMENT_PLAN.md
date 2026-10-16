@@ -565,6 +565,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_stroke_program_acceptance.py``；``test_section8_run_program_exit_includes_stroke_spike``。
 - **本轮（部分）**：``tests/examples/test_zayju_script.py``（``build_charset`` lint 烟测 + ``build.py`` 烟测）；``examples/zayju_script`` 走库内 ``trace_letter`` heal/refit。
 - **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_zayju_script_charset_builds_and_lints_clean``；``test_section8_run_program_exit_includes_zayju_script_smoke``。
+- **本轮（部分）**：``zayju_script`` 顺序 ``style_consistency`` 门（``test_zayju_script_sequential_style_gate_passes``）纳入 ``run_program_exit`` 烟测与 §8 回归登记。
 - **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_trace_letter_spike`` / ``test_section8_skill_reference_documents_trace_letter``。
 
 ### M4 真斜体

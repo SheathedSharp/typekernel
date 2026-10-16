@@ -40,6 +40,7 @@ _TRIAL_SMOKE = (
     "tests/parts/test_glyph_specs.py",
     "tests/parts/test_stroke_program_acceptance.py",
     "tests/examples/test_zayju_script.py::test_zayju_script_charset_builds_and_lints_clean",
+    "tests/examples/test_zayju_script.py::test_zayju_script_sequential_style_gate_passes",
     "tests/parts/test_stress.py",
     "tests/parts/test_figures.py::test_all_lining_figures_build_under_stress",
     "tests/qa/test_gate_thresholds_locked.py",

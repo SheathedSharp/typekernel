@@ -97,7 +97,10 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "tests/examples/test_zayju_script.py",
-        ("test_zayju_script_charset_builds_and_lints_clean",),
+        (
+            "test_zayju_script_charset_builds_and_lints_clean",
+            "test_zayju_script_sequential_style_gate_passes",
+        ),
     ),
     (
         "tests/qa/test_trial_protocol.py",
@@ -239,6 +242,8 @@ def test_section8_agent_recipes_documents_trace_letter_spike() -> None:
     assert "trace_letter" in text
     assert "zayju_script" in text
     assert "test_zayju_script.py" in text
+    assert "build_charset_sequential" in text
+    assert "style_consistency" in text
 
 
 def test_section8_agent_recipes_documents_stress() -> None:
@@ -406,6 +411,7 @@ def test_section8_run_program_exit_includes_stroke_spike() -> None:
 def test_section8_run_program_exit_includes_zayju_script_smoke() -> None:
     text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "test_zayju_script_charset_builds_and_lints_clean" in text
+    assert "test_zayju_script_sequential_style_gate_passes" in text
 
 
 def test_section8_agent_recipes_documents_tuned_glyph_specs() -> None:
