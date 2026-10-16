@@ -161,6 +161,15 @@ def test_section8_skill_reference_documents_m5_workflow() -> None:
     assert "diff_overlay.py" in text
 
 
+def test_section8_skill_reference_documents_tk302_stress() -> None:
+    text = (
+        ROOT / ".agents/skills/typekernel-font-design/reference.md"
+    ).read_text(encoding="utf-8")
+    assert "TK-302" in text
+    assert "stress" in text
+    assert "test_stress.py" in text
+
+
 def test_section8_agent_recipes_documents_trial_snapshot_exit_codes() -> None:
     text = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
     assert "TK-502" in text

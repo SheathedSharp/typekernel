@@ -66,6 +66,11 @@ L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family p
 
 VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladders (see `tests/parts/test_style_gate.py`). Serif voices need sentence gate + L3 distance tests.
 
+## Contrast & stress (TK-301 / TK-302)
+
+- **`contrast`**: round stroke horizontal ÷ vertical thickness (`bowl`, `o`, figures). Knob reach: `test_contrast_moves_round_letters`.
+- **`stress`**: degrees CCW rotation of the thin point on round counters (`0` = default presets / golden hashes). Affects `o` `c` `s`, cap `S`, lining `2` `3` `5` `6` `8` `9`. Regression: `tests/parts/test_stress.py`; agent notes: [agent-recipes.md](../../../docs/agent-recipes.md) §对比度与应力.
+
 ## Construction spike — skeleton + pen (TK-308)
 
 Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contrast pen for experiments or hand-traced strokes before `with_glyph`.
