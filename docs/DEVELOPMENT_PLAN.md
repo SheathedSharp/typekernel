@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1515 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1516 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -248,7 +248,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-107 旋钮覆盖测试　〔S〕
 - **做什么**：`tests/parts/test_knob_coverage.py`，把附录 C 的敏感度实验固化：每个 `DesignContext` 字段改动后，受影响字形集合不得小于下限。`contrast` 与 `terminal_style` 两条 strict-xfail 已转正（TK-301、TK-304）。
-- **本轮（部分）**：附录 C 表对齐 TK-301/304/302 实测（``contrast``/``terminal_style``/``stress``）；``test_stress_reaches_many_glyphs_on_humanist``（``stress=25`` ≥20 字）。
+- **本轮（部分）**：附录 C 表对齐 TK-301/304/302 实测（``contrast``/``terminal_style``/``stress``）；``test_stress_reaches_many_glyphs_on_humanist``（``stress=25`` ≥20 字）；``test_contrast_moves_many_glyphs_on_humanist``（``contrast=0.5`` ≥80 字）。
 - **验收**：测试通过；xfail 条目与 TK-301/TK-304 对应。
 
 #### TK-108 字形哈希快照　〔S〕
@@ -815,7 +815,7 @@ M5：TK-501（贯穿）→ TK-502
 | `descender` | ×1.2 | 19 | |
 | `ascender` | ×1.1 | 15 | |
 | `sharp_overshoot` | 30 | 5 | `v w A V W`，合理 |
-| `stress` | 25 | 23 | 环/开口类（`o` `c` `e` lining `0`–`9` 等）；见 TK-302 |
+| `stress` | 25 | 23 | 环/开口类（`o` `c` `e`、lining `0235689`、cap `CGOQS` 等）；见 TK-302 |
 | `terminal_style` | horizontal / angled | **20** | TK-304 后含 `F` `T` `k` 等开口端点 |
 | `sidebearing_ratio` | 0.2 | 1 | 间距旋钮，几何基本不变，合理 |
 | `tracking` | 40 | 0 | 间距旋钮，合理 |

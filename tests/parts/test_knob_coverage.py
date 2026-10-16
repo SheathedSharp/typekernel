@@ -55,6 +55,16 @@ def test_contrast_moves_round_letters() -> None:
     assert not still_static, sorted(still_static)
 
 
+def test_contrast_moves_many_glyphs_on_humanist() -> None:
+    """TK-107 / appendix C: ``contrast=0.5`` reshapes most of the charset (TK-301)."""
+    base = DesignContext.humanist_sans()
+    a = _build(base)
+    b = _build(base.tuned(contrast=0.5))
+    changed = _shape_changed(a, b)
+    assert len(changed) >= 80
+    assert {"o", "0", "O", "a"}.issubset(set(changed))
+
+
 def test_terminal_style_reaches_many_glyphs() -> None:
     base = DesignContext.humanist_sans()
     a = _build(base)

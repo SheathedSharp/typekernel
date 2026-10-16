@@ -196,6 +196,8 @@ def test_section8_plan_appendix_c_documents_stress_knob_sensitivity() -> None:
     text = (ROOT / "docs/DEVELOPMENT_PLAN.md").read_text(encoding="utf-8")
     assert "| `stress` | 25 | 23 |" in text
     assert "TK-301 后圆字母均动" in text
+    assert "| `contrast` | 0.5 | 85 |" in text
+    assert "test_contrast_moves_many_glyphs_on_humanist" in text
 
 
 def test_section8_agent_recipes_documents_tk302_stress() -> None:
