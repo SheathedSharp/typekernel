@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1510 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1513 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -395,6 +395,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``two_from_O``/``three_from_O``/``five_from_O`` 竖切用 ``_cut_x``（高 ``stress`` 内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``（``2``/``3``/``5``/``6``/``8``/``9``）；``test_all_lining_figures_build_under_stress``。
 - **本轮（部分）**：``figures._ring_parts`` 内环类型与 ``_quarters`` 对齐（mypy；``stress=0`` 哈希不变）。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_stress.py`` 与 ``test_all_lining_figures_build_under_stress``；``test_section8_run_m5_program_exit_includes_tk302_stress_regressions``。
+- **本轮（部分）**：``control._cut`` 竖/横切在旋转 counter 上回退线交（``c``/``e``/``C``/标点开口等）；``test_supported_charset_builds_under_moderate_stress``（三 preset × ``stress=35`` 全 ``supported``）。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
 

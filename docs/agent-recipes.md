@@ -42,7 +42,7 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 ## 对比度与应力（TK-301 / TK-302）
 
 - **`contrast`**（默认各 preset 已设好）：控制圆笔横竖厚度比；`bowl` / `o` / 数字环等会响应。探针见 `tests/parts/test_knob_coverage.py::test_contrast_moves_round_letters`、`tests/qa/test_thickness.py`。
-- **`stress`**（默认 **0**，勿在 golden preset 上擅自设非零）：绕圆碗中心 **逆时针** 旋转内 counter，把最细点从顶/底挪到侧面；影响 `o` `c` `s`、cap `S`、lining `2` `3` `5` `6` `8` `9` 等。`stress=0` 时七 preset 哈希不变；形变回归见 `tests/parts/test_stress.py`。高 `stress` 下 lining `2`/`3`/`5` 用 `figures._cut_x` 竖切，不要为过关改切割阈值。
+- **`stress`**（默认 **0**，勿在 golden preset 上擅自设非零）：绕圆碗中心 **逆时针** 旋转内 counter，把最细点从顶/底挪到侧面；影响 `o` `c` `s`、cap `S`、lining `2` `3` `5` `6` `8` `9` 等。`stress=0` 时七 preset 哈希不变；形变回归见 `tests/parts/test_stress.py`。高 `stress` 下 lining `2`/`3`/`5` 用 `figures._cut_x` 竖切；开口字母（`c`/`e`/标点等）用 `control._cut` 线交回退，不要为过关改切割阈值。
 - 若要在 shipping preset 上采用非零 `stress`，需人审并更新 `outline_hashes.json`（同 contrast 大改流程）。
 
 ## 弱字

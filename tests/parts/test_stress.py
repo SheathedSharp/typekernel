@@ -102,3 +102,14 @@ def test_stress_moves_thinnest_point_on_o() -> None:
     assert _near(a0, 90.0) or _near(a0, 270.0)
     thin_rot = (a0 + 45.0) % 360.0
     assert _near(a45, thin_rot, tol=32.0) or _near(a45, (thin_rot + 180.0) % 360.0, tol=32.0)
+
+
+@pytest.mark.parametrize("preset", ("humanist_sans", "geometric_sans", "code_clear"))
+def test_supported_charset_builds_under_moderate_stress(preset: str) -> None:
+    """TK-302: opening ``o`` derivatives must build when inner rings are rotated."""
+    ctx = getattr(DesignContext, preset)()
+    if preset == "geometric_sans":
+        ctx = ctx.tuned(contrast=0.55, stem=90.0)
+    controls = Controls.from_context(ctx.tuned(stress=35.0))
+    for ch in controls.supported:
+        controls.build(ch)

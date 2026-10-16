@@ -198,6 +198,7 @@ def test_section8_agent_recipes_documents_tk302_stress() -> None:
     assert "stress" in text
     assert "test_stress.py" in text
     assert "_cut_x" in text
+    assert "control._cut" in text
 
 
 def test_section8_agent_recipes_documents_tk207_min_run_gap() -> None:

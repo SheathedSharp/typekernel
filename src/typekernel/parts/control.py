@@ -18,7 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Literal
 
-from fontTools.misc.bezierTools import splitCubic
+from fontTools.misc.bezierTools import curveLineIntersections, splitCubic, splitCubicAtT
 
 from typekernel.geo.contour import Contour, reverse_contour, signed_area
 from typekernel.geo.curves import superellipse_cubics
@@ -261,6 +261,17 @@ def _split(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic] |
         return None
     a, b = pieces
     return (tuple(a), tuple(b))
+
+
+def _line_hits(c: Cubic, p: Pt, q: Pt) -> list[float]:
+    """Curve parameters where ``c`` crosses the line through ``p`` and ``q``."""
+    far_p = (p[0] - 3.0 * (q[0] - p[0]), p[1] - 3.0 * (q[1] - p[1]))
+    far_q = (q[0] + 3.0 * (q[0] - p[0]), q[1] + 3.0 * (q[1] - p[1]))
+    found: list[float] = []
+    for hit in curveLineIntersections(list(c), [far_p, far_q]):
+        if 0.0 < hit.t1 < 1.0 and all(abs(hit.t1 - t) > 1e-3 for t in found):
+            found.append(hit.t1)
+    return sorted(found)
 
 
 def _ccw(outline: Outline) -> Outline:
@@ -2234,10 +2245,30 @@ def _opening_bottom_bracketed_detour(
 
 def _cut(c: Cubic, where: float, *, horizontal: bool) -> tuple[Cubic, Cubic]:
     pieces = _split(c, where, horizontal=horizontal)
-    if pieces is None:
-        axis = "y" if horizontal else "x"
-        raise ValueError(f"curve does not cross {axis}={where:.2f}; check o metrics")
-    return pieces
+    if pieces is not None:
+        return pieces
+    if horizontal:
+        ymin = min(p[1] for p in c)
+        ymax = max(p[1] for p in c)
+        span = max(ymax - ymin, 1.0)
+        y = where
+        if y <= ymin or y >= ymax:
+            y = ymax - 1e-3 * span if y >= ymax else ymin + 1e-3 * span
+        hits = _line_hits(c, (-2500.0, y), (4500.0, y))
+    else:
+        xmin = min(p[0] for p in c)
+        xmax = max(p[0] for p in c)
+        span = max(xmax - xmin, 1.0)
+        x = where
+        if x <= xmin or x >= xmax:
+            x = xmax - 1e-3 * span if x >= xmax else xmin + 1e-3 * span
+        hits = _line_hits(c, (x, -2500.0), (x, 4500.0))
+    if hits:
+        t = hits[0]
+        a, b = splitCubicAtT(*c, t)
+        return (tuple(a), tuple(b))
+    axis = "y" if horizontal else "x"
+    raise ValueError(f"curve does not cross {axis}={where:.2f}; check o metrics")
 
 
 def c_from_o(
