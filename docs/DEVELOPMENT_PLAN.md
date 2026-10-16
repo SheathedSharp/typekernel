@@ -303,7 +303,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：钩部最小局部厚度 ≥ 对应 `thin` 的某一比例（`hook_min_thin_floor` + `test_hook_root_thickness_*` 已冻结分档）。
 
 #### TK-206 `3`、`G`、`s` 打磨　〔S〕
-- **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-15 仍视觉低优先。
+- **本轮（部分）**：附录 B-13/B-14 与 ``test_known_defects``（``test_b13_three_no_flat_top_shelf`` / ``test_b14_g_spur_cubic_join``）对齐；B-13～B-15 程序侧已绿，视觉签字见 ``human_review_bundle --only tk206``。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band``（腰区单段墨迹 + 最小宽度）；附录 B 登记更新。
 - **本轮（部分）**：``test_b15_s_spine_ink_is_continuous_band`` 参数化七 preset（含衬线 voice）。
 - **本轮（部分）**：``s_from_o`` 开口 reach ``+0.012``（七 preset ``s``/``S``）；``outline_hashes.json`` 更新；本地校样 ``artifacts/specimens/tk206_s_opening_humanist.png``。
@@ -322,6 +322,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 - **本轮（部分）**：``human_review_bundle`` 写出 ``tk206_s_opening_humanist.png``（``--only tk206`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_tk206_only``。
 - **本轮（部分）**：``--only tk206`` 另写 ``tk206_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
+- **本轮（部分）**：附录 B 表与 §8 人审说明对齐 ``--only tk206``；``test_section8_plan_documents_program_vs_human_exit`` 固化。
 
 #### TK-207 字重阶梯　〔M〕
 - **做什么**：`stem` 从 30 到 200 做阶梯，把 `weight_relief` 从只管 `n/o` 扩展到「每个字形有字腔下限」；定义每字形的最小字腔，再按 R8 验证。
@@ -709,7 +710,7 @@ M5：TK-501（贯穿）→ TK-502
 | 6 | `docs/AGENT_TRIALS.md` 终验摘要表 + 独立 agent 试验 | **未完成** |
 | 7 | `test_section8_required_docs_exist` 等文档钩子 | 已满足（人审签字除外） |
 
-人审视觉 gate（衬线两 voice + 斜体 VF）：`examples/human_review_bundle.py` → 人更新 `approvals/*.json`；在 `approved: false` 时不得声称 M5 视觉验收完成。
+人审视觉 gate（衬线两 voice + 斜体 VF）：`examples/human_review_bundle.py`（`--only serif|italic`）→ 人更新 `approvals/*.json`；附录 B-13～B-15 用 `--only tk206`（无 JSON）。在 `approved: false` 时不得声称 M5 视觉验收完成。
 
 ---
 
@@ -762,8 +763,8 @@ M5：TK-501（贯穿）→ TK-502
 | B-10 | `u` | 左下重脚（类 slab） | **假设**：`n` 旋转 180° 后肩–腿接合变成重脚 | `control.py:604` | lint R9（待校准） |
 | B-11 | `t` | 横笔与钩根细如发丝 | **假设**：钩深/rise 参数 + `blend_corners` 圆角过大 | `control.py:492`、`_finish_hook_letter :432` | lint R9 |
 | B-12 | `j f g J` | 钩根细、尾部尖 | **假设**：同源于 `_hook_record` | `control.py:516, 476, 987`、`caps.py:635` | lint R9 |
-| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；平顶几何回归 | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
-| B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；段型回归 | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
+| B-13 | `3` | 平顶「Ʒ」形 | **部分修**（``top_apex`` + 开口）；人审待签（``tk206_three_g_humanist.png``） | `figures.py:three_from_O` | `test_b13_three_no_flat_top_shelf` |
+| B-14 | `G` | spur 生硬 | **部分修**（κ 圆角 spur）；人审待签（同上校样） | `caps.py:G_from_O` | `test_b14_g_spur_cubic_join` |
 | B-15 | `s` | 偏生硬（可读） | **部分修**（``s_from_o`` reach ``+0.012``）；人审待签（``tk206_s_opening_humanist.png``） | `control.py:s_from_o` | `test_b15_s_spine_ink_is_continuous_band` + ``test_s_*`` VF |
 | — | — | **登记说明** | B-01～B-12 的「可自动检出」项已由 `tests/parts/test_known_defects.py` 回归（M2 修复，无 xfail）；B-13～B-15 有几何/拓扑钩子 + ``human_review_bundle --only tk206`` 校样（无 JSON gate）；B-16 由字重阶梯 R8 回归覆盖。 | — | — |
 | B-16 | 重字重 | `stem ≥ 150` 时 `3 a e m n u` 字腔坍塌 | 已确认（现象） | `weight_relief.py` | lint R8 |
