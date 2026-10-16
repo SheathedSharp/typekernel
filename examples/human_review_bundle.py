@@ -28,6 +28,7 @@ _CHECKLIST = """# Human review checklist (do not commit this folder)
 
 ```bash
 PYTHONPATH=src python examples/run_m5_program_exit.py --gate all
+pytest -q tests/qa/test_gate_thresholds_locked.py
 pytest -q tests/docs/test_development_plan_section8.py
 pytest -q tests/examples/test_agent_trial_reference.py
 pytest -q tests/qa/test_m3_exit.py

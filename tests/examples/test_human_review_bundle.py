@@ -28,6 +28,7 @@ def test_human_review_bundle_source_documents_pending_gates() -> None:
     assert "test_development_plan_section8.py" in text
     assert "test_agent_trial_reference.py" in text
     assert "run_m5_program_exit.py" in text
+    assert "test_gate_thresholds_locked.py" in text
     assert "test_m3_exit.py" in text
     assert "weight_ladder_sheet.py" in text
     assert "test_weight_ladder_sheet.py" in text

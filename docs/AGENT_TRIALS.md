@@ -47,7 +47,7 @@
 4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；衬线/斜体视觉接受写 `approvals/*.json`（见 `human_review_bundle.py`）。附录 B-13–B-15（`--only tk206`）仅看图签字或笔记，不写 approval 文件。
 5. **作废条件**：改过关句、改 L3/ gate 阈值、或 `cheating_flags` 非空；agent 在程序快照生成阶段写入 `human_review_scores`（须待人评后由人编辑 JSON 或摘要表）。
 
-库维护者回归：`tests/examples/test_agent_trial.py`、`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`；TK-206 附录 B-13～B-15：`tests/parts/test_known_defects.py`（`test_b13_*` / `test_b14_*` / `test_b15_*`，七 preset）+ `test_s_opening_reach_relief_frozen`（`run_m5_program_exit --gate all` 已含）。
+库维护者回归：`tests/examples/test_agent_trial.py`、`test_agent_trial_reference.py`、`test_preset_brief_snapshots_pass_gate`、`tests/fixtures/tk502_reference_metrics.json`（参考试作，非终验）、`tests/docs/test_development_plan_section8.py`、`tests/qa/test_m3_exit.py`、`tests/qa/test_gate_thresholds_locked.py`（`AGENT_SENTENCE` / gate 阈值 / `COUNTER_SCAN_MIN_RUN_OVER_STEM`）；TK-206 附录 B-13～B-15：`tests/parts/test_known_defects.py`（`test_b13_*` / `test_b14_*` / `test_b15_*`，七 preset）+ `test_s_opening_reach_relief_frozen`（`run_m5_program_exit --gate all` 已含）。
 
 ## 跑预设基线快照（库维护者）
 
