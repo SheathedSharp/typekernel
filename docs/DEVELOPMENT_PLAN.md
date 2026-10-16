@@ -254,6 +254,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **做什么**：用现有 `qa/outline_hash.py` 为 `humanist_sans / geometric_sans / code_clear` × 98 字形生成 `tests/golden/outline_hashes.json`，加回归测试。以后**每次字形变更，哪些字形的哈希变了就必须和任务声明一致**，更新快照的提交要在说明里列出变更字形。
 - **本轮（部分）**：``examples/regenerate_outline_hashes.py``（默认校验漂移、`--write` 重写）；``tests/examples/test_regenerate_outline_hashes.py`` 烟测。
 - **本轮（部分）**：``agent-recipes`` TK-108 刷新流程；``test_section8_agent_recipes_documents_tk108_golden_refresh``。
+- **本轮（部分）**：``README`` 补 ``regenerate_outline_hashes.py``；``test_section8_readme_points_at_plan_and_review_bundle`` 固化。
 - **验收**：快照存在；故意改一个字形能让测试失败。
 
 ### M2 修地板
