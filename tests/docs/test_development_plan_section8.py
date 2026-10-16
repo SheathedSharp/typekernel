@@ -322,6 +322,7 @@ def test_section8_dev_standards_documents_program_exit() -> None:
     assert "test_gate_thresholds_locked" in text
     assert "AGENT_SENTENCE" in text
     assert "test_knob_coverage.py" in text
+    assert "test_extended_latin_policy.py" in text
     assert "test_glyph_specs.py" in text
     assert "test_stress.py" in text
 
@@ -337,6 +338,7 @@ def test_section8_agent_goal_documents_program_vs_human_gates() -> None:
     assert "appendix_b_three_g_humanist.png" in text
     assert "test_serif_voice_meets_program_acceptance" in text
     assert "test_knob_coverage" in text
+    assert "test_extended_latin_policy" in text
     assert "test_stress" in text
     assert "test_glyph_specs" in text
     assert "test_stroke_program_acceptance" in text
@@ -377,6 +379,11 @@ def test_section8_plan_section6_documents_trial_snapshot_fields() -> None:
 def test_section8_run_program_exit_includes_knob_coverage() -> None:
     text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
     assert "tests/parts/test_knob_coverage.py" in text
+
+
+def test_section8_run_program_exit_includes_extended_latin_policy() -> None:
+    text = (ROOT / "examples/run_program_exit.py").read_text(encoding="utf-8")
+    assert "tests/parts/test_extended_latin_policy.py" in text
 
 
 def test_section8_run_program_exit_includes_glyph_specs() -> None:

@@ -39,6 +39,7 @@ def test_run_program_exit_list_includes_section8_and_gate_evidence() -> None:
     assert "tests/parts/test_known_defects.py::test_b13_three_no_flat_top_shelf" in lines
     assert "tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen" in lines
     assert "tests/parts/test_knob_coverage.py" in lines
+    assert "tests/parts/test_extended_latin_policy.py" in lines
     assert "tests/parts/test_glyph_specs.py" in lines
     assert "tests/parts/test_stroke_program_acceptance.py" in lines
     assert (

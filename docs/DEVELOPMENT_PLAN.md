@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1532 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1533 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -372,6 +372,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-208 扩展拉丁默认策略　〔S，可选〕
 - **决策（2026-10-16）**：`ç` `é` `ñ` 等 **预组合重音**与轮廓字母 `æøÆØ` **均不进** ``Controls.supported``；启用 ``FamilyBuildOptions.extended_latin``（非空）时 charset 追加轮廓字母，并由 ``add_composite_latin`` 注册整张 ``COMPOSITE_LATIN`` 表（与 ``first_font`` 示例一致）。
 - **本轮**：``ø``/``Ø`` 斜线第二 solid 经 ``_ccw`` 修正 R1；``qa/composite.composed_glyph_from_font`` + ``test_extended_latin_policy``（九 preset 轮廓 lint + 烘焙 composite lint）。
+- **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_extended_latin_policy.py``；``test_section8_run_program_exit_includes_extended_latin_policy``。
 - 无论是否进默认集，composite 字形都必须过 lint（重音碰撞）；烘焙后逐字 ``lint_glyph`` 零 error。
 
 ### M3 抬天花板

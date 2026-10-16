@@ -36,6 +36,7 @@ _TRIAL_SMOKE = (
     "tests/parts/test_known_defects.py::test_b15_s_spine_ink_is_continuous_band",
     "tests/parts/test_control_gs.py::test_s_opening_reach_relief_frozen",
     "tests/parts/test_knob_coverage.py",
+    "tests/parts/test_extended_latin_policy.py",
     "tests/parts/test_glyph_specs.py",
     "tests/parts/test_stroke_program_acceptance.py",
     "tests/examples/test_zayju_script.py::test_zayju_script_charset_builds_and_lints_clean",
