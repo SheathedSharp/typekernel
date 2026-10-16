@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM
 from typekernel.qa.family_gate import FAMILY_GATE_VERSION
 from typekernel.qa.sentence_gate import (
     AGENT_SENTENCE,
@@ -24,3 +25,7 @@ def test_agent_sentence_and_slack_frozen() -> None:
 
 def test_family_gate_version_frozen() -> None:
     assert FAMILY_GATE_VERSION == "1"
+
+
+def test_counter_scan_min_run_over_stem_frozen() -> None:
+    assert COUNTER_SCAN_MIN_RUN_OVER_STEM == 0.09

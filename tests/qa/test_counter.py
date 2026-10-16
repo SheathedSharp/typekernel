@@ -9,10 +9,6 @@ from typekernel.parts.weight_relief import counter_gap_floor
 from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM, min_counter_gap
 
 
-def test_counter_scan_min_run_over_stem_frozen() -> None:
-    assert COUNTER_SCAN_MIN_RUN_OVER_STEM == 0.09
-
-
 def test_descender_letters_skip_baseline_stem_pinch() -> None:
     """Stem–bowl slivers below the body band must not drive R8 on ``p``/``q``."""
     ctx = DesignContext.humanist_sans().tuned(stem=180.0)

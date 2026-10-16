@@ -162,7 +162,7 @@ weight_ladder_sheet(
 
 默认 `stems=(30, 70, 110, 150, 180, 200)`，与 `tests/qa/test_weight_ladder.py` 一致。输出目录在 `.gitignore` 内，本地生成即可。
 
-`min_counter_gap`（R8）在 scanline 上忽略小于 `max(1, COUNTER_SCAN_MIN_RUN_OVER_STEM×stem)`（当前 **0.09**）的缝，避免 `K`/`X` 斜臂与 `p`/`q` descender 发丝缝误报。**不要**为过关调低该阈值；审计用例见 `tests/qa/test_counter.py::test_descender_micro_sliver_below_min_run_gap_ignored`（与 `test_p_outer_ink_continuous_across_stem_bowl_join` 的探针高度不同：后者查碗–竖接合连续，前者冻结重字重下仍低于阈值的 scanline 缝）。
+`min_counter_gap`（R8）在 scanline 上忽略小于 `max(1, COUNTER_SCAN_MIN_RUN_OVER_STEM×stem)`（当前 **0.09**）的缝，避免 `K`/`X` 斜臂与 `p`/`q` descender 发丝缝误报。**不要**为过关调低该阈值；阈值冻结见 `tests/qa/test_gate_thresholds_locked.py::test_counter_scan_min_run_over_stem_frozen`；审计用例见 `tests/qa/test_counter.py::test_descender_micro_sliver_below_min_run_gap_ignored`（与 `test_p_outer_ink_continuous_across_stem_bowl_join` 的探针高度不同：后者查碗–竖接合连续，前者冻结重字重下仍低于阈值的 scanline 缝）。
 
 ## `s` 开口人审（TK-206 / 附录 B-15）
 
