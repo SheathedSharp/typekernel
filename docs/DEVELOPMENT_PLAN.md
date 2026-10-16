@@ -338,6 +338,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``COUNTER_SCAN_MIN_RUN_OVER_STEM`` + ``test_gate_thresholds_locked`` 冻结（R8 scanline 发丝缝阈值）。
 - **本轮（部分）**：``run_m5_program_exit --gate all`` 含完整 ``test_gate_thresholds_locked``（含 ``AGENT_SENTENCE`` / R8 扫描阈值）。
 - **本轮（部分）**：``AGENT_TRIALS`` / ``human_review_bundle`` 清单补 ``test_gate_thresholds_locked``；``test_agent_trials_doc`` / ``test_human_review_bundle`` 钩子。
+- **本轮（部分）**：``dev-standards`` / §8 计划钩子补 ``test_gate_thresholds_locked`` 与 ``run_m5`` 分工说明。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。
