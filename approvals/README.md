@@ -47,6 +47,11 @@ These ship with ``approved: false`` until a human updates them after review:
 - `serif-slab-voice.json` / `serif-bracketed-voice.json` — `--only serif` (slab/bracketed `proof.png`, VF `proof_vf.png`, weight ladder PNGs)
 - `italic-vf-construct.json` — `--only italic` (review `proof.png`, `proof_vf.png`, VF `.ttf` under `italic_family/`)
 
+**Appendix B-15 (`s` opening)** has no JSON gate: review `tk206_s_opening_humanist.png` from
+`human_review_bundle.py --only tk206` (or `contact_sheet.py --chars sS`). Record acceptance in
+notes or a design log only; changing `S_OPENING_REACH_RELIEF` requires golden refresh per
+`docs/agent-recipes.md`.
+
 Generate local proofs (does not write this folder):
 
 ```bash
