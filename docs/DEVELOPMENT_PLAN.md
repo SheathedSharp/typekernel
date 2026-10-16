@@ -331,7 +331,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：`$` 纳入 `COUNTER_PINCH_CHARSET`（腰接双环后字重阶梯 R8 零报）。
 - **本轮（部分）**：扩展 `COUNTER_PINCH_CHARSET`（`2`/`7`、`s`/`S`/`c`、大写 `CDEFOPQSTUZ`、`#`/`%`/`?`）；三 preset × 阶梯 R8 仍零报。
 - **本轮（部分）**：``min_counter_gap`` 在 ``y0<0`` 时将采样带下限抬至 ``0.12×y1``，避免 ``p``/``q`` descender 竖缝误报；``test_descender_letters_skip_baseline_stem_pinch``。
-- **本轮（部分）**：``test_p_descender_micro_sliver_below_min_run_gap_ignored`` 固化 ``p`` 重字重 descender 发丝缝（``y≈-17.34``）低于 ``min_run_gap``、不驱动 R8。
+- **本轮（部分）**：``test_descender_micro_sliver_below_min_run_gap_ignored`` 固化 ``p``/``q`` 重字重 descender 发丝缝（``y≈-17.34``）低于 ``min_run_gap``、不驱动 R8。
+- **本轮（部分）**：``run_m5_program_exit --gate all`` 含 ``test_descender_micro_sliver_below_min_run_gap_ignored``。
 - **本轮（部分）**：``min_counter_gap`` 对多轮廓 solid 用内孔包围盒、跳过 even-odd 竖缝误报；``b``/``d``/``g``/``p``/``q`` 纳入 ``COUNTER_PINCH_CHARSET``。
 - **本轮（部分）**：大写 ``A``/``B``/``R`` 纳入 ``COUNTER_PINCH_CHARSET``（阶梯 R8 零报）。
 - **本轮（部分）**：直立 ``u`` 纳入 ``COUNTER_PINCH_CHARSET``（七 preset × 阶梯 R8 零报）。

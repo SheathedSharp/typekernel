@@ -291,6 +291,7 @@ def test_section8_run_m5_program_exit_includes_tk206_defect_regressions() -> Non
     assert "test_b14_g_spur_cubic_join" in text
     assert "test_b15_s_spine_ink_is_continuous_band" in text
     assert "test_s_opening_reach_relief_frozen" in text
+    assert "test_descender_micro_sliver_below_min_run_gap_ignored" in text
     assert "test_human_review_bundle_tk206_only" in text
 
 

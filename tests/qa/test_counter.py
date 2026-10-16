@@ -18,13 +18,14 @@ def test_descender_letters_skip_baseline_stem_pinch() -> None:
         assert min_counter_gap(controls.build(ch)) >= floor
 
 
-def test_p_descender_micro_sliver_below_min_run_gap_ignored() -> None:
-    """TK-207: hairline stem–bowl gaps on ``p`` scanlines stay under ``min_run_gap``."""
+@pytest.mark.parametrize("ch", ("p", "q"))
+def test_descender_micro_sliver_below_min_run_gap_ignored(ch: str) -> None:
+    """TK-207: hairline stem–bowl gaps on ``p``/``q`` scanlines stay under ``min_run_gap``."""
     from typekernel.optics.space import ink_intervals_at_y
 
     ctx = DesignContext.humanist_sans().tuned(stem=180.0)
     controls = Controls.from_context(ctx).with_stem_relief()
-    glyph = controls.build("p")
+    glyph = controls.build(ch)
     min_run = max(1.0, 0.09 * ctx.stem)
     # Grid-audit y where ink splits but gap is far below the R8 scan threshold.
     y_audit = -17.343161198288144
