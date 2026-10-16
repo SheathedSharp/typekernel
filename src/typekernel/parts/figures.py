@@ -268,6 +268,27 @@ def _hit(c: Cubic, p: Pt, q: Pt, what: str, *, last: bool) -> float:
     return hits[-1] if last else hits[0]
 
 
+def _cut_x(c: Cubic, x: float, which: int) -> Cubic:
+    """``_cut(c, x, horizontal=False)[which]`` with vertical line-intersection fallback.
+
+    Stressed inner rings can miss the nominal opening ``x`` that ``splitCubic``
+    expects; ``three_from_O`` uses this for waist and terminal splits.
+    """
+    xmin = min(p[0] for p in c)
+    xmax = max(p[0] for p in c)
+    span = max(xmax - xmin, 1.0)
+    if x <= xmin or x >= xmax:
+        # Keep the split inside the cubic's horizontal extent (rotated counters).
+        x = xmax - 1e-3 * span if x >= xmax else xmin + 1e-3 * span
+    hits = _line_hits(c, (x, -2500.0), (x, 4500.0))
+    if hits:
+        t = hits[0] if which == 0 else hits[-1]
+        a, b = splitCubicAtT(*c, t)
+        piece: Cubic = a if which == 0 else b
+        return piece
+    return _cut(c, x, horizontal=False)[which]
+
+
 def _ring_parts(
     cx: float,
     cy: float,
@@ -447,12 +468,12 @@ def three_from_O(
     l0a, _ = splitCubicAtT(*l0, right.t1)
     _, u3b = splitCubicAtT(*u3, right.t2)
     # Keep the full upper ``u0`` arc (rounded top); open the bowl on the right via ``u1``.
-    u_side = _cut(u1, x_tu, horizontal=False)[0]
-    ui_side = _cut(ui1, x_tu, horizontal=False)[0]
-    l_bot = _cut(l2, x_tl, horizontal=False)[1]
-    li_bot = _cut(li2, x_tl, horizontal=False)[1]
-    waist_top = _cut(ui2, x_w, horizontal=False)[1]  # x_w → inner bottom of upper
-    waist_bot = _cut(li1, x_w, horizontal=False)[0]  # inner top of lower → x_w
+    u_side = _cut_x(u1, x_tu, 0)
+    ui_side = _cut_x(ui1, x_tu, 0)
+    l_bot = _cut_x(l2, x_tl, 1)
+    li_bot = _cut_x(li2, x_tl, 1)
+    waist_top = _cut_x(ui2, x_w, 1)  # x_w → inner bottom of upper
+    waist_bot = _cut_x(li1, x_w, 0)  # inner top of lower → x_w
 
     b = PathBuilder()
     b.moveTo(*l_bot[0])

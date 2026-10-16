@@ -392,7 +392,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮**：`stress` 字段；`bowl` / `_ring` 对 counter 施加绕 bowl 中心的旋转（`stress=0` 与改造前一致）；`tests/parts/test_stress.py` 探针。
 - **本轮（部分）**：``test_knob_coverage`` 补 ``stress`` 旋钮覆盖（``ocCO0`` 形状响应）。
 - **本轮（部分）**：``s_from_o`` 上下环内轮廓随 ``stress`` 绕各自 bowl 中心旋转（``stress=0`` 哈希不变）；``test_stress_moves_lowercase_s_outline`` / ``test_stress_zero_preserves_lowercase_s_hashes``。
-- **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``（``3`` 用较低探针角，``6``/``8`` 形变探针）。
+- **本轮（部分）**：lining ``2``/``3``/``5``/``6`` 经 ``figures._ring_parts``、``8`` 双孔经 ``eight_from_O`` 对环内 counter 施加 ``stress``（``cap S`` 仍走 ``s_from_o``）；``three_from_O`` 竖切用 ``_cut_x`` 回退（高 ``stress`` 下内环开口）；``test_stress_zero_preserves_lining_figure_hashes`` / ``test_stress_moves_lining_figure_outline``。
 - **本轮（部分）**：``figures._ring_parts`` 内环类型与 ``_quarters`` 对齐（mypy；``stress=0`` 哈希不变）。
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。

@@ -96,11 +96,11 @@ def test_terminal_style_flared_reaches_open_stroke_glyphs() -> None:
 def test_stress_moves_round_stroke_counters() -> None:
     """TK-302: stress rotates the thin point on bowl / ring glyphs."""
     ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0)
-    probe = "ocCO0s68"
+    probe = "ocCO0s368"
     a = {ch: Controls.from_context(ctx).build(ch) for ch in probe}
     b = {ch: Controls.from_context(ctx.tuned(stress=25.0)).build(ch) for ch in probe}
     changed = set(_shape_changed(a, b))
     assert "o" in changed
     assert "s" in changed
-    assert {"6", "8"}.issubset(changed)
+    assert {"3", "6", "8"}.issubset(changed)
     assert len(changed) >= 6
