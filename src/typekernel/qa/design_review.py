@@ -116,7 +116,7 @@ class DesignReview:
                 lines.append(f"  charset: … and {len(self.charset_failures) - 8} more")
         if self.sequence_failures:
             lines.append(
-                f"body DesignSequence: {len(self.sequence_failures)} issue(s)"
+                f"DesignSequence: {len(self.sequence_failures)} issue(s)"
             )
             for msg in self.sequence_failures[:8]:
                 lines.append(f"  sequence: {msg}")
@@ -205,15 +205,25 @@ def design_review(
 
 
 def _body_sequence_failures(controls: Controls) -> tuple[str, ...]:
-    """Run designer-order body unlock; empty means stock derivation is consistent."""
-    from typekernel.qa.design_sequence import DesignSequence, DesignSequenceError
+    """Run designer-order body + digit unlock; empty means stock is consistent."""
+    from typekernel.qa.design_sequence import (
+        DesignSequenceError,
+        unlock_controls_body,
+        unlock_controls_digits,
+    )
 
+    out: list[str] = []
     try:
-        DesignSequence.unlock_controls_body(controls)
+        unlock_controls_body(controls)
     except DesignSequenceError as exc:
         hints = tuple(exc.hints[:6])
-        return (str(exc), *hints)
-    return ()
+        out.extend((f"body DesignSequence: {exc}", *hints))
+    try:
+        unlock_controls_digits(controls)
+    except DesignSequenceError as exc:
+        hints = tuple(exc.hints[:6])
+        out.extend((f"digit DesignSequence: {exc}", *hints))
+    return tuple(out)
 
 
 def _fmt_metric(name: str, value: float) -> str:

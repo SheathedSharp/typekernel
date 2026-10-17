@@ -344,3 +344,62 @@ def test_curved_y_tail_stem_not_hairline() -> None:
         skip_checks=latin_topology_skip_checks("n", "y"),
     )
     assert report.passed, report.fix_hints()
+
+
+
+def test_latin_digit_topology_skips_documented() -> None:
+    from typekernel.qa.design_sequence import latin_digit_topology_skip_checks
+
+    # Open figures / double bowl: stem probes unreliable.
+    for ch in ("2", "3", "5", "8"):
+        skips = latin_digit_topology_skip_checks("1", ch)
+        assert "stem_median" in skips
+        assert "contrast_ratio" in skips
+        assert "entry_rail_y" in skips
+    # Stem-like figures keep stem gating vs control ``1``.
+    for ch in ("0", "4", "7", "6", "9"):
+        assert "stem_median" not in latin_digit_topology_skip_checks("1", ch)
+    # Diagonals skip contrast only.
+    assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "7")
+    assert "stem_median" not in latin_digit_topology_skip_checks("1", "7")
+
+
+def test_unlock_controls_digits_completes() -> None:
+    from typekernel.qa.design_sequence import (
+        default_digit_design_order,
+        unlock_controls_digits,
+    )
+
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.humanist_sans,
+        DesignContext.slab_serif,
+        DesignContext.code_clear,
+    ):
+        c = Controls.from_context(factory())
+        seq = unlock_controls_digits(c)
+        assert seq.is_complete
+        assert len(seq.unlocked) == len(default_digit_design_order())
+        via = c.unlock_digits()
+        assert via.unlocked == seq.unlocked  # type: ignore[union-attr]
+
+
+def test_unlock_controls_digits_refuses_thin_stem_figure() -> None:
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_digits
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=35.0))
+    broken = good.with_glyph("4", lambda _H, _O, _c: thin.build("4"))
+    with pytest.raises(DesignSequenceError, match="refused glyph '4'"):
+        unlock_controls_digits(broken)
+
+
+def test_unlock_controls_digits_ladder_completes() -> None:
+    from typekernel.qa.design_sequence import unlock_controls_digits_ladder
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    out = unlock_controls_digits_ladder(c, stems=(90.0, 150.0, 200.0))
+    assert set(out) == {90.0, 150.0, 200.0}
+    assert all(seq.is_complete for seq in out.values())
+    via = c.unlock_digits_ladder(stems=(90.0, 150.0))
+    assert set(via) == {90.0, 150.0}  # type: ignore[arg-type]

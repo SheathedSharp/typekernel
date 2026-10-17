@@ -30,18 +30,24 @@ if TYPE_CHECKING:
 __all__ = [
     "DEFAULT_BODY_DESIGN_ORDER",
     "DEFAULT_CAP_DESIGN_ORDER",
+    "DEFAULT_DIGIT_DESIGN_ORDER",
     "DesignSequence",
     "DesignSequenceError",
     "controls_body_tolerances",
     "controls_cap_tolerances",
+    "controls_digit_tolerances",
     "default_body_design_order",
     "default_cap_design_order",
+    "default_digit_design_order",
     "ensure_controls_body_unlocked",
     "latin_cap_topology_skip_checks",
+    "latin_digit_topology_skip_checks",
     "latin_topology_skip_checks",
     "unlock_controls_body",
     "unlock_controls_body_ladder",
     "unlock_controls_caps",
+    "unlock_controls_digits",
+    "unlock_controls_digits_ladder",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -114,6 +120,28 @@ DEFAULT_CAP_DESIGN_ORDER: tuple[str, ...] = (
 def default_cap_design_order() -> tuple[str, ...]:
     """Default uppercase designer order for Controls-derived Latin faces."""
     return DEFAULT_CAP_DESIGN_ORDER
+
+
+# Lining figures derive from cap H/O (:data:`~typekernel.parts.family.FIGURE_FORMS`).
+# Designer order: stem control ``1``, round ``0``, then H-stem figures, open
+# bowls, closed bowls — mirrors H/O then related for caps.
+DEFAULT_DIGIT_DESIGN_ORDER: tuple[str, ...] = (
+    "1",
+    "0",
+    "7",
+    "4",
+    "2",
+    "5",
+    "3",
+    "6",
+    "9",
+    "8",
+)
+
+
+def default_digit_design_order() -> tuple[str, ...]:
+    """Default lining-figure designer order for Controls-derived Latin faces."""
+    return DEFAULT_DIGIT_DESIGN_ORDER
 
 
 # Topology roles where some style metrics are meaningless across letters.
@@ -369,8 +397,150 @@ def unlock_controls_body_ladder(
 
 
 
-# TODO(digits): DesignSequence for 0–9 when caps pattern is cheap to reuse
-# (control ``0``/``1``, topology skips for open ``3``/``5``, etc.).
+# Digit topology roles (lining figures at cap height from H/O).
+_DIGIT_OPEN: frozenset[str] = frozenset({"2", "3", "5"})
+# Openings / crossbars: vertical stem probes hit hairlines or bars (like ``c``/``e``).
+_DIGIT_CLOSED: frozenset[str] = frozenset({"0", "6", "9"})
+_DIGIT_DOUBLE_BOWL: frozenset[str] = frozenset({"8"})
+# Waist / double-counter probes are not a single stem band vs control ``1``.
+_DIGIT_DIAGONAL: frozenset[str] = frozenset({"4", "7"})
+
+
+def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Metric skips for lining-figure DesignSequence (control ``1`` path).
+
+    Rails/slant are script proxies — always omitted. Stem stays gated for
+    stem-like figures (``1``/``4``/``7``/``0``/``6``/``9``); open ``2``/``3``/``5``
+    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is
+    omitted for rounds / opens / diagonals (H/V samples are not figure stems).
+    """
+    skip: list[str] = [
+        "entry_rail_y",
+        "exit_rail_y",
+        "exit_slant_deg",
+        "oriented_stem",
+    ]
+    if (
+        ref in _DIGIT_OPEN
+        or cand in _DIGIT_OPEN
+        or ref in _DIGIT_DOUBLE_BOWL
+        or cand in _DIGIT_DOUBLE_BOWL
+    ):
+        skip.extend(["stem_median", "contrast_ratio"])
+    if (
+        ref in _DIGIT_CLOSED
+        or cand in _DIGIT_CLOSED
+        or ref in _DIGIT_OPEN
+        or cand in _DIGIT_OPEN
+        or ref in _DIGIT_DOUBLE_BOWL
+        or cand in _DIGIT_DOUBLE_BOWL
+        or ref in _DIGIT_DIAGONAL
+        or cand in _DIGIT_DIAGONAL
+    ):
+        skip.append("contrast_ratio")
+    if (
+        ref in _DIGIT_CLOSED
+        or cand in _DIGIT_CLOSED
+        or ref in _DIGIT_OPEN
+        or cand in _DIGIT_OPEN
+        or ref in _DIGIT_DOUBLE_BOWL
+        or cand in _DIGIT_DOUBLE_BOWL
+    ):
+        # Slight overshoot on rounds vs flat ``1`` baseline.
+        skip.append("ink_ymin")
+    return tuple(dict.fromkeys(skip))
+
+
+def controls_digit_tolerances() -> StyleConsistencyTolerances:
+    """Budgets for Controls lining figures (from stem control ``1``).
+
+    Figures sit at cap height with ``FIGURE_STEM_RATIO`` strokes — slightly
+    wider absolute stem band than body, same relative slack as caps.
+    """
+    return StyleConsistencyTolerances(
+        stem_median=20.0,
+        stem_median_rel=0.20,
+        contrast_ratio=0.50,
+        entry_rail_y=36.0,
+        exit_rail_y=36.0,
+        exit_slant_deg=35.0,
+        bowl_center_y=80.0,
+        ink_ymin=55.0,
+        ink_ymax=120.0,
+    )
+
+
+def unlock_controls_digits(
+    controls: Controls,
+    *,
+    control: str = "1",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Unlock Controls lining figures one glyph at a time (``1``-first order).
+
+    Stock presets must complete :data:`DEFAULT_DIGIT_DESIGN_ORDER` under
+    :func:`controls_digit_tolerances`. Figures derive from cap ``H``/``O``;
+    run after caps are locked when redesigning figure masters.
+    """
+    planned = tuple(order) if order is not None else default_digit_design_order()
+    if control not in planned or planned[0] != control:
+        planned = (control, *[c for c in planned if c != control])
+    skips = skip_checks_for_pair
+    if skips is None:
+        skips = latin_digit_topology_skip_checks
+    tol = tolerances if tolerances is not None else controls_digit_tolerances()
+    seq = DesignSequence.start(
+        control,
+        controls.build(control),
+        tolerances=tol,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skips,
+        planned_order=planned,
+    )
+    for ch in seq.planned_order:
+        if ch == seq.control:
+            continue
+        seq.add(ch, controls.build(ch))
+    return seq
+
+
+def unlock_controls_digits_ladder(
+    template: Controls,
+    stems: Sequence[float] | None = None,
+    *,
+    control: str = "1",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> dict[float, DesignSequence]:
+    """Unlock lining figures on each weight-ladder master (VF / family path).
+
+    Same stem-master construction as :func:`unlock_controls_body_ladder`.
+    """
+    from typekernel.qa.trial_protocol import (
+        WEIGHT_LADDER_STEMS,
+        controls_at_ladder_stem,
+    )
+
+    ladder = tuple(stems) if stems is not None else WEIGHT_LADDER_STEMS
+    out: dict[float, DesignSequence] = {}
+    for stem in ladder:
+        sheet = controls_at_ladder_stem(template, float(stem))
+        out[float(stem)] = unlock_controls_digits(
+            sheet,
+            control=control,
+            order=order,
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+        )
+    return out
+
+
 def unlock_controls_caps(
     controls: Controls,
     *,
