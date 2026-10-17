@@ -5,7 +5,11 @@
 ```
 DesignContext     family proportions (stem, x-height, contrast, terminals, …)
        ↓
-Controls          n/o/H/O metrics + build_all() → dict[str, ComposedGlyph]
+Controls          n/o/H/O metrics + with_glyph / tuned_glyph
+       ↓
+DesignSequence    unlock_body / try_add (one glyph → style gate → unlock)
+       ↓
+build_all         stock derive punct/caps/figures AFTER body gate (compose only)
        ↓
 space_font        optical sidebearings
        ↓
@@ -163,9 +167,12 @@ seq = controls.design_sequence(order=("n", "o", "h"), control="n")
 seq.add("o", controls.build("o"))
 seq.add("h", controls.build("h"))
 glyphs = seq.export_glyphs(require_complete=True)
+
+# Or the one-shot body gate after controls are locked:
+seq = controls.unlock_body()  # == DesignSequence.unlock_controls_body(controls)
 ```
 
-Defaults: `controls_body_tolerances()` + `latin_topology_skip_checks` (stem band 12, contrast 0.45; rails/slant skipped for upright Latin).
+Defaults: `controls_body_tolerances()` + `latin_topology_skip_checks` (stem band 14, contrast 0.45; rails/slant skipped for upright Latin).
 
 On refuse, `DesignSequenceError.hints` / `seq.hints_from_last()` name the
 metric and the redesign direction. Phrase / `BRIEF_SENTENCE` proofs come

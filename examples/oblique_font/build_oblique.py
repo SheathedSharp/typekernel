@@ -22,6 +22,7 @@ OUT_DIR = HERE / "out"
 
 def design(controls: Controls, family: str, style: str) -> Font:
     ctx = controls.context
+    # Compose-time stock derivation after locked controls (not a DesignSequence design session).
     drawn = controls.build_all()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)

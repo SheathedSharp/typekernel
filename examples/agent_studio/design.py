@@ -1,7 +1,8 @@
 """Agent-authored L0 trial — edit this file; typekernel is the library, not the brief.
 
 Human designer order for a trial (not a family):
-  brief → named preset → read control glyphs → documented delta → weak letters → proof.
+  brief → named preset → control glyphs → DesignSequence body unlock →
+  documented delta → weak letters → proof.
 
 ``BRIEF_SENTENCE`` is the second specimen only. Pass/fail uses
 ``typekernel.qa.sentence_gate.AGENT_SENTENCE``. Do not change that sentence
@@ -15,10 +16,12 @@ from __future__ import annotations
 
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.control import f_from_n, t_from_n
+from typekernel.qa.design_sequence import DesignSequence
 
 # --- Brief (record intent before touching numbers) ---
 # Voice: humanist UI sans. This trial stays on the preset's topology.
-# Charset: ASCII via Controls.build_all. Weights: Regular only.
+# Body letters unlock via DesignSequence; build_all is compose-time only.
+# Weights: Regular only.
 FAMILY_NAME = "Agent Studio Humanist"
 PRESET_NAME = "humanist_sans"
 FOCUS_GLYPHS = "n o a s e f t r I"
@@ -42,3 +45,9 @@ def design_controls() -> Controls:
     controls = controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.82))
     controls = controls.with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.58))
     return controls
+
+
+def unlock_body_sequence(controls: Controls | None = None) -> DesignSequence:
+    """Required body gate: one glyph → style-check → unlock (no ungated batch)."""
+    sheet = controls if controls is not None else design_controls()
+    return sheet.unlock_body()  # type: ignore[return-value]

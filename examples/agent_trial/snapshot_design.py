@@ -1,4 +1,4 @@
-"""Write ``snapshot_trial`` JSON for a Python design module (TK-502)."""
+"""Write ``snapshot_trial`` JSON for a Python design module (agent trial)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from typekernel.qa.trial_protocol import (
     write_trial_snapshot,
 )
 
-APIS_USED = ("Style", "terminal_style", "tuned_glyph", "design_module")
+APIS_USED = ("Style", "terminal_style", "tuned_glyph", "DesignSequence", "design_module")
 
 
 def _load_controls(path: Path) -> Controls:
@@ -55,6 +55,13 @@ def main(argv: list[str] | None = None) -> int:
 
     brief = _brief(args.brief)
     controls = _load_controls(args.design.resolve())
+    # Designer-order body gate before metrics (no ungated build_all as design).
+    body = controls.unlock_body()
+    print(
+        f"body DesignSequence ok · unlocked {len(body.unlocked)} "
+        f"(complete={body.is_complete})",
+        flush=True,
+    )
     snap = snapshot_trial(
         controls,
         brief=brief,

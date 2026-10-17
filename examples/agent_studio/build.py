@@ -6,7 +6,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from design import BRIEF_SENTENCE, FAMILY_NAME, FOCUS_GLYPHS, baseline_controls, design_controls
+from design import (
+    BRIEF_SENTENCE,
+    FAMILY_NAME,
+    FOCUS_GLYPHS,
+    baseline_controls,
+    design_controls,
+    unlock_body_sequence,
+)
 
 from typekernel.qa.agent_preview import build_glyph_preview
 from typekernel.qa.design_review import design_review
@@ -25,6 +32,11 @@ def main() -> None:
     args = parser.parse_args()
 
     controls = design_controls()
+    body = unlock_body_sequence(controls)
+    print(
+        f"body DesignSequence ok · unlocked {len(body.unlocked)} "
+        f"(complete={body.is_complete})"
+    )
     review = design_review(
         controls,
         baseline=baseline_controls(),
@@ -56,7 +68,12 @@ def main() -> None:
     for name, path in paths.items():
         print(f"{name}: {path}")
 
-    if review.failures or review.l0_gaps or review.charset_failures:
+    if (
+        review.failures
+        or review.l0_gaps
+        or review.charset_failures
+        or review.sequence_failures
+    ):
         sys.exit(1)
 
 

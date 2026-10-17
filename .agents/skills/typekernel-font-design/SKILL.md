@@ -31,7 +31,7 @@ Do **not** simulate weight with stroke expand, script with oblique shear, or Ope
 
 | Level | Where | Done when |
 | --- | --- | --- |
-| **L0 trial** | `examples/agent_studio/` | Named preset + **one documented delta** from that preset's fields + `tuned_glyph` / `with_glyph` on **≥2** of `f t j a s e`. Gate text is `AGENT_SENTENCE` only. `design_review(..., baseline=Controls.from_context(preset))` shows optical gap ratio and non-terminal G1 **not worse** than that preset. |
+| **L0 trial** | `examples/agent_studio/` | Named preset + **one documented delta** from that preset's fields + `tuned_glyph` / `with_glyph` on **≥2** of `f t j a s e` + `Controls.unlock_body` / `DesignSequence`. Gate text is `AGENT_SENTENCE` only. `design_review(..., baseline=Controls.from_context(preset))` shows optical gap ratio and non-terminal G1 **not worse** than that preset, and empty `sequence_failures`. |
 | **L1 one style** | still one weight | L0, and the fixed pairs `Ta To fi fl rn 011` have **no silhouette collision** (`min optical gap > 0`). |
 | **L2 family** | `examples/agent_family/` or `examples/<family>/build_*.py` | Regular + Light and Bold (or a VF) as **separate** `Controls` masters. Bold uses `with_stem_relief()`. `compose_font_from_controls` + `reference_kern_classes` shared across masters. |
 
@@ -118,9 +118,10 @@ Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `dis
 **3 — Controls**  
 `Controls.from_context(ctx)` or `Controls.from_context(ctx, style=Style(...))` / `with_style(...)` for discrete topology (`a_form`, `g_form`, `l_tail`, `y_tail`, `i_dot`, `t_cut`, `serif` — defaults match stock presets). Full table: [agent-recipes.md](../../docs/agent-recipes.md) and [reference.md](reference.md). Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps A–Z except `H`/`I` have specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
 
-**4 — Build glyphs**  
-`drawn = controls.build_all()` or explicit substring. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
-`compose_font_from_controls` runs **join polish** (`tangent_fix`) on every outline before spacing; disable with `FamilyBuildOptions(joins_policy="noop")` for VF debugging.
+**4 — Unlock body, then derive the rest**  
+First: `seq = controls.unlock_body()` (or the per-glyph `design_sequence` / `try_add` loop above). Do **not** treat ungated `build_all` as design.  
+After the body gate: `drawn = controls.build_all()` (or an explicit substring) for punctuation / figures / caps at compose time. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
+`compose_font_from_controls` runs **join polish** (`tangent_fix`) on every outline before spacing; disable with `FamilyBuildOptions(joins_policy="noop")` for VF debugging. VF / optical-size `build_*.py` scripts that call `build_all` after locked controls are **compile** paths, not design sessions.
 
 **5 — Spacing & kerning**  
 ```python

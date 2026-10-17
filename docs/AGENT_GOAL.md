@@ -11,7 +11,7 @@
 | 人类字体设计师 | Agent 通过 typekernel 应对齐的行为 |
 | --- | --- |
 | 先定 brief / 比例 / 字族性格 | 选或调 `DesignContext`（preset + 有记录的 override），写清 family 用途 |
-| 画 control 字（n/o、H/O）再扩族 | `Controls.from_context` → 验证 control → `build_all()`，不是逐字随机堆轮廓 |
+| 画 control 字（n/o、H/O）再按设计师顺序扩族 | `Controls.from_context` → 验 control → `DesignSequence` / `Controls.unlock_body`（一字一闸）→ 锁定后再用 `build_all` 派生标点/大写/数字；禁止把 ungated `build_all` / phrase-batch 当设计方法 |
 | 每个字重是 **重画母版**，不是描粗 | 每个 `wght` 独立 `Controls`（stem + `with_stem_relief()` 等 **designed delta**） |
 | 斜体是 **另一套母版** | `italic_design(regular)` 给出独立 control sheet + **构造倾角**（`italic_slant_deg`，默认约 10°），`n/h/r/u/m` 分支拱、`f` 下伸等拓扑与直立不同；可与 Regular 做 `wght×ital` VF（`vf_upright_controls` 对齐段数）。`ital=1` 用 `italic_design`，不要用 `oblique_font` 冒充 Italic 风格名 |
 | 符号、数字、变音属于同一族 | 标点 / figures / extended Latin / 特性 glyph 与 `features.fea` **同时存在** |
@@ -32,7 +32,7 @@
 
 | 级别 | 落在哪 | 完成条件 |
 | --- | --- | --- |
-| **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`tuned_glyph` 或 `with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset。 |
+| **L0 试字** | `examples/agent_studio/` | 点名一个 preset；只做 **有记录的字段增量**（相对该 preset 的值，而不是无参照的 `stem=78`）；`tuned_glyph` 或 `with_glyph` 至少覆盖 `f t j a s e` 中的 **两个**；`Controls.unlock_body` / `DesignSequence` 正文过闸。过关文本只能是 `AGENT_SENTENCE`。`design_review(..., baseline=未改过的 preset)` 上，optical gap ratio 与非端子 G1 **不得差于** 该 preset，且 `sequence_failures` 为空。 |
 | **L1 单 style 可读** | 仍是一个字重 | L0，且固定 pair/word（`Ta` `To` `fi` `fl` `rn` `011`）**无撞字**（光学间距 ≤ 0 即失败）。pair 检查已经做进 `check_sentence_gate`。 |
 | **L2 字族** | `examples/agent_family/` 或自建 `examples/<family>/build_*.py` | Regular + Light/Bold（或 VF），每个字重独立 `Controls`。Bold 用 `with_stem_relief()`。`compose_font_from_controls` + 各母版共用 `reference_kern_classes`。 |
 | **L3 独特声音** | 与 L2 同级或在其之上 | 相对**最近**内置 preset 的 `nearest_voice_distance` ≥ **0.35**（`L3_VOICE_DISTANCE_THRESHOLD`）且 `topology_fraction_vs_nearest_presets` ≥ **0.05**（`L3_MIN_TOPOLOGY_FRACTION`，`l3_voice_criteria_met` 锁定）。`check_family_gate` 与 lint **零错误**。差异须来自 `Style`、`tuned_glyph` / `with_glyph` 等**有记录的** API，而不是无拓扑的纯缩放或噪声。**人审**（`approvals/*.json`）仍为必选项。 |
@@ -45,6 +45,7 @@
 
 ### 反模式（出现即未完成）
 
+- 用 `BRIEF_SENTENCE` / 整句 charset **批量造字**当设计方法，或跳过 `DesignSequence` / `unlock_body` 直接 `build_all` 当设计。
 - 为了过关而换短句、或把 brief 句传进 `check_sentence_gate`。
 - 以 `sentence gate ok` 加一张 PNG 宣布字族完成。
 - 在同一套 n/o 拓扑上把 counter / rx 乘 `1.0x`，当作新造型。

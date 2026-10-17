@@ -18,6 +18,7 @@ from design import (
     design_bold,
     design_controls,
     design_light,
+    unlock_body_sequence,
 )
 
 from typekernel.compile import (
@@ -47,6 +48,13 @@ def main() -> None:
     light = design_light()
     bold = design_bold()
 
+    for label, sheet in (("Regular", regular), ("Light", light), ("Bold", bold)):
+        body = unlock_body_sequence(sheet)
+        print(
+            f"{label} body DesignSequence ok · unlocked {len(body.unlocked)} "
+            f"(complete={body.is_complete})"
+        )
+
     review = design_review(regular, baseline=baseline_controls(), out_dir=out / "review")
     print(review.summary())
     if review.charset_failures:
@@ -55,7 +63,12 @@ def main() -> None:
             print(f"  {line}")
         if len(review.charset_failures) > 20:
             print(f"  … and {len(review.charset_failures) - 20} more")
-    if review.failures or review.l0_gaps or review.charset_failures:
+    if (
+        review.failures
+        or review.l0_gaps
+        or review.charset_failures
+        or review.sequence_failures
+    ):
         sys.exit(1)
 
     # Absolute ceilings only. Do not use the Regular preset as Bold's baseline.

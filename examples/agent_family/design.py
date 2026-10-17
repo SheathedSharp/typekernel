@@ -3,12 +3,16 @@
 Regular is the voice you compare to the unmodified preset.
 Light and Bold are separate masters (new stems), not a stroke expand.
 Bold calls ``with_stem_relief()``. Do not compare Bold's gap ratio to Regular's preset.
+
+Each master must pass ``Controls.unlock_body`` (DesignSequence) before compose;
+``build_all`` in ``build_family.py`` is compile-time derivation only.
 """
 
 from __future__ import annotations
 
 from typekernel.parts import Controls, DesignContext
 from typekernel.parts.control import f_from_n, t_from_n
+from typekernel.qa.design_sequence import DesignSequence
 
 # TODO: rename the family and rewrite the brief before calling this a release.
 FAMILY_NAME = "Agent Family Humanist"
@@ -50,3 +54,8 @@ def design_light() -> Controls:
 def design_bold() -> Controls:
     """Bold master: heavier stem plus counter relief."""
     return _voice(_BOLD_STEM, relief=True)
+
+
+def unlock_body_sequence(controls: Controls) -> DesignSequence:
+    """Designer-order body gate for one master (required before compose)."""
+    return controls.unlock_body()  # type: ignore[return-value]
