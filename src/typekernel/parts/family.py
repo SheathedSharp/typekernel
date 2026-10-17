@@ -366,6 +366,27 @@ class Controls:
             skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
         )
 
+    def unlock_caps(
+        self,
+        order: Sequence[str] | None = None,
+        *,
+        control: str = "H",
+        tolerances: object | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: object | None = None,
+    ) -> object:
+        """Run capitals through :func:`~typekernel.qa.design_sequence.unlock_controls_caps`."""
+        from typekernel.qa.design_sequence import unlock_controls_caps
+
+        return unlock_controls_caps(
+            self,
+            control=control,
+            order=order,
+            tolerances=tolerances,  # type: ignore[arg-type]
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
+        )
+
     def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
         """Derive ``chars`` from locked controls (default: all supported).
 

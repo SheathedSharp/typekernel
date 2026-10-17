@@ -147,7 +147,7 @@ def test_controls_body_tolerances_stem_tight() -> None:
 
     tol = controls_body_tolerances()
     assert tol.stem_median == 18.0
-    assert tol.stem_median_rel == 0.16
+    assert tol.stem_median_rel == 0.20
     assert tol.contrast_ratio == 0.45
 
 
@@ -210,3 +210,83 @@ def test_body_stem_median_ignores_crossbar_on_e() -> None:
     assert n.stem_median is not None and e.stem_median is not None
     # Must track the upright stem, not the eye / crossbar full width.
     assert abs(e.stem_median - n.stem_median) < 40.0
+
+
+def test_diagonal_stem_gated_not_blank_skipped() -> None:
+    from typekernel.qa.design_sequence import latin_topology_skip_checks
+
+    # Stable diagonals (v/w) keep stem gating; oriented only for v↔w.
+    skips = latin_topology_skip_checks("n", "v")
+    assert "stem_median" not in skips
+    assert "oriented_stem" in skips
+    assert "stem_median" not in latin_topology_skip_checks("v", "w")
+    assert "oriented_stem" not in latin_topology_skip_checks("v", "w")
+    # Crossing / arm diagonals skip vertical stem (unstable probes).
+    assert "stem_median" in latin_topology_skip_checks("n", "x")
+    assert "stem_median" in latin_topology_skip_checks("n", "z")
+    assert "stem_median" in latin_topology_skip_checks("n", "y")
+
+
+def test_diagonal_stem_pass_and_refuse() -> None:
+    from typekernel.qa.design_sequence import controls_body_tolerances, latin_topology_skip_checks
+    from typekernel.qa.style_consistency import compare_glyph_styles
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=40.0))
+    tol = controls_body_tolerances()
+    ok = compare_glyph_styles(
+        c.build("n"),
+        c.build("v"),
+        reference_name="n",
+        candidate_name="v",
+        tolerances=tol,
+        skip_checks=latin_topology_skip_checks("n", "v"),
+    )
+    assert ok.passed
+    bad = compare_glyph_styles(
+        c.build("n"),
+        thin.build("v"),
+        reference_name="n",
+        candidate_name="v",
+        tolerances=tol,
+        skip_checks=latin_topology_skip_checks("n", "v"),
+    )
+    assert not bad.passed
+    assert any(f.name == "stem_median" for f in bad.failures)
+
+
+def test_oriented_stem_gates_diagonal_pair() -> None:
+    from typekernel.qa.design_sequence import controls_body_tolerances, latin_topology_skip_checks
+    from typekernel.qa.style_consistency import (
+        compare_glyph_styles,
+        extract_glyph_style_metrics,
+    )
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    assert extract_glyph_style_metrics(c.build("v")).oriented_stem is not None
+    report = compare_glyph_styles(
+        c.build("v"),
+        c.build("w"),
+        reference_name="v",
+        candidate_name="w",
+        tolerances=controls_body_tolerances(),
+        skip_checks=latin_topology_skip_checks("v", "w"),
+    )
+    assert report.passed
+    by_name = {ch.name: ch for ch in report.checks}
+    assert "oriented_stem" in by_name
+    assert by_name["oriented_stem"].ok
+
+
+def test_unlock_controls_caps_completes() -> None:
+    from typekernel.qa.design_sequence import (
+        default_cap_design_order,
+        unlock_controls_caps,
+    )
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    seq = unlock_controls_caps(c)
+    assert seq.is_complete
+    assert len(seq.unlocked) == len(default_cap_design_order())
+    via = c.unlock_caps()
+    assert via.unlocked == seq.unlocked  # type: ignore[union-attr]

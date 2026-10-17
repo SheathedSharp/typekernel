@@ -111,6 +111,10 @@ _HINT_DIRECTION: dict[str, tuple[str, str]] = {
         "reduce candidate stem thickness toward the reference",
         "increase candidate stem thickness toward the reference",
     ),
+    "oriented_stem": (
+        "reduce candidate diagonal / oriented stem thickness toward the reference",
+        "increase candidate diagonal / oriented stem thickness toward the reference",
+    ),
     "contrast_ratio": (
         "even candidate stroke contrast (less H/V disparity) toward the reference",
         "increase candidate stroke contrast toward the reference",
@@ -182,6 +186,8 @@ class GlyphStyleMetrics:
     exit_slant_deg: float | None
     bowl_center_y: float
     """Vertical centre of ink bounds (bowl / body alignment proxy)."""
+    oriented_stem: float | None = None
+    """Median perpendicular thickness from oriented probes (diagonals)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -348,12 +354,68 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     return float(statistics.median(hs) / stem_median)
 
 
+
+def _oriented_stem_median(
+    outline: Outline,
+    *,
+    stem_hint: float | None = None,
+) -> float | None:
+    """Median perpendicular stem via :func:`~typekernel.optics.stem.measure_oriented_stem`.
+
+    Samples common Latin diagonal bearings (~42–48° and supplements) at body
+    centres. Returns ``None`` when no stable diagonal band is found (upright
+    stems, empty probes). ``stem_hint`` rejects hairline / full-width hits.
+    """
+    from typekernel.optics.stem import measure_oriented_stem
+
+    try:
+        xmin, ymin, xmax, ymax = bounds(outline)
+    except ValueError:
+        return None
+    w = max(xmax - xmin, 1.0)
+    h = max(ymax - ymin, 1.0)
+    widths: list[float] = []
+    bearings = (42.0, 48.0, 132.0, 138.0, -42.0, -48.0)
+    origins = (
+        (0.50, 0.50),
+        (0.40, 0.45),
+        (0.60, 0.55),
+        (0.45, 0.40),
+        (0.55, 0.60),
+    )
+    for deg in bearings:
+        for fx, fy in origins:
+            ox = xmin + fx * w
+            oy = ymin + fy * h
+            measured = measure_oriented_stem(outline, (ox, oy), deg)
+            if measured is None:
+                continue
+            if (
+                stem_hint is not None
+                and stem_hint > 0.0
+                and not (0.35 * stem_hint <= measured <= 1.7 * stem_hint)
+            ):
+                continue
+            widths.append(float(measured))
+    if not widths:
+        return None
+    med = float(statistics.median(widths))
+    core = [x for x in widths if 0.70 * med <= x <= 1.30 * med]
+    return float(statistics.median(core)) if core else med
+
+
 def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
     """Derive style proxies from a composed glyph's solid ink."""
     outline = _ink_outline(glyph)
     xmin, ymin, xmax, ymax = bounds(outline)
     pts = _sample_oncurve_points(outline)
     stem_median = _body_stem_median(outline)
+    oriented = _oriented_stem_median(
+        outline, stem_hint=stem_median if stem_median is not None else None
+    )
+    # Fall back to oriented only when vertical body probes miss entirely.
+    if stem_median is None and oriented is not None:
+        stem_median = oriented
     # Prefer body-band contrast. No mid-ray fallback: single-stem letters
     # (l/i/v) yield bogus horizontal spans and must skip via missing.
     contrast = _body_contrast_ratio(outline, stem_median)
@@ -373,6 +435,7 @@ def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
         exit_rail_y=exit_y,
         exit_slant_deg=slant,
         bowl_center_y=float(mid_y),
+        oriented_stem=oriented,
     )
 
 
@@ -461,6 +524,24 @@ def compare_glyph_styles(
         # Caps / ascenders may exceed control x-height — wider budget.
         _check("ink_ymax", ref_m.ink_ymax, cand_m.ink_ymax, tol.ink_ymax),
     ]
+    # Oriented stem: only for stable diagonal letter pairs (``v``/``w``). Script
+    # bowls can spuriously measure an oriented band; do not gate those.
+    _oriented_letters = frozenset({"v", "w", "V", "W"})
+    if (
+        ref_m.oriented_stem is not None
+        and cand_m.oriented_stem is not None
+        and reference_name in _oriented_letters
+        and candidate_name in _oriented_letters
+    ):
+        checks_list.append(
+            _check(
+                "oriented_stem",
+                ref_m.oriented_stem,
+                cand_m.oriented_stem,
+                stem_limit,
+                skip_if_missing=False,
+            )
+        )
     if skip:
         checks_list = [c for c in checks_list if c.name not in skip]
     checks = tuple(checks_list)

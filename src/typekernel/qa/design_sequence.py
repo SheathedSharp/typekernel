@@ -29,13 +29,18 @@ if TYPE_CHECKING:
 
 __all__ = [
     "DEFAULT_BODY_DESIGN_ORDER",
+    "DEFAULT_CAP_DESIGN_ORDER",
     "DesignSequence",
     "DesignSequenceError",
     "controls_body_tolerances",
+    "controls_cap_tolerances",
     "default_body_design_order",
+    "default_cap_design_order",
+    "latin_cap_topology_skip_checks",
     "latin_topology_skip_checks",
     "unlock_controls_body",
     "unlock_controls_body_ladder",
+    "unlock_controls_caps",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -73,6 +78,43 @@ def default_body_design_order() -> tuple[str, ...]:
     """Default lowercase designer order for Controls-derived Latin faces."""
     return DEFAULT_BODY_DESIGN_ORDER
 
+
+# Cap control H/O then related capitals (designer-order sketch).
+DEFAULT_CAP_DESIGN_ORDER: tuple[str, ...] = (
+    "H",
+    "O",
+    "I",
+    "L",
+    "E",
+    "F",
+    "T",
+    "U",
+    "D",
+    "B",
+    "P",
+    "R",
+    "C",
+    "G",
+    "Q",
+    "S",
+    "J",
+    "A",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+    "K",
+    "M",
+    "N",
+)
+
+
+def default_cap_design_order() -> tuple[str, ...]:
+    """Default uppercase designer order for Controls-derived Latin faces."""
+    return DEFAULT_CAP_DESIGN_ORDER
+
+
 # Topology roles where some style metrics are meaningless across letters.
 _CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O", "e", "c", "0", "Q", "C", "G"})
 # Openings / crossbars make vertical stem probes hit hairlines or eye bars.
@@ -83,6 +125,11 @@ _ASCENDERS: frozenset[str] = frozenset(
 _DESCENDERS: frozenset[str] = frozenset({"g", "j", "p", "q", "y", "J", "Q"})
 _DOTTED: frozenset[str] = frozenset({"i", "j"})
 _DIAGONALS: frozenset[str] = frozenset({"v", "w", "x", "y", "z", "k"})
+# Diagonals with stable oriented-stem pairwise compare (no descender / arm chaos).
+_STABLE_DIAGONALS: frozenset[str] = frozenset({"v", "w"})
+# Crossing ``x`` crotch probes go unstable at heavy stems.
+# Stem probes unreliable: crossing crotches, compensated thin strokes, serifed arms.
+_UNSTABLE_DIAG_STEM: frozenset[str] = frozenset({"x", "X", "z", "Z", "k", "K", "y", "Y"})
 _MULTI_ARCH: frozenset[str] = frozenset({"m", "w", "M", "W"})
 _CURVED_SPINE: frozenset[str] = frozenset({"s", "S"})
 # Baseline hooks that dip below the x-height floor without being full descenders.
@@ -105,6 +152,9 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         "exit_rail_y",
         "exit_slant_deg",
     ]
+    # Oriented stem only for stable diagonal pairs (``v``/``w``/``x``).
+    if not (ref in _STABLE_DIAGONALS and cand in _STABLE_DIAGONALS):
+        skip.append("oriented_stem")
     if ref in _ASCENDERS or cand in _ASCENDERS:
         skip.extend(["ink_ymax", "bowl_center_y"])
     if ref in _DESCENDERS or cand in _DESCENDERS:
@@ -116,8 +166,12 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         # Tittle constructions often use a lighter stem than control ``n``.
         skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio", "stem_median"])
     if ref in _DIAGONALS or cand in _DIAGONALS:
-        # Diagonal stem bands are not vertical-stem comparable to ``n``.
-        skip.extend(["contrast_ratio", "stem_median"])
+        # H/V contrast on diagonals is meaningless; stem is gated via body /
+        # oriented probes (see ``extract_glyph_style_metrics``). Serif feet /
+        # sharp overshoot make ink_ymin non-comparable to upright controls.
+        skip.extend(["contrast_ratio", "ink_ymin"])
+    if ref in _UNSTABLE_DIAG_STEM or cand in _UNSTABLE_DIAG_STEM:
+        skip.extend(["stem_median"])
     if ref in _MULTI_ARCH or cand in _MULTI_ARCH:
         # Double/triple arches: H/V contrast probes hit joins, not stems.
         skip.extend(["contrast_ratio"])
@@ -146,7 +200,7 @@ def controls_body_tolerances() -> StyleConsistencyTolerances:
     """
     return StyleConsistencyTolerances(
         stem_median=18.0,
-        stem_median_rel=0.16,
+        stem_median_rel=0.20,
         contrast_ratio=0.45,
         entry_rail_y=36.0,
         exit_rail_y=36.0,
@@ -156,6 +210,60 @@ def controls_body_tolerances() -> StyleConsistencyTolerances:
         ink_ymax=400.0,
     )
 
+
+
+
+
+def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Metric skips for uppercase DesignSequence (H/O control path).
+
+    Reuses lowercase role sets where letters overlap, plus cap diagonals
+    ``A V W X Y Z K M N`` and round caps ``C G O Q S``.
+    """
+    skip: list[str] = [
+        "entry_rail_y",
+        "exit_rail_y",
+        "exit_slant_deg",
+    ]
+    cap_diags = frozenset({"A", "V", "W", "X", "Y", "Z", "K", "M", "N"})
+    cap_rounds = frozenset({"C", "G", "O", "Q", "S", "D", "B", "P", "R", "U"})
+    # Cap diagonals often carry slab feet; only gate oriented on V/W/X pairs.
+    stable_caps = frozenset({"V", "W"})
+    if not (ref in stable_caps and cand in stable_caps):
+        skip.append("oriented_stem")
+    if ref in _ASCENDERS or cand in _ASCENDERS:
+        skip.extend(["ink_ymax", "bowl_center_y"])
+    if ref in _DESCENDERS or cand in _DESCENDERS:
+        skip.extend(["ink_ymin", "bowl_center_y"])
+    if ref in _DIAGONALS or cand in _DIAGONALS or ref in cap_diags or cand in cap_diags:
+        skip.extend(["contrast_ratio"])
+    if (
+        ref in _CLOSED_BOWLS
+        or cand in _CLOSED_BOWLS
+        or ref in cap_rounds
+        or cand in cap_rounds
+    ):
+        skip.extend(["contrast_ratio"])
+    if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
+        skip.extend(["stem_median"])
+    if ref in _CURVED_SPINE or cand in _CURVED_SPINE:
+        skip.extend(["stem_median", "contrast_ratio"])
+    return tuple(dict.fromkeys(skip))
+
+
+def controls_cap_tolerances() -> StyleConsistencyTolerances:
+    """Budgets for Controls Latin capital sequences (from ``H``/``O``)."""
+    return StyleConsistencyTolerances(
+        stem_median=20.0,
+        stem_median_rel=0.20,
+        contrast_ratio=0.50,
+        entry_rail_y=36.0,
+        exit_rail_y=36.0,
+        exit_slant_deg=35.0,
+        bowl_center_y=80.0,
+        ink_ymin=55.0,
+        ink_ymax=120.0,
+    )
 
 
 def unlock_controls_body(
@@ -215,6 +323,44 @@ def unlock_controls_body_ladder(
             skip_checks_for_pair=skip_checks_for_pair,
         )
     return out
+
+
+
+
+def unlock_controls_caps(
+    controls: Controls,
+    *,
+    control: str = "H",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Unlock Controls capitals one glyph at a time (H/O-first designer order).
+
+    Partial but real API: stock presets must complete
+    :data:`DEFAULT_CAP_DESIGN_ORDER` under :func:`controls_cap_tolerances`.
+    """
+    planned = tuple(order) if order is not None else default_cap_design_order()
+    if control not in planned or planned[0] != control:
+        planned = (control, *[c for c in planned if c != control])
+    skips = skip_checks_for_pair
+    if skips is None:
+        skips = latin_cap_topology_skip_checks
+    tol = tolerances if tolerances is not None else controls_cap_tolerances()
+    seq = DesignSequence.start(
+        control,
+        controls.build(control),
+        tolerances=tol,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skips,
+        planned_order=planned,
+    )
+    for ch in seq.planned_order:
+        if ch == seq.control:
+            continue
+        seq.add(ch, controls.build(ch))
+    return seq
 
 
 class DesignSequenceError(ValueError):

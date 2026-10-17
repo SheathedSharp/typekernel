@@ -93,3 +93,8 @@ def test_stem_median_rel_widens_limit() -> None:
     )
     by_name = {c.name: c for c in report.checks}
     assert by_name["stem_median"].limit >= 0.5 * (by_name["stem_median"].reference or 0.0)
+
+
+def test_extract_oriented_stem_on_diagonal() -> None:
+    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("nv")
+    assert extract_glyph_style_metrics(drawn["v"]).oriented_stem is not None
