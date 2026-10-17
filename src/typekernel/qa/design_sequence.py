@@ -35,6 +35,7 @@ __all__ = [
     "default_body_design_order",
     "latin_topology_skip_checks",
     "unlock_controls_body",
+    "unlock_controls_body_ladder",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -74,6 +75,8 @@ def default_body_design_order() -> tuple[str, ...]:
 
 # Topology roles where some style metrics are meaningless across letters.
 _CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O", "e", "c", "0", "Q", "C", "G"})
+# Openings / crossbars make vertical stem probes hit hairlines or eye bars.
+_OPEN_ROUNDS: frozenset[str] = frozenset({"c", "e", "C"})
 _ASCENDERS: frozenset[str] = frozenset(
     {"b", "d", "f", "h", "k", "l", "t", "B", "D", "F", "H", "K", "L", "P", "R", "T"}
 )
@@ -82,6 +85,8 @@ _DOTTED: frozenset[str] = frozenset({"i", "j"})
 _DIAGONALS: frozenset[str] = frozenset({"v", "w", "x", "y", "z", "k"})
 _MULTI_ARCH: frozenset[str] = frozenset({"m", "w", "M", "W"})
 _CURVED_SPINE: frozenset[str] = frozenset({"s", "S"})
+# Baseline hooks that dip below the x-height floor without being full descenders.
+_BASELINE_HOOKS: frozenset[str] = frozenset({"t"})
 
 
 def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
@@ -104,6 +109,9 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         skip.extend(["ink_ymax", "bowl_center_y"])
     if ref in _DESCENDERS or cand in _DESCENDERS:
         skip.extend(["ink_ymin", "bowl_center_y"])
+    if ref in _BASELINE_HOOKS or cand in _BASELINE_HOOKS:
+        # ``t`` hook spring often sits below baseline without a full descender.
+        skip.extend(["ink_ymin"])
     if ref in _DOTTED or cand in _DOTTED:
         # Tittle constructions often use a lighter stem than control ``n``.
         skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio", "stem_median"])
@@ -116,22 +124,29 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if ref in _CURVED_SPINE or cand in _CURVED_SPINE:
         # ``s`` has no stable vertical stem band — probes hit the spine curve.
         skip.extend(["stem_median", "contrast_ratio"])
-    _ = _CLOSED_BOWLS
+    if ref in _CLOSED_BOWLS or cand in _CLOSED_BOWLS:
+        # Round bowls (``c``/``e``/``o``): H/V contrast vs stem ``n`` is not
+        # comparable — openings and crossbars dominate horizontal probes.
+        skip.extend(["contrast_ratio"])
+    if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
+        # Open ``c``/``e``: vertical probes hit the opening hairline or eye bar.
+        skip.extend(["stem_median"])
     return tuple(dict.fromkeys(skip))
 
 
 def controls_body_tolerances() -> StyleConsistencyTolerances:
     """Budgets for Controls Latin body sequences (related forms from ``n``/``o``).
 
-    Stem band is 14 (slightly above the raw default 12) so heavy masters with
+    Stem band is 18 (above the raw default 12) so heavy masters with
     ``with_stem_relief`` still gate verticals without false refuses from
-    probe noise on ``l`` / related stems. Contrast is slightly wider than
+    probe noise on ``l`` / bowl side walls. Contrast is slightly wider than
     raw ``StyleConsistencyTolerances`` because bowl vs shoulder H/V samples
     drift ~0.3–0.4 across stock related forms without a construction bug —
     still far tighter than greenwashing rails/slant.
     """
     return StyleConsistencyTolerances(
-        stem_median=14.0,
+        stem_median=18.0,
+        stem_median_rel=0.16,
         contrast_ratio=0.45,
         entry_rail_y=36.0,
         exit_rail_y=36.0,
@@ -161,6 +176,45 @@ def unlock_controls_body(
         compare_to_previous=compare_to_previous,
         skip_checks_for_pair=skip_checks_for_pair,
     )
+
+
+def unlock_controls_body_ladder(
+    template: Controls,
+    stems: Sequence[float] | None = None,
+    *,
+    control: str = "n",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> dict[float, DesignSequence]:
+    """Unlock the Latin body on each weight-ladder master (VF / family path).
+
+    Builds a stem-tuned copy of ``template`` per stem (with
+    :meth:`~typekernel.parts.family.Controls.with_stem_relief` past onset) and
+    runs :meth:`DesignSequence.unlock_controls_body`. Raises on the first
+    refused master so agents redesign that weight before compose.
+
+    ``stems`` defaults to :data:`~typekernel.qa.trial_protocol.WEIGHT_LADDER_STEMS`.
+    """
+    from typekernel.qa.trial_protocol import (
+        WEIGHT_LADDER_STEMS,
+        controls_at_ladder_stem,
+    )
+
+    ladder = tuple(stems) if stems is not None else WEIGHT_LADDER_STEMS
+    out: dict[float, DesignSequence] = {}
+    for stem in ladder:
+        sheet = controls_at_ladder_stem(template, float(stem))
+        out[float(stem)] = DesignSequence.unlock_controls_body(
+            sheet,
+            control=control,
+            order=order,
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+        )
+    return out
 
 
 class DesignSequenceError(ValueError):
@@ -306,6 +360,29 @@ class DesignSequence:
                 continue
             seq.add(ch, controls.build(ch))
         return seq
+
+    @classmethod
+    def unlock_controls_body_ladder(
+        cls,
+        template: Controls,
+        stems: Sequence[float] | None = None,
+        *,
+        control: str = "n",
+        order: Sequence[str] | None = None,
+        tolerances: StyleConsistencyTolerances | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+    ) -> dict[float, DesignSequence]:
+        """Class alias for :func:`unlock_controls_body_ladder`."""
+        return unlock_controls_body_ladder(
+            template,
+            stems,
+            control=control,
+            order=order,
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+        )
 
     @property
     def unlocked(self) -> tuple[str, ...]:

@@ -77,3 +77,19 @@ def test_script_a_e_pass_body_gate() -> None:
         tolerances=script_body_tolerances(),
     )
     assert report.passed, [(c.name, c.delta, c.limit) for c in report.failures]
+
+
+def test_stem_median_rel_widens_limit() -> None:
+    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("nh")
+    tight = StyleConsistencyTolerances(stem_median=1.0, stem_median_rel=0.5)
+    # Force a large absolute floor via rel so same-family stems still pass.
+    report = compare_glyph_styles(
+        drawn["n"],
+        drawn["h"],
+        reference_name="n",
+        candidate_name="h",
+        tolerances=tight,
+        skip_checks=("ink_ymax", "bowl_center_y", "entry_rail_y", "exit_rail_y", "exit_slant_deg"),
+    )
+    by_name = {c.name: c for c in report.checks}
+    assert by_name["stem_median"].limit >= 0.5 * (by_name["stem_median"].reference or 0.0)

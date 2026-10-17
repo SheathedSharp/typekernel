@@ -191,9 +191,15 @@ class StyleConsistencyTolerances:
     ``ink_ymax`` defaults wide so ascenders/descenders can be gated on rails and
     stems against a body control without failing on height alone. Tighten it when
     comparing same-role letters (e.g. ``a`` vs ``e``).
+
+    ``stem_median_rel`` (when > 0) raises the stem limit to
+    ``max(stem_median, stem_median_rel * |reference|)`` so black masters with
+    designed bowl thickening stay gated without an absolute floor that only
+    fits Regular.
     """
 
     stem_median: float = 12.0
+    stem_median_rel: float = 0.0
     contrast_ratio: float = 0.35
     entry_rail_y: float = 36.0
     exit_rail_y: float = 36.0
@@ -260,8 +266,10 @@ def _body_stem_median(outline: Outline) -> float | None:
     """Median vertical-stem width in a body-safe Y band.
 
     Mid-bounds probes on ascenders hit the shoulder join (false thick ``h``).
-    Short body letters use a mid-height band; tall glyphs stay in the lower
-    body. Hairline / ultra-wide join spans are filtered around the median.
+    Multi-stem / bowl letters use a mid-height band; single tall stems stay in
+    the lower body. Spans wider than ``0.42×ink`` (counters, ``e`` crossbars,
+    full bowl chords) are dropped. Narrow letters whose stem ≈ ink width fall
+    back to an uncapped sample clustered around the *narrowest* upright.
     """
     try:
         xmin, ymin, xmax, ymax = bounds(outline)
@@ -269,19 +277,38 @@ def _body_stem_median(outline: Outline) -> float | None:
         return None
     h = max(ymax - ymin, 1.0)
     wmax = max(xmax - xmin, 1.0)
-    if h > 600.0:
+    frac_cap = 0.42 * wmax
+    mid_y = ymin + 0.45 * h
+    mid_capped = list_vertical_stems(outline, y=mid_y, max_width=frac_cap)
+    mid_raw = list_vertical_stems(outline, y=mid_y)
+    single_stem = len(mid_capped) <= 1 and len(mid_raw) <= 1
+    if h > 600.0 and single_stem:
         fracs: tuple[float, ...] = (0.16, 0.22, 0.28, 0.34, 0.40)
     else:
         fracs = (0.35, 0.42, 0.50, 0.58)
     widths: list[float] = []
     for f in fracs:
         y = ymin + f * h
-        for span in list_vertical_stems(outline, y=y, max_width=0.42 * wmax):
+        for span in list_vertical_stems(outline, y=y, max_width=frac_cap):
             widths.append(float(span.width))
     if not widths:
-        widths = [float(s.width) for s in list_vertical_stems(outline)]
-    if not widths:
-        return None
+        raw: list[float] = []
+        for f in fracs:
+            y = ymin + f * h
+            for span in list_vertical_stems(outline, y=y):
+                raw.append(float(span.width))
+        if not raw:
+            raw = [float(s.width) for s in list_vertical_stems(outline)]
+        if not raw:
+            return None
+        lo = min(raw)
+        # Keep upright stems near the narrowest sample; drop bar/counter spans.
+        cap = max(1.55 * lo, frac_cap)
+        widths = [w for w in raw if w <= cap]
+        if wmax > 2.2 * lo:
+            widths = [w for w in widths if w < 0.55 * wmax]
+        if not widths:
+            widths = [lo]
     med = float(statistics.median(widths))
     core = [w for w in widths if 0.55 * med <= w <= 1.40 * med]
     return float(statistics.median(core)) if core else med
@@ -291,22 +318,29 @@ def _body_stem_median(outline: Outline) -> float | None:
 def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float | None:
     """Horizontal/vertical thickness ratio sampled in the body (not mid-ray noise).
 
-    Rejects hairline crotch / join spans so ``u`` / ``e`` / ``s`` are not
-    falsely marked high-contrast against a mono stem control.
+    Rejects hairline crotch / join spans and **crown / baseline arches** so
+    ``u`` / ``n`` / ``e`` are not falsely marked high-contrast when an H-probe
+    clips the thin top arch instead of a designed horizontal bar.
     """
     if stem_median is None or stem_median <= 0.0:
         return None
     try:
-        xmin, _ymin, xmax, _ymax = bounds(outline)
+        xmin, ymin, xmax, ymax = bounds(outline)
     except ValueError:
         return None
     w = max(xmax - xmin, 1.0)
+    h = max(ymax - ymin, 1.0)
+    y_lo = ymin + 0.18 * h
+    y_hi = ymin + 0.72 * h
     hs: list[float] = []
     for f in (0.30, 0.40, 0.50, 0.60, 0.70):
         x = xmin + f * w
         for span in list_horizontal_stems(
             outline, x=x, max_width=1.8 * stem_median
         ):
+            cy = float(span.center_y)
+            if cy < y_lo or cy > y_hi:
+                continue
             if 0.35 * stem_median <= span.width <= 1.8 * stem_median:
                 hs.append(float(span.width))
     if not hs:
@@ -394,8 +428,15 @@ def compare_glyph_styles(
     ref_m = extract_glyph_style_metrics(reference)
     cand_m = extract_glyph_style_metrics(candidate)
     skip = frozenset(skip_checks)
+    stem_limit = float(tol.stem_median)
+    if (
+        tol.stem_median_rel > 0.0
+        and ref_m.stem_median is not None
+        and abs(ref_m.stem_median) > 1e-9
+    ):
+        stem_limit = max(stem_limit, float(tol.stem_median_rel) * abs(ref_m.stem_median))
     checks_list: list[StyleCheck] = [
-        _check("stem_median", ref_m.stem_median, cand_m.stem_median, tol.stem_median),
+        _check("stem_median", ref_m.stem_median, cand_m.stem_median, stem_limit),
         _check(
             "contrast_ratio",
             ref_m.contrast_ratio,

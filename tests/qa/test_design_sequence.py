@@ -146,7 +146,8 @@ def test_controls_body_tolerances_stem_tight() -> None:
     from typekernel.qa.design_sequence import controls_body_tolerances
 
     tol = controls_body_tolerances()
-    assert tol.stem_median == 14.0
+    assert tol.stem_median == 18.0
+    assert tol.stem_median_rel == 0.16
     assert tol.contrast_ratio == 0.45
 
 
@@ -172,3 +173,40 @@ def test_controls_unlock_body_matches_module_helper() -> None:
     via_module = unlock_controls_body(c)
     assert via_controls.unlocked == via_module.unlocked  # type: ignore[union-attr]
     assert via_controls.is_complete  # type: ignore[union-attr]
+
+
+def test_latin_topology_skips_open_rounds_and_hooks() -> None:
+    from typekernel.qa.design_sequence import latin_topology_skip_checks
+
+    nc = latin_topology_skip_checks("n", "c")
+    assert "contrast_ratio" in nc
+    assert "stem_median" in nc
+    nt = latin_topology_skip_checks("n", "t")
+    assert "ink_ymin" in nt
+    no = latin_topology_skip_checks("n", "o")
+    assert "contrast_ratio" in no
+    assert "stem_median" not in no
+
+
+def test_unlock_controls_body_ladder_completes() -> None:
+    from typekernel.qa.design_sequence import unlock_controls_body_ladder
+    from typekernel.qa.trial_protocol import WEIGHT_LADDER_STEMS
+
+    c = Controls.from_context(DesignContext.geometric_sans())
+    seqs = unlock_controls_body_ladder(c)
+    assert set(seqs) == set(WEIGHT_LADDER_STEMS)
+    assert all(s.is_complete for s in seqs.values())
+    via = c.unlock_body_ladder(stems=(70.0, 150.0))
+    assert set(via) == {70.0, 150.0}  # type: ignore[arg-type]
+    assert all(s.is_complete for s in via.values())  # type: ignore[union-attr]
+
+
+def test_body_stem_median_ignores_crossbar_on_e() -> None:
+    from typekernel.qa.style_consistency import extract_glyph_style_metrics
+
+    c = Controls.from_context(DesignContext.humanist_sans().tuned(stem=150.0)).with_stem_relief()
+    n = extract_glyph_style_metrics(c.build("n"))
+    e = extract_glyph_style_metrics(c.build("e"))
+    assert n.stem_median is not None and e.stem_median is not None
+    # Must track the upright stem, not the eye / crossbar full width.
+    assert abs(e.stem_median - n.stem_median) < 40.0
