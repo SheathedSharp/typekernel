@@ -11,8 +11,9 @@ For mechanical oblique on a finished font, use
 
 Agent gate: :func:`~typekernel.qa.design_sequence.unlock_controls_italic_body`
 unlocks the Latin body on this sheet (construct slant + branching skips).
-Diagonals ``k``/``v``/``w``/``x``/``y``/``z`` may still share topology with a
-sheared upright — further true-italic letterforms remain open.
+Diagonals ``k``/``v``/``w``/``x``/``y``/``z`` use chamfered-crotch / asymmetric
+italic constructions (topology differs from shear). Cursive cubic crotches
+with rebalanced extrema remain open.
 """
 
 from __future__ import annotations

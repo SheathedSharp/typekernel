@@ -1,8 +1,8 @@
 """Shared primitives for letter-writing / calligraphy script faces.
 
 Brand glyph skeletons stay in examples. This module is the reusable geometry,
-nib-stroke, and writing-rail layer that examples call before
-:func:`~typekernel.parts.skeleton.trace_letter`.
+nib-stroke, writing-rail, and join-polish layer that examples call before /
+after :func:`~typekernel.parts.skeleton.trace_letter`.
 
 Slant is a **coordinate shear** baked into centerlines — not
 :func:`~typekernel.parts.italic.slant_composed_glyph` / oblique post-process.
@@ -28,6 +28,7 @@ __all__ = [
     "exit_rail",
     "nib_ellipse_stroke",
     "nib_polyline_stroke",
+    "polish_script_joins",
     "shear_xy",
     "slant_shear",
     "trace_nib_strokes",
@@ -201,6 +202,31 @@ def nib_ellipse_stroke(
     )
 
 
+def polish_script_joins(
+    glyph: ComposedGlyph,
+    *,
+    radius: float | None = None,
+    kink_max_deg: float = 42.0,
+    ease_curvature: bool = True,
+) -> ComposedGlyph:
+    """Post-trace join polish for calligraphy unions (explicit, not silent simplify).
+
+    Wraps :func:`~typekernel.optics.glyph_polish.polish_glyph` with a slightly
+    wider kink band so round-nib crotches clean up without destroying extrema.
+    """
+    from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph
+
+    return polish_glyph(
+        glyph,
+        GlyphPolishOptions(
+            joins_policy="tangent_fix",
+            tangent_radius=radius,
+            kink_max_deg=kink_max_deg,
+            ease_curvature=ease_curvature,
+        ),
+    )
+
+
 def trace_nib_strokes(
     strokes: Sequence[Stroke],
     ctx: DesignContext,
@@ -209,9 +235,14 @@ def trace_nib_strokes(
     blend: bool = True,
     heal: bool = True,
     union: bool = True,
+    polish_joins: bool = True,
 ) -> ComposedGlyph:
-    """Expand script strokes via library :func:`trace_letter` (heal/strip/refit)."""
-    return trace_letter(
+    """Expand script strokes via library :func:`trace_letter` (heal/strip/refit).
+
+    When ``polish_joins`` is true (default), applies :func:`polish_script_joins`
+    after expand — reusable connect/join post-process for script faces.
+    """
+    glyph = trace_letter(
         Skeleton.of(*strokes),
         ctx,
         union=union,
@@ -222,3 +253,6 @@ def trace_nib_strokes(
         heal=heal,
         min_contour_area=min_contour_area,
     )
+    if polish_joins:
+        return polish_script_joins(glyph)
+    return glyph

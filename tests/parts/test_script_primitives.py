@@ -69,3 +69,26 @@ def test_trace_nib_strokes_builds_glyph() -> None:
     ctx = DesignContext.display().tuned(stem=36.0, contrast=0.48)
     glyph = trace_nib_strokes([ring], ctx, min_contour_area=350.0)
     assert glyph.solids
+
+
+def test_polish_script_joins_is_explicit() -> None:
+    from typekernel.parts import DesignContext
+    from typekernel.parts.script import (
+        NibSpec,
+        nib_ellipse_stroke,
+        polish_script_joins,
+        slant_shear,
+        trace_nib_strokes,
+    )
+
+    nib = NibSpec(36.0, 0.48, 38.0)
+    ring = nib_ellipse_stroke(
+        "ring", 175.0, 210.0, 100.0, 200.0, nib, shear=slant_shear(28.0)
+    )
+    ctx = DesignContext.display().tuned(stem=36.0, contrast=0.48)
+    raw = trace_nib_strokes([ring], ctx, polish_joins=False)
+    polished = polish_script_joins(raw)
+    assert polished.solids
+    # Default trace path applies polish.
+    default = trace_nib_strokes([ring], ctx, polish_joins=True)
+    assert default.solids

@@ -423,8 +423,8 @@ def italic_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     - Branching ``n``/``h``/``r``/``u``/``m`` change H/V samples → skip contrast.
 
     Does **not** widen absolute tolerances. Diagonals ``k``/``v``/``w``/``x``/
-    ``y``/``z`` may still share topology with a sheared upright — further
-    true-italic letterforms remain TODO.
+    ``y``/``z`` use chamfered-crotch italic constructions (topology differs from
+    shear); cursive cubic crotches with rebalanced extrema remain open.
     """
     skip = list(latin_topology_skip_checks(ref, cand))
     if ref in {"f"} or cand in {"f"}:

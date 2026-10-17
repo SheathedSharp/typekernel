@@ -49,6 +49,44 @@ def _polygon(points: list[Pt]) -> Outline:
     return _ccw(b.build())
 
 
+def _italic_diags(ctx: DesignContext) -> bool:
+    """True italic / VF-compat diagonal constructions (not shear-only)."""
+    from typekernel.parts.control import _italic_topology
+
+    return _italic_topology(ctx)
+
+
+def _along(from_p: Pt, to_p: Pt, dist: float) -> Pt:
+    dx, dy = to_p[0] - from_p[0], to_p[1] - from_p[1]
+    length = math.hypot(dx, dy) or 1.0
+    t = min(max(dist, 0.0) / length, 0.42)
+    return (from_p[0] + dx * t, from_p[1] + dy * t)
+
+
+def _soft_corner_polygon(points: list[Pt], soft: frozenset[int], radius: float) -> Outline:
+    """Closed polygon with listed corners chamfered (extra line segments).
+
+    Used for italic diagonals: soft crotches / crossings change the segment
+    count vs a pure upright polygon (and vs construct-sheared upright), without
+    introducing off-node axis extrema (R4). Cubics remain a TODO for fuller
+    cursive italic once extrema are rebalanced.
+    """
+    if radius <= 0.0 or not soft:
+        return _polygon(points)
+    n = len(points)
+    out: list[Pt] = []
+    for i in range(n):
+        prev_p = points[(i - 1) % n]
+        cur = points[i]
+        nxt = points[(i + 1) % n]
+        if i in soft:
+            out.append(_along(cur, prev_p, radius))
+            out.append(_along(cur, nxt, radius))
+        else:
+            out.append(cur)
+    return _polygon(out)
+
+
 def _hwidth(stem: float, contrast: float, run: float, rise: float, weight: float = 1.0) -> float:
     """Horizontal width of a diagonal whose centreline runs ``run`` over ``rise``."""
     phi = math.degrees(math.atan2(abs(run), abs(rise)))
@@ -292,7 +330,17 @@ def v_from_n(
     bump = c.sharp_overshoot
     pts = v_points(m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump)
     top = m.x_height + bump
-    return _pack(c, m, {"top": (w / 2.0, top), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
+    if _italic_diags(c):
+        # Asymmetric italic v: bias apex/crotch right; chamfered inner crotch.
+        bias = 0.11 * w
+        pts = list(pts)
+        pts[1] = (pts[1][0] + bias * 0.25, pts[1][1])
+        pts[2] = (pts[2][0] + bias * 0.55, pts[2][1])
+        pts[5] = (pts[5][0] + bias * 0.45, pts[5][1])
+        outline = _soft_corner_polygon(pts, frozenset({5}), m.stem * 0.38)
+    else:
+        outline = _polygon(pts)
+    return _pack(c, m, {"top": (w / 2.0, top), "bottom": (w / 2.0, 0.0)}, outline)
 
 
 def y_from_n(
@@ -373,7 +421,13 @@ def y_from_n(
         ]
     tip_y = desc + m.stem * (0.02 if c.terminal_style == "ball" else 0.08)
     tip_x = tail_r + (hw * 0.32 if c.terminal_style == "ball" else 0.0)
-    poly = _polygon(pts)
+    if _italic_diags(c):
+        # Chamfer the v-crotch (index 6 in straight y; 8 with curved tail midpoints).
+        soft_i = 8 if c.style.y_tail == "curved" else 6
+        # Also chamfer the join into the descender (index 1).
+        poly = _soft_corner_polygon(pts, frozenset({1, soft_i}), m.stem * 0.32)
+    else:
+        poly = _polygon(pts)
     if c.terminal_style == "ball" and m.stem <= 45.0:
         outline = poly
     else:
@@ -449,7 +503,13 @@ def w_from_n(
         top_overshoot=bump,
     )
     anchors = {"top": (ww / 2.0, m.x_height), "bottom": (ww / 2.0, 0.0)}
-    return _pack(c, m, anchors, _polygon(pts))
+    if _italic_diags(c):
+        # Chamfer the two inner valleys (low crotch + two upper notches).
+        # w_points layout: indices 3=low crotch, 8 and 11=upper inner notches.
+        outline = _soft_corner_polygon(pts, frozenset({3, 8, 11}), m.stem * 0.28)
+    else:
+        outline = _polygon(pts)
+    return _pack(c, m, anchors, outline)
 
 
 def x_from_n(
@@ -478,7 +538,19 @@ def x_from_n(
             scale += 0.022
         w = m.width * scale
     pts = x_points(m.stem, m.x_height, w, c.contrast)
-    return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
+    if _italic_diags(c):
+        # Classic italic x: raise the crossing; chamfer the waist notches.
+        dy = 0.07 * m.x_height
+        pts = list(pts)
+        # Indices 1 and 7 are the mid-waist tips on each diagonal.
+        pts[1] = (pts[1][0], pts[1][1] + dy)
+        pts[7] = (pts[7][0], pts[7][1] + dy)
+        pts[4] = (pts[4][0], pts[4][1] + dy * 0.5)
+        pts[10] = (pts[10][0], pts[10][1] + dy * 0.5)
+        outline = _soft_corner_polygon(pts, frozenset({1, 4, 7, 10}), m.stem * 0.22)
+    else:
+        outline = _polygon(pts)
+    return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, outline)
 
 
 def z_from_n(
@@ -492,7 +564,12 @@ def z_from_n(
     m = _n_record(n_glyph)
     w = 0.88 * m.width if width is None else width
     pts = z_points(m.stem, m.stem * c.contrast * 0.95, m.x_height, w, c.contrast)
-    return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, _polygon(pts))
+    if _italic_diags(c):
+        # Chamfer bar↔diagonal joins (indices 3 and 8 in z_points).
+        outline = _soft_corner_polygon(pts, frozenset({3, 8}), m.stem * 0.30)
+    else:
+        outline = _polygon(pts)
+    return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, outline)
 
 
 def k_from_n(
@@ -567,6 +644,9 @@ def k_from_n(
                 w *= 1.028
             if 140.0 <= m.stem <= 160.0:
                 w *= 1.016
+    if _italic_diags(c):
+        # Branch arm/leg join higher (closer to italic shoulder language).
+        vertex_eff = min(0.58, max(vertex_eff, 0.50))
     pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
     half = m.stem / 2.0
     anchors = {
@@ -577,10 +657,15 @@ def k_from_n(
         ),
     }
     tip = (w - m.stem * 0.15, m.x_height * 0.08)
+    if _italic_diags(c):
+        # Chamfer arm/leg crotch (index 5) and stem junctions (2, 8).
+        base_poly = _soft_corner_polygon(pts, frozenset({2, 5, 8}), m.stem * 0.34)
+    else:
+        base_poly = _polygon(pts)
     if c.terminal_style == "angled":
         outline = apply_terminal_shear(
             c,
-            _polygon(pts),
+            base_poly,
             at=(w - m.stem * 0.20, m.x_height * 0.09),
             along="x",
             inward="+",
@@ -588,11 +673,11 @@ def k_from_n(
         )
     elif c.terminal_style == "flared":
         if m.stem <= 45.0:
-            outline = _polygon(pts)
+            outline = base_poly
         else:
             outline = apply_terminal_shear(
                 c,
-                _polygon(pts),
+                base_poly,
                 at=(w - m.stem * 0.20, m.x_height * 0.09),
                 along="x",
                 inward="+",
@@ -600,8 +685,8 @@ def k_from_n(
             )
     elif c.terminal_style == "ball":
         outline = apply_terminal_shear(
-            c, _polygon(pts), at=tip, ball_radius=m.stem * 0.28
+            c, base_poly, at=tip, ball_radius=m.stem * 0.28
         )
     else:
-        outline = apply_terminal_shear(c, _polygon(pts), at=tip)
+        outline = apply_terminal_shear(c, base_poly, at=tip)
     return _pack(c, m, anchors, outline)

@@ -109,10 +109,12 @@ def _exit_rail(x0: float, x1: float, *, y: float = EXIT_Y) -> list[tuple[float, 
 
 
 def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
+    # Library expand + heal/refit + polish_script_joins (connect post-process).
     return trace_nib_strokes(
         strokes,
         ctx or script_context(),
         min_contour_area=MIN_CONTOUR_AREA,
+        polish_joins=True,
     )
 
 
