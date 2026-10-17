@@ -79,7 +79,7 @@ def main() -> None:
             sys.exit(1)
         print(f"{label} sentence gate ok")
 
-    kern_classes = reference_kern_classes(regular, require_body_unlock=False)
+    kern_classes = reference_kern_classes(regular)
     styles = (
         (regular, "Regular", 400),
         (light, "Light", 300),
@@ -94,7 +94,6 @@ def main() -> None:
             weight_class=weight,
             options=FAMILY_OPTIONS,
             kern_classes=kern_classes,
-        require_body_unlock=False,
         )
         built = build_font(font, out, formats=("otf",))
         otf = built.binaries["otf"]

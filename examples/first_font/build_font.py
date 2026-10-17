@@ -30,9 +30,7 @@ FIRST_FONT_OPTIONS = FamilyBuildOptions(
 
 
 def design(controls: Controls, family: str = FAMILY):
-    return compose_font_from_controls(controls, family, options=FIRST_FONT_OPTIONS
-        require_body_unlock=False,
-    )
+    return compose_font_from_controls(controls, family, options=FIRST_FONT_OPTIONS)
 
 
 def main() -> None:
