@@ -33,6 +33,7 @@ __all__ = [
     "DEFAULT_DIGIT_DESIGN_ORDER",
     "DesignSequence",
     "DesignSequenceError",
+    "charset_unlock_needs",
     "controls_body_tolerances",
     "controls_cap_tolerances",
     "controls_digit_tolerances",
@@ -40,6 +41,7 @@ __all__ = [
     "default_cap_design_order",
     "default_digit_design_order",
     "ensure_controls_body_unlocked",
+    "ensure_controls_unlocked_for_charset",
     "latin_cap_topology_skip_checks",
     "latin_digit_topology_skip_checks",
     "latin_topology_skip_checks",
@@ -268,16 +270,20 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     ]
     cap_diags = frozenset({"A", "V", "W", "X", "Y", "Z", "K", "M", "N"})
     cap_rounds = frozenset({"C", "G", "O", "Q", "S", "D", "B", "P", "R", "U"})
-    # Cap diagonals often carry slab feet; only gate oriented on V/W/X pairs.
-    stable_caps = frozenset({"V", "W"})
-    if not (ref in stable_caps and cand in stable_caps):
-        skip.append("oriented_stem")
+    # Cap diagonals (especially ``W`` vs ``V``) inflate oriented pairwise; gate
+    # stem against control ``H`` via stem_median / vertical-equiv instead.
+    skip.append("oriented_stem")
     if ref in _ASCENDERS or cand in _ASCENDERS:
         skip.extend(["ink_ymax", "bowl_center_y"])
     if ref in _DESCENDERS or cand in _DESCENDERS:
         skip.extend(["ink_ymin", "bowl_center_y"])
     if ref in _DIAGONALS or cand in _DIAGONALS or ref in cap_diags or cand in cap_diags:
         skip.extend(["contrast_ratio"])
+    # Pairwise stem among unlike cap diagonals is not comparable (``V``↔``W``,
+    # ``A``↔``X``, …). Each still gates stem against control ``H``. Stable
+    # ``V``↔``W`` keep oriented_stem above; stem_median pairwise still skipped.
+    if ref in cap_diags and cand in cap_diags:
+        skip.append("stem_median")
     if (
         ref in _CLOSED_BOWLS
         or cand in _CLOSED_BOWLS
@@ -307,6 +313,45 @@ def controls_cap_tolerances() -> StyleConsistencyTolerances:
     )
 
 
+
+def charset_unlock_needs(charset: str) -> tuple[bool, bool, bool]:
+    """Which DesignSequence unlocks a charset requires (body, caps, digits).
+
+    Punctuation has no DesignSequence yet — presence of punct alone does not
+    request an unlock (compose still ships punct from stock forms).
+    """
+    from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, RELATED_FORMS
+
+    need_body = any(ch in RELATED_FORMS for ch in charset)
+    need_caps = any(ch in CAP_FORMS for ch in charset)
+    need_digits = any(ch in FIGURE_FORMS for ch in charset)
+    return need_body, need_caps, need_digits
+
+
+def ensure_controls_unlocked_for_charset(
+    controls: Controls,
+    charset: str,
+    *,
+    require: bool = True,
+) -> Controls:
+    """Run body / caps / digits DesignSequence unlocks present in ``charset``.
+
+    Shared gate for compose / preview / kern-class entrypoints. When ``require``
+    is true (default), refuses if any applicable subset fails. Pass
+    ``require=False`` only for documented stock / specimen compiles.
+    """
+    if not require:
+        return controls
+    need_body, need_caps, need_digits = charset_unlock_needs(charset)
+    if need_body:
+        unlock_controls_body(controls)
+    if need_caps:
+        unlock_controls_caps(controls)
+    if need_digits:
+        unlock_controls_digits(controls)
+    return controls
+
+
 def ensure_controls_body_unlocked(
     controls: Controls,
     *,
@@ -317,12 +362,12 @@ def ensure_controls_body_unlocked(
     compare_to_previous: bool = True,
     skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
 ) -> Controls:
-    """Shared gate for compose / preview / export entrypoints.
+    """Body-only gate (legacy). Prefer :func:`ensure_controls_unlocked_for_charset`.
 
     When ``require`` is true (default), runs :func:`unlock_controls_body` and
-    re-raises :class:`DesignSequenceError` so agents cannot build around the
-    designer-order unlock. Pass ``require=False`` only for documented stock /
-    specimen compile paths that already validated the sheet.
+    re-raises :class:`DesignSequenceError`. Compose / preview use the charset
+    helper so caps and digits cannot ship ungated. Pass ``require=False`` only
+    for documented stock / specimen compile paths.
     """
     if require:
         unlock_controls_body(

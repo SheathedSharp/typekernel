@@ -77,6 +77,15 @@ class FamilyBuildOptions:
         )
 
 
+def _compose_charset(controls: Controls, opts: FamilyBuildOptions) -> str:
+    """Charset that ``build_all`` will derive for this compose call."""
+    if opts.chars is not None:
+        return "".join(dict.fromkeys(opts.chars + "no"))
+    if opts.extended_latin:
+        return controls.supported + opts.extended_latin
+    return controls.supported
+
+
 def reference_kern_classes(
     controls: Controls,
     *,
@@ -84,17 +93,21 @@ def reference_kern_classes(
 ) -> tuple[KernClass, ...]:
     """Kern classes from the regular control draw (reuse for VF masters).
 
-    Defaults to the same body DesignSequence unlock as
-    :func:`compose_font_from_controls`. Pass ``require_body_unlock=False`` only
-    for documented stock / specimen compiles.
+    Defaults to the same charset DesignSequence unlock as
+    :func:`compose_font_from_controls` (body / caps / digits as present).
+    Pass ``require_body_unlock=False`` only for documented stock / specimen
+    compiles.
     """
-    from typekernel.qa.design_sequence import ensure_controls_body_unlocked
+    from typekernel.qa.design_sequence import ensure_controls_unlocked_for_charset
 
-    ensure_controls_body_unlocked(controls, require=require_body_unlock)
+    charset = controls.supported if controls.supported else ""
+    ensure_controls_unlocked_for_charset(
+        controls, charset, require=require_body_unlock
+    )
     ctx = controls.context
     opts = FamilyBuildOptions()
     drawn = polish_glyph_map(
-        controls.build_all(controls.supported if controls.supported else None),
+        controls.build_all(charset if charset else None),
         opts.polish_options(),
     )
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
@@ -114,33 +127,30 @@ def compose_font_from_controls(
 ) -> Font:
     """Design-time font: spaced glyphs, class kern, feature-safe defaults.
 
-    By default runs :func:`~typekernel.qa.design_sequence.unlock_controls_body`
-    before ``build_all`` so agents cannot compose around the designer-order
-    gate. Pass ``require_body_unlock=False`` only for already-validated stock
-    compile paths (unit tests of features / polish), never as a design method.
+    By default runs DesignSequence unlocks for every subset present in the
+    compose charset (body, caps, digits) before ``build_all``, so agents cannot
+    ship ungated capitals or figures after only unlocking lowercase. Pass
+    ``require_body_unlock=False`` only for already-validated stock compile
+    paths (unit tests of features / polish), never as a design method.
     """
+    opts = options or FamilyBuildOptions()
+    charset = _compose_charset(controls, opts)
     if require_body_unlock:
         from typekernel.qa.design_sequence import (
             DesignSequenceError,
-            ensure_controls_body_unlocked,
+            ensure_controls_unlocked_for_charset,
         )
 
         try:
-            ensure_controls_body_unlocked(controls, require=True)
+            ensure_controls_unlocked_for_charset(controls, charset, require=True)
         except DesignSequenceError as exc:
             raise DesignSequenceError(
-                "compose_font_from_controls requires a body DesignSequence "
-                "unlock before compile — redesign refused glyphs, then retry "
-                f"(or unlock via Controls.unlock_body). {exc}"
+                "compose_font_from_controls requires DesignSequence unlock "
+                "(body / caps / digits as present in charset) before compile — "
+                "redesign refused glyphs, then retry (or unlock via "
+                f"Controls.unlock_body / unlock_caps / unlock_digits). {exc}"
             ) from exc
-    opts = options or FamilyBuildOptions()
     ctx = controls.context
-    if opts.chars is not None:
-        charset: str | None = "".join(dict.fromkeys(opts.chars + "no"))
-    elif opts.extended_latin:
-        charset = controls.supported + opts.extended_latin
-    else:
-        charset = None
     drawn = polish_glyph_map(controls.build_all(charset), opts.polish_options())
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)

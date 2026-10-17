@@ -203,13 +203,8 @@ class GlyphAssembler:
             solids = [body]
             holes = []
         if self._heal:
-            healed: list[Outline] = []
-            for solid in solids:
-                try:
-                    healed.append(self_union(solid))
-                except RuntimeError:
-                    healed.append(solid)
-            solids = healed
+            # Explicit heal must not silently no-op when pathops is missing.
+            solids = [self_union(solid) for solid in solids]
         if self._min_contour_area is not None:
             solids = [
                 strip_tiny_contours(s, min_area=self._min_contour_area) for s in solids
@@ -302,12 +297,10 @@ def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
 
 
 def try_union(outlines: list[Outline]) -> Outline:
-    """Union outlines when pathops is installed; otherwise return the first.
+    """Union outlines via pathops (raises if the boolean extra is missing).
 
-    Agents can call this without guarding imports. When boolean is unavailable,
-    overlapping contours remain separate — the first outline is returned only
-    if the list is length 1; otherwise a :class:`RuntimeError` explains the
-    missing extra (same as :func:`~typekernel.geo.boolean.union_all`).
+    Same contract as :func:`~typekernel.geo.boolean.union_all` — agents must
+    install ``typekernel[boolean]`` rather than relying on a silent fallback.
     """
     return union_all(outlines)
 
@@ -341,13 +334,8 @@ def heal_composed_glyph(
     solids = list(glyph.solids)
     holes = list(glyph.holes)
     if heal:
-        healed: list[Outline] = []
-        for solid in solids:
-            try:
-                healed.append(self_union(solid))
-            except RuntimeError:
-                healed.append(solid)
-        solids = healed
+        # Explicit heal=True requires pathops; do not pretend crossings dissolved.
+        solids = [self_union(solid) for solid in solids]
     if min_contour_area is not None:
         solids = [
             strip_tiny_contours(s, min_area=float(min_contour_area)) for s in solids

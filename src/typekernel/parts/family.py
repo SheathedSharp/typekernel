@@ -408,6 +408,20 @@ class Controls:
             skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
         )
 
+    def unlock_for_charset(
+        self,
+        charset: str,
+        *,
+        require: bool = True,
+    ) -> Controls:
+        """Run body / caps / digits DesignSequence unlocks present in ``charset``.
+
+        See :func:`~typekernel.qa.design_sequence.ensure_controls_unlocked_for_charset`.
+        """
+        from typekernel.qa.design_sequence import ensure_controls_unlocked_for_charset
+
+        return ensure_controls_unlocked_for_charset(self, charset, require=require)
+
     def unlock_digits_ladder(
         self,
         stems: Sequence[float] | None = None,
