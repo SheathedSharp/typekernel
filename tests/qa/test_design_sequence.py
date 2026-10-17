@@ -179,8 +179,8 @@ def test_latin_topology_skips_open_rounds_and_hooks() -> None:
     from typekernel.qa.design_sequence import latin_topology_skip_checks
 
     nc = latin_topology_skip_checks("n", "c")
-    assert "contrast_ratio" in nc
-    # Open ``c``/``e`` stem is gated (back-stem / aperture-aware sampler).
+    # Open ``c``/``e`` contrast + stem are gated (polar/midbar + back-stem).
+    assert "contrast_ratio" not in nc
     assert "stem_median" not in nc
     assert "stem_median" not in latin_topology_skip_checks("n", "e")
     nt = latin_topology_skip_checks("n", "t")
@@ -362,9 +362,10 @@ def test_latin_digit_topology_skips_documented() -> None:
     # Stem-like figures keep stem gating vs control ``1``.
     for ch in ("0", "4", "7", "6", "9"):
         assert "stem_median" not in latin_digit_topology_skip_checks("1", ch)
-    # Closed ``0`` gates contrast (polar H/V); ``6``/``9`` and diagonals skip.
+    # Closed ``0``/``6``/``9`` gate contrast (polar H/V); diagonals skip.
     assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "0")
-    assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "6")
+    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "6")
+    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "9")
     assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "7")
     assert "stem_median" not in latin_digit_topology_skip_checks("1", "7")
 
@@ -469,13 +470,13 @@ def test_punct_order_covers_punct_forms() -> None:
     assert set(DEFAULT_PUNCT_DESIGN_ORDER) == set(PUNCT_FORMS)
 
 
-def test_cap_closed_bowl_contrast_gated_open_still_skipped() -> None:
-    """Polar H/V contrast gates ``O``/``G``/``Q``; open ``C``/``S`` stay skipped."""
+def test_cap_bowl_contrast_gated_rsu_still_skipped() -> None:
+    """Polar/bar contrast gates ``O G Q C D B P``; ``R``/``S``/``U`` stay skipped."""
     from typekernel.qa.design_sequence import latin_cap_topology_skip_checks
 
-    for ch in ("O", "G", "Q"):
+    for ch in ("O", "G", "Q", "C", "D", "B", "P"):
         assert "contrast_ratio" not in latin_cap_topology_skip_checks("H", ch)
-    for ch in ("C", "S", "D"):
+    for ch in ("R", "S", "U"):
         assert "contrast_ratio" in latin_cap_topology_skip_checks("H", ch)
 
 
@@ -517,13 +518,43 @@ def test_unlock_controls_caps_refuses_broken_o_contrast() -> None:
         unlock_controls_caps(broken)
 
 
-def test_open_ce_contrast_still_skipped() -> None:
-    """Open ``c``/``e`` contrast stays skipped — black crossbar/aperture noise."""
+def test_open_ce_contrast_gated() -> None:
+    """Open ``c``/``e`` contrast gated after midbar/polar split (incl. black)."""
     from typekernel.qa.design_sequence import latin_topology_skip_checks
 
-    assert "contrast_ratio" in latin_topology_skip_checks("n", "c")
-    assert "contrast_ratio" in latin_topology_skip_checks("n", "e")
+    assert "contrast_ratio" not in latin_topology_skip_checks("n", "c")
+    assert "contrast_ratio" not in latin_topology_skip_checks("n", "e")
     assert "contrast_ratio" not in latin_topology_skip_checks("n", "o")
+
+
+def test_black_open_e_contrast_uses_polar_not_aperture() -> None:
+    """Black ``e`` midbar must not report aperture hairline as family contrast."""
+    from typekernel.qa.style_consistency import extract_glyph_style_metrics
+
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.slab_serif,
+        DesignContext.humanist_sans,
+    ):
+        c = Controls.from_context(factory().tuned(stem=200.0)).with_stem_relief()
+        fam = float(c.context.contrast)
+        e = extract_glyph_style_metrics(c.build("e"))
+        assert e.contrast_ratio is not None
+        assert e.contrast_ratio >= 0.65 * fam, (factory.__name__, e.contrast_ratio, fam)
+
+
+def test_extreme_cap_leftovers_unlock() -> None:
+    """Geo ``X``@200, slab ``M``@150, human ``A``@200 unlock via oriented remap."""
+    from typekernel.qa.design_sequence import unlock_controls_caps
+
+    cases = (
+        (DesignContext.geometric_sans, 200.0),
+        (DesignContext.slab_serif, 150.0),
+        (DesignContext.humanist_sans, 200.0),
+    )
+    for factory, stem in cases:
+        c = Controls.from_context(factory().tuned(stem=stem)).with_stem_relief()
+        assert unlock_controls_caps(c).is_complete
 
 
 def test_extreme_slab_caps_unlock_through_black() -> None:

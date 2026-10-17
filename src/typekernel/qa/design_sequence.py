@@ -227,12 +227,8 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if ref in _CURVED_SPINE or cand in _CURVED_SPINE:
         # ``s`` has no stable vertical stem band — probes hit the spine curve.
         skip.extend(["stem_median", "contrast_ratio"])
-    if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
-        # Open ``c``/``e``: H/V contrast vs stem ``n`` is not comparable —
-        # aperture hairlines and crossbars dominate horizontal probes.
-        skip.extend(["contrast_ratio"])
-    # Closed ``o``: contrast stays gated (measurable and stable across
-    # geometric_sans + slab_serif + humanist_sans). Open-round stem stays
+    # Closed ``o`` and open ``c``/``e``: contrast gated via polar / midbar
+    # probes (black ``e`` midbar collapse falls back to polar). Stem stays
     # gated via back-stem / aperture-aware ``_body_stem_median``.
     return tuple(dict.fromkeys(skip))
 
@@ -293,16 +289,11 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         skip.append("stem_median")
     if ref in {"W", "w"} or cand in {"W", "w"}:
         skip.append("stem_median")
-    # Contrast: gate closed ``O``/``G``/``Q`` (polar H/V probe). Keep skip for
-    # open ``C``, soft bowls ``D B P R U``, and ``S`` — mid-band / spine samples
-    # are not stable vs ``H`` across presets.
-    _cap_contrast_skip = frozenset({"C", "S", "D", "B", "P", "R", "U"})
-    if (
-        ref in _cap_contrast_skip
-        or cand in _cap_contrast_skip
-        or ref in _OPEN_ROUNDS
-        or cand in _OPEN_ROUNDS
-    ):
+    # Contrast: gate closed ``O``/``G``/``Q``, open ``C``, and soft ``D B P``
+    # (polar / bar probes). Keep skip for ``R``/``S``/``U`` — leg / spine /
+    # null samples still unstable vs ``H`` across presets.
+    _cap_contrast_skip = frozenset({"S", "R", "U"})
+    if ref in _cap_contrast_skip or cand in _cap_contrast_skip:
         skip.extend(["contrast_ratio"])
     if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
         skip.extend(["stem_median"])
@@ -471,7 +462,7 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
 
     Rails/slant are script proxies — always omitted. Stem stays gated for
     stem-like figures (``1``/``4``/``7``/``0``/``6``/``9``); open ``2``/``3``/``5``
-    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is gated for ``0`` (polar H/V); omitted for ``6``/``9`` / opens /
+    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is gated for ``0``/``6``/``9`` (polar H/V); omitted for opens /
     diagonals / ``8`` where H/V samples are unstable.
     """
     skip: list[str] = [
@@ -487,9 +478,9 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         or cand in _DIGIT_DOUBLE_BOWL
     ):
         skip.extend(["stem_median", "contrast_ratio"])
-    # Contrast: gate closed ``0`` (polar H/V). Keep skip for ``6``/``9`` (bowl
-    # joins), opens, double-bowl ``8``, and diagonal figures.
-    _digit_contrast_skip = frozenset({"6", "9"}) | _DIGIT_OPEN | _DIGIT_DOUBLE_BOWL | _DIGIT_DIAGONAL
+    # Contrast: gate closed ``0``/``6``/``9`` (polar H/V). Keep skip for opens,
+    # double-bowl ``8``, and diagonal figures.
+    _digit_contrast_skip = _DIGIT_OPEN | _DIGIT_DOUBLE_BOWL | _DIGIT_DIAGONAL
     if ref in _digit_contrast_skip or cand in _digit_contrast_skip:
         skip.append("contrast_ratio")
     if (

@@ -434,8 +434,9 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     baseline arches on ``n``/``u``. Closed bowls (``O``/``o``/``0``) put their
     designed thins at the poles — when *both* crown and baseline yield spans,
     those polar thins over side uprights are the contrast ratio. A lone crown
-    (shoulder arch) is ignored so ``n`` stays contrast-null. If the mid-band
-    median is join-inflated vs polar (>1.15×), prefer polar.
+    (shoulder arch) is ignored so ``n`` stays contrast-null. If the mid-band median is join-inflated vs polar (>1.15×), prefer polar.
+    Open ``e`` midbars that collapse below 0.65×polar (black eye aperture)
+    also fall back to polar.
     """
     if stem_median is None or stem_median <= 0.0:
         return None
@@ -448,6 +449,7 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     y_lo = ymin + 0.18 * h
     y_hi = ymin + 0.72 * h
     body: list[float] = []
+    midbar: list[float] = []
     crown: list[float] = []
     base: list[float] = []
     for f in (0.30, 0.40, 0.50, 0.60, 0.70):
@@ -461,6 +463,9 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
                 continue
             if y_lo <= cy <= y_hi and ww <= 1.8 * stem_median:
                 body.append(ww)
+                # Open ``e`` eye bar sits near mid body.
+                if ymin + 0.40 * h <= cy <= ymin + 0.60 * h:
+                    midbar.append(ww)
             if cy <= ymin + 0.28 * h and ww <= 2.0 * stem_median:
                 base.append(ww)
             if cy >= ymax - 0.28 * h and ww <= 2.0 * stem_median:
@@ -480,6 +485,11 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
 
     body_r = _ratio(body, float(stem_median))
     polar_r = _ratio(crown + base, v_den) if (crown and base) else None
+    mid_r = _ratio(midbar, float(stem_median))
+    # Black ``e``: midbar can read aperture hairline while poles still track the
+    # designed thick — prefer polar when midbar collapses below 0.55×polar.
+    if mid_r is not None and polar_r is not None and mid_r < 0.65 * polar_r:
+        return polar_r
     if body_r is not None and polar_r is not None:
         return polar_r if body_r > 1.15 * polar_r else body_r
     if body_r is not None:
@@ -736,6 +746,7 @@ def compare_glyph_styles(
         and (
             cand_m.stem_median is None
             or cand_m.stem_median > 1.18 * abs(ref_m.stem_median)
+            or cand_m.stem_median < abs(ref_m.stem_median) / 1.18
         )
     ):
         from typekernel.optics.stem import vertical_equiv_from_diagonal
@@ -750,11 +761,16 @@ def compare_glyph_styles(
         ve = vertical_equiv_from_diagonal(
             cand_m.oriented_stem, phi, contrast=contrast
         )
-        # Prefer the probe closer to the reference stem (deflate crotch inflation
-        # without adopting an overshooting or undershooting ve blindly).
+        # Prefer the probe closer to the reference stem. Include raw oriented
+        # thickness: crossed ``X``/``M`` often have φ≈0 so VE-at-45° overshoots,
+        # while oriented itself tracks the diagonal stroke near ``H``.
         raw = cand_m.stem_median
-        if raw is None or abs(ve - abs(ref_m.stem_median)) < abs(raw - abs(ref_m.stem_median)):
-            cand_stem = ve
+        ref_abs = abs(ref_m.stem_median)
+        opts: list[float] = [ve]
+        if raw is not None:
+            opts.append(float(raw))
+        opts.append(float(cand_m.oriented_stem))
+        cand_stem = min(opts, key=lambda v: abs(v - ref_abs))
 
     checks_list: list[StyleCheck] = [
         _check("stem_median", ref_m.stem_median, cand_stem, stem_limit),
