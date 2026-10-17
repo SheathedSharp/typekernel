@@ -1,8 +1,13 @@
 # Agent catalog — typekernel (Controls-first)
 
-**Production path for coding agents**: `DesignContext` → `Controls.build_all()` →
+**Production path for coding agents**: `DesignContext` → `Controls` (+ `with_glyph` /
+`tuned_glyph`) → **`DesignSequence` / `Controls.unlock_body`** (one glyph → style
+gate → unlock) → then compose-time `build_all` for punct/caps/figures →
 `space_font` → `compose_font_from_controls()` → `build_font`. Full workflow:
 [`.agents/skills/typekernel-font-design/SKILL.md`](../../.agents/skills/typekernel-font-design/SKILL.md).
+
+`build_all` is **not** the design method — it derives the locked sheet after the
+body sequence. Do not phrase-batch a `BRIEF_SENTENCE` charset.
 
 Legacy `parts.latin` / `parts.skeleton_recipes` remain for demos but are **not**
 re-exported from `typekernel.parts`.
@@ -19,10 +24,11 @@ L2 family template: `examples/agent_family/` (`build_family.py`).
 | API | One-liner |
 | --- | --- |
 | `Controls.from_context(ctx)` | Control records for `n` / `o` (+ derived caps). |
-| `controls.tuned_n(counter=…)` / `tuned_o(rx=…)` | Tune one control; `build_all()` refreshes the family. |
+| `controls.tuned_n(counter=…)` / `tuned_o(rx=…)` | Tune one control; re-run `unlock_body` then compose-time `build_all`. |
 | `controls.with_stem_relief()` | Heavy-master counter relief (designed delta). |
 | `controls.with_glyph("f", builder)` | Replace one letter’s derivation (single-glyph master). |
-| `controls.build_all(chars=None)` | Draw lowercase / caps / figures / punctuation. |
+| `controls.unlock_body()` / `DesignSequence` | Required body gate (designer-order). |
+| `controls.build_all(chars=None)` | Compose-time derive punct / caps / figures **after** unlock. |
 | `RELATED_FORMS`, `CAP_FORMS`, `PUNCT_FORMS` | Derivation maps (see `parts.family`). |
 
 ## Compile (agent-safe assembly)

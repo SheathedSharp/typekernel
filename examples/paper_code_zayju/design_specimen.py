@@ -202,6 +202,7 @@ def compose_triad() -> Path:
     sub_font = _font(FALLBACK_FONT, 15)
 
     for i, (title, sub, ctx) in enumerate(DIRECTIONS):
+        # Specimen/compose-time derive from locked Controls (not DesignSequence design; phrase is late proof only).
         drawn = Controls.from_context(ctx).build_all("zayju")
         glyphs = [drawn[ch] for ch in "zayju"]
         names = list("zayju")

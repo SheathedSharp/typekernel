@@ -34,6 +34,7 @@ def master_controls(base: DesignContext, *, stem: float, wdth: float) -> Control
 
 def master_font(controls: Controls, style: str, weight_class: int) -> Font:
     ctx = controls.context
+    # Compose-time stock derivation after locked controls (not a DesignSequence design session).
     drawn = controls.build_all()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)

@@ -135,6 +135,7 @@ def main() -> int:
     ctx = DesignContext.geometric_sans()
     names = list("zayju")
 
+    # Specimen/compose-time derive from locked Controls (not DesignSequence design; phrase is late proof only).
     drawn = Controls.from_context(ctx).build_all("zayju")
     before_glyphs = [drawn[ch] for ch in "zayju"]
     before_kern = default_sans_kern()

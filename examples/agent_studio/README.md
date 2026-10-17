@@ -9,6 +9,8 @@ This directory is **L0 only** (one Regular voice). A family — Light/Bold or a 
 | **`design.py`** | **Agent / you** — preset, documented `tuned`, `with_glyph` on two of `f t j a s e` |
 | `build.py` | Repo — `design_review` + locked sentence gate + previews |
 
+Body letters must pass `Controls.unlock_body` / `DesignSequence` before compose; `build_all` is compose-time only.
+
 Pass/fail text is `AGENT_SENTENCE`. `BRIEF_SENTENCE` is written to `sentence_brief.png` and cannot make the gate pass. The trial must not worsen the unmodified preset's optical gap ratio or non-terminal G1.
 
 ```bash

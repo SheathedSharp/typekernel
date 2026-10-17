@@ -1,5 +1,7 @@
 # Agent family (L2 template)
 
+Each master must pass `Controls.unlock_body` / `DesignSequence` before compose; `build_all` in `build_family.py` is compose-time derivation only.
+
 One step above [`agent_studio`](../agent_studio/): a **static family** with three designed masters. Copy this directory to `examples/<family>/` when the brief asks for weights, not a single trial.
 
 | File | Role |

@@ -351,6 +351,7 @@ def compose_compare(glyphs: list[ComposedGlyph]) -> Path:
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    # Specimen/compose-time derive from locked Controls (not DesignSequence design; phrase is late proof only).
     drawn = Controls.from_context(CTX).build_all("zayju")
     glyphs = [drawn[ch] for ch in "zayju"]
     for ch, g in zip("zayju", glyphs):
