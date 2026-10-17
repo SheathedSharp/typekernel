@@ -1,7 +1,7 @@
 """Regular + ``ital`` axis VF (italic master via ``italic_design``).
 
 ``vf_italic_pair`` builds upright + italic sheets with matched construct slant (10°)
-and VF segment compatibility (stem + bowl oblique pre-splits, TK-404).
+and VF segment compatibility (stem + bowl oblique pre-splits, wght×ital VF).
 """
 
 from __future__ import annotations
@@ -38,6 +38,7 @@ def master_font(
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
+    # Compose-time stock derivation after locked controls (not a DesignSequence design session).
     drawn = controls.build_all()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
@@ -62,6 +63,7 @@ def main() -> None:
     out_dir = args.out
     base = DesignContext.code_clear()
     reg, ital = vf_italic_pair(Controls.from_context(base))
+    # Compose-time stock derivation after locked controls (not a DesignSequence design session).
     ref_drawn = reg.build_all()
     ref_rhythm = rhythm_from_control_glyphs(ref_drawn["n"], ref_drawn["o"])
     ref_spaced = space_font(ref_drawn, base, rhythm=ref_rhythm)

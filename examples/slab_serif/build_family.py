@@ -1,4 +1,4 @@
-"""Build Regular / Light / Bold slab serif static fonts (TK-306)."""
+"""Build Regular / Light / Bold slab serif static fonts (serif voices)."""
 
 from __future__ import annotations
 

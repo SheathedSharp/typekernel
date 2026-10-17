@@ -1,4 +1,4 @@
-"""L3 serif voice baselines for TK-502 (preset-only, no agent edits)."""
+"""L3 serif voice baselines for agent trial (preset-only, no agent edits)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Build TK-502 reference trial: Regular + Bold OTFs for a fixed brief."""
+"""Build agent trial reference trial: Regular + Bold OTFs for a fixed brief."""
 
 from __future__ import annotations
 

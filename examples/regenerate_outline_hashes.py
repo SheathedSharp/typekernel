@@ -1,4 +1,4 @@
-"""Verify or rewrite tests/golden/outline_hashes.json (TK-108)."""
+"""Verify or rewrite tests/golden/outline_hashes.json (outline golden)."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ def _build_golden() -> dict[str, dict[str, str]]:
     presets: dict[str, dict[str, str]] = {}
     for name, factory in _PRESET_FACTORIES.items():
         controls = Controls.from_context(factory())
+        # Compose-time stock derivation after locked controls (not a DesignSequence design session).
         glyphs = controls.build_all()
         presets[name] = {
             ch: composed_glyph_hash(glyphs[ch]) for ch in controls.supported

@@ -1,4 +1,4 @@
-"""Generate local PNG/TTF bundles for TK-306 / TK-402 / TK-206 B-15 review.
+"""Generate local PNG/TTF bundles for serif voices / italic construct / appendix B-15 review.
 
 Does **not** write ``approvals/*.json`` — only artifacts under ``--out`` (gitignored).
 
@@ -46,7 +46,7 @@ pytest -q tests/examples/test_italic_family.py
 pytest -q tests/parts/test_italic_program_acceptance.py
 ```
 
-## TK-306 serif voices — open these PNGs
+## serif voices — open these PNGs
 
 | Voice | Static proofs | VF proof | Weight ladder |
 | --- | --- | --- | --- |
@@ -55,9 +55,9 @@ pytest -q tests/parts/test_italic_program_acceptance.py
 
 Judge: serif feet/caps, counters at bold, brief sentence legibility, VF interpolation (no kinks).
 
-Other presets (TK-207): ``PYTHONPATH=src python examples/weight_ladder_sheet.py --preset humanist_sans --out artifacts/specimens/weight_ladder.png``
+Other presets (weight ladder): ``PYTHONPATH=src python examples/weight_ladder_sheet.py --preset humanist_sans --out artifacts/specimens/weight_ladder.png``
 
-## TK-206 appendix B-13–B-15 (no approvals JSON)
+## appendix B-13–B-15 (no approvals JSON)
 
 | Defect | Artifact | Path |
 | --- | --- | --- |
@@ -121,7 +121,7 @@ write_approval(
 )
 ```
 
-## TK-402 true italic — open
+## true italic — open
 
 | Artifact | Path |
 | --- | --- |

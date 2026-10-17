@@ -1,4 +1,4 @@
-"""Write snapshot.json for all three TK-502 reference design modules."""
+"""Write snapshot.json for all three agent trial reference design modules."""
 
 from __future__ import annotations
 

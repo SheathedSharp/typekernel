@@ -1,4 +1,4 @@
-"""Reference agent trial for brief-1 (TK-502): warm humanist UI sans.
+"""Reference agent trial for brief-1 (agent trial): warm humanist UI sans.
 
 Not a preset snapshot: ``Style`` + ``terminal_style`` + context ``roundness``
 + ``tuned_glyph`` on documented fields. Snapshot must keep

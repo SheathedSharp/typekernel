@@ -1,4 +1,4 @@
-"""Reference agent trial for brief-2 (TK-502): editorial slab serif.
+"""Reference agent trial for brief-2 (agent trial): editorial slab serif.
 
 Starts from ``slab_serif()``; ``roundness`` / ``tracking`` + ``tuned_glyph`` on
 documented fields. ``f``/``t`` ``with_glyph`` matches ``examples/slab_serif``

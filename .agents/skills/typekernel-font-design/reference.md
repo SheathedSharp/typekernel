@@ -70,12 +70,12 @@ L0 still requires ≥2 overrides among `f t j a s e`; cap specs are for family p
 
 VF notes: `g_form=double` / `a_form=double` need `check_masters` on weight ladders (see `tests/parts/test_style_gate.py`). Serif voices need sentence gate + L3 distance tests.
 
-## Contrast & stress (TK-301 / TK-302)
+## Contrast & stress
 
 - **`contrast`**: round stroke horizontal ÷ vertical thickness (`bowl`, `o`, figures). Knob reach: `test_contrast_moves_round_letters`.
 - **`stress`**: degrees CCW rotation of the thin point on round counters (`0` = default presets / golden hashes). Affects `o` `c` `s`, cap `S`, lining `2` `3` `5` `6` `8` `9`. Regression: `tests/parts/test_stress.py`; agent notes: [agent-recipes.md](../../../docs/agent-recipes.md) §对比度与应力.
 
-## Construction spike — skeleton + pen (TK-308)
+## Construction spike — skeleton + pen
 
 Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contrast pen for experiments or hand-traced strokes before `with_glyph`.
 
@@ -90,11 +90,11 @@ Not a weight axis. Optional `parts.skeleton.trace_letter` + `geo.stroke` contras
 
 Do not use for L0–L2 preset trials unless the brief explicitly needs new stroke topology. See `docs/agent-recipes.md` §骨架构造 spike. Program acceptance: `tests/parts/test_stroke_program_acceptance.py`, `tests/examples/test_zayju_script.py`.
 
-## Italic & oblique (M4)
+## Italic & oblique
 
 - **Italic master**: `italic_design(regular)` — construct slant via `italic_slant_deg`, branching `n/h/r/u/m`, `f` descender. For `wght×ital` VF prefer `vf_italic_pair(regular, style=ItalicStyle(...))` (matched oblique pre-split angle) or `vf_upright_controls(regular, oblique_split_deg=…)` + `italic_design(upright, …)`.
 - **Oblique**: `oblique_font` / `ObliqueTransform` — mechanical shear only; do not label as Italic.
-- **TK-402**: `parts/oblique_compat.py` pre-splits before slant for glyphs outside `OBLIQUE_COMPAT_EXCLUDE` (`e` bakes splits in `e_from_o` via `outline_e_oblique_splits`). `OBLIQUE_PRE_EXTREMA` (`mu`). VF upright uses branching arches when `vf_compat_oblique_splits`.
+- **Italic construct**: `parts/oblique_compat.py` pre-splits before slant for glyphs outside `OBLIQUE_COMPAT_EXCLUDE` (`e` bakes splits in `e_from_o` via `outline_e_oblique_splits`). `OBLIQUE_PRE_EXTREMA` (`mu`). VF upright uses branching arches when `vf_compat_oblique_splits`.
 
 ## Glyph derivation (today)
 
@@ -123,7 +123,7 @@ Fails if:
 | `kerning groups differ` | Share `auto_side_kern_classes` from reference master |
 | Ugly style despite tuning | Wrong topology for brief—extend `parts`, do not only tune context |
 
-## Agent trials (M5 / TK-502)
+## Agent trials
 
 - Baselines: `examples/agent_trial/snapshot_presets.py`, `snapshot_serif_voices.py`.
 - Reference edits (L3 + gate/R8): `design_warm_humanist.py`, `design_editorial_geometric.py`, `design_editorial_slab.py` / `design_editorial_bracketed.py` (brief-2 `--variant slab|bracketed`), `design_coding_clear.py` — each exports `controls()`, `design_bold()`, `baseline_controls()`.
@@ -131,9 +131,9 @@ Fails if:
 - `snapshot_trial` → `weight_ladder_r8_failures` uses full trial `Controls` on `WEIGHT_LADDER_STEMS` (30–200) via `controls_at_ladder_stem`.
 - Regular + Bold OTF + proof: `build_reference_family.py --brief brief-{1,2,3} [--variant slab] --out …` (`AGENT_SENTENCE` absolute gate; L3 voices skip preset-relative `design_review` failures). End-to-end checklist: `docs/AGENT_TRIALS.md` §终验流程.
 - Human review PNG bundle (no `approvals/` writes): `examples/human_review_bundle.py` (serif VF proofs + italic `proof.png` / `proof_vf.png`; `--only appendix-b` → `appendix_b_three_g_humanist.png` + `appendix_b_s_opening_humanist.png` for appendix B-13–B-15).
-- TK-207 weight ladder (local `artifacts/specimens/`): `examples/weight_ladder_sheet.py --preset humanist_sans --out …`.
-- TK-104 charset review (width ≤ 1600px): `examples/contact_sheet.py --preset … --out …`; voice diff: `examples/diff_overlay.py --trial-preset … --baseline-preset …` (same as `design_review` `contact.png` / `diff_overlay.png` under `out/review/`).
-- TK-108 outline golden: `examples/regenerate_outline_hashes.py` (check drift; `--write` updates `tests/golden/outline_hashes.json` after intentional outline edits).
+- Weight ladder (local `artifacts/specimens/`): `examples/weight_ladder_sheet.py --preset humanist_sans --out …`.
+- Charset contact sheet (width ≤ 1600px): `examples/contact_sheet.py --preset … --out …`; voice diff: `examples/diff_overlay.py --trial-preset … --baseline-preset …` (same as `design_review` `contact.png` / `diff_overlay.png` under `out/review/`).
+- Outline golden: `examples/regenerate_outline_hashes.py` (check drift; `--write` updates `tests/golden/outline_hashes.json` after intentional outline edits).
 - Program acceptance (before human `approvals/`): `PYTHONPATH=src python examples/run_program_exit.py` (`--gate slab|bracketed|italic|all`, `--with-linters`); or `pytest -q tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance`, `tests/parts/test_italic_program_acceptance.py`, `tests/docs/test_development_plan_section8.py`.
 
 ## Tests

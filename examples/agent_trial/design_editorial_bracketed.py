@@ -1,4 +1,4 @@
-"""Reference agent trial for brief-2 (TK-502): editorial bracketed serif.
+"""Reference agent trial for brief-2 (agent trial): editorial bracketed serif.
 
 Starts from ``bracketed_serif()`` (default stem 70); light ``tracking`` +
 ``tuned_glyph``. ``f``/``t`` ``with_glyph`` matches ``examples/bracketed_serif``.

@@ -1,4 +1,4 @@
-"""Write a TK-104 trial-vs-baseline diff overlay PNG (local artifacts only)."""
+"""Write a contact sheet trial-vs-baseline diff overlay PNG (local artifacts only)."""
 
 from __future__ import annotations
 

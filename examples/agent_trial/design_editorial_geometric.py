@@ -1,4 +1,4 @@
-"""Reference agent trial for brief-2 (TK-502): editorial geometric sans.
+"""Reference agent trial for brief-2 (agent trial): editorial geometric sans.
 
 Single-storey ``a``/``g`` via ``Style``; sharper ``roundness`` + ``tuned_glyph``.
 """

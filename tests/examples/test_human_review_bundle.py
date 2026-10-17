@@ -1,4 +1,4 @@
-"""Smoke: human review artifact bundle (TK-306 / TK-402)."""
+"""Smoke: human review artifact bundle (serif / italic / appendix B)."""
 
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ def test_human_review_bundle_appendix_b_only(tmp_path: Path) -> None:
     assert (tmp_path / "appendix_b_three_g_humanist.png").is_file()
     assert (tmp_path / "appendix_b_s_opening_humanist.png").is_file()
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
-    assert "TK-206" in checklist
+    assert "Appendix B-13" in checklist or "B-13" in checklist
     assert "appendix_b_s_opening_humanist.png" in checklist
 
 
@@ -133,4 +133,4 @@ def test_human_review_bundle_italic_only(tmp_path: Path) -> None:
     assert (tmp_path / "italic_family" / "proof_vf.png").is_file()
     checklist = (tmp_path / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
     assert "italic-vf-construct" in checklist
-    assert "TK-402" in checklist
+    assert "True italic" in checklist or "italic-vf-construct" in checklist

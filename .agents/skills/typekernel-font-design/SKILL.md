@@ -184,7 +184,7 @@ Use the locked sentence and the brief sentence at **body** size (24–36 px), `f
 
 **L0 trial** — edit **`examples/agent_studio/design.py`**, run **`python examples/agent_studio/build.py`**. One Regular voice. The gate scores `AGENT_SENTENCE`; `BRIEF_SENTENCE` is `sentence_brief.png` only. A failing review (sentence, L0 gaps, or **charset / family_gate**) exits non-zero. Built-in presets pass charset gate; agent deltas must keep it green. Read `out/review/` (deltas, worst pair, control PNGs) before a second pass.
 
-M5 trial metrics: `snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (baselines) and `design_warm_humanist.py` / `design_editorial_geometric.py` / `design_editorial_slab.py` / `design_coding_clear.py` (L3 reference edits; `snapshot_design.py` / `snapshot_reference_trials.py`; audit JSON with `validate_snapshot.py`). Ladder R8 uses `controls_at_ladder_stem` (stems through 200). Program exit hooks: `examples/run_program_exit.py` (`--gate all`: §8 + `test_knob_coverage` / `test_extended_latin_policy` / `test_multi_voice_exit` / `test_style_consistency` / `test_originality` / `test_stress` / `test_glyph_specs` / `test_stroke_program_acceptance` / `test_zayju_script` charset + sequential style gate smoke + pending gate `test_evidence`; `--with-linters` for ruff/mypy), `tests/docs/test_development_plan_section8.py`, `tests/qa/test_multi_voice_exit.py`, serif/italic acceptance in `reference.md`. Visual review bundle (no `approvals/` writes): `examples/human_review_bundle.py` (`--only serif|italic` or `--only appendix-b` for appendix B-13–B-15 `3G` / `sS` review sheets); optional charset/diff/ladder/golden: `contact_sheet.py`, `diff_overlay.py`, `weight_ladder_sheet.py`, `regenerate_outline_hashes.py`. End-state checklist: `docs/AGENT_TRIALS.md` §终验流程; human `approvals/*.json` after PNG review (B-15 has no approval file).
+Agent trial metrics: `snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (baselines) and `design_warm_humanist.py` / `design_editorial_geometric.py` / `design_editorial_slab.py` / `design_coding_clear.py` (L3 reference edits; `snapshot_design.py` / `snapshot_reference_trials.py`; audit JSON with `validate_snapshot.py`). Ladder R8 uses `controls_at_ladder_stem` (stems through 200). Program exit hooks: `examples/run_program_exit.py` (`--gate all`: §8 + `test_knob_coverage` / `test_extended_latin_policy` / `test_multi_voice_exit` / `test_style_consistency` / `test_originality` / `test_stress` / `test_glyph_specs` / `test_stroke_program_acceptance` / `test_zayju_script` charset + sequential style gate smoke + pending gate `test_evidence`; `--with-linters` for ruff/mypy), `tests/docs/test_development_plan_section8.py`, `tests/qa/test_multi_voice_exit.py`, serif/italic acceptance in `reference.md`. Visual review bundle (no `approvals/` writes): `examples/human_review_bundle.py` (`--only serif|italic` or `--only appendix-b` for appendix B-13–B-15 `3G` / `sS` review sheets); optional charset/diff/ladder/golden: `contact_sheet.py`, `diff_overlay.py`, `weight_ladder_sheet.py`, `regenerate_outline_hashes.py`. End-state checklist: `docs/AGENT_TRIALS.md` §终验流程; human `approvals/*.json` after PNG review (B-15 has no approval file).
 
 **L2 family** — copy **`examples/agent_family/`** to `examples/<family>/`. Implement `design_controls` / `design_light` / `design_bold` (or VF masters) and `build_family.py` (`compose_font_from_controls`, shared kern classes). Do not deliver Light/Bold inside `agent_studio`.
 
@@ -211,7 +211,7 @@ Show the user **`grid.png`**, **`sentence.png`**, and the review summary (deltas
 
 - **Static family**: one `Controls` + one `build_font` per weight/style file.
 - **VF**: each location is a full redrawn `Font` inside `Master({axis: value}, font)`. Minimum masters so **each axis** min ≠ max (`check_masters`).
-- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is a deprecated alias). Branching `n/h/r/u/m` and italic `f` descender ship with M4; use `vf_upright_controls` for upright VF masters. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
+- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is a deprecated alias). Branching `n/h/r/u/m` and italic `f` descender ship with italic stage; use `vf_upright_controls` for upright VF masters. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
 
 ## Symbols & charset
 
@@ -236,7 +236,7 @@ Default punctuation/figures live in `Controls.supported` via `PUNCT_FORMS`, caps
 | `examples/zayju_letter/` | Hand-built `n` with `PathBuilder` when `Controls` is not enough |
 | `examples/variable_family/` | wght VF, designed counters |
 | `examples/italic_family/` | wght × ital via `vf_italic_pair`, shared kern (`build_italic_vf.py`) |
-| `examples/agent_trial/` | TK-502 `snapshot_*.py` + `design_*.py` reference trials (incl. brief-2 slab variant) |
+| `examples/agent_trial/` | `snapshot_*.py` + `design_*.py` reference trials (incl. brief-2 slab variant) |
 | `examples/slab_serif/` | **L2 serif** — slab voice, static three masters + `build_vf.py` |
 | `examples/bracketed_serif/` | **L2 serif** — bracketed voice, same ladder as slab VF tests |
 | `examples/variable_width/build_vfwd.py` | wght × wdth |

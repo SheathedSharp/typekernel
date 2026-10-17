@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1543 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1554 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 

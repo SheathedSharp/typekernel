@@ -1,4 +1,4 @@
-"""Bracketed serif voice (TK-306): Regular + Bold from ``bracketed_serif()``."""
+"""Bracketed serif voice (serif voices): Regular + Bold from ``bracketed_serif()``."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Slab serif voice (TK-306): Regular + Bold from ``slab_serif()``."""
+"""Slab serif voice (serif voices): Regular + Bold from ``slab_serif()``."""
 
 from __future__ import annotations
 

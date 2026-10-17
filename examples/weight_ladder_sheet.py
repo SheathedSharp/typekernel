@@ -1,4 +1,4 @@
-"""Write a TK-207 weight-ladder PNG for human review (local artifacts only)."""
+"""Write a weight ladder weight-ladder PNG for human review (local artifacts only)."""
 
 from __future__ import annotations
 

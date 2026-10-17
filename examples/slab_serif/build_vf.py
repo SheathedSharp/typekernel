@@ -1,4 +1,4 @@
-"""Four slab masters (TK-306 VF) → one ``wght`` variable font + proof.
+"""Four slab masters (serif voices VF) → one ``wght`` variable font + proof.
 
 Stems match ``test_slab_serif_masters_on_vf_stable_charset``: 70 / 100 / 140 / 180
 at wght 300 / 400 / 600 / 700. Each master is drawn, not stroke-expanded.
@@ -30,6 +30,7 @@ def master_font(
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
+    # Compose-time stock derivation after locked controls (not a DesignSequence design session).
     drawn = controls.build_all()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)

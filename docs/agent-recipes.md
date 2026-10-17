@@ -39,7 +39,7 @@ Regular 上每次只改 **一个字段**，写成相对该 preset 当前值的�
 
 `g_form=double` 在 `code_clear` 字重阶梯上已通过四母版 `check_masters`。`a_form=double` 在 `code_clear` stem **70–180** 六母版阶梯上已通过 `check_masters`（见 `test_double_a_form_masters_interpolate_on_weight_ladder`）。各 Style 选项与典型组合在七 preset 上已通过 identity 抽检（`test_style_option_identity_spot_check_on_preset`、`test_styled_voice_identity_core_charset_on_preset`）。其余非拓扑 Style 在 `code_clear` 字重阶梯上已通过 `check_masters` 抽检。
 
-## 对比度与应力（TK-301 / TK-302）
+## 对比度与应力（contrast / stress）
 
 - **`contrast`**（默认各 preset 已设好）：控制圆笔横竖厚度比；`bowl` / `o` / 数字环等会响应。探针见 `tests/parts/test_knob_coverage.py::test_contrast_moves_round_letters`、`tests/qa/test_thickness.py`。
 - **`stress`**（默认 **0**，勿在 golden preset 上擅自设非零）：绕圆碗中心 **逆时针** 旋转内 counter，把最细点从顶/底挪到侧面；影响 `o` `c` `s`、cap `S`、lining `2` `3` `5` `6` `8` `9` 等。`stress=0` 时七 preset 哈希不变；形变回归见 `tests/parts/test_stress.py`。高 `stress` 下 lining `2`/`3`/`5` 用 `figures._cut_x` 竖切；开口字母（`c`/`e`/标点等）用 `control._cut` 线交回退，不要为过关改切割阈值。
@@ -92,7 +92,7 @@ controls = (
 
 `design_review` 的 `notes` 会列出 `spec f: {...}`。
 
-默认规格须与 stock 派生一致、字段单调性见 `tests/parts/test_glyph_specs.py`（M5 烟测含全文件）。
+默认规格须与 stock 派生一致、字段单调性见 `tests/parts/test_glyph_specs.py`（program-exit 烟测含全文件）。
 
 仍可直接 `with_glyph` 挂自定义 builder：
 
@@ -130,7 +130,7 @@ _report, failures = check_sentence_gate(controls, baseline=baseline_controls())
 
 固定 pair：`Ta` `To` `fi` `fl` `rn` `011`。光学间距 ≤ 0 算撞字。这组 **不** 证明字偶已经好看；间距仍是库内专项（见 AGENT_GOAL「库内仍未完成」）。
 
-## 全字符校样与叠图（TK-104）
+## 全字符校样与叠图（contact sheet）
 
 `design_review` 会在 `out/review/` 写 `contact.png` 与相对 baseline 的 `diff_overlay.png`。也可单独生成到 `artifacts/specimens/`：
 
@@ -145,7 +145,7 @@ PYTHONPATH=src python examples/diff_overlay.py \
 
 可选 `--index` 在同目录写 `index.json`；`--chars` 缩小子集加快迭代。
 
-## 字重阶梯校样（TK-207）
+## 字重阶梯校样（weight ladder）
 
 R8 自动化已覆盖全部 `supported` 字符；人审时用阶梯 PNG 看字腔是否塌：
 
@@ -172,7 +172,7 @@ weight_ladder_sheet(
 
 `lint` R8 字腔下限为 `counter_gap_floor(stem)`（`COUNTER_GAP_FLOOR_OVER_STEM×stem + COUNTER_GAP_FLOOR_BASE`，当前 **0.08×stem+2.5**；冻结见 `test_counter_gap_floor_formula_frozen`）。`min_counter_gap` 度量在 scanline 上另忽略小于 `max(1, COUNTER_SCAN_MIN_RUN_OVER_STEM×stem)`（当前 **0.09**）的缝，避免 `K`/`X` 斜臂与 `p`/`q` descender 发丝缝误报。**不要**为过关调低任一阈值；扫描阈值见 `test_counter_scan_min_run_over_stem_frozen`；descender 审计见 `test_descender_micro_sliver_below_min_run_gap_ignored`（与 `test_p_outer_ink_continuous_across_stem_bowl_join` 探针高度不同：后者查碗–竖接合连续，前者冻结重字重下仍低于扫描阈值的缝）。
 
-## `s` 开口人审（TK-206 / 附录 B-15）
+## `s` 开口人审（附录 B-15）
 
 程序侧已冻结 B-13～B-15 几何钩子（``test_b13_*`` / ``test_b14_*`` / ``test_b15_*``、``test_s_opening_reach_relief_frozen``）；视觉是否接受仍须人看图签字（无单独 ``approvals/*.json``）：
 
@@ -188,7 +188,7 @@ PYTHONPATH=src python examples/contact_sheet.py --preset humanist_sans --chars s
 
 改开口量后须 ``regenerate_outline_hashes.py --write`` 并更新校样 PNG。
 
-## 轮廓哈希快照（TK-108）
+## 轮廓哈希快照（outline golden）
 
 改 `parts` 轮廓后，在提交说明里列出变更字形，并刷新 golden：
 
@@ -199,7 +199,7 @@ PYTHONPATH=src python examples/regenerate_outline_hashes.py --write  # 写 tests
 
 然后跑 `pytest -q tests/qa/test_golden_outline_hashes.py`。
 
-## 骨架构造 spike（TK-308，非默认管线）
+## 骨架构造 spike（skeleton+pen，非默认管线）
 
 **不要**用 `geo.stroke.expand` / `trace_letter` 做字重轴或替代 `Controls` 主路径。仅当在 `parts` 里试验新拓扑、或像 `zayju_letter` 那样手绘后再挂回 `with_glyph` 时，可选用骨架 + 对比笔：
 
@@ -221,7 +221,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 - 多段开放：默认走拼接偏移轨 cubic 拟合（``butt``/``round``/``square`` cap；``miter``/``round``/``bevel`` join）；``offset_fit_budget=0`` 时与 ``cubic_centerline_to_polyline`` + ``expand`` 等价。报告里的 `max_chord_error` / `max_offset_fit_error` 分别对应中线与偏移轨近似成本。
 - 闭合环：多段偏移轨 cubic 拟合（``_expand_closed_cubic_offset``）；勿与字重轴混用。
 
-## 扩展拉丁（TK-208，可选）
+## 扩展拉丁（可选）
 
 默认 ``supported`` **不含** `çéñ` 等预组合重音，也不含 `æøÆØ`。需要时在 ``FamilyBuildOptions(extended_latin="æøÆØ")`` 中 opt-in：charset 会追加轮廓字母，并注册整张 ``COMPOSITE_LATIN`` 预组合表（见 ``examples/first_font/build_font.py``）。回归：`tests/parts/test_extended_latin_policy.py`。
 
@@ -246,7 +246,7 @@ font = compose_font_from_controls(
 Text↔display deltas via `context_for_opsz(base, opsz)` (defaults 14 / 72). Example VF: `examples/optical_size/build_opsz_vf.py` (shared kern classes, `proof_axis_ladder`). Regression: `tests/parts/test_optical_size.py`, `tests/examples/test_optical_size.py`.
 
 
-## Agent 终验快照（TK-502，程序侧）
+## Agent 终验快照（程序侧）
 
 参考试作 ≠ 终验：终验须从 brief 的 preset 自行改字并留痕，见 `docs/AGENT_TRIALS.md` §终验流程。
 
@@ -257,9 +257,9 @@ PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
 
 写 JSON 前会跑 `validate_trial_snapshot`（防伪造 `l3_voice_ok` / `program_pass_ok` 等字段不一致）。`snapshot_trial` 会对纯 stem 缩放写入 `cheating_flags`（`stem_only_or_scale_voice`）。退出码：`trial_snapshot_exit_code` — **0** 程序过关；**2** lint/identity；**3** family gate；**4** 字重阶梯 R8；**5** 快照字段不一致；**6** 未达 L3；**7** 作废条件（`cheating_flags` 非空）；**8** 终验归档缺全 `human_review_scores`（仅 `validate_snapshot.py --require-human-scores`）。`human_review_scores` 由**人**在程序快照写好后编辑 JSON，不得由 agent 在 `snapshot_design.py` 运行时写入。审计：`validate_snapshot.py --recursive artifacts/trials/<run>/`。库维护者程序条：`examples/run_program_exit.py`（含 `test_agent_trial*` / `test_trial_protocol`；或 `pytest -q tests/docs/test_development_plan_section8.py`）。
 
-## 衬线 / 斜体人审 bundle（TK-306、TK-402）
+## 衬线 / 斜体人审 bundle
 
-自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / TK-402 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
+自动化：`tests/examples/test_slab_serif.py`、`tests/examples/test_bracketed_serif.py`（gate、VF、`check_masters`、L3）；`tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance`；`tests/examples/test_italic_family.py` + `tests/parts/test_italic_program_acceptance.py`（真斜体 VF / italic-construct 程序验收）。本地一次性生成校样与阶梯 PNG（**不写** `approvals/`）：
 
 ```bash
 PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review

@@ -1,4 +1,4 @@
-"""Validate written ``snapshot.json`` files (TK-502 final-trial audit)."""
+"""Validate written ``snapshot.json`` files (agent trial final-trial audit)."""
 
 from __future__ import annotations
 

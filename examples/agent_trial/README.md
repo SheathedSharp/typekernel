@@ -1,4 +1,4 @@
-# Agent trial helpers (TK-502)
+# Agent trial helpers
 
 | Script | Role |
 | --- | --- |

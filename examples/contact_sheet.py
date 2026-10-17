@@ -1,4 +1,4 @@
-"""Write a TK-104 full-charset contact sheet PNG (local artifacts only)."""
+"""Write a contact sheet full-charset contact sheet PNG (local artifacts only)."""
 
 from __future__ import annotations
 

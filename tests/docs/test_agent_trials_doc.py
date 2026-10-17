@@ -1,4 +1,4 @@
-"""TK-502: committed trial protocol doc stays complete."""
+"""Committed agent-trial protocol doc stays complete."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Reference agent trial for brief-3 (TK-502): coding / UI clear sans.
+"""Reference agent trial for brief-3 (agent trial): coding / UI clear sans.
 
 Full ASCII punctuation charset from ``code_clear``; ``Style`` + terminal ball.
 """
