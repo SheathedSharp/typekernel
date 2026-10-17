@@ -482,6 +482,47 @@ def _lower_stroke_cluster(widths: list[float]) -> float | None:
     return float(statistics.median(ordered[: max(2, int(0.4 * len(ordered)))]))
 
 
+def _estimate_diagonal_angle_from_vertical(outline: Outline) -> float | None:
+    """Angle-from-vertical of a single drifting diagonal (``z``) via span centres.
+
+    Mid-body vertical spans on a ``z`` diagonal migrate horizontally with Y.
+    Fitting that drift recovers the construction angle so
+    :func:`~typekernel.optics.stem.vertical_equiv_from_diagonal` inverts the
+    same compensation the glyph was built with. Crossed diagonals (``x``)
+    cancel and return near 0 — callers should fall back to 45°.
+    """
+    try:
+        xmin, ymin, xmax, ymax = bounds(outline)
+    except ValueError:
+        return None
+    h = max(ymax - ymin, 1.0)
+    wmax = max(xmax - xmin, 1.0)
+    chord_cap = 0.72 * wmax
+    pts: list[tuple[float, float]] = []
+    for f in (0.35, 0.42, 0.50, 0.58, 0.65):
+        spans = [
+            s
+            for s in list_vertical_stems(outline, y=ymin + f * h)
+            if float(s.width) < chord_cap
+        ]
+        if not spans:
+            continue
+        s = max(spans, key=lambda sp: float(sp.width))
+        pts.append((f, 0.5 * (float(s.left) + float(s.right))))
+    if len(pts) < 3:
+        return None
+    fs = [p[0] for p in pts]
+    xs = [p[1] for p in pts]
+    fmean = statistics.mean(fs)
+    xmean = statistics.mean(xs)
+    den = sum((f - fmean) ** 2 for f in fs)
+    if den < 1e-12:
+        return None
+    dx_df = sum((f - fmean) * (x - xmean) for f, x in zip(fs, xs)) / den
+    # dy = df * h  →  dx/dy = (dx_df * df) / (df * h) = dx_df / h
+    return float(math.degrees(math.atan(abs(dx_df) / h)))
+
+
 def _oriented_stem_median(
     outline: Outline,
     *,
@@ -565,7 +606,11 @@ def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
     if stem_median is None and oriented is not None:
         from typekernel.optics.stem import vertical_equiv_from_diagonal
 
-        stem_median = vertical_equiv_from_diagonal(oriented)
+        phi = _estimate_diagonal_angle_from_vertical(outline)
+        if phi is None or phi < 25.0 or phi > 80.0:
+            phi = 45.0
+        contrast = float(getattr(glyph.context, "contrast", 1.0) or 1.0)
+        stem_median = vertical_equiv_from_diagonal(oriented, phi, contrast=contrast)
     # Prefer body-band contrast. No mid-ray fallback: single-stem letters
     # (l/i/v) yield bogus horizontal spans and must skip via missing.
     contrast = _body_contrast_ratio(outline, stem_median)
@@ -668,7 +713,16 @@ def compare_glyph_styles(
     ):
         from typekernel.optics.stem import vertical_equiv_from_diagonal
 
-        ve = vertical_equiv_from_diagonal(cand_m.oriented_stem)
+        # Invert compensation at the glyph's diagonal angle (default 45° is
+        # wrong for black ``z``, whose bars flatten the stroke toward ~65–70°).
+        cand_outline = _ink_outline(candidate)
+        phi = _estimate_diagonal_angle_from_vertical(cand_outline)
+        if phi is None or phi < 25.0 or phi > 80.0:
+            phi = 45.0
+        contrast = float(getattr(candidate.context, "contrast", 1.0) or 1.0)
+        ve = vertical_equiv_from_diagonal(
+            cand_m.oriented_stem, phi, contrast=contrast
+        )
         # Prefer the probe closer to the reference stem (deflate crotch inflation
         # without adopting an overshooting or undershooting ve blindly).
         raw = cand_m.stem_median

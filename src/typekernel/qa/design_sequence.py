@@ -152,7 +152,7 @@ def default_digit_design_order() -> tuple[str, ...]:
 
 
 # Topology roles where some style metrics are meaningless across letters.
-_CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O", "e", "c", "0", "Q", "C", "G"})
+_CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O", "0", "Q", "G"})  # open c/e/C live in _OPEN_ROUNDS
 # Openings / crossbars make vertical stem probes hit hairlines or eye bars.
 _OPEN_ROUNDS: frozenset[str] = frozenset({"c", "e", "C"})
 _ASCENDERS: frozenset[str] = frozenset(
@@ -227,13 +227,13 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if ref in _CURVED_SPINE or cand in _CURVED_SPINE:
         # ``s`` has no stable vertical stem band — probes hit the spine curve.
         skip.extend(["stem_median", "contrast_ratio"])
-    if ref in _CLOSED_BOWLS or cand in _CLOSED_BOWLS:
-        # Round bowls (``c``/``e``/``o``): H/V contrast vs stem ``n`` is not
-        # comparable — openings and crossbars dominate horizontal probes.
+    if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
+        # Open ``c``/``e``: H/V contrast vs stem ``n`` is not comparable —
+        # aperture hairlines and crossbars dominate horizontal probes.
         skip.extend(["contrast_ratio"])
-    # Open ``c``/``e`` stem stays gated: back-stem rescue in
-    # ``_body_stem_median`` recovers the upright when the 0.42×ink cap would
-    # keep only the aperture hairline. Contrast remains skipped via bowls.
+    # Closed ``o``: contrast stays gated (measurable and stable across
+    # geometric_sans + slab_serif + humanist_sans). Open-round stem stays
+    # gated via back-stem / aperture-aware ``_body_stem_median``.
     return tuple(dict.fromkeys(skip))
 
 

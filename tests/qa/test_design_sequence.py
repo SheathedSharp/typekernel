@@ -186,7 +186,8 @@ def test_latin_topology_skips_open_rounds_and_hooks() -> None:
     nt = latin_topology_skip_checks("n", "t")
     assert "ink_ymin" in nt
     no = latin_topology_skip_checks("n", "o")
-    assert "contrast_ratio" in no
+    # Closed ``o`` contrast is gated (stable across presets); stem always gated.
+    assert "contrast_ratio" not in no
     assert "stem_median" not in no
 
 
@@ -512,13 +513,13 @@ def test_open_round_stem_pass_and_refuse() -> None:
         unlock_controls_body(broken)
 
 
-def test_extreme_slab_stem200_body_hard_fail_documented() -> None:
-    """Black slab body can refuse ``z`` — measurement/construction ceiling."""
-    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_body
+def test_extreme_slab_stem200_body_unlocks() -> None:
+    """Black slab body unlocks after angle-aware diagonal VE remap for ``z``."""
+    from typekernel.qa.design_sequence import unlock_controls_body
 
     c = Controls.from_context(DesignContext.slab_serif().tuned(stem=200.0)).with_stem_relief()
-    with pytest.raises(DesignSequenceError, match="refused glyph"):
-        unlock_controls_body(c)
+    seq = unlock_controls_body(c)
+    assert seq.is_complete
 
 
 def test_unlock_controls_body_refuses_thin_i() -> None:
