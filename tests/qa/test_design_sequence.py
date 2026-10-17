@@ -467,9 +467,9 @@ def test_punct_order_covers_punct_forms() -> None:
 def test_extreme_slab_stem160_caps_hard_fail_documented() -> None:
     """Extreme slab masters still refuse some caps — do not greenwash.
 
-    Stem ≥ 160 on slab_serif can refuse ``X`` / ``M`` / ``E`` under honest
-    stem probes. Default preset stems (~70–100) and compose stay green; this
-    marks the construction ceiling until diagonals/bars are redesigned.
+    Stem ≥ 160 on slab_serif can refuse ``M`` / ``Y`` / ``E`` under honest
+    stem probes (``X`` extreme thin landed). Default presets and compose stay
+    green; this marks the construction ceiling until those glyphs are redesigned.
     """
     from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_caps
 
@@ -485,3 +485,22 @@ def test_extreme_slab_stem200_body_hard_fail_documented() -> None:
     c = Controls.from_context(DesignContext.slab_serif().tuned(stem=200.0)).with_stem_relief()
     with pytest.raises(DesignSequenceError, match="refused glyph"):
         unlock_controls_body(c)
+
+
+def test_unlock_controls_body_refuses_thin_i() -> None:
+    """Dotted ``i`` stem stays gated against control ``n`` (skip shrink)."""
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_body
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=35.0))
+    broken = good.with_glyph("i", lambda _n, _o, _ctx: thin.build("i"))
+    with pytest.raises(DesignSequenceError, match="refused glyph 'i'"):
+        unlock_controls_body(broken)
+
+
+def test_dotted_letters_keep_stem_gate() -> None:
+    from typekernel.qa.design_sequence import latin_topology_skip_checks
+
+    assert "stem_median" not in latin_topology_skip_checks("n", "i")
+    assert "stem_median" not in latin_topology_skip_checks("n", "j")
+    assert "ink_ymax" in latin_topology_skip_checks("n", "i")

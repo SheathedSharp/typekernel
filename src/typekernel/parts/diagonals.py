@@ -141,12 +141,14 @@ def w_points(
     ]
 
 
-def x_points(stem: float, height: float, width: float, contrast: float) -> list[Pt]:
+def x_points(
+    stem: float, height: float, width: float, contrast: float, weight: float = 1.0
+) -> list[Pt]:
     """Two compensated diagonals crossing at mid height."""
     w, xh = width, height
-    hw = stem
+    hw = stem * weight
     for _ in range(8):
-        hw = _hwidth(stem, contrast, w - hw, xh)
+        hw = _hwidth(stem, contrast, w - hw, xh, weight=weight)
     if not 0.0 < 2.0 * hw < w:
         raise ValueError("x strokes do not fit this width; widen it or thin the stem")
     run = w - hw

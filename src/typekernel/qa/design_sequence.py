@@ -202,8 +202,9 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         # ``t`` hook spring often sits below baseline without a full descender.
         skip.extend(["ink_ymin"])
     if ref in _DOTTED or cand in _DOTTED:
-        # Tittle constructions often use a lighter stem than control ``n``.
-        skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio", "stem_median"])
+        # Tittle extent / centre differ from ``n``; stem of the upright shaft is
+        # comparable and stays gated (probes hit the stem, not the tittle).
+        skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio"])
     if ref in _DIAGONALS or cand in _DIAGONALS:
         # H/V contrast on diagonals is meaningless; stem is gated via body /
         # oriented probes (see ``extract_glyph_style_metrics``). Serif feet /

@@ -1834,7 +1834,14 @@ def X_from_H(
         if 138.0 <= s <= 162.0:
             w_frac += 0.05
     w = w_frac * h.width
-    base = x_points(h.stem, h.cap_height, w, c.contrast)
+    # Extreme slab stems: mid-band vertical probes on ``X`` inflate past ``H``.
+    # Sans/bracketed keep full compensation so R8 crotches stay open.
+    if c.style.serif == "slab" and h.stem >= 150.0:
+        extreme = max(0.0, min(1.0, (h.stem - 150.0) / 70.0))
+        diag_w = 1.0 - 0.14 * extreme
+    else:
+        diag_w = 1.0
+    base = x_points(h.stem, h.cap_height, w, c.contrast, weight=diag_w)
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
         w,

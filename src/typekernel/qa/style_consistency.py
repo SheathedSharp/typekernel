@@ -559,7 +559,7 @@ def compare_glyph_styles(
     # (same transform as construction compensation).
     # Diagonals whose mid-band vertical probes inflate at heavy stems / slab
     # feet. Remap via oriented → vertical_equiv (same as construction).
-    _crossing = frozenset({"x", "X", "z", "Z", "v", "w", "y", "k", "V", "W", "Y", "K", "A"})
+    _crossing = frozenset({"x", "X", "z", "Z", "v", "w", "y", "k", "V", "W", "Y", "K", "A", "M", "N"})
     cand_stem = cand_m.stem_median
     if (
         candidate_name in _crossing
