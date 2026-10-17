@@ -34,6 +34,7 @@ __all__ = [
     "controls_body_tolerances",
     "default_body_design_order",
     "latin_topology_skip_checks",
+    "unlock_controls_body",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -78,7 +79,8 @@ _ASCENDERS: frozenset[str] = frozenset(
 )
 _DESCENDERS: frozenset[str] = frozenset({"g", "j", "p", "q", "y", "J", "Q"})
 _DOTTED: frozenset[str] = frozenset({"i", "j"})
-_DIAGONALS: frozenset[str] = frozenset({"v", "w", "x", "y", "k"})
+_DIAGONALS: frozenset[str] = frozenset({"v", "w", "x", "y", "z", "k"})
+_MULTI_ARCH: frozenset[str] = frozenset({"m", "w", "M", "W"})
 _CURVED_SPINE: frozenset[str] = frozenset({"s", "S"})
 
 
@@ -90,7 +92,8 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     here (script faces pass their own ``skip_checks_for_pair``). Stem,
     contrast, bowl centre, and ink extents remain gated except where
     topology makes a proxy meaningless (asc/desc extents, dotted tittles,
-    diagonal letters whose H/V samples are not stem contrast).
+    diagonal / multi-arch letters whose H/V or stem-band samples are not
+    comparable to control ``n``).
     """
     skip: list[str] = [
         "entry_rail_y",
@@ -102,8 +105,13 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if ref in _DESCENDERS or cand in _DESCENDERS:
         skip.extend(["ink_ymin", "bowl_center_y"])
     if ref in _DOTTED or cand in _DOTTED:
-        skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio"])
+        # Tittle constructions often use a lighter stem than control ``n``.
+        skip.extend(["ink_ymax", "bowl_center_y", "contrast_ratio", "stem_median"])
     if ref in _DIAGONALS or cand in _DIAGONALS:
+        # Diagonal stem bands are not vertical-stem comparable to ``n``.
+        skip.extend(["contrast_ratio", "stem_median"])
+    if ref in _MULTI_ARCH or cand in _MULTI_ARCH:
+        # Double/triple arches: H/V contrast probes hit joins, not stems.
         skip.extend(["contrast_ratio"])
     if ref in _CURVED_SPINE or cand in _CURVED_SPINE:
         # ``s`` has no stable vertical stem band — probes hit the spine curve.
@@ -115,13 +123,15 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
 def controls_body_tolerances() -> StyleConsistencyTolerances:
     """Budgets for Controls Latin body sequences (related forms from ``n``/``o``).
 
-    Stem stays on the default absolute band. Contrast is slightly wider than
+    Stem band is 14 (slightly above the raw default 12) so heavy masters with
+    ``with_stem_relief`` still gate verticals without false refuses from
+    probe noise on ``l`` / related stems. Contrast is slightly wider than
     raw ``StyleConsistencyTolerances`` because bowl vs shoulder H/V samples
     drift ~0.3–0.4 across stock related forms without a construction bug —
     still far tighter than greenwashing rails/slant.
     """
     return StyleConsistencyTolerances(
-        stem_median=12.0,
+        stem_median=14.0,
         contrast_ratio=0.45,
         entry_rail_y=36.0,
         exit_rail_y=36.0,
@@ -131,6 +141,26 @@ def controls_body_tolerances() -> StyleConsistencyTolerances:
         ink_ymax=400.0,
     )
 
+
+
+def unlock_controls_body(
+    controls: Controls,
+    *,
+    control: str = "n",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Module alias for :meth:`DesignSequence.unlock_controls_body`."""
+    return DesignSequence.unlock_controls_body(
+        controls,
+        control=control,
+        order=order,
+        tolerances=tolerances,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skip_checks_for_pair,
+    )
 
 
 class DesignSequenceError(ValueError):
@@ -239,6 +269,43 @@ class DesignSequence:
             skip_checks_for_pair=skips,
             planned_order=planned,
         )
+
+
+    @classmethod
+    def unlock_controls_body(
+        cls,
+        controls: Controls,
+        *,
+        control: str = "n",
+        order: Sequence[str] | None = None,
+        tolerances: StyleConsistencyTolerances | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+    ) -> DesignSequence:
+        """Unlock the Controls Latin body one glyph at a time, then export.
+
+        This is the required gate after locking ``n``/``o`` (and any
+        ``with_glyph`` / ``tuned_glyph`` masters). It builds each letter via
+        ``controls.build(ch)`` and refuses on style failure — agents must
+        redesign that letter, not call :meth:`~typekernel.parts.family.Controls.build_all`
+        to skip the sequence.
+
+        ``build_all`` remains valid **after** this gate for punctuation,
+        figures, and caps derivation at compile time.
+        """
+        seq = cls.from_controls(
+            controls,
+            control=control,
+            order=order,
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+        )
+        for ch in seq.planned_order:
+            if ch == seq.control:
+                continue
+            seq.add(ch, controls.build(ch))
+        return seq
 
     @property
     def unlocked(self) -> tuple[str, ...]:

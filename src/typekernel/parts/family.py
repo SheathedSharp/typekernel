@@ -313,9 +313,40 @@ class Controls:
             skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
         )
 
+    def unlock_body(
+        self,
+        order: Sequence[str] | None = None,
+        *,
+        control: str = "n",
+        tolerances: object | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: object | None = None,
+    ) -> object:
+        """Run the Latin body through :class:`~typekernel.qa.DesignSequence` gates.
+
+        Required after locking controls (and any ``with_glyph`` / ``tuned_glyph``
+        masters). Raises on refuse. Prefer this over ungated :meth:`build_all`
+        when proving the body is style-consistent. Use :meth:`build_all` only
+        afterward for punctuation / figures / caps at compose time.
+        """
+        from typekernel.qa.design_sequence import DesignSequence
+
+        return DesignSequence.unlock_controls_body(
+            self,
+            control=control,
+            order=order,
+            tolerances=tolerances,  # type: ignore[arg-type]
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
+        )
 
     def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
-        """Draw the controls once and derive ``chars`` (default: all supported)."""
+        """Derive ``chars`` from locked controls (default: all supported).
+
+        Stock derivation helper for compose / VF after the designer-order body
+        gate (:meth:`unlock_body` / :class:`~typekernel.qa.DesignSequence`).
+        Not a substitute for sequential design of new letters.
+        """
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
         cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
         extended = {**EXTENDED_LATIN_FORMS, **EXTENDED_LATIN_CAP_FORMS}

@@ -74,6 +74,7 @@ class DesignReview:
     glyphs: tuple[GlyphScore, ...]
     l0_gaps: tuple[str, ...]
     charset_failures: tuple[str, ...] = ()
+    sequence_failures: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
 
     @property
@@ -113,6 +114,16 @@ class DesignReview:
                 lines.append(f"  charset: {msg}")
             if len(self.charset_failures) > 8:
                 lines.append(f"  charset: … and {len(self.charset_failures) - 8} more")
+        if self.sequence_failures:
+            lines.append(
+                f"body DesignSequence: {len(self.sequence_failures)} issue(s)"
+            )
+            for msg in self.sequence_failures[:8]:
+                lines.append(f"  sequence: {msg}")
+            if len(self.sequence_failures) > 8:
+                lines.append(
+                    f"  sequence: … and {len(self.sequence_failures) - 8} more"
+                )
         for note in self.notes:
             lines.append(f"note: {note}")
         return "\n".join(lines)
@@ -163,6 +174,7 @@ def design_review(
     )
     l0_gaps = _l0_gaps(controls)
     charset_failures = tuple(collect_family_gate_failures(controls))
+    sequence_failures = _body_sequence_failures(controls)
     notes.extend(_spec_notes(controls))
     review = DesignReview(
         sentence=sentence,
@@ -172,6 +184,7 @@ def design_review(
         glyphs=glyphs,
         l0_gaps=l0_gaps,
         charset_failures=charset_failures,
+        sequence_failures=sequence_failures,
         notes=tuple(notes),
     )
     if out_dir is not None:
@@ -184,9 +197,23 @@ def design_review(
             glyphs=review.glyphs,
             l0_gaps=review.l0_gaps,
             charset_failures=review.charset_failures,
+            sequence_failures=review.sequence_failures,
             notes=tuple(notes),
         )
     return review
+
+
+
+def _body_sequence_failures(controls: Controls) -> tuple[str, ...]:
+    """Run designer-order body unlock; empty means stock derivation is consistent."""
+    from typekernel.qa.design_sequence import DesignSequence, DesignSequenceError
+
+    try:
+        DesignSequence.unlock_controls_body(controls)
+    except DesignSequenceError as exc:
+        hints = tuple(exc.hints[:6])
+        return (str(exc), *hints)
+    return ()
 
 
 def _fmt_metric(name: str, value: float) -> str:
