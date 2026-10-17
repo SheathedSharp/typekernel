@@ -70,7 +70,7 @@ def build(brief_id: str, out: Path, *, variant: str | None = None) -> int:
             return 3
         print(f"{label} sentence gate ok")
 
-    kern_classes = reference_kern_classes(regular)
+    kern_classes = reference_kern_classes(regular, require_body_unlock=False)
     otfs: list[tuple[str, Path]] = []
     for sheet, style, weight in (
         (regular, "Regular", 400),

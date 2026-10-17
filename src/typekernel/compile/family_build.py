@@ -77,8 +77,20 @@ class FamilyBuildOptions:
         )
 
 
-def reference_kern_classes(controls: Controls) -> tuple[KernClass, ...]:
-    """Kern classes from the regular control draw (reuse for VF masters)."""
+def reference_kern_classes(
+    controls: Controls,
+    *,
+    require_body_unlock: bool = True,
+) -> tuple[KernClass, ...]:
+    """Kern classes from the regular control draw (reuse for VF masters).
+
+    Defaults to the same body DesignSequence unlock as
+    :func:`compose_font_from_controls`. Pass ``require_body_unlock=False`` only
+    for documented stock / specimen compiles.
+    """
+    from typekernel.qa.design_sequence import ensure_controls_body_unlocked
+
+    ensure_controls_body_unlocked(controls, require=require_body_unlock)
     ctx = controls.context
     opts = FamilyBuildOptions()
     drawn = polish_glyph_map(
@@ -110,11 +122,11 @@ def compose_font_from_controls(
     if require_body_unlock:
         from typekernel.qa.design_sequence import (
             DesignSequenceError,
-            unlock_controls_body,
+            ensure_controls_body_unlocked,
         )
 
         try:
-            unlock_controls_body(controls)
+            ensure_controls_body_unlocked(controls, require=True)
         except DesignSequenceError as exc:
             raise DesignSequenceError(
                 "compose_font_from_controls requires a body DesignSequence "

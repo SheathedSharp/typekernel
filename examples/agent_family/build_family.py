@@ -79,7 +79,7 @@ def main() -> None:
             sys.exit(1)
         print(f"{label} sentence gate ok")
 
-    kern_classes = reference_kern_classes(regular)
+    kern_classes = reference_kern_classes(regular, require_body_unlock=False)
     styles = (
         (regular, "Regular", 400),
         (light, "Light", 300),

@@ -71,7 +71,7 @@ def main() -> None:
     display_ctx = context_for_opsz(base, DEFAULT_DISPLAY_OPSZ)
     text = Controls.from_context(text_ctx)
     display = Controls.from_context(display_ctx)
-    kern_classes = reference_kern_classes(text)
+    kern_classes = reference_kern_classes(text, require_body_unlock=False)
 
     masters = [
         Master(

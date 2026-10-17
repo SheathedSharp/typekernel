@@ -49,3 +49,19 @@ def test_compose_allow_skip_unlock_for_stock_compile() -> None:
         require_body_unlock=False,
     )
     assert "fi" in font
+
+
+def test_reference_kern_classes_requires_body_unlock() -> None:
+    from typekernel.compile import reference_kern_classes
+    from typekernel.qa.design_sequence import DesignSequenceError
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    assert reference_kern_classes(good)
+
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=35.0))
+    broken = good.with_glyph("h", lambda _n, _o, _ctx: thin.build("h"))
+    with pytest.raises(DesignSequenceError):
+        reference_kern_classes(broken)
+
+    # Documented stock opt-out
+    assert reference_kern_classes(broken, require_body_unlock=False)

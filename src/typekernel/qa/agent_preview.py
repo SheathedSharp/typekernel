@@ -36,13 +36,23 @@ def build_glyph_preview(
     focus: str = DEFAULT_FOCUS_GLYPHS,
     sentence: str,
     out_dir: str | Path = "out",
+    require_body_unlock: bool = True,
 ) -> dict[str, Path]:
-    """Compile *controls* and write grid + sentence PNGs; return paths."""
+    """Compile *controls* and write grid + sentence PNGs; return paths.
+
+    Requires body DesignSequence unlock by default (same as compose). Pass
+    ``require_body_unlock=False`` only for documented stock / specimen previews.
+    """
     out_dir = Path(out_dir)
     charset = charset_for_preview(focus, sentence)
     liga = all(ch in charset for ch in "fil")
     opts = FamilyBuildOptions(chars=charset, liga=liga)
-    font = compose_font_from_controls(controls, family, options=opts)
+    font = compose_font_from_controls(
+        controls,
+        family,
+        options=opts,
+        require_body_unlock=require_body_unlock,
+    )
     result = build_font(font, out_dir, formats=("otf",))
     otf = Path(result.binaries["otf"])
     grid_chars = "".join(c for c in focus if not c.isspace())

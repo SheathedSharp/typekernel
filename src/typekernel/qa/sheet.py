@@ -136,10 +136,14 @@ def weight_ladder_sheet(
 
         if stem >= STEM_RELIEF_ONSET:
             controls = controls.with_stem_relief()
+        # Specimen ladder: opt out of body unlock — heavy humanist/slab masters
+        # can refuse on ``z`` stem while still being useful counter-collapse proof.
+        # Design unlock stays on compose / preview / export agent paths.
         built = compose_font_from_controls(
             controls,
             "Ladder",
             options=FamilyBuildOptions(chars=chars, liga=False),
+            require_body_unlock=False,
         )
         result = build_font(built, tmp_dir, formats=("otf",))
         otf = result.binaries["otf"]
