@@ -23,29 +23,23 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
     from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
-from typekernel.geo.stroke import CubicBezier
-from typekernel.parts import (
-    ComposedGlyph,
-    DesignContext,
-    Skeleton,
-    Stroke,
-    trace_letter,
-)
+from typekernel.parts import ComposedGlyph, DesignContext, Stroke
 from typekernel.parts.script import (
-    chaikin_subdivide,
+    NibSpec,
     entry_rail,
     exit_rail,
-    shear_xy,
+    nib_ellipse_stroke,
+    nib_polyline_stroke,
     slant_shear,
+    trace_nib_strokes,
 )
 
 SLANT_DEG: Final = 28.0
 SHEAR: Final = slant_shear(SLANT_DEG)
-K: Final = 0.5523
-
 NIB_THICKNESS: Final = 36.0
 NIB_CONTRAST: Final = 0.48
 NIB_ANGLE: Final = 38.0
+SCRIPT_NIB: Final = NibSpec(NIB_THICKNESS, NIB_CONTRAST, NIB_ANGLE)
 
 X_HEIGHT: Final = 420.0
 CAP_HEIGHT: Final = 700.0
@@ -73,31 +67,6 @@ def script_context() -> DesignContext:
     )
 
 
-def _S(x: float, y: float) -> tuple[float, float]:
-    return shear_xy(x, y, SHEAR)
-
-
-def _C(
-    p0: tuple[float, float],
-    p1: tuple[float, float],
-    p2: tuple[float, float],
-    p3: tuple[float, float],
-) -> CubicBezier:
-    return CubicBezier(_S(*p0), _S(*p1), _S(*p2), _S(*p3))
-
-
-def _ellipse(
-    cx: float, cy: float, rx: float, ry: float
-) -> tuple[CubicBezier, CubicBezier, CubicBezier, CubicBezier]:
-    return (
-        _C((cx + rx, cy), (cx + rx, cy + K * ry), (cx + K * rx, cy + ry), (cx, cy + ry)),
-        _C((cx, cy + ry), (cx - K * rx, cy + ry), (cx - rx, cy + K * ry), (cx - rx, cy)),
-        _C((cx - rx, cy), (cx - rx, cy - K * ry), (cx - K * rx, cy - ry), (cx, cy - ry)),
-        _C((cx, cy - ry), (cx + K * rx, cy - ry), (cx + rx, cy - K * ry), (cx + rx, cy)),
-    )
-
-
-
 def _poly(
     name: str,
     pts: list[tuple[float, float]],
@@ -106,15 +75,14 @@ def _poly(
     contrast: float | None = None,
     smooth: int = 4,
 ) -> Stroke:
-    dense = chaikin_subdivide(pts, rounds=smooth)
-    return Stroke.from_points(
+    return nib_polyline_stroke(
         name,
-        [_S(*p) for p in dense],
-        thickness=thickness if thickness is not None else NIB_THICKNESS,
-        contrast=contrast if contrast is not None else NIB_CONTRAST,
-        angle_deg=NIB_ANGLE,
-        join="round",
-        cap="round",
+        pts,
+        SCRIPT_NIB,
+        shear=SHEAR,
+        thickness=thickness,
+        contrast=contrast,
+        smooth=smooth,
     )
 
 
@@ -127,15 +95,8 @@ def _ring(
     *,
     thickness: float | None = None,
 ) -> Stroke:
-    return Stroke.from_beziers(
-        name,
-        _ellipse(cx, cy, rx, ry),
-        closed=True,
-        thickness=thickness if thickness is not None else NIB_THICKNESS,
-        contrast=NIB_CONTRAST,
-        angle_deg=NIB_ANGLE,
-        join="round",
-        cap="round",
+    return nib_ellipse_stroke(
+        name, cx, cy, rx, ry, SCRIPT_NIB, shear=SHEAR, thickness=thickness
     )
 
 
@@ -148,16 +109,9 @@ def _exit_rail(x0: float, x1: float, *, y: float = EXIT_Y) -> list[tuple[float, 
 
 
 def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
-    # Library polyline→cubic expand + heal/strip/blend keep outlines smooth.
-    return trace_letter(
-        Skeleton.of(*strokes),
+    return trace_nib_strokes(
+        strokes,
         ctx or script_context(),
-        union=True,
-        blend=True,
-        ease=False,
-        join="round",
-        cap="round",
-        heal=True,
         min_contour_area=MIN_CONTOUR_AREA,
     )
 

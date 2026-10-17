@@ -716,3 +716,37 @@ def test_try_unlock_script_builders_zayju_charset() -> None:
     ]
     assert seq.is_complete
     assert "".join(seq.unlocked) == "".join(design.DESIGN_ORDER)
+
+
+def test_unlock_controls_italic_body_completes() -> None:
+    """True italic sheet unlocks Latin body via italic topology skips."""
+    from typekernel.qa.design_sequence import unlock_controls_italic_body
+
+    seq = unlock_controls_italic_body(
+        Controls.from_context(DesignContext.humanist_sans())
+    )
+    assert seq.is_complete
+    assert seq.control == "n"
+
+
+def test_italic_topology_skips_branching_contrast_and_f_descender() -> None:
+    from typekernel.qa.design_sequence import italic_topology_skip_checks
+
+    assert "contrast_ratio" in italic_topology_skip_checks("n", "h")
+    assert "ink_ymin" in italic_topology_skip_checks("n", "f")
+
+
+def test_charset_unlock_needs_extended_latin() -> None:
+    from typekernel.qa.design_sequence import charset_unlock_needs
+
+    assert charset_unlock_needs("æø") == (True, False, False, False)
+    assert charset_unlock_needs("ÆØ") == (False, True, False, False)
+
+
+def test_unlock_controls_extended_latin_gates_outline_forms() -> None:
+    from typekernel.qa.design_sequence import unlock_controls_extended_latin
+
+    seq = unlock_controls_extended_latin(
+        Controls.from_context(DesignContext.geometric_sans())
+    )
+    assert set(seq.unlocked) >= {"æ", "ø", "Æ", "Ø"}

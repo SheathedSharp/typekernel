@@ -45,6 +45,8 @@ __all__ = [
     "default_punct_design_order",
     "ensure_controls_body_unlocked",
     "ensure_controls_unlocked_for_charset",
+    "extended_latin_topology_skip_checks",
+    "italic_topology_skip_checks",
     "latin_cap_topology_skip_checks",
     "latin_digit_topology_skip_checks",
     "latin_punct_topology_skip_checks",
@@ -57,6 +59,8 @@ __all__ = [
     "unlock_controls_caps",
     "unlock_controls_digits",
     "unlock_controls_digits_ladder",
+    "unlock_controls_extended_latin",
+    "unlock_controls_italic_body",
     "unlock_controls_punct",
     "unlock_script_builders",
 ]
@@ -404,6 +408,173 @@ def unlock_script_builders(
     return seq
 
 
+# ---------------------------------------------------------------------------
+# True italic Controls DesignSequence (construct slant ≠ oblique_font)
+# ---------------------------------------------------------------------------
+
+# Branching arches (TK-403): H/V contrast probes differ from upright ``n``.
+_ITALIC_BRANCHING: frozenset[str] = frozenset({"n", "h", "r", "u", "m"})
+
+
+def italic_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Latin topology skips plus construct-italic realities.
+
+    - ``f`` reaches the descender zone under italic topology → skip ``ink_ymin``.
+    - Branching ``n``/``h``/``r``/``u``/``m`` change H/V samples → skip contrast.
+
+    Does **not** widen absolute tolerances. Diagonals ``k``/``v``/``w``/``x``/
+    ``y``/``z`` may still share topology with a sheared upright — further
+    true-italic letterforms remain TODO.
+    """
+    skip = list(latin_topology_skip_checks(ref, cand))
+    if ref in {"f"} or cand in {"f"}:
+        skip.append("ink_ymin")
+    if ref in _ITALIC_BRANCHING or cand in _ITALIC_BRANCHING:
+        skip.append("contrast_ratio")
+    return tuple(dict.fromkeys(skip))
+
+
+def unlock_controls_italic_body(
+    regular: Controls,
+    *,
+    style: object | None = None,
+    control: str = "n",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Unlock Latin body on an :func:`~typekernel.parts.italic.italic_design` sheet.
+
+    Agent path for true italic (construct slant + branching), **not**
+    :func:`~typekernel.compile.oblique.oblique_font`. Defaults to
+    :func:`italic_topology_skip_checks` and :func:`controls_body_tolerances`.
+    """
+    from typekernel.parts.italic import ItalicStyle, italic_design
+
+    if style is not None and not isinstance(style, ItalicStyle):
+        raise TypeError("style must be ItalicStyle | None")
+    ital = italic_design(regular, style=style)
+    skips = skip_checks_for_pair or italic_topology_skip_checks
+    return unlock_controls_body(
+        ital,
+        control=control,
+        order=order,
+        tolerances=tolerances,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skips,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Extended Latin outline forms (æø / ÆØ) — gated, not silent ship
+# ---------------------------------------------------------------------------
+
+_DEFAULT_EXTENDED_LATIN_ORDER: tuple[str, ...] = ("æ", "ø", "Æ", "Ø")
+
+
+def extended_latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Skips for outline extended Latin vs body/cap controls.
+
+    ``æ``/``Æ`` are dual-letter ligatures — stem/contrast vs single controls
+    are not comparable. ``ø`` slash shifts bowl centre vs ``o``. ``Ø`` keeps
+    Latin cap skips aside from ligature exemptions on ``Æ``.
+    """
+    if cand in {"Æ", "Ø"} or ref in {"Æ", "Ø"}:
+        skip = list(latin_cap_topology_skip_checks(ref, cand))
+        if cand == "Æ" or ref == "Æ":
+            skip.extend(["stem_median", "contrast_ratio"])
+        return tuple(dict.fromkeys(skip))
+    skip = list(latin_topology_skip_checks(ref, cand))
+    if cand == "æ" or ref == "æ":
+        skip.extend(["stem_median", "contrast_ratio"])
+    if cand == "ø" or ref == "ø":
+        skip.append("bowl_center_y")
+    return tuple(dict.fromkeys(skip))
+
+
+def unlock_controls_extended_latin(
+    controls: Controls,
+    *,
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = False,
+) -> DesignSequence:
+    """Gate outline extended Latin after body (and caps when present) unlock.
+
+    Order defaults to ``æ ø Æ Ø`` filtered to forms the sheet can build.
+    Each letter is style-checked against a related control (``a``/``o``/``H``/
+    ``O``) with :func:`extended_latin_topology_skip_checks` — not ungated
+    ``build_all`` alone.
+    """
+    from typekernel.parts.extended_latin import (
+        EXTENDED_LATIN_CAP_FORMS,
+        EXTENDED_LATIN_FORMS,
+    )
+
+    planned = tuple(order) if order is not None else _DEFAULT_EXTENDED_LATIN_ORDER
+    # Ensure base unlocks first.
+    need_caps = any(ch in EXTENDED_LATIN_CAP_FORMS for ch in planned)
+    unlock_controls_body(controls)
+    if need_caps:
+        unlock_controls_caps(controls)
+
+    # Pick first available lowercase as session control for the sequence object.
+    control = "a" if "æ" in planned or "ø" in planned else "H"
+    if control == "a":
+        control_glyph = controls.build("a")
+        tol = tolerances if tolerances is not None else controls_body_tolerances()
+    else:
+        control_glyph = controls.build("H")
+        tol = tolerances if tolerances is not None else controls_cap_tolerances()
+
+    seq = DesignSequence.start(
+        control,
+        control_glyph,
+        tolerances=tol,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=extended_latin_topology_skip_checks,
+        planned_order=(control, *planned),
+    )
+
+    pair_control = {
+        "æ": "a",
+        "ø": "o",
+        "Æ": "H",
+        "Ø": "O",
+    }
+    for ch in planned:
+        if ch in EXTENDED_LATIN_FORMS or ch in EXTENDED_LATIN_CAP_FORMS:
+            glyph = controls.build(ch)
+        else:
+            raise KeyError(f"no extended Latin form for {ch!r}")
+        # Force comparison against the related control by temporarily using
+        # try_add (compares vs session control + previous). For æ/ø session
+        # control is a; for caps-only it is H. Also compare explicitly to pair.
+        ref_name = pair_control[ch]
+        ref_glyph = controls.build(ref_name)
+        skip = extended_latin_topology_skip_checks(ref_name, ch)
+        report = compare_glyph_styles(
+            ref_glyph,
+            glyph,
+            reference_name=ref_name,
+            candidate_name=ch,
+            tolerances=tol if ch.islower() else controls_cap_tolerances(),
+            skip_checks=skip,
+        )
+        if not report.passed:
+            raise DesignSequenceError(
+                f"extended Latin refused {ch!r} vs {ref_name!r}",
+                reports=(report,),
+            )
+        # Record unlock without re-running mismatched session control pairs.
+        seq._glyphs[ch] = glyph
+        if ch not in seq._unlocked:
+            seq._unlocked.append(ch)
+        seq._last_reports = (report,)
+    return seq
+
+
 def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     """Metric skips for uppercase DesignSequence (H/O control path).
 
@@ -465,12 +636,22 @@ def controls_cap_tolerances() -> StyleConsistencyTolerances:
 def charset_unlock_needs(charset: str) -> tuple[bool, bool, bool, bool]:
     """Which DesignSequence unlocks a charset requires.
 
-    Returns ``(body, caps, digits, punct)``.
+    Returns ``(body, caps, digits, punct)``. Outline extended Latin (``æø`` /
+    ``ÆØ``) counts as body / caps so compose cannot ship them after skipping
+    the base unlocks.
     """
+    from typekernel.parts.extended_latin import (
+        EXTENDED_LATIN_CAP_FORMS,
+        EXTENDED_LATIN_FORMS,
+    )
     from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS
 
-    need_body = any(ch in RELATED_FORMS for ch in charset)
-    need_caps = any(ch in CAP_FORMS for ch in charset)
+    need_body = any(
+        ch in RELATED_FORMS or ch in EXTENDED_LATIN_FORMS for ch in charset
+    )
+    need_caps = any(
+        ch in CAP_FORMS or ch in EXTENDED_LATIN_CAP_FORMS for ch in charset
+    )
     need_digits = any(ch in FIGURE_FORMS for ch in charset)
     need_punct = any(ch in PUNCT_FORMS for ch in charset)
     return need_body, need_caps, need_digits, need_punct
@@ -490,6 +671,11 @@ def ensure_controls_unlocked_for_charset(
     """
     if not require:
         return controls
+    from typekernel.parts.extended_latin import (
+        EXTENDED_LATIN_CAP_FORMS,
+        EXTENDED_LATIN_FORMS,
+    )
+
     need_body, need_caps, need_digits, need_punct = charset_unlock_needs(charset)
     if need_body:
         unlock_controls_body(controls)
@@ -499,6 +685,13 @@ def ensure_controls_unlocked_for_charset(
         unlock_controls_digits(controls)
     if need_punct:
         unlock_controls_punct(controls)
+    extended = [
+        ch
+        for ch in charset
+        if ch in EXTENDED_LATIN_FORMS or ch in EXTENDED_LATIN_CAP_FORMS
+    ]
+    if extended:
+        unlock_controls_extended_latin(controls, order=tuple(dict.fromkeys(extended)))
     return controls
 
 

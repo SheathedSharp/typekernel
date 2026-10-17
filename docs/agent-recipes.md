@@ -216,7 +216,7 @@ glyph = trace_letter(skel, DesignContext.geometric_sans(), union=False, cap="but
 
 - 折线：`Stroke.from_points(...)`（默认）；``offset_fit_budget > 0`` 时先 ``polyline_to_cubic_centerline`` 再 ``expand_cubic``（避免折线 expand 的 LINE 齿）。
 - 三次中线：`Stroke.from_beziers` 或 plan dict 的 `beziers` 键（四控制点列表）；`chord_budget` / `offset_fit_budget` 传给 `expand_cubic`（``offset_fit_budget: 0`` 在 dict 里合法，强制折线化路径）。
-- ``trace_letter`` 默认 ``heal`` / ``strip_tiny`` / ``refit_cubics``（自交愈合、去碎岛、pathops 线段重拟合为 cubic）；完整示例见 ``examples/zayju_script/``（``DESIGN_ORDER`` + ``build_charset_sequential`` → library ``try_unlock_script_builders`` / ``script_topology_skip_checks`` / ``parts.script``；品牌骨架仍在示例）；烟测 ``tests/examples/test_zayju_script.py``（charset lint + 顺序风格门）；库 API 回归 ``tests/qa/test_style_consistency.py``（``run_program_exit`` 已含）。
+- ``trace_letter`` 默认 ``heal`` / ``strip_tiny`` / ``refit_cubics``（自交愈合、去碎岛、pathops 线段重拟合为 cubic）；完整示例见 ``examples/zayju_script/``（``DESIGN_ORDER`` + ``build_charset_sequential`` → library ``try_unlock_script_builders`` / ``script_topology_skip_checks`` / ``parts.script`` (``NibSpec``/nib strokes)；品牌骨架仍在示例）；烟测 ``tests/examples/test_zayju_script.py``（charset lint + 顺序风格门）；库 API 回归 ``tests/qa/test_style_consistency.py``（``run_program_exit`` 已含）。
 - 单段开放 + `butt` cap：`expand_cubic` 会走偏移轨道 cubic 拟合，读 `CenterlineExpandReport.max_offset_fit_error`（见 `tests/geo/test_stroke_expand.py`）。
 - 多段开放：默认走拼接偏移轨 cubic 拟合（``butt``/``round``/``square`` cap；``miter``/``round``/``bevel`` join）；``offset_fit_budget=0`` 时与 ``cubic_centerline_to_polyline`` + ``expand`` 等价。报告里的 `max_chord_error` / `max_offset_fit_error` 分别对应中线与偏移轨近似成本。
 - 闭合环：多段偏移轨 cubic 拟合（``_expand_closed_cubic_offset``）；勿与字重轴混用。

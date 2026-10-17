@@ -1,7 +1,8 @@
 """Shared primitives for letter-writing / calligraphy script faces.
 
-Brand glyph skeletons stay in examples. This module is the reusable geometry
-and writing-rail layer that examples call before :func:`~typekernel.parts.skeleton.trace_letter`.
+Brand glyph skeletons stay in examples. This module is the reusable geometry,
+nib-stroke, and writing-rail layer that examples call before
+:func:`~typekernel.parts.skeleton.trace_letter`.
 
 Slant is a **coordinate shear** baked into centerlines — not
 :func:`~typekernel.parts.italic.slant_composed_glyph` / oblique post-process.
@@ -11,14 +12,41 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
+
+from typekernel.geo.stroke import CapStyle, CubicBezier, JoinStyle
+from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.context import DesignContext
+from typekernel.parts.skeleton import Skeleton, Stroke, trace_letter
 
 __all__ = [
+    "K_CIRCLE",
+    "NibSpec",
     "chaikin_subdivide",
+    "ellipse_cubics",
     "entry_rail",
     "exit_rail",
+    "nib_ellipse_stroke",
+    "nib_polyline_stroke",
     "shear_xy",
     "slant_shear",
+    "trace_nib_strokes",
 ]
+
+# Cubic approximation constant for unit circle quarters.
+K_CIRCLE: float = 0.5523
+
+
+@dataclass(frozen=True, slots=True)
+class NibSpec:
+    """Contrast broad-nib defaults for script stroke expansion."""
+
+    thickness: float
+    contrast: float
+    angle_deg: float
+    join: JoinStyle = "round"
+    cap: CapStyle = "round"
+    chaikin_rounds: int = 4
 
 
 def slant_shear(degrees: float) -> float:
@@ -80,3 +108,117 @@ def exit_rail(
     """Three-point exit departure from a letter (pre-shear coordinates)."""
     mid = (x0 + x1) / 2.0
     return [(x0, lift * 0.5), (mid, y - dip), (x1, y + end_rise)]
+
+
+def ellipse_cubics(
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    *,
+    shear: float = 0.0,
+    k: float = K_CIRCLE,
+) -> tuple[CubicBezier, CubicBezier, CubicBezier, CubicBezier]:
+    """Four-cubic ellipse in pre-shear coords, then optional writing shear."""
+
+    def S(x: float, y: float) -> tuple[float, float]:
+        return shear_xy(x, y, shear)
+
+    return (
+        CubicBezier(
+            S(cx + rx, cy),
+            S(cx + rx, cy + k * ry),
+            S(cx + k * rx, cy + ry),
+            S(cx, cy + ry),
+        ),
+        CubicBezier(
+            S(cx, cy + ry),
+            S(cx - k * rx, cy + ry),
+            S(cx - rx, cy + k * ry),
+            S(cx - rx, cy),
+        ),
+        CubicBezier(
+            S(cx - rx, cy),
+            S(cx - rx, cy - k * ry),
+            S(cx - k * rx, cy - ry),
+            S(cx, cy - ry),
+        ),
+        CubicBezier(
+            S(cx, cy - ry),
+            S(cx + k * rx, cy - ry),
+            S(cx + rx, cy - k * ry),
+            S(cx + rx, cy),
+        ),
+    )
+
+
+def nib_polyline_stroke(
+    name: str,
+    pts: Sequence[tuple[float, float]],
+    nib: NibSpec,
+    *,
+    shear: float = 0.0,
+    thickness: float | None = None,
+    contrast: float | None = None,
+    smooth: int | None = None,
+) -> Stroke:
+    """Chaikin-densify + shear polyline into a contrast-nib :class:`Stroke`."""
+    rounds = nib.chaikin_rounds if smooth is None else smooth
+    dense = chaikin_subdivide(pts, rounds=rounds)
+    sheared = [shear_xy(p[0], p[1], shear) for p in dense]
+    return Stroke.from_points(
+        name,
+        sheared,
+        thickness=nib.thickness if thickness is None else thickness,
+        contrast=nib.contrast if contrast is None else contrast,
+        angle_deg=nib.angle_deg,
+        join=nib.join,
+        cap=nib.cap,
+    )
+
+
+def nib_ellipse_stroke(
+    name: str,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    nib: NibSpec,
+    *,
+    shear: float = 0.0,
+    thickness: float | None = None,
+) -> Stroke:
+    """Closed elliptical ring stroke under the nib."""
+    return Stroke.from_beziers(
+        name,
+        ellipse_cubics(cx, cy, rx, ry, shear=shear),
+        closed=True,
+        thickness=nib.thickness if thickness is None else thickness,
+        contrast=nib.contrast,
+        angle_deg=nib.angle_deg,
+        join=nib.join,
+        cap=nib.cap,
+    )
+
+
+def trace_nib_strokes(
+    strokes: Sequence[Stroke],
+    ctx: DesignContext,
+    *,
+    min_contour_area: float = 350.0,
+    blend: bool = True,
+    heal: bool = True,
+    union: bool = True,
+) -> ComposedGlyph:
+    """Expand script strokes via library :func:`trace_letter` (heal/strip/refit)."""
+    return trace_letter(
+        Skeleton.of(*strokes),
+        ctx,
+        union=union,
+        blend=blend,
+        ease=False,
+        join="round",
+        cap="round",
+        heal=heal,
+        min_contour_area=min_contour_area,
+    )

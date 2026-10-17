@@ -71,5 +71,5 @@ a time — not unlocked by widening the gate.
 - `design.py` — brand metrics, `DESIGN_ORDER`, per-glyph skeletons; sequential
   unlock delegates to library script DesignSequence helpers
 - `build.py` — style gate, space, phrase kern, compile, proofs
-- Library: `typekernel.parts.script` (chaikin/shear/rails),
+- Library: `typekernel.parts.script` (NibSpec / nib strokes / chaikin/shear/rails),
   `typekernel.qa.design_sequence.script_*` / `try_unlock_script_builders`

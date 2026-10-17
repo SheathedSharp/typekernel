@@ -8,6 +8,11 @@ for ``n`` / ``h`` / ``r`` / ``u`` / ``m`` when ``italic_slant_deg`` ≥ 6°
 
 For mechanical oblique on a finished font, use
 :func:`~typekernel.compile.oblique.oblique_font` — do not label that as Italic.
+
+Agent gate: :func:`~typekernel.qa.design_sequence.unlock_controls_italic_body`
+unlocks the Latin body on this sheet (construct slant + branching skips).
+Diagonals ``k``/``v``/``w``/``x``/``y``/``z`` may still share topology with a
+sheared upright — further true-italic letterforms remain open.
 """
 
 from __future__ import annotations
