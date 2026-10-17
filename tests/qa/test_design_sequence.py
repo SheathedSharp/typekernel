@@ -403,3 +403,24 @@ def test_unlock_controls_digits_ladder_completes() -> None:
     assert all(seq.is_complete for seq in out.values())
     via = c.unlock_digits_ladder(stems=(90.0, 150.0))
     assert set(via) == {90.0, 150.0}  # type: ignore[arg-type]
+
+
+def test_capital_j_stem_uses_upper_band_not_hook() -> None:
+    """Shallow ``J`` overshoot must not sample the hook hairline as stem."""
+    from typekernel.qa.style_consistency import extract_glyph_style_metrics
+
+    # Contrast < 1 + cap_height 700 reproduces the agent-family bold trap.
+    ctx = DesignContext.geometric_sans().tuned(stem=140.0, contrast=0.82, cap_height=700.0)
+    controls = Controls.from_context(ctx).with_stem_relief()
+    h = extract_glyph_style_metrics(controls.build("H")).stem_median
+    j = extract_glyph_style_metrics(controls.build("J")).stem_median
+    assert h is not None and j is not None
+    assert abs(j - h) <= max(30.0, 0.25 * h), (h, j)
+
+
+def test_cap_diagonal_pairwise_stem_skipped() -> None:
+    from typekernel.qa.design_sequence import latin_cap_topology_skip_checks
+
+    skips = latin_cap_topology_skip_checks("V", "W")
+    assert "stem_median" in skips
+    assert "oriented_stem" in skips

@@ -294,7 +294,9 @@ def _body_stem_median(outline: Outline) -> float | None:
     single_stem = len(mid_capped) <= 1 and len(mid_raw) <= 1
     # Descenders (``y``/``g``/…): lower-band probes hit the tail hairline.
     # Sample the upper body (x-height band) instead of the ascender-safe fracs.
-    if ymin < -40.0:
+    # Shallow hooks (``J`` overshoot ≈ −10..−20) are not below −40 but still
+    # put the hairline in the lower single-stem band — treat like descenders.
+    if ymin < -40.0 or (ymin < 0.0 and h > 600.0 and single_stem):
         fracs: tuple[float, ...] = (0.52, 0.58, 0.64, 0.72)
     elif h > 600.0 and single_stem:
         fracs = (0.16, 0.22, 0.28, 0.34, 0.40)
