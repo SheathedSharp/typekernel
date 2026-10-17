@@ -119,3 +119,44 @@ def test_italic_diagonals_match_vf_upright_topology() -> None:
     up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
     for ch in "kvwxyz":
         assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_branch_fillet_deeper_than_shear() -> None:
+    """Shared stem→shoulder fillet: ``n``/``h``/``m``/``r`` gain cubics vs shear."""
+    from typekernel.geo.segment import CubicSegment
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+
+    def n_cubics(g) -> int:
+        return sum(
+            1
+            for solid in g.solids
+            for contour in solid.contours
+            for seg in contour.segments
+            if isinstance(seg, CubicSegment)
+        )
+
+    deeper = 0
+    for ch in "nhmr":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        if n_cubics(drawn) > n_cubics(sheared):
+            deeper += 1
+    assert deeper == 4
+
+
+def test_italic_branch_fillet_vf_pair_matches_on_presets() -> None:
+    """Construction-time fillet keeps VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    for factory in (
+        DesignContext.humanist_sans,
+        DesignContext.geometric_sans,
+        DesignContext.code_clear,
+    ):
+        up, it = vf_italic_pair(Controls.from_context(factory()))
+        for ch in "nhmr":
+            assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))

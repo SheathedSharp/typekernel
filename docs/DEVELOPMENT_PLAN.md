@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1617 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1620 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -572,6 +572,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：脚本 ``NibSpec`` / ``nib_*_stroke`` / ``trace_nib_strokes``；真斜体 ``italic_topology_skip_checks`` + ``unlock_controls_italic_body``；扩展拉丁 ``charset_unlock_needs`` 计入 æøÆØ + ``unlock_controls_extended_latin``；§2.3.1 pytest **1614**。
 - **本轮（部分）**：斜体对角线 ``k/v/w/x/y/z`` 非对称 + 裆部 chamfer（拓扑异于 shear，VF upright 对齐；cubic 极值重平衡仍开放）；``polish_script_joins`` / ``trace_nib_strokes(polish_joins=…)``；§2.3.1 pytest **1614**。
 - **本轮（部分）**：斜体对角线 crotch 升级为 cursive cubic + ``outline_with_axis_extrema_on_curve``（R4-safe；``k/v/w/x/y/z`` 均含 C；非对角线真斜体细化仍开放）；``charset_unlock_needs`` / ``ensure_mark_composites_gated`` 覆盖 mark composites（``COMPOSITE_LATIN``），``compose_font_from_controls(extended_latin=…)`` 一并闸基字；§2.3.1 pytest **1617**。
+- **本轮（部分）**：非对角线真斜体 ``n/h/m/r`` 共用 ``_emit_italic_branch_shoulder`` 茎→肩 fillet（固定拓扑，VF wght×ital 绿；``u`` 仍 sharp branch，诚实限制）；碗字 ``join×0.88`` + 单层 ``a`` 收窄；``bridge_script_rails``；§2.3.1 pytest **1620**。
 - **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_trace_letter_spike`` / ``test_section8_skill_reference_documents_trace_letter``。
 
 ### M4 真斜体

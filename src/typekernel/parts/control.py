@@ -351,6 +351,12 @@ def _u_family_outline(m: NMetrics, ctx: DesignContext, *, vf_compat: bool = Fals
 
 
 def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) -> Outline:
+    """Italic ``u``: mirror of sharp ``n`` branch (no extra fillet).
+
+    Stem→shoulder fillets on ``n``/``h``/``m``/``r`` are weight-stable; the
+    mirrored + inner-crown-lifted ``u`` path is not yet, so ``u`` keeps the
+    classic branching join until a shared recipe is proven across wght relief.
+    """
     bulge = _u_foot_bulge(ctx, m.stem)
     if bulge <= 0.0:
         return _ccw(
@@ -360,6 +366,7 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
                     stem_top=stem_top,
                     ctx=ctx,
                     shelf_left_foot=_stem_serif_inlined(ctx),
+                    soft_branch=False,
                 ),
                 at_x=m.width / 2.0,
             )
@@ -793,12 +800,71 @@ def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     return m.x_height * 0.5
 
 
+def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> float:
+    """Fillet size for stem→shoulder branch (cursive italic crotch).
+
+    Sized from the branch drop (not stem) so wght masters keep a stable
+    segment recipe before construct-slant extrema.
+    """
+    del stem  # API keeps stem for call-site symmetry with other italic helpers.
+    drop = max(0.0, stem_top - branch_y)
+    return max(2.0, drop * 0.36)
+
+
+def _emit_italic_branch_shoulder(
+    b: PathBuilder,
+    *,
+    branch_x: float,
+    branch_y: float,
+    shoulder0: Cubic,
+    radius: float,
+) -> None:
+    """Vertical stem into first shoulder cubic via a kappa fillet (R4-friendly).
+
+    Current point must lie on ``x=branch_x`` with ``y > branch_y``. Emits a
+    rounded corner at the branch, then the remainder of ``shoulder0`` after a
+    fixed-parameter split so wght×ital masters keep matching segment counts.
+    """
+    from fontTools.misc.bezierTools import splitCubicAtT
+
+    from typekernel.geo.path_helpers import rounded_corner_cubics
+    from typekernel.geo.point import Point
+
+    if radius <= 0.0:
+        b.lineTo(branch_x, branch_y)
+        _curve(b, shoulder0)
+        return
+    p0, p1, p2, p3 = shoulder0
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    if math.hypot(dx, dy) < 1e-9:
+        dx, dy = p3[0] - p0[0], p3[1] - p0[1]
+    length = math.hypot(dx, dy) or 1.0
+    out_tgt = (
+        p0[0] + dx / length * max(radius * 2.5, 1.0),
+        p0[1] + dy / length * max(radius * 2.5, 1.0),
+    )
+    start, c1, c2, end, _corner = rounded_corner_cubics(
+        Point(branch_x, branch_y + max(radius * 2.0, 1.0)),
+        Point(branch_x, branch_y),
+        Point(out_tgt[0], out_tgt[1]),
+        radius,
+    )
+    b.lineTo(start.x, start.y)
+    b.curveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
+    _left, right = splitCubicAtT(p0, p1, p2, p3, 0.18)
+    r0, r1, r2, r3 = (tuple(pt) for pt in right)
+    # Always keep this line so segment counts do not depend on float gaps.
+    b.lineTo(r0[0], r0[1])
+    b.curveTo(r1[0], r1[1], r2[0], r2[1], r3[0], r3[1])
+
+
 def _n_branching_outline(
     m: NMetrics,
     *,
     stem_top: float,
     ctx: DesignContext | None = None,
     shelf_left_foot: bool = False,
+    soft_branch: bool = True,
 ) -> Outline:
     """``n`` / ``h`` shoulder springing from the left stem mid-height (italic)."""
     branch_y = _italic_branch_y(m, stem_top)
@@ -825,8 +891,17 @@ def _n_branching_outline(
         b.moveTo(l0, 0.0)
         b.lineTo(l0, stem_top)
         b.lineTo(l1, stem_top)
-    b.lineTo(l1, branch_y)
-    _curve(b, s.outer[0])
+    if soft_branch:
+        _emit_italic_branch_shoulder(
+            b,
+            branch_x=l1,
+            branch_y=branch_y,
+            shoulder0=s.outer[0],
+            radius=_italic_branch_radius(m.stem, stem_top, branch_y),
+        )
+    else:
+        b.lineTo(l1, branch_y)
+        _curve(b, s.outer[0])
     _curve(b, s.outer[1])
     b.lineTo(r1, 0.0)
     if ctx is not None and _stem_serif_inlined(ctx):
@@ -1138,9 +1213,13 @@ def _r_branching_outline(
         inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
     b.lineTo(s.l0, m.x_height)
     b.lineTo(s.l1, m.x_height)
-    b.lineTo(s.l1, branch_y)
-    b.lineTo(s.l1, branch_y)
-    _curve(b, s.outer[0])
+    _emit_italic_branch_shoulder(
+        b,
+        branch_x=s.l1,
+        branch_y=branch_y,
+        shoulder0=s.outer[0],
+        radius=_italic_branch_radius(m.stem, m.x_height, branch_y),
+    )
     _curve(b, outer_arm)
     b.lineTo(*inner_arm[0])
     _curve(b, inner_arm)
@@ -1469,10 +1548,17 @@ def m_from_n(
         b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
     if branch_y is not None:
-        b.lineTo(s1.l1, branch_y)
-    elif _vf_compat_stem(c):
-        b.lineTo(s1.l1, xh)
-    _curve(b, s1.outer[0])
+        _emit_italic_branch_shoulder(
+            b,
+            branch_x=s1.l1,
+            branch_y=branch_y,
+            shoulder0=s1.outer[0],
+            radius=_italic_branch_radius(mm.stem, xh, branch_y),
+        )
+    else:
+        if _vf_compat_stem(c):
+            b.lineTo(s1.l1, xh)
+        _curve(b, s1.outer[0])
     split1 = _split(s1.outer[1], xh, horizontal=True)
     split2 = _split(s2.outer[0], xh, horizontal=True)
     if split1 is not None and split2 is not None:
@@ -1827,8 +1913,9 @@ def _bowl_glyph(
         def foot(b: PathBuilder, x_stem: float) -> None:
             inline_stem_foot_serif_path(b, x_stem, y_foot, c, stem)
 
+    bowl_join = join * 0.88 if _italic_topology(c) else join
     outline = _bowl_stem_outline(
-        o, stem, stem_bottom=bottom, stem_top=top, join=join, foot=foot
+        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=foot
     )
     cx = o.rx
     anchors: dict[str, Pt] = {"top": (cx, o.x_height)}
@@ -1895,10 +1982,12 @@ def _single_storey_a_from_o(
     join: float,
 ) -> ComposedGlyph:
     o = _o_record(o_glyph)
+    a_join = join
     if _italic_topology(c):
-        o = o.tuned(rx=o.rx * 0.965, ry=o.ry * 0.985)
+        o = o.tuned(rx=o.rx * 0.955, ry=o.ry * 0.98)
+        a_join = join * 0.88
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
-    outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=join)
+    outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=a_join)
     outline = apply_terminal_shear(c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92))
     anchors = {
         "top": (o.rx, o.x_height),

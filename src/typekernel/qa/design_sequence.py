@@ -425,7 +425,7 @@ def italic_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
 
     Does **not** widen absolute tolerances. Diagonals ``k``/``v``/``w``/``x``/
     ``y``/``z`` use cursive-cubic italic constructions (topology differs from
-    shear); further cursive italic refinements (non-diagonal letters) remain open.
+    shear); non-diagonal branching uses a shared stem→shoulder fillet; further letterform craft remains open.
     """
     skip = list(latin_topology_skip_checks(ref, cand))
     if ref in {"f"} or cand in {"f"}:

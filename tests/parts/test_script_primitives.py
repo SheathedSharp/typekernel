@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typekernel.parts.script import (
+    bridge_script_rails,
     chaikin_subdivide,
     entry_rail,
     exit_rail,
@@ -92,3 +93,14 @@ def test_polish_script_joins_is_explicit() -> None:
     # Default trace path applies polish.
     default = trace_nib_strokes([ring], ctx, polish_joins=True)
     assert default.solids
+
+
+def test_bridge_script_rails_joins_exit_to_entry() -> None:
+    ex = exit_rail(0.0, 80.0, y=40.0, lift=60.0)
+    en = entry_rail(100.0, 180.0, y=40.0, lift=70.0)
+    bridged = bridge_script_rails(ex, en, mid_dip=5.0)
+    assert bridged[0] == ex[0]
+    assert bridged[-1] == en[-1]
+    assert len(bridged) == len(ex) + 1 + len(en)
+    mid = bridged[len(ex)]
+    assert mid[1] < (ex[-1][1] + en[0][1]) * 0.5

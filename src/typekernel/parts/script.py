@@ -22,6 +22,7 @@ from typekernel.parts.skeleton import Skeleton, Stroke, trace_letter
 __all__ = [
     "K_CIRCLE",
     "NibSpec",
+    "bridge_script_rails",
     "chaikin_subdivide",
     "ellipse_cubics",
     "entry_rail",
@@ -109,6 +110,27 @@ def exit_rail(
     """Three-point exit departure from a letter (pre-shear coordinates)."""
     mid = (x0 + x1) / 2.0
     return [(x0, lift * 0.5), (mid, y - dip), (x1, y + end_rise)]
+
+
+def bridge_script_rails(
+    exit_pts: Sequence[tuple[float, float]],
+    entry_pts: Sequence[tuple[float, float]],
+    *,
+    mid_dip: float = 4.0,
+) -> list[tuple[float, float]]:
+    """Join an exit rail to the next entry as one open connect polyline.
+
+    Inserts a shallow mid dip between the exit end and entry start so
+    ``chaikin_subdivide`` / nib expand can form a continuous writing connect
+    without callers hand-stitching points.
+    """
+    if len(exit_pts) < 1 or len(entry_pts) < 1:
+        raise ValueError("exit_pts and entry_pts must be non-empty")
+    ex = [(float(p[0]), float(p[1])) for p in exit_pts]
+    en = [(float(p[0]), float(p[1])) for p in entry_pts]
+    mid_x = (ex[-1][0] + en[0][0]) * 0.5
+    mid_y = (ex[-1][1] + en[0][1]) * 0.5 - mid_dip
+    return [*ex, (mid_x, mid_y), *en]
 
 
 def ellipse_cubics(
