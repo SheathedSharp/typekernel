@@ -82,6 +82,7 @@ def build(brief_id: str, out: Path, *, variant: str | None = None) -> int:
             style,
             weight_class=weight,
             kern_classes=kern_classes,
+        require_body_unlock=False,
         )
         built = build_font(font, out, formats=("otf",))
         otfs.append((style, built.binaries["otf"]))

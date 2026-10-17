@@ -94,6 +94,7 @@ def main() -> None:
             weight_class=weight,
             options=FAMILY_OPTIONS,
             kern_classes=kern_classes,
+        require_body_unlock=False,
         )
         built = build_font(font, out, formats=("otf",))
         otf = built.binaries["otf"]

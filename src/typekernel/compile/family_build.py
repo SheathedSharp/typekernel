@@ -98,8 +98,29 @@ def compose_font_from_controls(
     weight_class: int = 400,
     options: FamilyBuildOptions | None = None,
     kern_classes: Sequence[KernClass] | None = None,
+    require_body_unlock: bool = True,
 ) -> Font:
-    """Design-time font: spaced glyphs, class kern, feature-safe defaults."""
+    """Design-time font: spaced glyphs, class kern, feature-safe defaults.
+
+    By default runs :func:`~typekernel.qa.design_sequence.unlock_controls_body`
+    before ``build_all`` so agents cannot compose around the designer-order
+    gate. Pass ``require_body_unlock=False`` only for already-validated stock
+    compile paths (unit tests of features / polish), never as a design method.
+    """
+    if require_body_unlock:
+        from typekernel.qa.design_sequence import (
+            DesignSequenceError,
+            unlock_controls_body,
+        )
+
+        try:
+            unlock_controls_body(controls)
+        except DesignSequenceError as exc:
+            raise DesignSequenceError(
+                "compose_font_from_controls requires a body DesignSequence "
+                "unlock before compile — redesign refused glyphs, then retry "
+                f"(or unlock via Controls.unlock_body). {exc}"
+            ) from exc
     opts = options or FamilyBuildOptions()
     ctx = controls.context
     if opts.chars is not None:
