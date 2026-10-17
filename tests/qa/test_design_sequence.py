@@ -424,3 +424,64 @@ def test_cap_diagonal_pairwise_stem_skipped() -> None:
     skips = latin_cap_topology_skip_checks("V", "W")
     assert "stem_median" in skips
     assert "oriented_stem" in skips
+
+
+def test_unlock_controls_punct_completes() -> None:
+    from typekernel.qa.design_sequence import (
+        default_punct_design_order,
+        unlock_controls_punct,
+    )
+
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.humanist_sans,
+        DesignContext.slab_serif,
+        DesignContext.bracketed_serif,
+        DesignContext.code_clear,
+    ):
+        c = Controls.from_context(factory())
+        seq = unlock_controls_punct(c)
+        assert seq.is_complete
+        assert len(seq.unlocked) == len(default_punct_design_order())
+        via = c.unlock_punct()
+        assert via.unlocked == seq.unlocked  # type: ignore[union-attr]
+
+
+def test_unlock_controls_punct_refuses_thin_paren() -> None:
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_punct
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=35.0))
+    broken = good.with_glyph(")", lambda _n, _o, _ctx: thin.build(")"))
+    with pytest.raises(DesignSequenceError, match="refused glyph"):
+        unlock_controls_punct(broken)
+
+
+def test_punct_order_covers_punct_forms() -> None:
+    from typekernel.parts.punctuation import PUNCT_FORMS
+    from typekernel.qa.design_sequence import DEFAULT_PUNCT_DESIGN_ORDER
+
+    assert set(DEFAULT_PUNCT_DESIGN_ORDER) == set(PUNCT_FORMS)
+
+
+def test_extreme_slab_stem160_caps_hard_fail_documented() -> None:
+    """Extreme slab masters still refuse some caps — do not greenwash.
+
+    Stem ≥ 160 on slab_serif can refuse ``X`` / ``M`` / ``E`` under honest
+    stem probes. Default preset stems (~70–100) and compose stay green; this
+    marks the construction ceiling until diagonals/bars are redesigned.
+    """
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_caps
+
+    c = Controls.from_context(DesignContext.slab_serif().tuned(stem=160.0)).with_stem_relief()
+    with pytest.raises(DesignSequenceError, match="refused glyph"):
+        unlock_controls_caps(c)
+
+
+def test_extreme_slab_stem200_body_hard_fail_documented() -> None:
+    """Black slab body can refuse ``z`` — measurement/construction ceiling."""
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_body
+
+    c = Controls.from_context(DesignContext.slab_serif().tuned(stem=200.0)).with_stem_relief()
+    with pytest.raises(DesignSequenceError, match="refused glyph"):
+        unlock_controls_body(c)

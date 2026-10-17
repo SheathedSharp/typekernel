@@ -408,13 +408,34 @@ class Controls:
             skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
         )
 
+    def unlock_punct(
+        self,
+        *,
+        control: str = ".",
+        order: Sequence[str] | None = None,
+        tolerances: object | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: object | None = None,
+    ) -> object:
+        """Run punctuation through :func:`~typekernel.qa.design_sequence.unlock_controls_punct`."""
+        from typekernel.qa.design_sequence import unlock_controls_punct
+
+        return unlock_controls_punct(
+            self,
+            control=control,
+            order=order,
+            tolerances=tolerances,  # type: ignore[arg-type]
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
+        )
+
     def unlock_for_charset(
         self,
         charset: str,
         *,
         require: bool = True,
     ) -> Controls:
-        """Run body / caps / digits DesignSequence unlocks present in ``charset``.
+        """Run body / caps / digits / punct DesignSequence unlocks present in ``charset``.
 
         See :func:`~typekernel.qa.design_sequence.ensure_controls_unlocked_for_charset`.
         """
@@ -473,6 +494,10 @@ class Controls:
             **RELATED_FORMS,
             **{k: v for k, v in self.glyph_overrides.items() if k in RELATED_FORMS},
         }
+        punct_forms_merged = {
+            **PUNCT_FORMS,
+            **{k: v for k, v in self.glyph_overrides.items() if k in PUNCT_FORMS},
+        }
         cap_forms_merged = {
             **cap_forms,
             **{k: v for k, v in self.glyph_overrides.items() if k in cap_forms},
@@ -480,7 +505,7 @@ class Controls:
         out: dict[str, ComposedGlyph] = {}
         for forms, draw in (
             (related, self.control_glyphs),
-            (PUNCT_FORMS, self.control_glyphs),
+            (punct_forms_merged, self.control_glyphs),
             (extended, self.control_glyphs),
             (cap_forms_merged, self.cap_control_glyphs),
         ):

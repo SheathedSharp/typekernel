@@ -205,24 +205,27 @@ def design_review(
 
 
 def _body_sequence_failures(controls: Controls) -> tuple[str, ...]:
-    """Run designer-order body + digit unlock; empty means stock is consistent."""
+    """Run designer-order body / caps / digit / punct unlock; empty = consistent."""
     from typekernel.qa.design_sequence import (
         DesignSequenceError,
         unlock_controls_body,
+        unlock_controls_caps,
         unlock_controls_digits,
+        unlock_controls_punct,
     )
 
     out: list[str] = []
-    try:
-        unlock_controls_body(controls)
-    except DesignSequenceError as exc:
-        hints = tuple(exc.hints[:6])
-        out.extend((f"body DesignSequence: {exc}", *hints))
-    try:
-        unlock_controls_digits(controls)
-    except DesignSequenceError as exc:
-        hints = tuple(exc.hints[:6])
-        out.extend((f"digit DesignSequence: {exc}", *hints))
+    for label, fn in (
+        ("body", unlock_controls_body),
+        ("caps", unlock_controls_caps),
+        ("digit", unlock_controls_digits),
+        ("punct", unlock_controls_punct),
+    ):
+        try:
+            fn(controls)
+        except DesignSequenceError as exc:
+            hints = tuple(exc.hints[:6])
+            out.extend((f"{label} DesignSequence: {exc}", *hints))
     return tuple(out)
 
 

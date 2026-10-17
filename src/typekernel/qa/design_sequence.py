@@ -31,25 +31,30 @@ __all__ = [
     "DEFAULT_BODY_DESIGN_ORDER",
     "DEFAULT_CAP_DESIGN_ORDER",
     "DEFAULT_DIGIT_DESIGN_ORDER",
+    "DEFAULT_PUNCT_DESIGN_ORDER",
     "DesignSequence",
     "DesignSequenceError",
     "charset_unlock_needs",
     "controls_body_tolerances",
     "controls_cap_tolerances",
     "controls_digit_tolerances",
+    "controls_punct_tolerances",
     "default_body_design_order",
     "default_cap_design_order",
     "default_digit_design_order",
+    "default_punct_design_order",
     "ensure_controls_body_unlocked",
     "ensure_controls_unlocked_for_charset",
     "latin_cap_topology_skip_checks",
     "latin_digit_topology_skip_checks",
+    "latin_punct_topology_skip_checks",
     "latin_topology_skip_checks",
     "unlock_controls_body",
     "unlock_controls_body_ladder",
     "unlock_controls_caps",
     "unlock_controls_digits",
     "unlock_controls_digits_ladder",
+    "unlock_controls_punct",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -280,9 +285,12 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     if ref in _DIAGONALS or cand in _DIAGONALS or ref in cap_diags or cand in cap_diags:
         skip.extend(["contrast_ratio"])
     # Pairwise stem among unlike cap diagonals is not comparable (``V``↔``W``,
-    # ``A``↔``X``, …). Each still gates stem against control ``H``. Stable
-    # ``V``↔``W`` keep oriented_stem above; stem_median pairwise still skipped.
+    # ``A``↔``X``, …). Each still gates stem against control ``H``, except
+    # ``W`` whose four diagonals are intentionally lighter than ``H`` by
+    # construction (:func:`~typekernel.parts.caps.W_from_H`).
     if ref in cap_diags and cand in cap_diags:
+        skip.append("stem_median")
+    if ref in {"W", "w"} or cand in {"W", "w"}:
         skip.append("stem_median")
     if (
         ref in _CLOSED_BOWLS
@@ -314,18 +322,18 @@ def controls_cap_tolerances() -> StyleConsistencyTolerances:
 
 
 
-def charset_unlock_needs(charset: str) -> tuple[bool, bool, bool]:
-    """Which DesignSequence unlocks a charset requires (body, caps, digits).
+def charset_unlock_needs(charset: str) -> tuple[bool, bool, bool, bool]:
+    """Which DesignSequence unlocks a charset requires.
 
-    Punctuation has no DesignSequence yet — presence of punct alone does not
-    request an unlock (compose still ships punct from stock forms).
+    Returns ``(body, caps, digits, punct)``.
     """
-    from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, RELATED_FORMS
+    from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS
 
     need_body = any(ch in RELATED_FORMS for ch in charset)
     need_caps = any(ch in CAP_FORMS for ch in charset)
     need_digits = any(ch in FIGURE_FORMS for ch in charset)
-    return need_body, need_caps, need_digits
+    need_punct = any(ch in PUNCT_FORMS for ch in charset)
+    return need_body, need_caps, need_digits, need_punct
 
 
 def ensure_controls_unlocked_for_charset(
@@ -334,7 +342,7 @@ def ensure_controls_unlocked_for_charset(
     *,
     require: bool = True,
 ) -> Controls:
-    """Run body / caps / digits DesignSequence unlocks present in ``charset``.
+    """Run body / caps / digits / punct DesignSequence unlocks present in ``charset``.
 
     Shared gate for compose / preview / kern-class entrypoints. When ``require``
     is true (default), refuses if any applicable subset fails. Pass
@@ -342,13 +350,15 @@ def ensure_controls_unlocked_for_charset(
     """
     if not require:
         return controls
-    need_body, need_caps, need_digits = charset_unlock_needs(charset)
+    need_body, need_caps, need_digits, need_punct = charset_unlock_needs(charset)
     if need_body:
         unlock_controls_body(controls)
     if need_caps:
         unlock_controls_caps(controls)
     if need_digits:
         unlock_controls_digits(controls)
+    if need_punct:
+        unlock_controls_punct(controls)
     return controls
 
 
@@ -607,6 +617,211 @@ def unlock_controls_caps(
     if skips is None:
         skips = latin_cap_topology_skip_checks
     tol = tolerances if tolerances is not None else controls_cap_tolerances()
+    seq = DesignSequence.start(
+        control,
+        controls.build(control),
+        tolerances=tol,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skips,
+        planned_order=planned,
+    )
+    for ch in seq.planned_order:
+        if ch == seq.control:
+            continue
+        seq.add(ch, controls.build(ch))
+    return seq
+
+
+
+# ---------------------------------------------------------------------------
+# Punctuation DesignSequence (control "." — period as the atomic mark)
+# ---------------------------------------------------------------------------
+
+DEFAULT_PUNCT_DESIGN_ORDER: tuple[str, ...] = (
+    ".",
+    ",",
+    ";",
+    ":",
+    "!",
+    "?",
+    "'",
+    '"',
+    "\u2018",
+    "\u2019",
+    "\u201c",
+    "\u201d",
+    "\u00b0",
+    "*",
+    "-",
+    "\u2212",
+    "\u2013",
+    "\u2014",
+    "_",
+    "=",
+    "+",
+    "<",
+    ">",
+    "(",
+    ")",
+    "[",
+    "]",
+    "{",
+    "}",
+    "/",
+    "\\",
+    "#",
+    "&",
+    "%",
+    "@",
+    "$",
+)
+
+_PUNCT_QUOTES: frozenset[str] = frozenset(
+    {"'", '"', "\u2018", "\u2019", "\u201c", "\u201d"}
+)
+_PUNCT_RINGS: frozenset[str] = frozenset({"\u00b0", "*"})
+_PUNCT_BAR_CORE: frozenset[str] = frozenset({"-", "\u2013", "\u2014", "\u2212"})
+_PUNCT_BARS: frozenset[str] = frozenset(
+    {"-", "\u2013", "\u2014", "\u2212", "_", "=", "+", "<", ">"}
+)
+_PUNCT_BRACKETS: frozenset[str] = frozenset({"(", ")", "[", "]", "{", "}"})
+_PUNCT_BRACKET_PAIRS: tuple[frozenset[str], ...] = (
+    frozenset({"(", ")"}),
+    frozenset({"[", "]"}),
+    frozenset({"{", "}"}),
+)
+_PUNCT_SLASHES: frozenset[str] = frozenset({"/", "\\"})
+_PUNCT_COMPLEX: frozenset[str] = frozenset({"#", "&", "%", "@", "$"})
+
+
+def default_punct_design_order() -> tuple[str, ...]:
+    """Default punctuation designer order for Controls-derived Latin faces."""
+    return DEFAULT_PUNCT_DESIGN_ORDER
+
+
+def latin_punct_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Metric skips for punctuation DesignSequence (control ``.`` path).
+
+    Same-role pairs keep honest gates; cross-role pairs (including most marks
+    vs period) skip metrics that would false-fail. Period bridges keep
+    ``ink_ymax`` for ``,`` and stem / ``ink_ymin`` for ``!``.
+    """
+    skip: list[str] = [
+        "entry_rail_y",
+        "exit_rail_y",
+        "exit_slant_deg",
+        "oriented_stem",
+    ]
+    pair = frozenset({ref, cand})
+
+    if pair == {".", ","}:
+        skip.extend(["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin"])
+        return tuple(dict.fromkeys(skip))
+    if pair == {".", "!"}:
+        # Period tittle is size-capped (``x_height×0.145``); bang stem tracks
+        # ``n.stem`` — stem compare is not the same role at heavy weights.
+        skip.extend(
+            ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymax"]
+        )
+        return tuple(dict.fromkeys(skip))  # keep ink_ymin (shared baseline sit)
+    if "." in pair:
+        skip.extend(
+            ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"]
+        )
+        return tuple(dict.fromkeys(skip))
+
+    if pair == {",", ";"}:
+        skip.extend(
+            ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"]
+        )
+        return tuple(dict.fromkeys(skip))
+    if pair == {"!", "?"}:
+        skip.extend(["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymax"])
+        return tuple(dict.fromkeys(skip))
+
+    if ref in _PUNCT_QUOTES and cand in _PUNCT_QUOTES:
+        skip.extend(["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin"])
+        return tuple(dict.fromkeys(skip))
+    if ref in _PUNCT_RINGS and cand in _PUNCT_RINGS:
+        skip.extend(
+            ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"]
+        )
+        return tuple(dict.fromkeys(skip))
+
+    if ref in _PUNCT_BAR_CORE and cand in _PUNCT_BAR_CORE:
+        skip.extend(["stem_median", "contrast_ratio"])
+        return tuple(dict.fromkeys(skip))
+    if ref in _PUNCT_BARS and cand in _PUNCT_BARS:
+        skip.extend(
+            ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"]
+        )
+        return tuple(dict.fromkeys(skip))
+
+    if ref in _PUNCT_BRACKETS and cand in _PUNCT_BRACKETS:
+        # Only matching pairs share stem language; braces are thinner than [].
+        if not any(pair <= group for group in _PUNCT_BRACKET_PAIRS):
+            skip.extend(
+                [
+                    "stem_median",
+                    "contrast_ratio",
+                    "bowl_center_y",
+                    "ink_ymin",
+                    "ink_ymax",
+                ]
+            )
+        else:
+            skip.extend(["contrast_ratio", "bowl_center_y"])
+        return tuple(dict.fromkeys(skip))
+
+    if ref in _PUNCT_SLASHES and cand in _PUNCT_SLASHES:
+        skip.extend(["contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"])
+        return tuple(dict.fromkeys(skip))
+    if ref in _PUNCT_COMPLEX and cand in _PUNCT_COMPLEX:
+        skip.extend(["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymax"])
+        return tuple(dict.fromkeys(skip))
+
+    skip.extend(
+        ["stem_median", "contrast_ratio", "bowl_center_y", "ink_ymin", "ink_ymax"]
+    )
+    return tuple(dict.fromkeys(skip))
+
+
+def controls_punct_tolerances() -> StyleConsistencyTolerances:
+    """Budgets for Controls punctuation sequences (from period control ``.``)."""
+    return StyleConsistencyTolerances(
+        stem_median=18.0,
+        stem_median_rel=0.22,
+        contrast_ratio=0.55,
+        entry_rail_y=36.0,
+        exit_rail_y=36.0,
+        exit_slant_deg=35.0,
+        bowl_center_y=80.0,
+        ink_ymin=55.0,
+        ink_ymax=120.0,
+    )
+
+
+def unlock_controls_punct(
+    controls: Controls,
+    *,
+    control: str = ".",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Unlock Controls punctuation one glyph at a time (period-first order).
+
+    Stock presets must complete :data:`DEFAULT_PUNCT_DESIGN_ORDER` under
+    :func:`controls_punct_tolerances`.
+    """
+    planned = tuple(order) if order is not None else default_punct_design_order()
+    if control not in planned or planned[0] != control:
+        planned = (control, *[c for c in planned if c != control])
+    skips = skip_checks_for_pair
+    if skips is None:
+        skips = latin_punct_topology_skip_checks
+    tol = tolerances if tolerances is not None else controls_punct_tolerances()
     seq = DesignSequence.start(
         control,
         controls.build(control),

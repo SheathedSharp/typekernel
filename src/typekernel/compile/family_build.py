@@ -146,9 +146,9 @@ def compose_font_from_controls(
         except DesignSequenceError as exc:
             raise DesignSequenceError(
                 "compose_font_from_controls requires DesignSequence unlock "
-                "(body / caps / digits as present in charset) before compile — "
+                "(body / caps / digits / punct as present in charset) before compile — "
                 "redesign refused glyphs, then retry (or unlock via "
-                f"Controls.unlock_body / unlock_caps / unlock_digits). {exc}"
+                f"Controls.unlock_body / unlock_caps / unlock_digits / unlock_punct). {exc}"
             ) from exc
     ctx = controls.context
     drawn = polish_glyph_map(controls.build_all(charset), opts.polish_options())

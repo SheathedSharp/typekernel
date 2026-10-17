@@ -41,7 +41,7 @@ def build_glyph_preview(
     """Compile *controls* and write grid + sentence PNGs; return paths.
 
     Requires DesignSequence unlock for subsets in the preview charset (body /
-    caps / digits) by default — same as compose. Pass
+    caps / digits / punct) by default — same as compose. Pass
     ``require_body_unlock=False`` only for documented stock / specimen previews.
     """
     out_dir = Path(out_dir)
