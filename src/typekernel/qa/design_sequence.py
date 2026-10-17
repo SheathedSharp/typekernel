@@ -256,14 +256,11 @@ def controls_body_tolerances() -> StyleConsistencyTolerances:
     )
 
 
-
-
-
 def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     """Metric skips for uppercase DesignSequence (H/O control path).
 
     Reuses lowercase role sets where letters overlap, plus cap diagonals
-    ``A V W X Y Z K M N`` and round caps ``C G O Q S``.
+    ``A V W X Y Z K M N``. Round/soft caps gate contrast except spine ``S``.
     """
     skip: list[str] = [
         "entry_rail_y",
@@ -271,7 +268,6 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         "exit_slant_deg",
     ]
     cap_diags = frozenset({"A", "V", "W", "X", "Y", "Z", "K", "M", "N"})
-    cap_rounds = frozenset({"C", "G", "O", "Q", "S", "D", "B", "P", "R", "U"})
     # Cap diagonals (especially ``W`` vs ``V``) inflate oriented pairwise; gate
     # stem against control ``H`` via stem_median / vertical-equiv instead.
     skip.append("oriented_stem")
@@ -289,10 +285,10 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         skip.append("stem_median")
     if ref in {"W", "w"} or cand in {"W", "w"}:
         skip.append("stem_median")
-    # Contrast: gate closed ``O``/``G``/``Q``, open ``C``, and soft ``D B P``
-    # (polar / bar probes). Keep skip for ``R``/``S``/``U`` — leg / spine /
-    # null samples still unstable vs ``H`` across presets.
-    _cap_contrast_skip = frozenset({"S", "R", "U"})
+    # Contrast: gate closed/open/soft bowls plus ``R``/``U`` (narrow bar /
+    # base-arc probes). Keep skip for ``S`` — spine waist vs ``H`` bar is not
+    # stable at light weights (geo default Q→S).
+    _cap_contrast_skip = frozenset({"S"})
     if ref in _cap_contrast_skip or cand in _cap_contrast_skip:
         skip.extend(["contrast_ratio"])
     if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
@@ -462,8 +458,9 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
 
     Rails/slant are script proxies — always omitted. Stem stays gated for
     stem-like figures (``1``/``4``/``7``/``0``/``6``/``9``); open ``2``/``3``/``5``
-    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is gated for ``0``/``6``/``9`` (polar H/V); omitted for opens /
-    diagonals / ``8`` where H/V samples are unstable.
+    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is
+    gated for closed and open figures (polar/bar H/V); omitted for diagonal
+    ``4``/``7`` where H/V samples are unstable.
     """
     skip: list[str] = [
         "entry_rail_y",
@@ -477,10 +474,11 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         or ref in _DIGIT_DOUBLE_BOWL
         or cand in _DIGIT_DOUBLE_BOWL
     ):
-        skip.extend(["stem_median", "contrast_ratio"])
-    # Contrast: gate closed ``0``/``6``/``9`` (polar H/V). Keep skip for opens,
-    # double-bowl ``8``, and diagonal figures.
-    _digit_contrast_skip = _DIGIT_OPEN | _DIGIT_DOUBLE_BOWL | _DIGIT_DIAGONAL
+        # Stem probes still unreliable on opens / ``8``; contrast is gated below.
+        skip.append("stem_median")
+    # Contrast: gate closed ``0``/``6``/``9`` and opens/``8`` (polar/bar H/V).
+    # Keep skip for diagonal ``4``/``7`` only.
+    _digit_contrast_skip = _DIGIT_DIAGONAL
     if ref in _digit_contrast_skip or cand in _digit_contrast_skip:
         skip.append("contrast_ratio")
     if (

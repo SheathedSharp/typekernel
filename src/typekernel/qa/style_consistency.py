@@ -342,7 +342,7 @@ def _body_stem_median(outline: Outline) -> float | None:
             # Cap kept only aperture hairline while upright exceeds 0.42×ink.
             # Require a true hairline (≤0.15×ink) so bowl chords (``G``) do not
             # trigger a back-stem rescue over a real upright.
-            if cap_hi < 0.40 * raw_hi and cap_hi <= 0.15 * wmax:
+            if cap_hi < 0.40 * raw_hi and cap_hi <= 0.12 * wmax:
                 widths.append(raw_hi)
             elif len(capped) >= 2:
                 lo = min(float(s.width) for s in capped)
@@ -352,11 +352,15 @@ def _body_stem_median(outline: Outline) -> float | None:
                 if (
                     len(capped) == 2
                     and hi >= 2.2 * lo
-                    and lo <= 0.15 * wmax
+                    and lo <= 0.12 * wmax
                 ):
                     widths.append(hi)
                 else:
-                    widths.extend(float(s.width) for s in capped)
+                    caps_w = [float(s.width) for s in capped]
+                    if len(caps_w) >= 3:
+                        med_c = float(statistics.median(caps_w))
+                        caps_w = [cw for cw in caps_w if cw >= 0.70 * med_c]
+                    widths.extend(caps_w)
             else:
                 widths.append(cap_hi)
         elif raw:
@@ -368,19 +372,19 @@ def _body_stem_median(outline: Outline) -> float | None:
         elif capped:
             widths.extend(float(s.width) for s in capped)
     if not widths:
-        raw: list[float] = []
+        fallback: list[float] = []
         for f in fracs:
             y = ymin + f * h
             for span in list_vertical_stems(outline, y=y):
-                raw.append(float(span.width))
-        if not raw:
-            raw = [float(s.width) for s in list_vertical_stems(outline)]
-        if not raw:
+                fallback.append(float(span.width))
+        if not fallback:
+            fallback = [float(s.width) for s in list_vertical_stems(outline)]
+        if not fallback:
             return None
-        lo = min(raw)
+        lo = min(fallback)
         # Keep upright stems near the narrowest sample; drop bar/counter spans.
         cap = max(1.55 * lo, frac_cap)
-        widths = [w for w in raw if w <= cap]
+        widths = [w for w in fallback if w <= cap]
         if wmax > 2.2 * lo:
             widths = [w for w in widths if w < 0.55 * wmax]
         if not widths:
@@ -393,7 +397,7 @@ def _body_stem_median(outline: Outline) -> float | None:
         mid_w = float(statistics.median(widths))
         if hi_w >= 0.40 * wmax or hi_w >= 1.8 * mid_w:
             narrow = [w for w in widths if w <= 1.35 * lo_w]
-            if narrow and float(statistics.median(narrow)) >= 0.55 * mid_w:
+            if narrow and float(statistics.median(narrow)) >= 0.75 * mid_w:
                 widths = narrow
     med = float(statistics.median(widths))
     core = [w for w in widths if 0.55 * med <= w <= 1.40 * med]
@@ -433,8 +437,9 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     Mid-band H probes catch designed bars (``H``/``e``) and reject crown /
     baseline arches on ``n``/``u``. Closed bowls (``O``/``o``/``0``) put their
     designed thins at the poles — when *both* crown and baseline yield spans,
-    those polar thins over side uprights are the contrast ratio. A lone crown
-    (shoulder arch) is ignored so ``n`` stays contrast-null. If the mid-band median is join-inflated vs polar (>1.15×), prefer polar.
+    those polar thins over side uprights are the contrast ratio. A lone crown (shoulder arch) is ignored so ``n`` stays contrast-null;
+    base-only with ≥2 mid uprights covers ``U``. ``R`` narrows bar-vs-join
+    body samples when polar is unavailable. If the mid-band median is join-inflated vs polar (>1.15×), prefer polar.
     Open ``e`` midbars that collapse below 0.65×polar (black eye aperture)
     also fall back to polar.
     """
@@ -454,11 +459,11 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     base: list[float] = []
     for f in (0.30, 0.40, 0.50, 0.60, 0.70):
         x = xmin + f * w
-        for span in list_horizontal_stems(
+        for hspan in list_horizontal_stems(
             outline, x=x, max_width=2.2 * stem_median
         ):
-            cy = float(span.center_y)
-            ww = float(span.width)
+            cy = float(hspan.center_y)
+            ww = float(hspan.width)
             if ww < 0.25 * stem_median:
                 continue
             if y_lo <= cy <= y_hi and ww <= 1.8 * stem_median:
@@ -474,24 +479,45 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     # under-read; mid V spans stay near the designed thick).
     v_spans: list[float] = []
     for f in (0.42, 0.50, 0.58):
-        for span in list_vertical_stems(outline, y=ymin + f * h):
-            ww = float(span.width)
+        for vspan in list_vertical_stems(outline, y=ymin + f * h):
+            ww = float(vspan.width)
             if 0.35 * stem_median <= ww <= 1.8 * stem_median:
                 v_spans.append(ww)
+    mid_stemlike = [
+        s
+        for s in list_vertical_stems(outline, y=ymin + 0.50 * h)
+        if 0.35 * stem_median <= float(s.width) <= 1.8 * stem_median
+    ]
+    multi_v = len(mid_stemlike) >= 2
     v_den = float(statistics.median(v_spans)) if v_spans else float(stem_median)
 
     def _ratio(xs: list[float], den: float) -> float | None:
         return float(statistics.median(xs) / den) if xs else None
 
+    # Polar: both poles (``O``) or base-only with ≥2 mid uprights (``U``).
+    if crown and base:
+        polar_r = _ratio(crown + base, v_den)
+    elif base and multi_v and not crown:
+        polar_r = _ratio(base, v_den)
+    else:
+        polar_r = None
+    # ``R`` bar vs leg-join: narrow body only when polar is unavailable.
+    if polar_r is None and len(body) >= 2 and max(body) > 1.25 * min(body):
+        lo = min(body)
+        narrow = [bw for bw in body if bw <= 1.35 * lo]
+        if narrow:
+            body = narrow
     body_r = _ratio(body, float(stem_median))
-    polar_r = _ratio(crown + base, v_den) if (crown and base) else None
     mid_r = _ratio(midbar, float(stem_median))
     # Black ``e``: midbar can read aperture hairline while poles still track the
-    # designed thick — prefer polar when midbar collapses below 0.55×polar.
+    # designed thick — prefer polar when midbar collapses below 0.65×polar.
     if mid_r is not None and polar_r is not None and mid_r < 0.65 * polar_r:
         return polar_r
     if body_r is not None and polar_r is not None:
-        return polar_r if body_r > 1.15 * polar_r else body_r
+        # Join-inflated body OR over-narrow spur vs polar → trust poles.
+        if body_r > 1.15 * polar_r or body_r < 0.70 * polar_r:
+            return polar_r
+        return body_r
     if body_r is not None:
         return body_r
     return polar_r
@@ -646,8 +672,10 @@ def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
         phi = _estimate_diagonal_angle_from_vertical(outline)
         if phi is None or phi < 25.0 or phi > 80.0:
             phi = 45.0
-        contrast = float(getattr(glyph.context, "contrast", 1.0) or 1.0)
-        stem_median = vertical_equiv_from_diagonal(oriented, phi, contrast=contrast)
+        ctx_contrast = float(getattr(glyph.context, "contrast", 1.0) or 1.0)
+        stem_median = vertical_equiv_from_diagonal(
+            oriented, phi, contrast=ctx_contrast
+        )
     # Prefer body-band contrast. No mid-ray fallback: single-stem letters
     # (l/i/v) yield bogus horizontal spans and must skip via missing.
     contrast = _body_contrast_ratio(outline, stem_median)

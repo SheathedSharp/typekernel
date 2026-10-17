@@ -356,16 +356,15 @@ def test_latin_digit_topology_skips_documented() -> None:
     # Open figures / double bowl: stem probes unreliable.
     for ch in ("2", "3", "5", "8"):
         skips = latin_digit_topology_skip_checks("1", ch)
-        assert "stem_median" in skips
-        assert "contrast_ratio" in skips
+        assert "stem_median" in skips  # open/8 stem still unreliable
+        assert "contrast_ratio" not in skips
         assert "entry_rail_y" in skips
     # Stem-like figures keep stem gating vs control ``1``.
     for ch in ("0", "4", "7", "6", "9"):
         assert "stem_median" not in latin_digit_topology_skip_checks("1", ch)
-    # Closed ``0``/``6``/``9`` gate contrast (polar H/V); diagonals skip.
-    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "0")
-    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "6")
-    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "9")
+    # Closed + opens/``8`` gate contrast; diagonal ``4``/``7`` skip.
+    for ch in ("0", "6", "9", "2", "3", "5", "8"):
+        assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", ch)
     assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "7")
     assert "stem_median" not in latin_digit_topology_skip_checks("1", "7")
 
@@ -470,14 +469,13 @@ def test_punct_order_covers_punct_forms() -> None:
     assert set(DEFAULT_PUNCT_DESIGN_ORDER) == set(PUNCT_FORMS)
 
 
-def test_cap_bowl_contrast_gated_rsu_still_skipped() -> None:
-    """Polar/bar contrast gates ``O G Q C D B P``; ``R``/``S``/``U`` stay skipped."""
+def test_cap_bowl_contrast_gated_s_still_skipped() -> None:
+    """Polar/bar contrast gates bowls + ``R``/``U``; spine ``S`` stays skipped."""
     from typekernel.qa.design_sequence import latin_cap_topology_skip_checks
 
-    for ch in ("O", "G", "Q", "C", "D", "B", "P"):
+    for ch in ("O", "G", "Q", "C", "D", "B", "P", "R", "U"):
         assert "contrast_ratio" not in latin_cap_topology_skip_checks("H", ch)
-    for ch in ("R", "S", "U"):
-        assert "contrast_ratio" in latin_cap_topology_skip_checks("H", ch)
+    assert "contrast_ratio" in latin_cap_topology_skip_checks("H", "S")
 
 
 def test_round_polar_contrast_tracks_family() -> None:
@@ -525,6 +523,53 @@ def test_open_ce_contrast_gated() -> None:
     assert "contrast_ratio" not in latin_topology_skip_checks("n", "c")
     assert "contrast_ratio" not in latin_topology_skip_checks("n", "e")
     assert "contrast_ratio" not in latin_topology_skip_checks("n", "o")
+
+
+def test_cap_r_u_contrast_tracks_h() -> None:
+    """``R``/``U`` contrast stays within cap budget of ``H`` across presets."""
+    from typekernel.qa.design_sequence import controls_cap_tolerances
+    from typekernel.qa.style_consistency import compare_glyph_styles, extract_glyph_style_metrics
+
+    tol = controls_cap_tolerances()
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.slab_serif,
+        DesignContext.humanist_sans,
+    ):
+        c = Controls.from_context(factory().tuned(stem=150.0)).with_stem_relief()
+        assert extract_glyph_style_metrics(c.build("U")).contrast_ratio is not None
+        for ch in ("R", "U"):
+            r = compare_glyph_styles(
+                c.build("H"),
+                c.build(ch),
+                reference_name="H",
+                candidate_name=ch,
+                tolerances=tol,
+                skip_checks=(),
+            )
+            ck = next(x for x in r.checks if x.name == "contrast_ratio")
+            assert ck.ok, (factory.__name__, ch, ck.candidate, ck.reference, ck.delta)
+
+
+def test_latin_controls_unlock_sweep_main_presets() -> None:
+    """Body/caps/digits unlock on geo/slab/humanist at regular + black stems."""
+    from typekernel.qa.design_sequence import (
+        unlock_controls_body,
+        unlock_controls_caps,
+        unlock_controls_digits,
+    )
+
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.slab_serif,
+        DesignContext.humanist_sans,
+    ):
+        for stem in (None, 150.0, 200.0):
+            ctx = factory() if stem is None else factory().tuned(stem=stem)
+            c = Controls.from_context(ctx).with_stem_relief() if stem else Controls.from_context(ctx)
+            assert unlock_controls_body(c).is_complete
+            assert unlock_controls_caps(c).is_complete
+            assert unlock_controls_digits(c).is_complete
 
 
 def test_black_open_e_contrast_uses_polar_not_aperture() -> None:
