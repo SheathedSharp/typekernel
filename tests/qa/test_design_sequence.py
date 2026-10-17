@@ -180,7 +180,9 @@ def test_latin_topology_skips_open_rounds_and_hooks() -> None:
 
     nc = latin_topology_skip_checks("n", "c")
     assert "contrast_ratio" in nc
-    assert "stem_median" in nc
+    # Open ``c``/``e`` stem is gated (back-stem / aperture-aware sampler).
+    assert "stem_median" not in nc
+    assert "stem_median" not in latin_topology_skip_checks("n", "e")
     nt = latin_topology_skip_checks("n", "t")
     assert "ink_ymin" in nt
     no = latin_topology_skip_checks("n", "o")
@@ -464,18 +466,50 @@ def test_punct_order_covers_punct_forms() -> None:
     assert set(DEFAULT_PUNCT_DESIGN_ORDER) == set(PUNCT_FORMS)
 
 
-def test_extreme_slab_stem160_caps_hard_fail_documented() -> None:
-    """Extreme slab masters still refuse some caps — do not greenwash.
+def test_extreme_slab_caps_unlock_through_black() -> None:
+    """Aperture-aware stem probes let slab caps unlock through stem 200.
 
-    Stem ≥ 160 on slab_serif can refuse ``M`` / ``Y`` / ``E`` (or later) under honest
-    stem probes (``X`` extreme thin landed). Default presets and compose stay
-    green; this marks the construction ceiling until those glyphs are redesigned.
+    Previously ``M``/``E``/``V`` false-failed on crotch/bar chords; construction
+    thins plus honest sampling cleared the gate without widening tolerances.
     """
-    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_caps
+    from typekernel.qa.design_sequence import unlock_controls_caps
 
-    c = Controls.from_context(DesignContext.slab_serif().tuned(stem=160.0)).with_stem_relief()
-    with pytest.raises(DesignSequenceError, match="refused glyph"):
-        unlock_controls_caps(c)
+    for stem in (160.0, 180.0, 200.0):
+        c = Controls.from_context(DesignContext.slab_serif().tuned(stem=stem)).with_stem_relief()
+        seq = unlock_controls_caps(c)
+        assert seq.is_complete
+
+
+def test_open_round_stem_pass_and_refuse() -> None:
+    """Same-family ``c``/``e`` pass stem vs ``n``; thin ``c`` refuses."""
+    from typekernel.qa.design_sequence import (
+        DesignSequenceError,
+        controls_body_tolerances,
+        latin_topology_skip_checks,
+        unlock_controls_body,
+    )
+    from typekernel.qa.style_consistency import compare_glyph_styles
+
+    black = Controls.from_context(DesignContext.slab_serif().tuned(stem=200.0)).with_stem_relief()
+    tol = controls_body_tolerances()
+    for ch in ("c", "e"):
+        ok = compare_glyph_styles(
+            black.build("n"),
+            black.build(ch),
+            reference_name="n",
+            candidate_name=ch,
+            tolerances=tol,
+            skip_checks=latin_topology_skip_checks("n", ch),
+        )
+        assert ok.passed, f"black {ch} should pass stem: {ok.fix_hints()}"
+        stem_ck = next(c for c in ok.checks if c.name == "stem_median")
+        assert stem_ck.ok, ch
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=35.0))
+    broken = good.with_glyph("c", lambda _n, _o, _ctx: thin.build("c"))
+    with pytest.raises(DesignSequenceError, match="refused glyph 'c'"):
+        unlock_controls_body(broken)
 
 
 def test_extreme_slab_stem200_body_hard_fail_documented() -> None:

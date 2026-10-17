@@ -292,21 +292,81 @@ def _body_stem_median(outline: Outline) -> float | None:
     mid_capped = list_vertical_stems(outline, y=mid_y, max_width=frac_cap)
     mid_raw = list_vertical_stems(outline, y=mid_y)
     single_stem = len(mid_capped) <= 1 and len(mid_raw) <= 1
-    # Descenders (``y``/``g``/…): lower-band probes hit the tail hairline.
-    # Sample the upper body (x-height band) instead of the ascender-safe fracs.
-    # Shallow hooks (``J`` overshoot ≈ −10..−20) are not below −40 but still
-    # put the hairline in the lower single-stem band — treat like descenders.
-    if ymin < -40.0 or (ymin < 0.0 and h > 600.0 and single_stem):
+    # True descenders (``y``/``g``/…, ymin ≲ −100): lower-band probes hit the
+    # tail hairline — sample the x-height band instead. Tall single stems
+    # (caps / ascenders, ``ymax`` above x-height) use the lower body so
+    # ``E``/``Y`` bars and crotches are not mistaken for stems. Body rounds
+    # with overshoot can have ``h>600`` while ``ymax`` stays near x-height —
+    # keep them on the mid band (open ``c``/``e`` shoulders).
+    if ymin < -100.0:
         fracs: tuple[float, ...] = (0.52, 0.58, 0.64, 0.72)
-    elif h > 600.0 and single_stem:
-        fracs = (0.16, 0.22, 0.28, 0.34, 0.40)
+    elif ymax > 650.0 and single_stem:
+        lower = (0.16, 0.22, 0.28, 0.34, 0.40)
+        # Diagonals (``V``/``A``): a *single* span that widens upward toward
+        # the crotch. Multi-span rows (``M``/``B``) and bottom-heavy hooks
+        # (``J``) stay on the lower band.
+        lower_hi: list[float] = []
+        lower_all_single = True
+        for lf in lower:
+            spans = list_vertical_stems(outline, y=ymin + lf * h)
+            if not spans:
+                continue
+            if len(spans) > 1:
+                lower_all_single = False
+            lower_hi.append(max(float(s.width) for s in spans))
+        if (
+            lower_all_single
+            and len(lower_hi) >= 2
+            and max(lower_hi) > 1.35 * min(lower_hi)
+            and lower_hi[-1] >= 1.2 * lower_hi[0]
+        ):
+            fracs = (0.62, 0.68, 0.74, 0.80)
+        else:
+            fracs = lower
     else:
         fracs = (0.35, 0.42, 0.50, 0.58)
     widths: list[float] = []
+    chord_cap = 0.72 * wmax
+    speck = 0.06 * wmax
     for f in fracs:
         y = ymin + f * h
-        for span in list_vertical_stems(outline, y=y, max_width=frac_cap):
-            widths.append(float(span.width))
+        capped = list_vertical_stems(outline, y=y, max_width=frac_cap)
+        raw = [
+            s
+            for s in list_vertical_stems(outline, y=y)
+            if speck <= float(s.width) < chord_cap
+        ]
+        if capped and raw:
+            cap_hi = max(float(s.width) for s in capped)
+            raw_hi = max(float(s.width) for s in raw)
+            # Cap kept only aperture hairline while upright exceeds 0.42×ink.
+            # Require a true hairline (≤0.15×ink) so bowl chords (``G``) do not
+            # trigger a back-stem rescue over a real upright.
+            if cap_hi < 0.40 * raw_hi and cap_hi <= 0.15 * wmax:
+                widths.append(raw_hi)
+            elif len(capped) >= 2:
+                lo = min(float(s.width) for s in capped)
+                hi = cap_hi
+                # Only the two-span hairline+upright case prefers ``hi``.
+                # Crowded script scans (many stems) must keep the cluster.
+                if (
+                    len(capped) == 2
+                    and hi >= 2.2 * lo
+                    and lo <= 0.15 * wmax
+                ):
+                    widths.append(hi)
+                else:
+                    widths.extend(float(s.width) for s in capped)
+            else:
+                widths.append(cap_hi)
+        elif raw:
+            # Uncapped-only path: allow back stems up to half the ink width
+            # (black open rounds). Reject wider diagonal crotches (``A``/``V``).
+            raw_hi = max(float(s.width) for s in raw)
+            if raw_hi <= 0.55 * wmax:
+                widths.append(raw_hi)
+        elif capped:
+            widths.extend(float(s.width) for s in capped)
     if not widths:
         raw: list[float] = []
         for f in fracs:
@@ -325,9 +385,45 @@ def _body_stem_median(outline: Outline) -> float | None:
             widths = [w for w in widths if w < 0.55 * wmax]
         if not widths:
             widths = [lo]
+    # Prefer the narrow upright cluster when crotches/bars mix in (``V``/``M``).
+    # Do not drop a real stem in favor of bowl hairlines (thin ``b``/``d``).
+    if len(widths) >= 2 and max(widths) > 1.50 * min(widths):
+        lo_w = min(widths)
+        hi_w = max(widths)
+        mid_w = float(statistics.median(widths))
+        if hi_w >= 0.40 * wmax or hi_w >= 1.8 * mid_w:
+            narrow = [w for w in widths if w <= 1.35 * lo_w]
+            if narrow and float(statistics.median(narrow)) >= 0.55 * mid_w:
+                widths = narrow
     med = float(statistics.median(widths))
     core = [w for w in widths if 0.55 * med <= w <= 1.40 * med]
-    return float(statistics.median(core)) if core else med
+    med = float(statistics.median(core)) if core else med
+
+    # Back-stem / aperture rescue: at black weights the real upright is often
+    # wider than ``0.42×ink`` (open ``c``/``e``), so the cap keeps only the
+    # aperture hairline. Prefer the thickest non-chord span per scanline.
+    chord_cap = 0.72 * wmax
+    speck = 0.06 * wmax
+    back_widths: list[float] = []
+    for f in fracs:
+        y = ymin + f * h
+        spans = [
+            s
+            for s in list_vertical_stems(outline, y=y)
+            if speck <= float(s.width) < chord_cap
+        ]
+        if not spans:
+            continue
+        back_widths.append(float(max(spans, key=lambda s: s.width).width))
+    if len(back_widths) >= 2:
+        back = float(statistics.median(back_widths))
+        # Only rescue aperture-hairline pollution — never inflate diagonals
+        # (``w``/``v``) or lone crotch chords (script ``y``). Require ≥2
+        # agreeing scans so a single thick ray cannot override the cluster.
+        if med < 0.40 * back and med <= 0.15 * wmax:
+            bcore = [w for w in back_widths if 0.55 * back <= w <= 1.40 * back]
+            return float(statistics.median(bcore)) if bcore else back
+    return med
 
 
 

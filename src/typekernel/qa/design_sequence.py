@@ -231,11 +231,9 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         # Round bowls (``c``/``e``/``o``): H/V contrast vs stem ``n`` is not
         # comparable — openings and crossbars dominate horizontal probes.
         skip.extend(["contrast_ratio"])
-    if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
-        # Open ``c``/``e``: at extreme black, mid-band probes hit the aperture
-        # hairline (``c``≈25du at stem 200). Keep stem skipped until a
-        # back-stem sampler exists; contrast already skipped via bowls.
-        skip.extend(["stem_median"])
+    # Open ``c``/``e`` stem stays gated: back-stem rescue in
+    # ``_body_stem_median`` recovers the upright when the 0.42×ink cap would
+    # keep only the aperture hairline. Contrast remains skipped via bowls.
     return tuple(dict.fromkeys(skip))
 
 
