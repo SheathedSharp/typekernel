@@ -2113,7 +2113,13 @@ def A_from_H(
     peak = cap + c.sharp_overshoot
     f = apex * h.stem
     a = (w - f) / 2.0
-    hw = _hwidth(h.stem, c.contrast, a, cap)
+    # Extreme stems (≥130): diagonal crotch probes read thicker than upright
+    # ``H``. Mild thin toward black — only past regular ladder weights so R8
+    # at 110 stays closed.
+    # Map so stem 130 → ~0, stem 220 → 1 relative to onset 130.
+    extreme = max(0.0, min(1.0, (h.stem - 130.0) / 90.0)) if h.stem >= 130.0 else 0.0
+    diag_w = 1.0 - 0.16 * extreme
+    hw = _hwidth(h.stem, c.contrast, a, cap, weight=diag_w)
     crotch = cap * (w - 2.0 * hw) / (2.0 * a)
     y0 = bar * cap - h.bar / 2.0
     y1 = min(y0 + h.bar, crotch - 0.5 * h.stem)

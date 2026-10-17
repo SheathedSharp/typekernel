@@ -2,8 +2,21 @@
 
 Analogous to grouping Three.js meshes: add solid parts and optional counters,
 optionally boolean-union the solids so overlaps do not leave notches, subtract
-holes with pathops when available, then pack sidebearings from the shared
+holes with pathops, then pack sidebearings from the shared
 :class:`~typekernel.parts.context.DesignContext`.
+
+Boolean / heal policy (library-wide)
+------------------------------------
+1. **Controls stock Latin (``Controls.build`` / ``build_all``)** — prefer
+   single-contour, interpolation-safe constructions. Do **not** auto-heal or
+   auto-union on the Controls path; VF masters need stable point counts.
+2. **Custom / skeleton / multi-part assemble** — call
+   :meth:`GlyphAssembler.union_solids`, :meth:`GlyphAssembler.subtract_holes`,
+   and/or :meth:`GlyphAssembler.heal_self_intersections` **explicitly**. Heal
+   and boolean ops require ``typekernel[boolean]`` (skia-pathops) and **raise**
+   if it is missing — never silently skip.
+3. **Post-hoc** — :func:`heal_composed_glyph` is opt-in for agent-drawn outlines
+   after boolean work; same raise-on-missing contract when ``heal=True``.
 """
 
 from __future__ import annotations

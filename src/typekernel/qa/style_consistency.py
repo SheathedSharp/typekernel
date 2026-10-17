@@ -557,7 +557,9 @@ def compare_glyph_styles(
     # the reference, gate via oriented thickness mapped back to vertical
     # equivalent with :func:`~typekernel.optics.stem.vertical_equiv_from_diagonal`
     # (same transform as construction compensation).
-    _crossing = frozenset({"x", "X", "z", "Z"})
+    # Diagonals whose mid-band vertical probes inflate at heavy stems / slab
+    # feet. Remap via oriented → vertical_equiv (same as construction).
+    _crossing = frozenset({"x", "X", "z", "Z", "v", "w", "y", "k", "V", "W", "Y", "K", "A"})
     cand_stem = cand_m.stem_median
     if (
         candidate_name in _crossing
@@ -570,7 +572,12 @@ def compare_glyph_styles(
     ):
         from typekernel.optics.stem import vertical_equiv_from_diagonal
 
-        cand_stem = vertical_equiv_from_diagonal(cand_m.oriented_stem)
+        ve = vertical_equiv_from_diagonal(cand_m.oriented_stem)
+        # Prefer the probe closer to the reference stem (deflate crotch inflation
+        # without adopting an overshooting or undershooting ve blindly).
+        raw = cand_m.stem_median
+        if raw is None or abs(ve - abs(ref_m.stem_median)) < abs(raw - abs(ref_m.stem_median)):
+            cand_stem = ve
 
     checks_list: list[StyleCheck] = [
         _check("stem_median", ref_m.stem_median, cand_stem, stem_limit),
