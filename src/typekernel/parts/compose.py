@@ -320,3 +320,54 @@ def try_difference(a: Outline, b: Outline) -> Outline:
 def try_intersection(a: Outline, b: Outline) -> Outline:
     """Intersection via pathops (raises if the boolean extra is missing)."""
     return boolean_op(a, b, "intersection")
+
+
+def heal_composed_glyph(
+    glyph: ComposedGlyph,
+    *,
+    heal: bool = True,
+    min_contour_area: float | None = 25.0,
+    refit_budget: float | None = 2.5,
+    corner_deg: float = 35.0,
+) -> ComposedGlyph:
+    """Post-process an existing glyph: self-union, strip debris, refit cubics.
+
+    Agents drawing custom outlines (or boolean-composited parts) can call this
+    without rebuilding through :class:`GlyphAssembler`. ``heal`` dissolves
+    self-crossings via pathops self-union; ``min_contour_area`` drops speck
+    contours; ``refit_budget`` re-fits pathops LINE debris to cubics (``None``
+    skips refit). Requires ``typekernel[boolean]`` when ``heal`` is True.
+    """
+    solids = list(glyph.solids)
+    holes = list(glyph.holes)
+    if heal:
+        healed: list[Outline] = []
+        for solid in solids:
+            try:
+                healed.append(self_union(solid))
+            except RuntimeError:
+                healed.append(solid)
+        solids = healed
+    if min_contour_area is not None:
+        solids = [
+            strip_tiny_contours(s, min_area=float(min_contour_area)) for s in solids
+        ]
+        holes = [
+            strip_tiny_contours(h, min_area=float(min_contour_area)) for h in holes
+        ]
+        holes = [h for h in holes if h.contours]
+    if refit_budget is not None:
+        budget = float(refit_budget)
+        solids = [
+            refit_outline_to_cubics(s, fit_budget=budget, corner_deg=corner_deg)
+            for s in solids
+        ]
+        holes = [
+            refit_outline_to_cubics(h, fit_budget=budget, corner_deg=corner_deg)
+            for h in holes
+        ]
+    return replace(
+        glyph,
+        solids=tuple(solids),
+        holes=tuple(holes),
+    )

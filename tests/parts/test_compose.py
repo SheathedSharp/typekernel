@@ -61,3 +61,15 @@ def test_letter_z_is_one_solid() -> None:
     ctx = DesignContext.geometric_sans()
     z = letter_z(ctx)
     assert len(z.solids) == 1
+
+
+@pytest.mark.skipif(not HAS_PATHOPS, reason="skia-pathops not installed")
+def test_heal_composed_glyph_roundtrip() -> None:
+    from typekernel.parts import heal_composed_glyph
+
+    ctx = DesignContext.geometric_sans()
+    raw = Controls.from_context(ctx).build("a")
+    healed = heal_composed_glyph(raw, heal=True, min_contour_area=25.0, refit_budget=2.5)
+    assert healed.advance > 0
+    assert len(healed.solids) >= 1
+    assert healed.context is raw.context

@@ -25,6 +25,7 @@ from typekernel.qa.design_sequence import (
     default_body_design_order,
     latin_topology_skip_checks,
     unlock_controls_body,
+    unlock_controls_body_ladder,
 )
 from typekernel.qa.gates import load_approval, require_approval, write_approval
 from typekernel.qa.outline_hash import outline_hash
@@ -95,6 +96,7 @@ __all__ = [
     "script_body_tolerances",
     "stem_uniformity",
     "unlock_controls_body",
+    "unlock_controls_body_ladder",
     "word_gap_spread",
     "word_report",
     "write_approval",
