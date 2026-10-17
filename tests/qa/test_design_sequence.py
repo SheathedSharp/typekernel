@@ -362,7 +362,9 @@ def test_latin_digit_topology_skips_documented() -> None:
     # Stem-like figures keep stem gating vs control ``1``.
     for ch in ("0", "4", "7", "6", "9"):
         assert "stem_median" not in latin_digit_topology_skip_checks("1", ch)
-    # Diagonals skip contrast only.
+    # Closed ``0`` gates contrast (polar H/V); ``6``/``9`` and diagonals skip.
+    assert "contrast_ratio" not in latin_digit_topology_skip_checks("1", "0")
+    assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "6")
     assert "contrast_ratio" in latin_digit_topology_skip_checks("1", "7")
     assert "stem_median" not in latin_digit_topology_skip_checks("1", "7")
 
@@ -465,6 +467,63 @@ def test_punct_order_covers_punct_forms() -> None:
     from typekernel.qa.design_sequence import DEFAULT_PUNCT_DESIGN_ORDER
 
     assert set(DEFAULT_PUNCT_DESIGN_ORDER) == set(PUNCT_FORMS)
+
+
+def test_cap_closed_bowl_contrast_gated_open_still_skipped() -> None:
+    """Polar H/V contrast gates ``O``/``G``/``Q``; open ``C``/``S`` stay skipped."""
+    from typekernel.qa.design_sequence import latin_cap_topology_skip_checks
+
+    for ch in ("O", "G", "Q"):
+        assert "contrast_ratio" not in latin_cap_topology_skip_checks("H", ch)
+    for ch in ("C", "S", "D"):
+        assert "contrast_ratio" in latin_cap_topology_skip_checks("H", ch)
+
+
+def test_round_polar_contrast_tracks_family() -> None:
+    """Closed bowls expose polar contrast near family; ``n`` stays null."""
+    from typekernel.qa.style_consistency import extract_glyph_style_metrics
+
+    for factory in (
+        DesignContext.geometric_sans,
+        DesignContext.slab_serif,
+        DesignContext.humanist_sans,
+    ):
+        c = Controls.from_context(factory().tuned(stem=150.0)).with_stem_relief()
+        fam = float(c.context.contrast)
+        n = extract_glyph_style_metrics(c.build("n"))
+        assert n.contrast_ratio is None
+        for ch in ("o", "O", "0"):
+            m = extract_glyph_style_metrics(c.build(ch))
+            assert m.contrast_ratio is not None, ch
+            assert abs(m.contrast_ratio - fam) <= 0.45, (factory.__name__, ch, m.contrast_ratio, fam)
+
+
+def test_unlock_controls_caps_refuses_broken_o_contrast() -> None:
+    """Closed ``O`` contrast is gated — a flattened bowl must refuse."""
+    from typekernel.qa.design_sequence import DesignSequenceError, unlock_controls_caps
+    from typekernel.qa.style_consistency import extract_glyph_style_metrics
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    # Reuse thin ``I`` stem metrics as a stand-in low-contrast upright so ``O``
+    # polar / side ratio collapses away from ``H``.
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=40.0, contrast=0.35))
+    broken = good.with_glyph("O", lambda _H, _O, _c: thin.build("O"))
+    # Sanity: broken O contrast drifts from control H.
+    h_c = extract_glyph_style_metrics(good.build("H")).contrast_ratio
+    o_c = extract_glyph_style_metrics(broken.build("O")).contrast_ratio
+    assert h_c is not None and o_c is not None
+    assert abs(o_c - h_c) > 0.50
+    with pytest.raises(DesignSequenceError, match="refused glyph 'O'"):
+        unlock_controls_caps(broken)
+
+
+def test_open_ce_contrast_still_skipped() -> None:
+    """Open ``c``/``e`` contrast stays skipped — black crossbar/aperture noise."""
+    from typekernel.qa.design_sequence import latin_topology_skip_checks
+
+    assert "contrast_ratio" in latin_topology_skip_checks("n", "c")
+    assert "contrast_ratio" in latin_topology_skip_checks("n", "e")
+    assert "contrast_ratio" not in latin_topology_skip_checks("n", "o")
 
 
 def test_extreme_slab_caps_unlock_through_black() -> None:

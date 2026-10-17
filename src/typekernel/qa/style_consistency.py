@@ -428,11 +428,14 @@ def _body_stem_median(outline: Outline) -> float | None:
 
 
 def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float | None:
-    """Horizontal/vertical thickness ratio sampled in the body (not mid-ray noise).
+    """Horizontal/vertical thickness ratio (crossbar or round-polar thins).
 
-    Rejects hairline crotch / join spans and **crown / baseline arches** so
-    ``u`` / ``n`` / ``e`` are not falsely marked high-contrast when an H-probe
-    clips the thin top arch instead of a designed horizontal bar.
+    Mid-band H probes catch designed bars (``H``/``e``) and reject crown /
+    baseline arches on ``n``/``u``. Closed bowls (``O``/``o``/``0``) put their
+    designed thins at the poles — when *both* crown and baseline yield spans,
+    those polar thins over side uprights are the contrast ratio. A lone crown
+    (shoulder arch) is ignored so ``n`` stays contrast-null. If the mid-band
+    median is join-inflated vs polar (>1.15×), prefer polar.
     """
     if stem_median is None or stem_median <= 0.0:
         return None
@@ -444,20 +447,44 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
     h = max(ymax - ymin, 1.0)
     y_lo = ymin + 0.18 * h
     y_hi = ymin + 0.72 * h
-    hs: list[float] = []
+    body: list[float] = []
+    crown: list[float] = []
+    base: list[float] = []
     for f in (0.30, 0.40, 0.50, 0.60, 0.70):
         x = xmin + f * w
         for span in list_horizontal_stems(
-            outline, x=x, max_width=1.8 * stem_median
+            outline, x=x, max_width=2.2 * stem_median
         ):
             cy = float(span.center_y)
-            if cy < y_lo or cy > y_hi:
+            ww = float(span.width)
+            if ww < 0.25 * stem_median:
                 continue
-            if 0.35 * stem_median <= span.width <= 1.8 * stem_median:
-                hs.append(float(span.width))
-    if not hs:
-        return None
-    return float(statistics.median(hs) / stem_median)
+            if y_lo <= cy <= y_hi and ww <= 1.8 * stem_median:
+                body.append(ww)
+            if cy <= ymin + 0.28 * h and ww <= 2.0 * stem_median:
+                base.append(ww)
+            if cy >= ymax - 0.28 * h and ww <= 2.0 * stem_median:
+                crown.append(ww)
+    # Side uprights as denominator for polar thins (open ``C`` stem_median can
+    # under-read; mid V spans stay near the designed thick).
+    v_spans: list[float] = []
+    for f in (0.42, 0.50, 0.58):
+        for span in list_vertical_stems(outline, y=ymin + f * h):
+            ww = float(span.width)
+            if 0.35 * stem_median <= ww <= 1.8 * stem_median:
+                v_spans.append(ww)
+    v_den = float(statistics.median(v_spans)) if v_spans else float(stem_median)
+
+    def _ratio(xs: list[float], den: float) -> float | None:
+        return float(statistics.median(xs) / den) if xs else None
+
+    body_r = _ratio(body, float(stem_median))
+    polar_r = _ratio(crown + base, v_den) if (crown and base) else None
+    if body_r is not None and polar_r is not None:
+        return polar_r if body_r > 1.15 * polar_r else body_r
+    if body_r is not None:
+        return body_r
+    return polar_r
 
 
 

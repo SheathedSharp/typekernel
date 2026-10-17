@@ -293,11 +293,15 @@ def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         skip.append("stem_median")
     if ref in {"W", "w"} or cand in {"W", "w"}:
         skip.append("stem_median")
+    # Contrast: gate closed ``O``/``G``/``Q`` (polar H/V probe). Keep skip for
+    # open ``C``, soft bowls ``D B P R U``, and ``S`` — mid-band / spine samples
+    # are not stable vs ``H`` across presets.
+    _cap_contrast_skip = frozenset({"C", "S", "D", "B", "P", "R", "U"})
     if (
-        ref in _CLOSED_BOWLS
-        or cand in _CLOSED_BOWLS
-        or ref in cap_rounds
-        or cand in cap_rounds
+        ref in _cap_contrast_skip
+        or cand in _cap_contrast_skip
+        or ref in _OPEN_ROUNDS
+        or cand in _OPEN_ROUNDS
     ):
         skip.extend(["contrast_ratio"])
     if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
@@ -467,8 +471,8 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
 
     Rails/slant are script proxies — always omitted. Stem stays gated for
     stem-like figures (``1``/``4``/``7``/``0``/``6``/``9``); open ``2``/``3``/``5``
-    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is
-    omitted for rounds / opens / diagonals (H/V samples are not figure stems).
+    and double-bowl ``8`` skip stem where probes are unreliable. Contrast is gated for ``0`` (polar H/V); omitted for ``6``/``9`` / opens /
+    diagonals / ``8`` where H/V samples are unstable.
     """
     skip: list[str] = [
         "entry_rail_y",
@@ -483,16 +487,10 @@ def latin_digit_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         or cand in _DIGIT_DOUBLE_BOWL
     ):
         skip.extend(["stem_median", "contrast_ratio"])
-    if (
-        ref in _DIGIT_CLOSED
-        or cand in _DIGIT_CLOSED
-        or ref in _DIGIT_OPEN
-        or cand in _DIGIT_OPEN
-        or ref in _DIGIT_DOUBLE_BOWL
-        or cand in _DIGIT_DOUBLE_BOWL
-        or ref in _DIGIT_DIAGONAL
-        or cand in _DIGIT_DIAGONAL
-    ):
+    # Contrast: gate closed ``0`` (polar H/V). Keep skip for ``6``/``9`` (bowl
+    # joins), opens, double-bowl ``8``, and diagonal figures.
+    _digit_contrast_skip = frozenset({"6", "9"}) | _DIGIT_OPEN | _DIGIT_DOUBLE_BOWL | _DIGIT_DIAGONAL
+    if ref in _digit_contrast_skip or cand in _digit_contrast_skip:
         skip.append("contrast_ratio")
     if (
         ref in _DIGIT_CLOSED
