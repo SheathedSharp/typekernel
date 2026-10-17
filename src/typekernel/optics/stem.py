@@ -244,6 +244,32 @@ def diagonal_compensation(
     return w
 
 
+def vertical_equiv_from_diagonal(
+    measured_perp: float,
+    angle_from_vertical_deg: float = 45.0,
+    *,
+    contrast: float = 1.0,
+    floor: float = 0.55,
+) -> float:
+    """Invert :func:`diagonal_compensation` to recover an upright stem equivalent.
+
+    Shared by construction optics and style QA when an oriented (diagonal)
+    thickness must be compared to a vertical control stem.
+    """
+    if measured_perp <= 0:
+        raise ValueError(f"measured_perp must be positive, got {measured_perp!r}")
+    if contrast <= 0:
+        raise ValueError(f"contrast must be positive, got {contrast!r}")
+    if floor <= 0 or floor > 1.0:
+        raise ValueError(f"floor must be in (0, 1], got {floor!r}")
+    phi = math.radians(angle_from_vertical_deg)
+    factor = max(floor, abs(math.cos(phi)))
+    factor *= 1.0 - (1.0 - contrast) * abs(math.sin(phi))
+    if factor <= 0:
+        raise ValueError("compensation factor collapsed to non-positive")
+    return measured_perp / factor
+
+
 def horizontal_vs_vertical_report(
     outline: Outline,
     *,

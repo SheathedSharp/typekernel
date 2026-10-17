@@ -36,6 +36,7 @@ __all__ = [
     "controls_cap_tolerances",
     "default_body_design_order",
     "default_cap_design_order",
+    "ensure_controls_body_unlocked",
     "latin_cap_topology_skip_checks",
     "latin_topology_skip_checks",
     "unlock_controls_body",
@@ -127,9 +128,12 @@ _DOTTED: frozenset[str] = frozenset({"i", "j"})
 _DIAGONALS: frozenset[str] = frozenset({"v", "w", "x", "y", "z", "k"})
 # Diagonals with stable oriented-stem pairwise compare (no descender / arm chaos).
 _STABLE_DIAGONALS: frozenset[str] = frozenset({"v", "w"})
-# Crossing ``x`` crotch probes go unstable at heavy stems.
-# Stem probes unreliable: crossing crotches, compensated thin strokes, serifed arms.
-_UNSTABLE_DIAG_STEM: frozenset[str] = frozenset({"x", "X", "z", "Z", "k", "K", "y", "Y"})
+# Residual stem skips for letters whose probes are still untrustworthy after
+# oriented + vertical-equiv gating in :mod:`style_consistency`. Empty for the
+# geometric_sans ladder (``x``/``z``/``k``/``y`` are gated). If a letter must
+# return here, document *why* and add a regression that fails when measurement
+# becomes wrongly confident (see tests/qa/test_design_sequence.py).
+_UNSTABLE_DIAG_STEM: frozenset[str] = frozenset()
 _MULTI_ARCH: frozenset[str] = frozenset({"m", "w", "M", "W"})
 _CURVED_SPINE: frozenset[str] = frozenset({"s", "S"})
 # Baseline hooks that dip below the x-height floor without being full descenders.
@@ -170,6 +174,15 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         # oriented probes (see ``extract_glyph_style_metrics``). Serif feet /
         # sharp overshoot make ink_ymin non-comparable to upright controls.
         skip.extend(["contrast_ratio", "ink_ymin"])
+    # Pairwise stem among unlike diagonals (``x``↔``z``, ``k``↔``v``, …) is not
+    # comparable — constructions differ. Each still gates stem against control
+    # ``n``. Stable ``v``↔``w`` keep pairwise stem + oriented.
+    if (
+        ref in _DIAGONALS
+        and cand in _DIAGONALS
+        and not (ref in _STABLE_DIAGONALS and cand in _STABLE_DIAGONALS)
+    ):
+        skip.append("stem_median")
     if ref in _UNSTABLE_DIAG_STEM or cand in _UNSTABLE_DIAG_STEM:
         skip.extend(["stem_median"])
     if ref in _MULTI_ARCH or cand in _MULTI_ARCH:
@@ -266,6 +279,35 @@ def controls_cap_tolerances() -> StyleConsistencyTolerances:
     )
 
 
+def ensure_controls_body_unlocked(
+    controls: Controls,
+    *,
+    require: bool = True,
+    control: str = "n",
+    order: Sequence[str] | None = None,
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> Controls:
+    """Shared gate for compose / preview / export entrypoints.
+
+    When ``require`` is true (default), runs :func:`unlock_controls_body` and
+    re-raises :class:`DesignSequenceError` so agents cannot build around the
+    designer-order unlock. Pass ``require=False`` only for documented stock /
+    specimen compile paths that already validated the sheet.
+    """
+    if require:
+        unlock_controls_body(
+            controls,
+            control=control,
+            order=order,
+            tolerances=tolerances,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skip_checks_for_pair,
+        )
+    return controls
+
+
 def unlock_controls_body(
     controls: Controls,
     *,
@@ -327,6 +369,8 @@ def unlock_controls_body_ladder(
 
 
 
+# TODO(digits): DesignSequence for 0–9 when caps pattern is cheap to reuse
+# (control ``0``/``1``, topology skips for open ``3``/``5``, etc.).
 def unlock_controls_caps(
     controls: Controls,
     *,

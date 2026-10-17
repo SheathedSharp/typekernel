@@ -221,10 +221,9 @@ def test_diagonal_stem_gated_not_blank_skipped() -> None:
     assert "oriented_stem" in skips
     assert "stem_median" not in latin_topology_skip_checks("v", "w")
     assert "oriented_stem" not in latin_topology_skip_checks("v", "w")
-    # Crossing / arm diagonals skip vertical stem (unstable probes).
-    assert "stem_median" in latin_topology_skip_checks("n", "x")
-    assert "stem_median" in latin_topology_skip_checks("n", "z")
-    assert "stem_median" in latin_topology_skip_checks("n", "y")
+    # Crossing / arm diagonals also gate stem (oriented→vertical-equiv fallback).
+    for ch in ("x", "z", "k", "y"):
+        assert "stem_median" not in latin_topology_skip_checks("n", ch)
 
 
 def test_diagonal_stem_pass_and_refuse() -> None:
@@ -234,25 +233,59 @@ def test_diagonal_stem_pass_and_refuse() -> None:
     c = Controls.from_context(DesignContext.geometric_sans())
     thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=40.0))
     tol = controls_body_tolerances()
-    ok = compare_glyph_styles(
-        c.build("n"),
-        c.build("v"),
-        reference_name="n",
-        candidate_name="v",
-        tolerances=tol,
-        skip_checks=latin_topology_skip_checks("n", "v"),
-    )
-    assert ok.passed
-    bad = compare_glyph_styles(
-        c.build("n"),
-        thin.build("v"),
-        reference_name="n",
-        candidate_name="v",
-        tolerances=tol,
-        skip_checks=latin_topology_skip_checks("n", "v"),
-    )
-    assert not bad.passed
-    assert any(f.name == "stem_median" for f in bad.failures)
+    for ch in ("v", "x", "z", "k", "y"):
+        ok = compare_glyph_styles(
+            c.build("n"),
+            c.build(ch),
+            reference_name="n",
+            candidate_name=ch,
+            tolerances=tol,
+            skip_checks=latin_topology_skip_checks("n", ch),
+        )
+        assert ok.passed, f"same-family {ch} should pass: {ok.fix_hints()}"
+        bad = compare_glyph_styles(
+            c.build("n"),
+            thin.build(ch),
+            reference_name="n",
+            candidate_name=ch,
+            tolerances=tol,
+            skip_checks=latin_topology_skip_checks("n", ch),
+        )
+        assert not bad.passed, f"too-thin {ch} must refuse"
+        assert any(f.name == "stem_median" for f in bad.failures), ch
+
+
+def test_diagonal_stem_ladder_geometric_sans() -> None:
+    """Heavy geometric masters: x/z use oriented→vertical-equiv when upright inflates."""
+    from typekernel.qa.design_sequence import controls_body_tolerances, latin_topology_skip_checks
+    from typekernel.qa.style_consistency import compare_glyph_styles
+    from typekernel.qa.trial_protocol import controls_at_ladder_stem
+
+    base = Controls.from_context(DesignContext.geometric_sans())
+    tol = controls_body_tolerances()
+    for stem in (150.0, 180.0, 200.0):
+        sheet = controls_at_ladder_stem(base, stem)
+        for ch in ("x", "z", "k", "y", "v", "w"):
+            report = compare_glyph_styles(
+                sheet.build("n"),
+                sheet.build(ch),
+                reference_name="n",
+                candidate_name=ch,
+                tolerances=tol,
+                skip_checks=latin_topology_skip_checks("n", ch),
+            )
+            assert report.passed, f"stem={stem} {ch}: {report.fix_hints()}"
+
+
+def test_unstable_diag_stem_residual_documented() -> None:
+    """Regression: _UNSTABLE_DIAG_STEM must stay empty unless a letter is proven unmeasurable.
+
+    If a letter is re-added, this fails so the skip cannot land silently — pair
+    any re-add with a comment in design_sequence.py explaining why probes fail.
+    """
+    from typekernel.qa import design_sequence as ds
+
+    assert ds._UNSTABLE_DIAG_STEM == frozenset()
 
 
 def test_oriented_stem_gates_diagonal_pair() -> None:
@@ -290,3 +323,24 @@ def test_unlock_controls_caps_completes() -> None:
     assert len(seq.unlocked) == len(default_cap_design_order())
     via = c.unlock_caps()
     assert via.unlocked == seq.unlocked  # type: ignore[union-attr]
+
+
+def test_curved_y_tail_stem_not_hairline() -> None:
+    """Descender fracs must not read the curved ``y`` tail as the stem."""
+    from typekernel.parts.style import Style
+    from typekernel.qa.design_sequence import controls_body_tolerances, latin_topology_skip_checks
+    from typekernel.qa.style_consistency import compare_glyph_styles
+
+    ctx = DesignContext.humanist_sans().tuned(
+        style=Style(y_tail="curved", a_form="single", g_form="single"),
+    )
+    c = Controls.from_context(ctx)
+    report = compare_glyph_styles(
+        c.build("n"),
+        c.build("y"),
+        reference_name="n",
+        candidate_name="y",
+        tolerances=controls_body_tolerances(),
+        skip_checks=latin_topology_skip_checks("n", "y"),
+    )
+    assert report.passed, report.fix_hints()

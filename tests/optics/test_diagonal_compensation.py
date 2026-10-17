@@ -75,3 +75,11 @@ def test_compensated_x_bars() -> None:
     target = diagonal_compensation(45.0, 70.0, contrast=ctx.contrast)
     assert wa == pytest.approx(target, abs=1.0)
     assert wb == pytest.approx(target, abs=1.0)
+
+
+def test_vertical_equiv_inverts_compensation() -> None:
+    from typekernel.optics.stem import diagonal_compensation, vertical_equiv_from_diagonal
+
+    stem = 120.0
+    diag = diagonal_compensation(45.0, stem)
+    assert vertical_equiv_from_diagonal(diag, 45.0) == pytest.approx(stem, rel=1e-9)

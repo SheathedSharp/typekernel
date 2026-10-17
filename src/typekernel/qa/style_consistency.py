@@ -19,6 +19,10 @@ from typekernel.geo.outline import Outline, bounds
 from typekernel.optics.stem import list_horizontal_stems, list_vertical_stems
 from typekernel.parts.compose import ComposedGlyph
 
+# Optics ↔ QA: diagonal stem remap uses optics.stem.vertical_equiv_from_diagonal
+# (inverse of diagonal_compensation). Further shared stem helpers: only if a
+# second call site appears; avoid sprawling rewrite.
+
 __all__ = [
     "GlyphStyleMetrics",
     "SequenceStyleReport",
@@ -288,8 +292,12 @@ def _body_stem_median(outline: Outline) -> float | None:
     mid_capped = list_vertical_stems(outline, y=mid_y, max_width=frac_cap)
     mid_raw = list_vertical_stems(outline, y=mid_y)
     single_stem = len(mid_capped) <= 1 and len(mid_raw) <= 1
-    if h > 600.0 and single_stem:
-        fracs: tuple[float, ...] = (0.16, 0.22, 0.28, 0.34, 0.40)
+    # Descenders (``y``/``g``/…): lower-band probes hit the tail hairline.
+    # Sample the upper body (x-height band) instead of the ascender-safe fracs.
+    if ymin < -40.0:
+        fracs: tuple[float, ...] = (0.52, 0.58, 0.64, 0.72)
+    elif h > 600.0 and single_stem:
+        fracs = (0.16, 0.22, 0.28, 0.34, 0.40)
     else:
         fracs = (0.35, 0.42, 0.50, 0.58)
     widths: list[float] = []
@@ -355,6 +363,27 @@ def _body_contrast_ratio(outline: Outline, stem_median: float | None) -> float |
 
 
 
+def _lower_stroke_cluster(widths: list[float]) -> float | None:
+    """Median of the thin stroke cluster, splitting off join / crotch outliers.
+
+    Sorted samples often show a gap between true diagonal stroke thickness and
+    crotch / bar chords. Prefer the lower cluster when that gap is clear;
+    otherwise the lower 40% (joins sit high).
+    """
+    if len(widths) < 2:
+        return float(widths[0]) if widths else None
+    ordered = sorted(widths)
+    lim = max(2, int(0.75 * len(ordered)))
+    region = ordered[:lim]
+    gaps = [(region[i + 1] - region[i], i) for i in range(len(region) - 1)]
+    gap, idx = max(gaps)
+    med_all = float(statistics.median(ordered))
+    if gap > 0.20 * med_all and idx + 1 >= 2:
+        cluster = region[: idx + 1]
+        return float(statistics.median(cluster))
+    return float(statistics.median(ordered[: max(2, int(0.4 * len(ordered)))]))
+
+
 def _oriented_stem_median(
     outline: Outline,
     *,
@@ -362,9 +391,11 @@ def _oriented_stem_median(
 ) -> float | None:
     """Median perpendicular stem via :func:`~typekernel.optics.stem.measure_oriented_stem`.
 
-    Samples common Latin diagonal bearings (~42–48° and supplements) at body
-    centres. Returns ``None`` when no stable diagonal band is found (upright
-    stems, empty probes). ``stem_hint`` rejects hairline / full-width hits.
+    Samples Latin diagonal bearings at body and **corner** origins so crossing
+    letters (``x``) avoid the crotch join. A lower-stroke cluster drops join
+    outliers. Returns ``None`` when no stable diagonal band is found.
+    ``stem_hint`` (when set) only rejects extreme hairline / full-ink hits —
+    it must not be an already-inflated upright or the thin cluster is lost.
     """
     from typekernel.optics.stem import measure_oriented_stem
 
@@ -374,14 +405,33 @@ def _oriented_stem_median(
         return None
     w = max(xmax - xmin, 1.0)
     h = max(ymax - ymin, 1.0)
+    ink = math.hypot(w, h)
     widths: list[float] = []
-    bearings = (42.0, 48.0, 132.0, 138.0, -42.0, -48.0)
+    bearings = (
+        35.0,
+        40.0,
+        45.0,
+        50.0,
+        130.0,
+        135.0,
+        140.0,
+        -35.0,
+        -40.0,
+        -45.0,
+        -50.0,
+    )
     origins = (
         (0.50, 0.50),
         (0.40, 0.45),
         (0.60, 0.55),
-        (0.45, 0.40),
-        (0.55, 0.60),
+        (0.28, 0.28),
+        (0.72, 0.72),
+        (0.28, 0.72),
+        (0.72, 0.28),
+        (0.35, 0.65),
+        (0.65, 0.35),
+        (0.50, 0.40),
+        (0.50, 0.60),
     )
     for deg in bearings:
         for fx, fy in origins:
@@ -390,18 +440,16 @@ def _oriented_stem_median(
             measured = measure_oriented_stem(outline, (ox, oy), deg)
             if measured is None:
                 continue
+            if measured >= 0.45 * ink:
+                continue
             if (
                 stem_hint is not None
                 and stem_hint > 0.0
-                and not (0.35 * stem_hint <= measured <= 1.7 * stem_hint)
+                and measured < 0.18 * stem_hint
             ):
                 continue
             widths.append(float(measured))
-    if not widths:
-        return None
-    med = float(statistics.median(widths))
-    core = [x for x in widths if 0.70 * med <= x <= 1.30 * med]
-    return float(statistics.median(core)) if core else med
+    return _lower_stroke_cluster(widths)
 
 
 def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
@@ -410,12 +458,16 @@ def extract_glyph_style_metrics(glyph: ComposedGlyph) -> GlyphStyleMetrics:
     xmin, ymin, xmax, ymax = bounds(outline)
     pts = _sample_oncurve_points(outline)
     stem_median = _body_stem_median(outline)
-    oriented = _oriented_stem_median(
-        outline, stem_hint=stem_median if stem_median is not None else None
-    )
-    # Fall back to oriented only when vertical body probes miss entirely.
+    # Do not pass an upright hint into oriented sampling: inflated verticals
+    # (heavy ``x``/``z``) would widen the accept band and hide the thin stroke
+    # cluster. Hairline rejection uses ink-diagonal cap inside the sampler.
+    oriented = _oriented_stem_median(outline, stem_hint=None)
+    # Fall back only when vertical body probes miss. Inflation on ``x``/``z`` is
+    # handled at compare time (needs a reference stem) via vertical_equiv.
     if stem_median is None and oriented is not None:
-        stem_median = oriented
+        from typekernel.optics.stem import vertical_equiv_from_diagonal
+
+        stem_median = vertical_equiv_from_diagonal(oriented)
     # Prefer body-band contrast. No mid-ray fallback: single-stem letters
     # (l/i/v) yield bogus horizontal spans and must skip via missing.
     contrast = _body_contrast_ratio(outline, stem_median)
@@ -498,8 +550,28 @@ def compare_glyph_styles(
         and abs(ref_m.stem_median) > 1e-9
     ):
         stem_limit = max(stem_limit, float(tol.stem_median_rel) * abs(ref_m.stem_median))
+    # Crossing / flat-diagonal letters: mid-body vertical probes inflate at
+    # heavy stems (crotch / diagonal-as-vertical). When the upright drifts past
+    # the reference, gate via oriented thickness mapped back to vertical
+    # equivalent with :func:`~typekernel.optics.stem.vertical_equiv_from_diagonal`
+    # (same transform as construction compensation).
+    _crossing = frozenset({"x", "X", "z", "Z"})
+    cand_stem = cand_m.stem_median
+    if (
+        candidate_name in _crossing
+        and ref_m.stem_median is not None
+        and cand_m.oriented_stem is not None
+        and (
+            cand_m.stem_median is None
+            or cand_m.stem_median > 1.18 * abs(ref_m.stem_median)
+        )
+    ):
+        from typekernel.optics.stem import vertical_equiv_from_diagonal
+
+        cand_stem = vertical_equiv_from_diagonal(cand_m.oriented_stem)
+
     checks_list: list[StyleCheck] = [
-        _check("stem_median", ref_m.stem_median, cand_m.stem_median, stem_limit),
+        _check("stem_median", ref_m.stem_median, cand_stem, stem_limit),
         _check(
             "contrast_ratio",
             ref_m.contrast_ratio,
