@@ -52,7 +52,7 @@ Outputs under `out/`:
 
 ## Style gate budgets
 
-`script_sequence_tolerances()` keeps rails/slant/stem near body defaults.
+Library `script_sequence_tolerances()` / `script_topology_skip_checks` (via `try_unlock_script_builders`) keep rails/slant/stem near body defaults.
 Contrast allows multi-vertical pen stress (`u`/`h`). Role skips omit metrics
 that topology makes meaningless (closed bowls, ascenders, descender loops,
 dotted `i`/`j`). Glyphs that failed those budgets were redesigned one letter at
@@ -60,12 +60,16 @@ a time — not unlocked by widening the gate.
 
 ## Gates
 
-- **Required:** `build_charset_sequential` → library `typekernel.qa.DesignSequence` (style
+- **Required:** `build_charset_sequential` → library
+  `try_unlock_script_builders` / `DesignSequence.from_builders` (style
   consistency vs control + previous).
 - Controls `check_sentence_gate` does **not** apply — this face is not derived
   from `Controls.build_all`.
 
 ## Files
 
-- `design.py` — metrics, `DESIGN_ORDER`, per-glyph skeletons, sequential builder
+- `design.py` — brand metrics, `DESIGN_ORDER`, per-glyph skeletons; sequential
+  unlock delegates to library script DesignSequence helpers
 - `build.py` — style gate, space, phrase kern, compile, proofs
+- Library: `typekernel.parts.script` (chaikin/shear/rails),
+  `typekernel.qa.design_sequence.script_*` / `try_unlock_script_builders`

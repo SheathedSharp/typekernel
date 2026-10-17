@@ -49,12 +49,16 @@ __all__ = [
     "latin_digit_topology_skip_checks",
     "latin_punct_topology_skip_checks",
     "latin_topology_skip_checks",
+    "script_sequence_tolerances",
+    "script_topology_skip_checks",
+    "try_unlock_script_builders",
     "unlock_controls_body",
     "unlock_controls_body_ladder",
     "unlock_controls_caps",
     "unlock_controls_digits",
     "unlock_controls_digits_ladder",
     "unlock_controls_punct",
+    "unlock_script_builders",
 ]
 
 # Humanist / geometric body order: stem control, bowl control, then related.
@@ -254,6 +258,150 @@ def controls_body_tolerances() -> StyleConsistencyTolerances:
         ink_ymin=55.0,
         ink_ymax=400.0,
     )
+
+
+# ---------------------------------------------------------------------------
+# Script / skeleton DesignSequence (letter-writing faces, not Controls Latin)
+# ---------------------------------------------------------------------------
+
+# Role sets for calligraphy / writing-script topology (rails stay gated).
+_SCRIPT_CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O"})
+_SCRIPT_ASCENDERS: frozenset[str] = frozenset(
+    {"d", "h", "D", "l", "b", "k", "f", "t"}
+)
+_SCRIPT_DESCENDERS: frozenset[str] = frozenset({"j", "y", "g", "p", "q"})
+_SCRIPT_DOTTED: frozenset[str] = frozenset({"i", "j"})
+
+
+def script_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Metric skips across script topology roles (rails stay meaningful).
+
+    Unlike :func:`latin_topology_skip_checks`, entry/exit rails and exit slant
+    are **gated** for same-role body letters — they are the writing-connection
+    language. Closed bowls omit rails; ascenders/descenders/dotted letters omit
+    extents and rail metrics that topology makes meaningless.
+    """
+    skip: list[str] = []
+    if ref in _SCRIPT_CLOSED_BOWLS or cand in _SCRIPT_CLOSED_BOWLS:
+        skip.extend(["entry_rail_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_ASCENDERS or ref in _SCRIPT_ASCENDERS:
+        skip.extend(["ink_ymax", "bowl_center_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_DESCENDERS or ref in _SCRIPT_DESCENDERS:
+        # Descender loops poison lower-band exit-angle samples.
+        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_DOTTED or ref in _SCRIPT_DOTTED:
+        # Single stem + tittle: vertical-stem probes are not comparable to
+        # dual-stem body letters.
+        skip.extend(
+            [
+                "exit_rail_y",
+                "exit_slant_deg",
+                "ink_ymax",
+                "bowl_center_y",
+                "stem_median",
+            ]
+        )
+    return tuple(dict.fromkeys(skip))
+
+
+def script_sequence_tolerances() -> StyleConsistencyTolerances:
+    """Budgets for full script DesignSequence unlock (control → charset).
+
+    Rails/slant/stem stay near body defaults. Contrast is wider than
+    :func:`~typekernel.qa.style_consistency.script_body_tolerances` to allow
+    multi-vertical pen stress (``u``/``h``) without phrase-batch fudge — still
+    paired with :func:`script_topology_skip_checks`, not a blank cheque.
+    Same-role pairs (``a`` vs ``e``) should prefer ``script_body_tolerances``.
+    """
+    return StyleConsistencyTolerances(
+        stem_median=14.0,
+        contrast_ratio=0.95,
+        entry_rail_y=40.0,
+        exit_rail_y=42.0,
+        exit_slant_deg=40.0,
+        bowl_center_y=55.0,
+        ink_ymin=55.0,
+        ink_ymax=120.0,
+    )
+
+
+def try_unlock_script_builders(
+    builders: Mapping[str, Callable[[], ComposedGlyph]],
+    *,
+    control: str,
+    order: Sequence[str],
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> tuple[DesignSequence, SequenceStyleReport]:
+    """Unlock a script/skeleton face one glyph at a time (soft refuse).
+
+    Builds each letter via ``builders[ch]()``. On the first style refuse,
+    returns the partial :class:`DesignSequence` plus a
+    :class:`~typekernel.qa.style_consistency.SequenceStyleReport` that includes
+    the refused candidate for diagnostics — later letters are not built.
+    On full unlock, ``report.passed`` is True.
+    """
+    seq = DesignSequence.from_builders(
+        builders,
+        control=control,
+        order=order,
+        tolerances=tolerances,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skip_checks_for_pair,
+    )
+    skips = seq.skip_checks_for_pair
+    tol = seq.tolerances
+    for ch in seq.planned_order:
+        if ch == seq.control:
+            continue
+        if ch not in builders:
+            raise KeyError(f"no builder for planned glyph {ch!r}")
+        glyph = builders[ch]()
+        report = seq.try_add(ch, glyph)
+        if not report.passed:
+            drawn = dict(seq.glyphs)
+            drawn[ch] = glyph
+            full = check_design_sequence(
+                drawn,
+                tuple(drawn.keys()),
+                control=control,
+                tolerances=tol,
+                compare_to_previous=compare_to_previous,
+                skip_checks_for_pair=skips,
+            )
+            return seq, full
+    return seq, seq.sequence_report()
+
+
+def unlock_script_builders(
+    builders: Mapping[str, Callable[[], ComposedGlyph]],
+    *,
+    control: str,
+    order: Sequence[str],
+    tolerances: StyleConsistencyTolerances | None = None,
+    compare_to_previous: bool = True,
+    skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+) -> DesignSequence:
+    """Like :func:`try_unlock_script_builders` but raise on the first refuse."""
+    seq, report = try_unlock_script_builders(
+        builders,
+        control=control,
+        order=order,
+        tolerances=tolerances,
+        compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=skip_checks_for_pair,
+    )
+    if not report.passed:
+        hints: list[str] = []
+        for rep in report.failures:
+            hints.extend(rep.fix_hints())
+        raise DesignSequenceError(
+            "script DesignSequence refused a glyph"
+            + (f" — {'; '.join(hints)}" if hints else ""),
+            reports=tuple(report.failures),
+        )
+    return seq
 
 
 def latin_cap_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
@@ -932,6 +1080,45 @@ class DesignSequence:
             planned_order=planned,
         )
 
+    @classmethod
+    def from_builders(
+        cls,
+        builders: Mapping[str, Callable[[], ComposedGlyph]],
+        *,
+        control: str,
+        order: Sequence[str],
+        tolerances: StyleConsistencyTolerances | None = None,
+        compare_to_previous: bool = True,
+        skip_checks_for_pair: Callable[[str, str], Sequence[str]] | None = None,
+    ) -> DesignSequence:
+        """Start a session from zero-arg glyph builders (script / skeleton faces).
+
+        Builds **only** the control glyph. Remaining letters in ``order`` unlock
+        via :meth:`try_add` / :meth:`add`, or use :func:`try_unlock_script_builders`.
+        Defaults to :func:`script_sequence_tolerances` and
+        :func:`script_topology_skip_checks`.
+        """
+        if control not in builders:
+            raise KeyError(f"control {control!r} missing from builders")
+        planned = tuple(order)
+        if not planned:
+            raise ValueError("order must be non-empty")
+        if control not in planned or planned[0] != control:
+            planned = (control, *[c for c in planned if c != control])
+        skips = skip_checks_for_pair
+        if skips is None:
+            skips = script_topology_skip_checks
+        tol = (
+            tolerances if tolerances is not None else script_sequence_tolerances()
+        )
+        return cls.start(
+            control,
+            builders[control](),
+            tolerances=tol,
+            compare_to_previous=compare_to_previous,
+            skip_checks_for_pair=skips,
+            planned_order=planned,
+        )
 
     @classmethod
     def unlock_controls_body(

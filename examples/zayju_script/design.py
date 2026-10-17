@@ -17,8 +17,7 @@ Slant is baked into coordinates — not ``oblique_font``.
 
 from __future__ import annotations
 
-import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
@@ -32,9 +31,16 @@ from typekernel.parts import (
     Stroke,
     trace_letter,
 )
+from typekernel.parts.script import (
+    chaikin_subdivide,
+    entry_rail,
+    exit_rail,
+    shear_xy,
+    slant_shear,
+)
 
 SLANT_DEG: Final = 28.0
-SHEAR: Final = math.tan(math.radians(SLANT_DEG))
+SHEAR: Final = slant_shear(SLANT_DEG)
 K: Final = 0.5523
 
 NIB_THICKNESS: Final = 36.0
@@ -68,7 +74,7 @@ def script_context() -> DesignContext:
 
 
 def _S(x: float, y: float) -> tuple[float, float]:
-    return (x + y * SHEAR, y)
+    return shear_xy(x, y, SHEAR)
 
 
 def _C(
@@ -91,18 +97,6 @@ def _ellipse(
     )
 
 
-def _chaikin(pts: Sequence[tuple[float, float]], rounds: int = 4) -> list[tuple[float, float]]:
-    cur = [tuple(p) for p in pts]
-    for _ in range(rounds):
-        nxt: list[tuple[float, float]] = [cur[0]]
-        for i in range(len(cur) - 1):
-            a, b = cur[i], cur[i + 1]
-            nxt.append((0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]))
-            nxt.append((0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]))
-        nxt.append(cur[-1])
-        cur = nxt
-    return cur
-
 
 def _poly(
     name: str,
@@ -112,7 +106,7 @@ def _poly(
     contrast: float | None = None,
     smooth: int = 4,
 ) -> Stroke:
-    dense = _chaikin(pts, rounds=smooth)
+    dense = chaikin_subdivide(pts, rounds=smooth)
     return Stroke.from_points(
         name,
         [_S(*p) for p in dense],
@@ -146,13 +140,11 @@ def _ring(
 
 
 def _entry_rail(x0: float, x1: float, *, y: float = ENTRY_Y) -> list[tuple[float, float]]:
-    mid = (x0 + x1) / 2.0
-    return [(x0, y + 20.0), (mid, y - 6.0), (x1, RAIL_LIFT)]
+    return entry_rail(x0, x1, y=y, lift=RAIL_LIFT)
 
 
 def _exit_rail(x0: float, x1: float, *, y: float = EXIT_Y) -> list[tuple[float, float]]:
-    mid = (x0 + x1) / 2.0
-    return [(x0, RAIL_LIFT * 0.5), (mid, y - 6.0), (x1, y + 28.0)]
+    return exit_rail(x0, x1, y=y, lift=RAIL_LIFT)
 
 
 def _trace(*strokes: Stroke, ctx: DesignContext | None = None) -> ComposedGlyph:
@@ -624,48 +616,13 @@ def build_charset(ctx: DesignContext | None = None) -> dict[str, ComposedGlyph]:
     return {ch: BUILDERS[ch](c) for ch in DESIGN_ORDER}
 
 
-_CLOSED_BOWLS: Final = frozenset({"o", "O"})
-_ASCENDERS: Final = frozenset({"d", "h", "D", "l", "b", "k", "f", "t"})
-_DESCENDERS: Final = frozenset({"j", "y", "g", "p", "q"})
-
-
-def _script_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
-    """Omit metrics that are meaningless across topology roles."""
-    skip: list[str] = []
-    if ref in _CLOSED_BOWLS or cand in _CLOSED_BOWLS:
-        skip.extend(["entry_rail_y", "exit_rail_y", "exit_slant_deg"])
-    if cand in _ASCENDERS or ref in _ASCENDERS:
-        skip.extend(["ink_ymax", "bowl_center_y", "exit_rail_y", "exit_slant_deg"])
-    if cand in _DESCENDERS or ref in _DESCENDERS:
-        # Descender loops poison lower-band exit-angle samples.
-        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
-    # Dotted / short letters: vertical exits are not writing rails.
-    if cand in {"i", "j"} or ref in {"i", "j"}:
-        # Single stem + tittle: vertical-stem probes are not comparable to dual-stem body.
-        skip.extend(
-            ["exit_rail_y", "exit_slant_deg", "ink_ymax", "bowl_center_y", "stem_median"]
-        )
-    return tuple(dict.fromkeys(skip))
-
-
 def script_sequence_tolerances() -> StyleConsistencyTolerances:
-    """Florid-script budgets after per-glyph redesign.
-
-    Rails/slant/stem stay near body defaults. Contrast allows multi-vertical
-    pen stress (u/h) without opening the door to phrase-batch fudge.
-    """
-    from typekernel.qa.style_consistency import StyleConsistencyTolerances
-
-    return StyleConsistencyTolerances(
-        stem_median=14.0,
-        contrast_ratio=0.95,
-        entry_rail_y=40.0,
-        exit_rail_y=42.0,
-        exit_slant_deg=40.0,
-        bowl_center_y=55.0,
-        ink_ymin=55.0,
-        ink_ymax=120.0,
+    """Brand re-export of library script DesignSequence budgets."""
+    from typekernel.qa.design_sequence import (
+        script_sequence_tolerances as _lib_script_sequence_tolerances,
     )
+
+    return _lib_script_sequence_tolerances()
 
 
 def build_charset_sequential(
@@ -674,51 +631,37 @@ def build_charset_sequential(
     tolerances: object | None = None,
     compare_to_previous: bool = True,
 ) -> tuple[dict[str, ComposedGlyph], object]:
-    """Design-order build via library :class:`~typekernel.qa.DesignSequence`.
+    """Design-order build via library ``try_unlock_script_builders``.
 
-    One glyph at a time: draw → style-check vs control/previous → unlock or stop.
-    Does **not** batch-construct then wave a report. On failure, later letters
-    are not built.
-
-    Returns ``(drawn, sequence_report)``. Agents must fix the failing glyph
-    (see ``report.failures`` / ``fix_hints``) before unlocking the next letter.
+    Glyph skeletons stay brand-local; topology skips, sequence tolerances, and
+    the unlock loop live in ``typekernel.qa.design_sequence``.
     """
-    from typekernel.qa.design_sequence import DesignSequence
+    from typekernel.qa.design_sequence import (
+        script_sequence_tolerances as _lib_tol,
+    )
+    from typekernel.qa.design_sequence import (
+        try_unlock_script_builders,
+    )
     from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
     c = ctx or script_context()
-    tol = tolerances if tolerances is not None else script_sequence_tolerances()
+    tol = tolerances if tolerances is not None else _lib_tol()
     if not isinstance(tol, StyleConsistencyTolerances):
         raise TypeError("tolerances must be StyleConsistencyTolerances")
 
-    control_glyph = BUILDERS[CONTROL_GLYPH](c)
-    seq = DesignSequence.start(
-        CONTROL_GLYPH,
-        control_glyph,
+    builders = {ch: (lambda ch=ch, c=c: BUILDERS[ch](c)) for ch in DESIGN_ORDER}
+    seq, report = try_unlock_script_builders(
+        builders,
+        control=CONTROL_GLYPH,
+        order=DESIGN_ORDER,
         tolerances=tol,
         compare_to_previous=compare_to_previous,
-        skip_checks_for_pair=_script_skip_checks,
-        planned_order=DESIGN_ORDER,
     )
-    for ch in DESIGN_ORDER:
-        if ch == CONTROL_GLYPH:
-            continue
-        glyph = BUILDERS[ch](c)
-        report = seq.try_add(ch, glyph)
-        if not report.passed:
-            # Stop — do not batch-unlock later letters. Include refused candidate
-            # in the returned map for diagnostics only.
-            from typekernel.qa.style_consistency import check_design_sequence
-
-            drawn = dict(seq.glyphs)
-            drawn[ch] = glyph
-            full = check_design_sequence(
-                drawn,
-                tuple(drawn.keys()),
-                control=CONTROL_GLYPH,
-                tolerances=tol,
-                compare_to_previous=compare_to_previous,
-                skip_checks_for_pair=_script_skip_checks,
-            )
-            return drawn, full
-    return dict(seq.glyphs), seq.sequence_report()
+    if not report.passed:
+        drawn = dict(seq.glyphs)
+        fail_names = {r.candidate_name for r in report.failures}
+        for ch in fail_names:
+            if ch in builders and ch not in drawn:
+                drawn[ch] = builders[ch]()
+        return drawn, report
+    return dict(seq.glyphs), report

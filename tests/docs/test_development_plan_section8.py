@@ -252,6 +252,7 @@ def test_section8_agent_recipes_documents_trace_letter_spike() -> None:
     assert "zayju_script" in text
     assert "test_zayju_script.py" in text
     assert "build_charset_sequential" in text
+    assert "try_unlock_script_builders" in text
     assert "style_consistency" in text
     assert "test_style_consistency.py" in text
 

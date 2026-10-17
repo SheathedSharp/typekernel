@@ -674,3 +674,45 @@ def test_dotted_letters_keep_stem_gate() -> None:
     assert "stem_median" not in latin_topology_skip_checks("n", "i")
     assert "stem_median" not in latin_topology_skip_checks("n", "j")
     assert "ink_ymax" in latin_topology_skip_checks("n", "i")
+
+
+def test_script_topology_skip_checks_keeps_rails_on_body() -> None:
+    """Script body pairs gate rails; closed bowls / dotted omit them."""
+    from typekernel.qa.design_sequence import script_topology_skip_checks
+
+    body = script_topology_skip_checks("a", "e")
+    assert "entry_rail_y" not in body
+    assert "exit_rail_y" not in body
+    bowl = script_topology_skip_checks("a", "o")
+    assert "entry_rail_y" in bowl
+    dotted = script_topology_skip_checks("a", "i")
+    assert "stem_median" in dotted
+
+
+def test_script_sequence_tolerances_wider_contrast_than_body() -> None:
+    from typekernel.qa.design_sequence import script_sequence_tolerances
+    from typekernel.qa.style_consistency import script_body_tolerances
+
+    seq = script_sequence_tolerances()
+    body = script_body_tolerances()
+    assert seq.contrast_ratio > body.contrast_ratio
+
+
+def test_try_unlock_script_builders_zayju_charset() -> None:
+    """Library unlock helper completes the zayju_script DESIGN_ORDER."""
+    from examples.zayju_script import design
+    from typekernel.qa.design_sequence import try_unlock_script_builders
+
+    ctx = design.script_context()
+    builders = {
+        ch: (lambda ch=ch, c=ctx: design.BUILDERS[ch](c)) for ch in design.DESIGN_ORDER
+    }
+    seq, report = try_unlock_script_builders(
+        builders, control=design.CONTROL_GLYPH, order=design.DESIGN_ORDER
+    )
+    assert report.passed, [
+        (r.reference_name, r.candidate_name, [c.name for c in r.failures])
+        for r in report.failures
+    ]
+    assert seq.is_complete
+    assert "".join(seq.unlocked) == "".join(design.DESIGN_ORDER)
