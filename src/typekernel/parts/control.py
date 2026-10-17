@@ -351,15 +351,18 @@ def _u_family_outline(m: NMetrics, ctx: DesignContext, *, vf_compat: bool = Fals
 
 
 def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) -> Outline:
-    """Italic ``u``: mirror of sharp ``n`` branch (no extra fillet).
+    """Italic ``u``: mirrored sharp branch, then shared crotch soften.
 
-    Stem→shoulder fillets on ``n``/``h``/``m``/``r`` are weight-stable; the
-    mirrored + inner-crown-lifted ``u`` path is not yet, so ``u`` keeps the
-    classic branching join until a shared recipe is proven across wght relief.
+    Construction-time :func:`_emit_italic_branch_shoulder` is unsafe on the
+    mirrored shoulder (see that docstring). Soften post-process keeps VF
+    wght×ital segment counts under ``with_stem_relief``.
     """
     bulge = _u_foot_bulge(ctx, m.stem)
+    branch_y = _italic_branch_y(m, stem_top)
+    cx = m.width / 2.0
+    stem_x = 2.0 * cx - m.stem  # inner face of right stem after mirror
     if bulge <= 0.0:
-        return _ccw(
+        sharp = _ccw(
             mirror_x(
                 _n_branching_outline(
                     m,
@@ -368,10 +371,16 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
                     shelf_left_foot=_stem_serif_inlined(ctx),
                     soft_branch=False,
                 ),
-                at_x=m.width / 2.0,
+                at_x=cx,
             )
         )
-    branch_y = _italic_branch_y(m, stem_top)
+        return _soften_italic_branch_crotch(
+            sharp,
+            branch_y=branch_y,
+            stem_x=stem_x,
+            stem=m.stem,
+            stem_top=stem_top,
+        )
     drop = stem_top - branch_y
     mm = m.tuned(
         x_height=branch_y,
@@ -381,7 +390,6 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
         inner_crown=m.inner_crown - drop * 0.16,
     )
     s = _shoulder(mm)
-    cx = m.width / 2.0
     ro, ri = 2.0 * cx - 0.0, 2.0 * cx - m.stem
     lo, li = 2.0 * cx - m.width, 2.0 * cx - (m.stem + m.counter)
     b = PathBuilder()
@@ -398,7 +406,14 @@ def _u_branching_outline(m: NMetrics, ctx: DesignContext, *, stem_top: float) ->
     _curve(b, _mirror_cubic(cx, s.inner[1]))
     b.lineTo(ri, 0.0)
     b.closePath()
-    return _ccw(b.build())
+    sharp = _ccw(b.build())
+    return _soften_italic_branch_crotch(
+        sharp,
+        branch_y=branch_y,
+        stem_x=stem_x,
+        stem=m.stem,
+        stem_top=stem_top,
+    )
 
 
 def _n_slab_left_foot_detour(
@@ -811,6 +826,43 @@ def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> floa
     return max(2.0, drop * 0.36)
 
 
+
+def _soften_italic_branch_crotch(
+    outline: Outline,
+    *,
+    branch_y: float,
+    stem_x: float,
+    stem: float,
+    stem_top: float,
+) -> Outline:
+    """Blend the stem→shoulder crotch, then rebalance axis extrema (R4-safe).
+
+    Weight-stable for mirrored ``u`` (and usable on any branching outline).
+    Selects only the line→curve join nearest ``(stem_x, branch_y)`` so
+    ``outline_oblique_compat_splits`` keeps a fixed segment recipe across
+    ``with_stem_relief`` counter growth — unlike construction-time
+    :func:`_emit_italic_branch_shoulder` on mirrored shoulders (retrograde
+    fillet→split bridge; segment drop under double relief / ``_font(stem=…)``).
+    """
+    from typekernel.geo.extrema import outline_with_axis_extrema_on_curve
+    from typekernel.geo.joins import _is_line, _seg_end, blend_corners
+
+    drop = max(0.0, stem_top - branch_y)
+    radius = max(2.0, drop * 0.18)
+    tol = max(6.0, stem * 0.15)
+
+    def select(angle: float, a: object, b: object) -> bool:
+        if angle < 0.5:
+            return False
+        if not (_is_line(a) and not _is_line(b)):  # type: ignore[arg-type]
+            return False
+        pt = _seg_end(a)  # type: ignore[arg-type]
+        return abs(pt.y - branch_y) <= tol and abs(pt.x - stem_x) <= tol
+
+    blended = blend_corners(outline, radius, select=select, tension=0.95)
+    return outline_with_axis_extrema_on_curve(blended)
+
+
 def _emit_italic_branch_shoulder(
     b: PathBuilder,
     *,
@@ -821,9 +873,14 @@ def _emit_italic_branch_shoulder(
 ) -> None:
     """Vertical stem into first shoulder cubic via a kappa fillet (R4-friendly).
 
-    Current point must lie on ``x=branch_x`` with ``y > branch_y``. Emits a
-    rounded corner at the branch, then the remainder of ``shoulder0`` after a
-    fixed-parameter split so wght×ital masters keep matching segment counts.
+    For **left-stem** branching (``n``/``h``/``m``/``r``) only. Do **not** drive
+    mirrored ``u`` through this path: the fillet exit and ``splitCubicAtT``
+    junction are not collinear on a mirrored shoulder, so the bridge ``lineTo``
+    folds; ``outline_oblique_compat_splits`` then drops a segment when counter
+    grows under weight relief (VF ``check_masters`` / ``_font(..., stem=120)``).
+    Use :func:`_soften_italic_branch_crotch` for ``u`` instead.
+
+    Current point must lie on ``x=branch_x`` with ``y > branch_y``.
     """
     from fontTools.misc.bezierTools import splitCubicAtT
 

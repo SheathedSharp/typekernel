@@ -122,7 +122,7 @@ def test_italic_diagonals_match_vf_upright_topology() -> None:
 
 
 def test_italic_branch_fillet_deeper_than_shear() -> None:
-    """Shared stem→shoulder fillet: ``n``/``h``/``m``/``r`` gain cubics vs shear."""
+    """Soft branch crotches: ``n``/``h``/``m``/``r``/``u`` gain cubics vs shear."""
     from typekernel.geo.segment import CubicSegment
 
     reg = Controls.from_context(DesignContext.humanist_sans())
@@ -139,13 +139,13 @@ def test_italic_branch_fillet_deeper_than_shear() -> None:
         )
 
     deeper = 0
-    for ch in "nhmr":
+    for ch in "nhmru":
         drawn = ital.build(ch)
         sheared = slant_composed_glyph(reg.build(ch), slant)
         assert topology_signature(drawn) != topology_signature(sheared)
         if n_cubics(drawn) > n_cubics(sheared):
             deeper += 1
-    assert deeper == 4
+    assert deeper == 5
 
 
 def test_italic_branch_fillet_vf_pair_matches_on_presets() -> None:
@@ -158,5 +158,74 @@ def test_italic_branch_fillet_vf_pair_matches_on_presets() -> None:
         DesignContext.code_clear,
     ):
         up, it = vf_italic_pair(Controls.from_context(factory()))
-        for ch in "nhmr":
+        for ch in "nhmru":
             assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+
+def test_italic_u_soft_branch_survives_weight_relief() -> None:
+    """Soft ``u`` (crotch soften) keeps topology under double stem-relief / ``_font``.
+
+    Regression lock: construction-time ``_emit_italic_branch_shoulder`` on a
+    mirrored ``u`` drops a segment when counter grows (see emit docstring).
+    """
+    from dataclasses import replace
+
+    import tests.parts.test_oblique_compat as oblique_t
+    from typekernel.font import Master, check_masters
+    from typekernel.parts.italic import vf_italic_pair
+
+    ctx = DesignContext.humanist_sans()
+    up, it = vf_italic_pair(Controls.from_context(ctx))
+    bold = vf_italic_pair(Controls.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
+    sheet = replace(bold, context=bold.context.tuned(stem=120.0)).with_stem_relief()
+    codes = {
+        topology_signature(up.build("u")).contour_codes,
+        topology_signature(it.build("u")).contour_codes,
+        topology_signature(bold.build("u")).contour_codes,
+        topology_signature(sheet.build("u")).contour_codes,
+    }
+    assert len(codes) == 1
+    masters = [
+        Master({"wght": 400, "ital": 0}, oblique_t._font(up, "Regular")),
+        Master({"wght": 400, "ital": 1}, oblique_t._font(it, "Italic")),
+        Master({"wght": 700, "ital": 0}, oblique_t._font(bold, "Bold", stem=120.0)),
+    ]
+    assert check_masters(masters) == []
+
+
+def test_italic_u_emit_on_mirror_breaks_weight_relief() -> None:
+    """Living doc: emit fillet on mirrored ``u`` is not weight-stable.
+
+    If this starts passing, emit may have become safe for ``u`` — re-check
+    before removing ``_soften_italic_branch_crotch``.
+    """
+    from dataclasses import replace
+
+    import typekernel.parts.control as ctl
+    from typekernel.parts.italic import vf_italic_pair
+    from typekernel.parts.transforms import mirror_x
+
+    def emit_mirror_u(m, ctx, *, stem_top):
+        return ctl._ccw(
+            mirror_x(
+                ctl._n_branching_outline(
+                    m,
+                    stem_top=stem_top,
+                    ctx=ctx,
+                    shelf_left_foot=ctl._stem_serif_inlined(ctx),
+                    soft_branch=True,  # construction emit
+                ),
+                at_x=m.width / 2.0,
+            )
+        )
+
+    orig = ctl._u_branching_outline
+    ctl._u_branching_outline = emit_mirror_u
+    try:
+        ctx = DesignContext.humanist_sans()
+        bold = vf_italic_pair(Controls.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
+        sheet = replace(bold, context=bold.context.tuned(stem=120.0)).with_stem_relief()
+        assert topology_signature(bold.build("u")) != topology_signature(sheet.build("u"))
+    finally:
+        ctl._u_branching_outline = orig
