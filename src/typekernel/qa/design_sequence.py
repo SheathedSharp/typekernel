@@ -232,7 +232,9 @@ def latin_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
         # comparable — openings and crossbars dominate horizontal probes.
         skip.extend(["contrast_ratio"])
     if ref in _OPEN_ROUNDS or cand in _OPEN_ROUNDS:
-        # Open ``c``/``e``: vertical probes hit the opening hairline or eye bar.
+        # Open ``c``/``e``: at extreme black, mid-band probes hit the aperture
+        # hairline (``c``≈25du at stem 200). Keep stem skipped until a
+        # back-stem sampler exists; contrast already skipped via bowls.
         skip.extend(["stem_median"])
     return tuple(dict.fromkeys(skip))
 

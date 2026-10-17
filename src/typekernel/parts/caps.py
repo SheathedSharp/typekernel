@@ -2256,7 +2256,13 @@ def Y_from_H(
         junction_eff = max(junction_eff, 0.45)
     w, cap, t = width * h.width, h.cap_height, h.stem
     yj = junction_eff * cap
-    hw = _hwidth(t, c.contrast, w / 2.0 - t / 2.0, cap - yj)
+    # Only past the R8-sensitive mid-black band (150 pinches); unlock at 180+.
+    if c.style.serif == "slab" and t >= 175.0:
+        extreme = max(0.0, min(1.0, (t - 175.0) / 45.0))
+        diag_w = 1.0 - 0.12 * extreme
+    else:
+        diag_w = 1.0
+    hw = _hwidth(t, c.contrast, w / 2.0 - t / 2.0, cap - yj, weight=diag_w)
     s0, s1 = (w - t) / 2.0, (w + t) / 2.0
     # left arm outer edge: (0, cap) → (w/2 - hw/2, yj); inner edge shifted by hw
     run = w / 2.0 - hw / 2.0

@@ -467,7 +467,7 @@ def test_punct_order_covers_punct_forms() -> None:
 def test_extreme_slab_stem160_caps_hard_fail_documented() -> None:
     """Extreme slab masters still refuse some caps — do not greenwash.
 
-    Stem ≥ 160 on slab_serif can refuse ``M`` / ``Y`` / ``E`` under honest
+    Stem ≥ 160 on slab_serif can refuse ``M`` / ``Y`` / ``E`` (or later) under honest
     stem probes (``X`` extreme thin landed). Default presets and compose stay
     green; this marks the construction ceiling until those glyphs are redesigned.
     """
