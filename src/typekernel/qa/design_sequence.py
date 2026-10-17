@@ -45,6 +45,7 @@ __all__ = [
     "default_punct_design_order",
     "ensure_controls_body_unlocked",
     "ensure_controls_unlocked_for_charset",
+    "ensure_mark_composites_gated",
     "extended_latin_topology_skip_checks",
     "italic_topology_skip_checks",
     "latin_cap_topology_skip_checks",
@@ -423,8 +424,8 @@ def italic_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
     - Branching ``n``/``h``/``r``/``u``/``m`` change H/V samples → skip contrast.
 
     Does **not** widen absolute tolerances. Diagonals ``k``/``v``/``w``/``x``/
-    ``y``/``z`` use chamfered-crotch italic constructions (topology differs from
-    shear); cursive cubic crotches with rebalanced extrema remain open.
+    ``y``/``z`` use cursive-cubic italic constructions (topology differs from
+    shear); further cursive italic refinements (non-diagonal letters) remain open.
     """
     skip = list(latin_topology_skip_checks(ref, cand))
     if ref in {"f"} or cand in {"f"}:
@@ -633,25 +634,72 @@ def controls_cap_tolerances() -> StyleConsistencyTolerances:
 
 
 
+def ensure_mark_composites_gated(
+    controls: Controls,
+    charset: str,
+    *,
+    require: bool = True,
+) -> Controls:
+    """Refuse silent ship of mark composites without base DesignSequence unlock.
+
+    When *charset* contains any :data:`~typekernel.parts.diacritics.COMPOSITE_LATIN`
+    character (or the caller passes the full composite set), runs body / caps
+    unlocks as needed. Does **not** style-gate each precomposed accent — those
+    are mark attachments — but bases must have passed
+    :func:`unlock_controls_body` / :func:`unlock_controls_caps`.
+
+    Pass ``require=False`` only for documented stock / specimen compiles.
+    """
+    from typekernel.parts.diacritics import COMPOSITE_LATIN
+
+    if not require:
+        return controls
+    composite_chars = {row[0] for row in COMPOSITE_LATIN}
+    present = [ch for ch in charset if ch in composite_chars]
+    if not present:
+        return controls
+    need_body, need_caps, _, _ = charset_unlock_needs("".join(present))
+    if need_body:
+        unlock_controls_body(controls)
+    if need_caps:
+        unlock_controls_caps(controls)
+    return controls
+
+
+
+
 def charset_unlock_needs(charset: str) -> tuple[bool, bool, bool, bool]:
     """Which DesignSequence unlocks a charset requires.
 
     Returns ``(body, caps, digits, punct)``. Outline extended Latin (``æø`` /
-    ``ÆØ``) counts as body / caps so compose cannot ship them after skipping
-    the base unlocks.
+    ``ÆØ``) and mark composites (``á``/``É``/…) count as body / caps so compose
+    cannot ship them after skipping the base unlocks.
     """
+    from typekernel.parts.diacritics import COMPOSITE_LATIN
     from typekernel.parts.extended_latin import (
         EXTENDED_LATIN_CAP_FORMS,
         EXTENDED_LATIN_FORMS,
     )
     from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS
 
+    composite_chars = {row[0] for row in COMPOSITE_LATIN}
     need_body = any(
-        ch in RELATED_FORMS or ch in EXTENDED_LATIN_FORMS for ch in charset
+        ch in RELATED_FORMS
+        or ch in EXTENDED_LATIN_FORMS
+        or (ch in composite_chars and ch.islower())
+        for ch in charset
     )
+    # Uppercase composites and any composite that uses a cap base need caps.
     need_caps = any(
-        ch in CAP_FORMS or ch in EXTENDED_LATIN_CAP_FORMS for ch in charset
+        ch in CAP_FORMS
+        or ch in EXTENDED_LATIN_CAP_FORMS
+        or (ch in composite_chars and ch.isupper())
+        for ch in charset
     )
+    # Lowercase composites whose base is a related form already set need_body;
+    # ñ/ç etc. still need body. Cap composites like Ç need caps (above).
+    if any(ch in composite_chars for ch in charset):
+        need_body = True
     need_digits = any(ch in FIGURE_FORMS for ch in charset)
     need_punct = any(ch in PUNCT_FORMS for ch in charset)
     return need_body, need_caps, need_digits, need_punct
@@ -692,6 +740,7 @@ def ensure_controls_unlocked_for_charset(
     ]
     if extended:
         unlock_controls_extended_latin(controls, order=tuple(dict.fromkeys(extended)))
+    ensure_mark_composites_gated(controls, charset, require=True)
     return controls
 
 

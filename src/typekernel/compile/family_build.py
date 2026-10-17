@@ -136,13 +136,18 @@ def compose_font_from_controls(
     opts = options or FamilyBuildOptions()
     charset = _compose_charset(controls, opts)
     if require_body_unlock:
+        from typekernel.parts.diacritics import composite_latin_charset
         from typekernel.qa.design_sequence import (
             DesignSequenceError,
             ensure_controls_unlocked_for_charset,
         )
 
+        # Mark composites ship with extended_latin — gate their bases too.
+        unlock_chars = charset
+        if opts.extended_latin:
+            unlock_chars = "".join(dict.fromkeys(charset + composite_latin_charset()))
         try:
-            ensure_controls_unlocked_for_charset(controls, charset, require=True)
+            ensure_controls_unlocked_for_charset(controls, unlock_chars, require=True)
         except DesignSequenceError as exc:
             raise DesignSequenceError(
                 "compose_font_from_controls requires DesignSequence unlock "

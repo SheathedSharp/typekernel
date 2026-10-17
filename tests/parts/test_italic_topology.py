@@ -91,20 +91,25 @@ def test_italic_ru_topology_differs_from_sheared_regular() -> None:
 
 
 def test_italic_diagonals_topology_differs_from_shear() -> None:
-    """``k/v/w/x/y/z`` chamfered-crotch italic ≠ construct shear of upright."""
+    """``k/v/w/x/y/z`` cursive-cubic italic ≠ construct shear of upright."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
     reg = Controls.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     diffs = 0
+    cubic = 0
     for ch in "kvwxyz":
         sheared = slant_composed_glyph(reg.build(ch), slant)
         drawn = ital.build(ch)
         assert composed_glyph_hash(sheared) != composed_glyph_hash(drawn)
-        if topology_signature(sheared) != topology_signature(drawn):
+        sig = topology_signature(drawn)
+        if topology_signature(sheared) != sig:
             diffs += 1
+        if any("C" in code for code in sig.contour_codes):
+            cubic += 1
     assert diffs == 6
+    assert cubic == 6  # cursive cubic crotches (not chamfer-only)
 
 
 def test_italic_diagonals_match_vf_upright_topology() -> None:

@@ -64,27 +64,43 @@ def _along(from_p: Pt, to_p: Pt, dist: float) -> Pt:
 
 
 def _soft_corner_polygon(points: list[Pt], soft: frozenset[int], radius: float) -> Outline:
-    """Closed polygon with listed corners chamfered (extra line segments).
+    """Closed polygon with listed corners as cubics, then R4 extrema rebalance.
 
-    Used for italic diagonals: soft crotches / crossings change the segment
-    count vs a pure upright polygon (and vs construct-sheared upright), without
-    introducing off-node axis extrema (R4). Cubics remain a TODO for fuller
-    cursive italic once extrema are rebalanced.
+    Cursive italic crotches: tangent cubics at soft indices, then
+    :func:`~typekernel.geo.extrema.outline_with_axis_extrema_on_curve` so
+    axis turning points land on nodes (R4-safe). Falls back to a line chamfer
+    only when ``radius`` is non-positive.
     """
     if radius <= 0.0 or not soft:
         return _polygon(points)
+    from typekernel.geo.extrema import outline_with_axis_extrema_on_curve
+
     n = len(points)
-    out: list[Pt] = []
+    b = PathBuilder()
+    first = True
     for i in range(n):
         prev_p = points[(i - 1) % n]
         cur = points[i]
         nxt = points[(i + 1) % n]
         if i in soft:
-            out.append(_along(cur, prev_p, radius))
-            out.append(_along(cur, nxt, radius))
+            enter = _along(cur, prev_p, radius)
+            exit_pt = _along(cur, nxt, radius)
+            c1 = (enter[0] * 0.35 + cur[0] * 0.65, enter[1] * 0.35 + cur[1] * 0.65)
+            c2 = (exit_pt[0] * 0.35 + cur[0] * 0.65, exit_pt[1] * 0.35 + cur[1] * 0.65)
+            if first:
+                b.moveTo(*enter)
+                first = False
+            else:
+                b.lineTo(*enter)
+            b.curveTo(c1[0], c1[1], c2[0], c2[1], exit_pt[0], exit_pt[1])
         else:
-            out.append(cur)
-    return _polygon(out)
+            if first:
+                b.moveTo(*cur)
+                first = False
+            else:
+                b.lineTo(*cur)
+    b.closePath()
+    return outline_with_axis_extrema_on_curve(_ccw(b.build()))
 
 
 def _hwidth(stem: float, contrast: float, run: float, rise: float, weight: float = 1.0) -> float:
@@ -331,7 +347,7 @@ def v_from_n(
     pts = v_points(m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump)
     top = m.x_height + bump
     if _italic_diags(c):
-        # Asymmetric italic v: bias apex/crotch right; chamfered inner crotch.
+        # Asymmetric italic v: bias apex/crotch right; cursive cubic crotch.
         bias = 0.11 * w
         pts = list(pts)
         pts[1] = (pts[1][0] + bias * 0.25, pts[1][1])
@@ -422,9 +438,9 @@ def y_from_n(
     tip_y = desc + m.stem * (0.02 if c.terminal_style == "ball" else 0.08)
     tip_x = tail_r + (hw * 0.32 if c.terminal_style == "ball" else 0.0)
     if _italic_diags(c):
-        # Chamfer the v-crotch (index 6 in straight y; 8 with curved tail midpoints).
+        # Round the v-crotch (index 6 in straight y; 8 with curved tail midpoints).
         soft_i = 8 if c.style.y_tail == "curved" else 6
-        # Also chamfer the join into the descender (index 1).
+        # Also round the join into the descender (index 1).
         poly = _soft_corner_polygon(pts, frozenset({1, soft_i}), m.stem * 0.32)
     else:
         poly = _polygon(pts)
@@ -504,7 +520,7 @@ def w_from_n(
     )
     anchors = {"top": (ww / 2.0, m.x_height), "bottom": (ww / 2.0, 0.0)}
     if _italic_diags(c):
-        # Chamfer the two inner valleys (low crotch + two upper notches).
+        # Round the two inner valleys (low crotch + two upper notches).
         # w_points layout: indices 3=low crotch, 8 and 11=upper inner notches.
         outline = _soft_corner_polygon(pts, frozenset({3, 8, 11}), m.stem * 0.28)
     else:
@@ -539,7 +555,7 @@ def x_from_n(
         w = m.width * scale
     pts = x_points(m.stem, m.x_height, w, c.contrast)
     if _italic_diags(c):
-        # Classic italic x: raise the crossing; chamfer the waist notches.
+        # Classic italic x: raise the crossing; round the waist notches.
         dy = 0.07 * m.x_height
         pts = list(pts)
         # Indices 1 and 7 are the mid-waist tips on each diagonal.
@@ -565,7 +581,7 @@ def z_from_n(
     w = 0.88 * m.width if width is None else width
     pts = z_points(m.stem, m.stem * c.contrast * 0.95, m.x_height, w, c.contrast)
     if _italic_diags(c):
-        # Chamfer bar↔diagonal joins (indices 3 and 8 in z_points).
+        # Round bar↔diagonal joins (indices 3 and 8 in z_points).
         outline = _soft_corner_polygon(pts, frozenset({3, 8}), m.stem * 0.30)
     else:
         outline = _polygon(pts)
@@ -658,7 +674,7 @@ def k_from_n(
     }
     tip = (w - m.stem * 0.15, m.x_height * 0.08)
     if _italic_diags(c):
-        # Chamfer arm/leg crotch (index 5) and stem junctions (2, 8).
+        # Round arm/leg crotch (index 5) and stem junctions (2, 8).
         base_poly = _soft_corner_polygon(pts, frozenset({2, 5, 8}), m.stem * 0.34)
     else:
         base_poly = _polygon(pts)

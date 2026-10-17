@@ -750,3 +750,38 @@ def test_unlock_controls_extended_latin_gates_outline_forms() -> None:
         Controls.from_context(DesignContext.geometric_sans())
     )
     assert set(seq.unlocked) >= {"æ", "ø", "Æ", "Ø"}
+
+
+def test_charset_unlock_needs_mark_composites() -> None:
+    from typekernel.qa.design_sequence import charset_unlock_needs
+
+    assert charset_unlock_needs("áéñ") == (True, False, False, False)
+    assert charset_unlock_needs("ÁÉ")[0] is True and charset_unlock_needs("ÁÉ")[1] is True
+    assert charset_unlock_needs("Ç")[1] is True
+
+
+def test_ensure_mark_composites_gated_unlocks_bases() -> None:
+    from typekernel.qa.design_sequence import ensure_mark_composites_gated
+
+    c = Controls.from_context(DesignContext.humanist_sans())
+    ensure_mark_composites_gated(c, "áé")
+    # Bases must be buildable after gate (body unlocked).
+    assert c.build("a").advance > 0
+    assert c.build("e").advance > 0
+
+
+def test_ensure_mark_composites_refuse_when_body_broken() -> None:
+    """Mark composites must not silent-ship if body DesignSequence refuses."""
+    from typekernel.qa.design_sequence import (
+        DesignSequenceError,
+        ensure_mark_composites_gated,
+    )
+
+    good = Controls.from_context(DesignContext.geometric_sans())
+    thin = Controls.from_context(DesignContext.geometric_sans().tuned(stem=40.0))
+    # Wrong-weight ``h`` fails body DesignSequence vs control ``n``.
+    broken = good.with_glyph("h", lambda _n, _o, _c: thin.build("h"))
+    with pytest.raises(DesignSequenceError):
+        ensure_mark_composites_gated(broken, "á", require=True)
+    # Explicit opt-out still allowed for stock paths.
+    ensure_mark_composites_gated(broken, "á", require=False)
