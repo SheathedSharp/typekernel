@@ -364,14 +364,14 @@ def test_italic_hook_and_opening_vf_pair_matches() -> None:
 
 
 def test_italic_caps_stems_more_written_than_shear() -> None:
-    """Sans caps ``H``/``I``/``L``/``E``/``F``: entry/exit craft ≠ construct shear."""
+    """Sans caps ``H``/``I``/``L``/``E``/``F``/``N``/``M``/``T``: entry/exit ≠ shear."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
     reg = Controls.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
-    for ch in "HILEF":
+    for ch in "HILEFNMT":
         drawn = ital.build(ch)
         sheared = slant_composed_glyph(reg.build(ch), slant)
         assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
@@ -379,7 +379,7 @@ def test_italic_caps_stems_more_written_than_shear() -> None:
         if _body_cubics(drawn) >= _body_cubics(sheared):
             deeper += 1
     # ``I`` may trade rounded-rect corner cubics for foot kicks under slant splits.
-    assert deeper >= 4
+    assert deeper >= 6
 
 
 def test_italic_caps_stems_vf_pair_matches() -> None:
@@ -387,7 +387,34 @@ def test_italic_caps_stems_vf_pair_matches() -> None:
     from typekernel.parts.italic import vf_italic_pair
 
     up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
-    for ch in "HILEF":
+    for ch in "HILEFNMT":
+        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_cap_diagonals_more_written_than_shear() -> None:
+    """Sans caps ``A``/``V``/``W``/``X``/``Y``/``K``/``Z``: crotch/tip craft ≠ shear."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    deeper = 0
+    for ch in "AVWXYKZ":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        if _body_cubics(drawn) >= _body_cubics(sheared):
+            deeper += 1
+    assert deeper >= 5
+
+
+def test_italic_cap_diagonals_vf_pair_matches() -> None:
+    """Cap diagonal crotch craft keeps VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    for ch in "AVWXYKZ":
         assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
 
 

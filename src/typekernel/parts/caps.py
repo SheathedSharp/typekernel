@@ -53,7 +53,15 @@ from typekernel.parts.control import (
     o_metrics,
     s_from_o,
 )
-from typekernel.parts.diagonals import _hwidth, k_points, v_points, w_points, x_points, z_points
+from typekernel.parts.diagonals import (
+    _hwidth,
+    _soft_corner_polygon,
+    k_points,
+    v_points,
+    w_points,
+    x_points,
+    z_points,
+)
 from typekernel.parts.terminal_openings import apply_terminal_shear, opening_closure
 from typekernel.parts.weight_relief import min_bowl_stems
 
@@ -299,6 +307,80 @@ def _f_italic_sans_outline(h: HMetrics, ctx: DesignContext, *, width: float) -> 
     b.closePath()
     return _ccw(b.build())
 
+
+
+
+def _n_italic_sans_outline(
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    y_left: float,
+    y_right: float,
+) -> Outline:
+    """``N``: entry kick + right-stem exit outstroke (sans)."""
+    t, cap = h.stem, h.cap_height
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(t, cap)
+    b.lineTo(w - t, y_right)
+    b.lineTo(w - t, cap)
+    b.lineTo(w, cap)
+    _emit_italic_exit_outstroke(b, w - t, w, stem=t)
+    b.lineTo(t, y_left)
+    b.lineTo(t, 0.0)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _m_italic_sans_outline(
+    h: HMetrics,
+    ctx: DesignContext,
+    *,
+    w: float,
+    y_low: float,
+    y_v: float,
+    bx: float,
+) -> Outline:
+    """``M``: entry kick + right-stem exit outstroke (sans)."""
+    t, cap = h.stem, h.cap_height
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(t, cap)
+    b.lineTo(w / 2.0, y_v)
+    b.lineTo(w - t, cap)
+    b.lineTo(w, cap)
+    _emit_italic_exit_outstroke(b, w - t, w, stem=t)
+    b.lineTo(w - t, y_low)
+    b.lineTo(w - bx, 0.0)
+    b.lineTo(bx, 0.0)
+    b.lineTo(t, y_low)
+    b.lineTo(t, 0.0)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _t_italic_sans_outline(h: HMetrics, ctx: DesignContext, *, width: float) -> Outline:
+    """``T``: stem entry kick + foot outstroke; bar tips sheared by caller."""
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, s0, stem=t, left_top=cap - bt)
+    b.lineTo(0.0, cap - bt)
+    b.lineTo(0.0, cap)
+    b.lineTo(w, cap)
+    b.lineTo(w, cap - bt)
+    b.lineTo(s1, cap - bt)
+    _emit_italic_exit_outstroke(b, s0, s1, stem=t)
+    b.lineTo(s0 + dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
 
 def _cap_stem_serif_anchors_enabled(
     c: DesignContext, *, baked: bool, diagonal: bool = False
@@ -1797,8 +1879,17 @@ def V_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _v_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _v_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_v_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        bias = 0.11 * w
+        pts = list(base)
+        pts[1] = (pts[1][0] + bias * 0.25, pts[1][1])
+        pts[2] = (pts[2][0] + bias * 0.55, pts[2][1])
+        pts[5] = (pts[5][0] + bias * 0.45, pts[5][1])
+        outline = _soft_corner_polygon(pts, frozenset({5}), h.stem * 0.38)
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _w_cap_foot_dims(h: HMetrics, ctx: DesignContext, apex_x: float) -> tuple[float, float, float]:
@@ -1885,8 +1976,12 @@ def W_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _w_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _w_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_w_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        outline = _soft_corner_polygon(base, frozenset({3, 8, 11}), h.stem * 0.28)
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _x_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
@@ -1980,8 +2075,18 @@ def X_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _x_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _x_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_x_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        dy = 0.07 * h.cap_height
+        pts = list(base)
+        pts[1] = (pts[1][0], pts[1][1] + dy)
+        pts[7] = (pts[7][0], pts[7][1] + dy)
+        pts[4] = (pts[4][0], pts[4][1] + dy * 0.5)
+        pts[10] = (pts[10][0], pts[10][1] + dy * 0.5)
+        outline = _soft_corner_polygon(pts, frozenset({1, 4, 7, 10}), h.stem * 0.22)
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _z_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
@@ -2063,8 +2168,12 @@ def Z_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _z_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _z_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_z_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        outline = _soft_corner_polygon(base, frozenset({3, 8}), h.stem * 0.30)
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _k_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
@@ -2157,6 +2266,9 @@ def K_from_H(
             vertex_eff = max(vertex_eff, 0.44)
     w = w_frac * h.width
     cap = h.cap_height
+    if _cap_italic_sans(c):
+        # Branch join higher — same language as lowercase italic ``k``.
+        vertex_eff = min(0.58, max(vertex_eff, 0.50))
     base = k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex_eff)
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
@@ -2167,8 +2279,15 @@ def K_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _k_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _k_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_k_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        outline = _soft_corner_polygon(base, frozenset({2, 5, 8}), h.stem * 0.34)
+        outline = _apply_italic_opening_tip_shear(
+            c, outline, ((w - h.stem * 0.15, cap * 0.92),), stem=h.stem
+        )
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _a_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
@@ -2279,26 +2398,44 @@ def A_from_H(
         ((w + f) / 2.0, peak),
         ((w - f) / 2.0, peak),
     ]
-    b = PathBuilder()
+    anchors = _cap_anchors(
+        w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)
+    )
     if baked and c.style.serif == "bracketed":
+        b = PathBuilder()
         _write_a_cap_bracketed_outer(
             b, h, c, hw, w, f, peak, y0, left_at_y0=left(y0)
         )
-    else:
-        outer_pts = _a_cap_slab_outer(h, c, hw, w, base_outer) if baked else base_outer
-        for i, p in enumerate(outer_pts):
-            (b.moveTo if i == 0 else b.lineTo)(*p)
+        b.moveTo(left(y1), y1)
+        b.lineTo(w / 2.0, crotch)
+        b.lineTo(right(y1), y1)
         b.closePath()
+        return _pack(c, h, anchors, _with_counters(b))
+    if _cap_italic_sans(c) and not baked:
+        # Soft peak flats + counter crotch (lowercase-diag language).
+        outer = _soft_corner_polygon(base_outer, frozenset({6, 7}), h.stem * 0.20)
+        counter = _soft_corner_polygon(
+            [(left(y1), y1), (w / 2.0, crotch), (right(y1), y1)],
+            frozenset({1}),
+            h.stem * 0.30,
+        )
+        oc = outer.contours[0]
+        if signed_area(oc) < 0:
+            oc = reverse_contour(oc)
+        cc = counter.contours[0]
+        if signed_area(cc) > 0:
+            cc = reverse_contour(cc)
+        return _pack(c, h, anchors, Outline((oc, cc)))
+    b = PathBuilder()
+    outer_pts = _a_cap_slab_outer(h, c, hw, w, base_outer) if baked else base_outer
+    for i, p in enumerate(outer_pts):
+        (b.moveTo if i == 0 else b.lineTo)(*p)
+    b.closePath()
     b.moveTo(left(y1), y1)
     b.lineTo(w / 2.0, crotch)
     b.lineTo(right(y1), y1)
     b.closePath()
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True)),
-        _with_counters(b),
-    )
+    return _pack(c, h, anchors, _with_counters(b))
 
 
 def _y_cap_foot_dims(
@@ -2419,8 +2556,19 @@ def Y_from_H(
     if baked and c.style.serif == "bracketed":
         outline = _y_cap_bracketed_outline(h, c, base)
         return _pack(c, h, anchors, outline)
-    pts = _y_cap_slab_points(h, c, base) if baked else base
-    return _pack(c, h, anchors, _polygon(pts))
+    if baked:
+        return _pack(c, h, anchors, _polygon(_y_cap_slab_points(h, c, base)))
+    if _cap_italic_sans(c):
+        # Soft arm↔stem joins + crotch; tip shear on outer arm ends.
+        outline = _soft_corner_polygon(base, frozenset({1, 4, 7}), h.stem * 0.32)
+        outline = _apply_italic_opening_tip_shear(
+            c,
+            outline,
+            ((hw * 0.5, cap), (w - hw * 0.5, cap)),
+            stem=h.stem,
+        )
+        return _pack(c, h, anchors, outline)
+    return _pack(c, h, anchors, _polygon(base))
 
 
 def _m_cap_foot_dims(
@@ -2604,6 +2752,13 @@ def M_from_H(
             b, h, c, w=w, y_low=y_low, y_v=y_v, bx=bx
         )
         return _pack(c, h, anchors, _ccw(b.build()))
+    if _cap_italic_sans(c):
+        return _pack(
+            c,
+            h,
+            anchors,
+            _m_italic_sans_outline(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx),
+        )
     pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
     return _pack(c, h, anchors, _polygon(pts))
 
@@ -2764,6 +2919,13 @@ def N_from_H(
             b, h, c, w=w, y_left=y_left, y_right=y_right
         )
         return _pack(c, h, anchors, _ccw(b.build()))
+    if _cap_italic_sans(c):
+        return _pack(
+            c,
+            h,
+            anchors,
+            _n_italic_sans_outline(h, c, w=w, y_left=y_left, y_right=y_right),
+        )
     pts = _n_cap_outline_points(h, c, w=w, y_left=y_left, y_right=y_right)
     return _pack(c, h, anchors, _polygon(pts))
 
@@ -2850,6 +3012,14 @@ def T_from_H(
         b = PathBuilder()
         _write_t_bracketed_outer(b, h, c, width=width)
         outline = _ccw(b.build())
+    elif _cap_italic_sans(c):
+        outline = _t_italic_sans_outline(h, c, width=width)
+        outline = _apply_italic_opening_tip_shear(
+            c,
+            outline,
+            ((0.0, h.cap_height - h.bar * 0.5), (w, h.cap_height - h.bar * 0.5)),
+            stem=h.stem,
+        )
     else:
         pts = _t_outline_points(h, c, width=width)
         outline = (
