@@ -18,8 +18,9 @@ mirrored shoulders under weight relief). Sans stems get shared written
 ``_emit_italic_entry_kick`` / ``_emit_italic_exit_outstroke`` (and ``r`` a soft
 arm terminal). Hook letters ``f``/``j``/``t`` reuse those kicks plus written arm
 / belly lean; ``a`` gets a crown exit; ``c``/``e`` lean opening tips via band
-shear; ``s`` G1 tips take an italic outward lean. VF-compat upright shares the
-stem/hook segment recipe.
+shear; ``s`` G1 tips take an italic outward lean. Sans caps ``H``/``I``/``L``/
+``E``/``F`` reuse the same entry/exit helpers. VF-compat upright shares the
+stem/hook/cap segment recipe.
 """
 
 from __future__ import annotations

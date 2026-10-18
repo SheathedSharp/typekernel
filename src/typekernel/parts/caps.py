@@ -30,9 +30,15 @@ from typekernel.parts.control import (
     Cubic,
     NMetrics,
     OMetrics,
+    _apply_italic_opening_tip_shear,
     _ccw,
     _curve,
     _cut,
+    _emit_italic_entry_kick,
+    _emit_italic_exit_outstroke,
+    _italic_kick_dims,
+    _italic_single_stem_outline,
+    _italic_topology,
     _opening_slab_metrics,
     _opening_top_bracketed_move,
     _opening_top_slab_move,
@@ -205,6 +211,95 @@ def _cap_serif_inlined(c: DesignContext) -> bool:
     return c.style.serif in ("slab", "bracketed")
 
 
+def _cap_italic_sans(c: DesignContext) -> bool:
+    """Written italic foot craft on sans capitals (serif feet keep their own path)."""
+    return _italic_topology(c) and not _cap_serif_inlined(c)
+
+
+def _h_italic_sans_outline(h: HMetrics, ctx: DesignContext) -> Outline:
+    """``H`` with shared lowercase entry kick + right-stem exit outstroke."""
+    t, w, cap = h.stem, h.width, h.cap_height
+    y0, y1 = h.bar_y - h.bar / 2.0, h.bar_y + h.bar / 2.0
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(t, cap)
+    b.lineTo(t, y1)
+    b.lineTo(w - t, y1)
+    b.lineTo(w - t, cap)
+    b.lineTo(w, cap)
+    _emit_italic_exit_outstroke(b, w - t, w, stem=t)
+    b.lineTo(w - t, y0)
+    b.lineTo(t, y0)
+    b.lineTo(t, 0.0)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _l_italic_sans_outline(h: HMetrics, ctx: DesignContext, *, width: float) -> Outline:
+    """``L``: entry kick on the stem."""
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(t, cap)
+    b.lineTo(t, bt)
+    b.lineTo(w, bt)
+    b.lineTo(w, 0.0)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _e_italic_sans_outline(h: HMetrics, ctx: DesignContext, *, width: float) -> Outline:
+    """``E``: entry kick on the stem."""
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    w_top, w_mid, w_bot = w * 0.97, w * 0.88, w
+    m0, m1 = h.bar_y - bt / 2.0, h.bar_y + bt / 2.0
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(w_top, cap)
+    b.lineTo(w_top, cap - bt)
+    b.lineTo(t, cap - bt)
+    b.lineTo(t, m1)
+    b.lineTo(w_mid, m1)
+    b.lineTo(w_mid, m0)
+    b.lineTo(t, m0)
+    b.lineTo(t, bt)
+    b.lineTo(w_bot, bt)
+    b.lineTo(w_bot, 0.0)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def _f_italic_sans_outline(h: HMetrics, ctx: DesignContext, *, width: float) -> Outline:
+    """``F``: entry kick + stem-foot exit outstroke."""
+    t, cap, bt = h.stem, h.cap_height, h.bar
+    w = width * h.width
+    w_top, w_mid = w, w * 0.9
+    mid = h.bar_y - 0.03 * cap
+    m0, m1 = mid - bt / 2.0, mid + bt / 2.0
+    dx, _dy = _italic_kick_dims(t)
+    b = PathBuilder()
+    _emit_italic_entry_kick(b, 0.0, stem=t, left_top=cap)
+    b.lineTo(w_top, cap)
+    b.lineTo(w_top, cap - bt)
+    b.lineTo(t, cap - bt)
+    b.lineTo(t, m1)
+    b.lineTo(w_mid, m1)
+    b.lineTo(w_mid, m0)
+    b.lineTo(t, m0)
+    _emit_italic_exit_outstroke(b, 0.0, t, stem=t)
+    b.lineTo(dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
+
 def _cap_stem_serif_anchors_enabled(
     c: DesignContext, *, baked: bool, diagonal: bool = False
 ) -> bool:
@@ -342,6 +437,14 @@ def build_H(ctx: DesignContext, metrics: HMetrics | None = None) -> ComposedGlyp
             _cap_anchors(h.width, h, stem_serif_anchors=False),
             outline,
         )
+    if _cap_italic_sans(ctx):
+        outline = _h_italic_sans_outline(h, ctx)
+        return _pack(
+            ctx,
+            h,
+            _cap_anchors(h.width, h, stem_serif_anchors=False),
+            outline,
+        )
     outline = _polygon(_h_outline_points(h, ctx))
     return _pack(
         ctx,
@@ -389,6 +492,8 @@ def I_from_H(H: ComposedGlyph, ctx: DesignContext | None = None) -> ComposedGlyp
         _write_i_bracketed_outer(b, h, c)
         anchors = {"top": (half, cap), "bottom": (half, 0.0)}
         return _pack(c, h, anchors, _ccw(b.build()))
+    if _cap_italic_sans(c):
+        return _pack(c, h, _cap_anchors(h.stem, h), _italic_single_stem_outline(c, stem=h.stem, top=cap))
     from typekernel.parts.primitives import rounded_rect
 
     # Soft corner fillets on sans ``I`` so defaults are G1 without ``tuned_glyph``.
@@ -494,6 +599,12 @@ def L_from_H(
         b = PathBuilder()
         _write_l_bracketed_outer(b, h, c, width=width)
         return _pack(c, h, anchors, _ccw(b.build()))
+    if _cap_italic_sans(c):
+        outline = _l_italic_sans_outline(h, c, width=width)
+        outline = _apply_italic_opening_tip_shear(
+            c, outline, ((width * h.width, h.bar * 0.5),), stem=h.stem
+        )
+        return _pack(c, h, anchors, outline)
     outline = _polygon(_l_outline_points(h, c, width=width))
     return _pack(c, h, anchors, outline)
 
@@ -589,6 +700,16 @@ def E_from_H(
         b = PathBuilder()
         _write_e_bracketed_outer(b, h, c, width=width)
         return _pack(c, h, anchors, _ccw(b.build()))
+    if _cap_italic_sans(c):
+        outline = _e_italic_sans_outline(h, c, width=width)
+        w = width * h.width
+        tips = (
+            (w * 0.97, h.cap_height - h.bar * 0.5),
+            (w * 0.88, h.bar_y),
+            (w, h.bar * 0.5),
+        )
+        outline = _apply_italic_opening_tip_shear(c, outline, tips, stem=h.stem)
+        return _pack(c, h, anchors, outline)
     outline = _polygon(_e_outline_points(h, c, width=width))
     return _pack(c, h, anchors, outline)
 
@@ -681,6 +802,14 @@ def F_from_H(
         b = PathBuilder()
         _write_f_bracketed_outer(b, h, c, width=width)
         outline = _ccw(b.build())
+    elif _cap_italic_sans(c):
+        outline = _f_italic_sans_outline(h, c, width=width)
+        outline = _apply_italic_opening_tip_shear(
+            c,
+            outline,
+            ((w_top, h.cap_height - h.bar * 0.5), (w_top * 0.9, h.bar_y)),
+            stem=h.stem,
+        )
     else:
         pts = _f_outline_points(h, c, width=width)
         outline = (

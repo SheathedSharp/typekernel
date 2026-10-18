@@ -361,3 +361,38 @@ def test_italic_hook_and_opening_vf_pair_matches() -> None:
     up, it = vf_italic_pair(Controls.from_context(DesignContext.humanist_sans()))
     for ch in "fjtaces":
         assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_caps_stems_more_written_than_shear() -> None:
+    """Sans caps ``H``/``I``/``L``/``E``/``F``: entry/exit craft ≠ construct shear."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    deeper = 0
+    for ch in "HILEF":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        if _body_cubics(drawn) >= _body_cubics(sheared):
+            deeper += 1
+    # ``I`` may trade rounded-rect corner cubics for foot kicks under slant splits.
+    assert deeper >= 4
+
+
+def test_italic_caps_stems_vf_pair_matches() -> None:
+    """Cap stem terminal craft keeps VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    for ch in "HILEF":
+        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_caps_unlock_stays_complete() -> None:
+    from typekernel.qa.design_sequence import unlock_controls_caps
+
+    ital = italic_design(Controls.from_context(DesignContext.humanist_sans()))
+    assert unlock_controls_caps(ital).is_complete
