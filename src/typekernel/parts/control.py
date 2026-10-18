@@ -847,17 +847,49 @@ def _emit_italic_entry_kick(
     *,
     stem: float,
     left_top: float,
+    y0: float = 0.0,
 ) -> None:
-    """Baseline entry kick into the left stem face (written lead-in).
+    """Entry kick into the left stem face (written lead-in).
 
-    Issues ``moveTo``: starts inset on the baseline, cubic into ``(l0, dy)``,
-    then rises to ``left_top``. Sans-only; serif feet keep their own path.
+    Issues ``moveTo``: starts inset at ``y0``, cubic into ``(l0, y0+dy)``,
+    then rises to ``left_top``. ``y0`` is the descender floor for italic ``f``.
+    Sans-only; serif feet keep their own path.
     """
     dx, dy = _italic_kick_dims(stem)
-    dy = min(dy, max(2.0, left_top * 0.22))
-    b.moveTo(l0 + dx, 0.0)
-    b.curveTo(l0 + dx * 0.35, 0.0, l0, dy * 0.45, l0, dy)
+    rise = max(2.0, left_top - y0)
+    dy = min(dy, max(2.0, rise * 0.22))
+    b.moveTo(l0 + dx, y0)
+    b.curveTo(l0 + dx * 0.35, y0, l0, y0 + dy * 0.45, l0, y0 + dy)
     b.lineTo(l0, left_top)
+
+
+def _italic_opening_tip_angle(ctx: DesignContext) -> float:
+    """Degrees for written opening-tip shear (even when ``terminal_style`` is vertical)."""
+    if abs(ctx.italic_slant_deg) >= 6.0:
+        return -max(8.0, abs(ctx.italic_slant_deg) * 0.85)
+    if ctx.vf_compat_oblique_splits:
+        return -max(8.0, abs(ctx.vf_oblique_split_deg) * 0.85)
+    return -10.0
+
+
+def _apply_italic_opening_tip_shear(
+    ctx: DesignContext,
+    outline: Outline,
+    tips: tuple[Pt, ...],
+    *,
+    stem: float,
+) -> Outline:
+    """Lean aperture stubs with a band shear (topology preserved, R4-safe)."""
+    if ctx.style.serif in ("slab", "bracketed"):
+        return outline
+    from typekernel.parts.terminals import shear_end
+
+    angle = _italic_opening_tip_angle(ctx)
+    band = max(5.0, stem * 0.32)
+    out = outline
+    for tip in tips:
+        out = shear_end(out, tip, angle, band=band, along="y", inward="-")
+    return out
 
 
 def _emit_italic_exit_outstroke(
@@ -1274,10 +1306,27 @@ def _r_outline(
     if bar is not None and not 0.0 < bar[0] < bar[1] < m.join_y:
         raise ValueError("crossbar must sit between the baseline and the shoulder crotch")
 
+    italic_hook = ctx is not None and _italic_topology(ctx) and not _stem_serif_inlined(ctx)
+    # True when entry kick already climbed the left face to ``m.x_height``.
+    entry_to_xh = False
     b = PathBuilder()
-    b.moveTo(s.l0, stem_floor if hook_stem_knots else 0.0)
-    if hook_stem_knots or vf_compat:
-        b.lineTo(s.l0, 0.0)
+    if italic_hook and hook_stem_knots and stem_floor < -1e-6:
+        # Italic ``f``: written entry at the descender floor → baseline.
+        _emit_italic_entry_kick(
+            b, s.l0, stem=m.stem, left_top=0.0, y0=stem_floor
+        )
+    elif italic_hook and not hook_stem_knots and abs(stem_floor) < 1e-6:
+        if bar is None:
+            # Italic ``j`` hook master: entry at the stem foot → x-height.
+            _emit_italic_entry_kick(b, s.l0, stem=m.stem, left_top=m.x_height)
+            entry_to_xh = True
+        else:
+            # Italic ``t`` (pre-flip): entry into the crossbar band.
+            _emit_italic_entry_kick(b, s.l0, stem=m.stem, left_top=bar[0])
+    else:
+        b.moveTo(s.l0, stem_floor if hook_stem_knots else 0.0)
+        if hook_stem_knots or vf_compat:
+            b.lineTo(s.l0, 0.0)
     if bar is not None:
         y0, y1, left, _ = bar
         for p in ((s.l0, y0), (s.l0 - left, y0), (s.l0 - left, y1), (s.l0, y1)):
@@ -1296,7 +1345,7 @@ def _r_outline(
         inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
         b.lineTo(s.l0, m.x_height)
         _n_inline_shoulder_left_cap_slab(b, s.l0, m.x_height, ctx, m.stem)
-    else:
+    elif not entry_to_xh:
         b.lineTo(s.l0, m.x_height)
     if slab_foot is not None:
         foot_l, foot_th, foot_br = slab_foot
@@ -1318,13 +1367,20 @@ def _r_outline(
     if hook_belly > 0.0:
         p_here = outer_arm[3]
         p_out = inner_arm[0]
+        # Italic: lean the belly tip outward (written hook end).
+        lean = max(2.0, m.stem * 0.12) if italic_hook else 0.0
         b.curveTo(
-            p_here[0] - hook_belly * 0.55,
+            p_here[0] - hook_belly * 0.55 + lean,
             p_here[1] - hook_belly * 0.4,
-            p_out[0],
+            p_out[0] + lean,
             p_out[1] + hook_belly * 0.2,
             p_out[0],
             p_out[1],
+        )
+    elif italic_hook:
+        _curve(
+            b,
+            _italic_arm_terminal_cubic(outer_arm[3], inner_arm[0], stem=m.stem),
         )
     else:
         b.lineTo(*inner_arm[0])
@@ -1495,6 +1551,7 @@ def _hook_with_crossbar_outline(
         hook_stem_knots=inline_crossbar,
         hook_belly=hook_belly,
         slab_foot=slab_foot,
+        ctx=ctx,
     )
     if blend and not inline_crossbar:
         outline = _finish_hook_letter(outline, ctx)
@@ -1612,6 +1669,7 @@ def j_from_n(
         arm,
         hook_belly=_hook_belly_fillet(m.stem),
         slab_foot=_hook_slab_stem_foot(c, m.stem),
+        ctx=c,
     )
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
@@ -1879,7 +1937,9 @@ def dotless_j_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     m = _n_record(n_glyph)
     height = m.x_height - c.descender
     hook = _hook_record(m, height, c)
-    outline, _ = _r_outline(hook, 0.75, hook_belly=_hook_belly_fillet(m.stem))
+    outline, _ = _r_outline(
+        hook, 0.75, hook_belly=_hook_belly_fillet(m.stem), ctx=c
+    )
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     dot_y = m.x_height + m.stem * 0.55
@@ -1991,6 +2051,7 @@ def _bowl_stem_outline(
     stem_top: float,
     join: float,
     foot: Callable[[PathBuilder, float], None] | None = None,
+    top_exit: bool = False,
 ) -> Outline:
     """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
 
@@ -2031,7 +2092,21 @@ def _bowl_stem_outline(
 
     b = PathBuilder()
     b.moveTo(s_r, stem_bottom)
-    b.lineTo(s_r, stem_top)
+    if top_exit:
+        dx, dy = _italic_kick_dims(stem)
+        dy = min(dy, max(2.0, (stem_top - stem_bottom) * 0.08))
+        b.lineTo(s_r, stem_top - dy)
+        # Written exit at the stem crown (single-storey ``a``).
+        b.curveTo(
+            s_r,
+            stem_top - dy * 0.35,
+            s_r - dx * 0.35,
+            stem_top,
+            s_r - dx,
+            stem_top,
+        )
+    else:
+        b.lineTo(s_r, stem_top)
     top_join = top_cut[1]
     p0 = top_join[0]
     if abs(p0[0] - s_l) > 1e-9:
@@ -2157,12 +2232,25 @@ def _single_storey_a_from_o(
 ) -> ComposedGlyph:
     o = _o_record(o_glyph)
     a_join = join
+    top_exit = False
     if _italic_topology(c):
         o = o.tuned(rx=o.rx * 0.955, ry=o.ry * 0.98)
         a_join = join * 0.88
+        top_exit = c.style.serif not in ("slab", "bracketed")
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
-    outline = _bowl_stem_outline(o, stem, stem_bottom=0.0, stem_top=o.x_height, join=a_join)
-    outline = apply_terminal_shear(c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92))
+    outline = _bowl_stem_outline(
+        o,
+        stem,
+        stem_bottom=0.0,
+        stem_top=o.x_height,
+        join=a_join,
+        top_exit=top_exit,
+    )
+    # Written top_exit already shapes the crown; keep style shear for non-vertical tips.
+    if not top_exit or c.terminal_style != "vertical":
+        outline = apply_terminal_shear(
+            c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92)
+        )
     anchors = {
         "top": (o.rx, o.x_height),
         "bottom": (o.rx, 0.0),
@@ -2579,8 +2667,16 @@ def c_from_o(
     for cubic in (_rev(ibot), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)
     b.closePath()
+    outline = _ccw(b.build())
+    if _italic_topology(c):
+        outline = _apply_italic_opening_tip_shear(
+            c,
+            outline,
+            (bot[3], top[0]),
+            stem=o.thickness_v,
+        )
     anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
-    return _pack(c, o, anchors, _ccw(b.build()))
+    return _pack(c, o, anchors, outline)
 
 
 def e_from_o(
@@ -2629,6 +2725,8 @@ def e_from_o(
             _opening_bottom_bracketed_detour(b, lower[3], slab_l, slab_th, bracket_r)
         else:
             _opening_bottom_slab_detour(b, lower[3], slab_l, slab_th)
+    # Italic ``e`` keeps a vertical stub here: a written cubic tip fights the
+    # baked ``outline_e_oblique_splits`` + construct slant R4 recipe (compat-excluded).
     b.lineTo(*ilower[3])
     _curve(b, _rev(ilower))
     _curve(b, _rev(iwall))
@@ -2643,6 +2741,10 @@ def e_from_o(
 
     outer, eye = b.build().contours
     outline = Outline((outer, reverse_contour(eye)))
+    if _italic_topology(c):
+        outline = _apply_italic_opening_tip_shear(
+            c, outline, (lower[3],), stem=o.thickness_v
+        )
     shear = _e_oblique_shear(c)
     if shear is not None:
         from typekernel.geo.extrema import outline_e_oblique_splits
@@ -2816,8 +2918,18 @@ def g_from_o(
 
 
 
-def _g1_tip_bridge(b: PathBuilder, incoming: Cubic, outgoing: Cubic, *, tension: float = 0.38) -> None:
-    """Curve from end of ``incoming`` to start of ``outgoing`` with G1 handles."""
+def _g1_tip_bridge(
+    b: PathBuilder,
+    incoming: Cubic,
+    outgoing: Cubic,
+    *,
+    tension: float = 0.38,
+    outward_lean: float = 0.0,
+) -> None:
+    """Curve from end of ``incoming`` to start of ``outgoing`` with G1 handles.
+
+    ``outward_lean`` shifts bridge handles along +x (written italic ``s`` tips).
+    """
     # incoming is drawn as-is ending at its last point; we already drew it.
     # For lower opening we pass _rev(li_bot) as the cubic that was just drawn
     # and l_bot as next.
@@ -2832,10 +2944,11 @@ def _g1_tip_bridge(b: PathBuilder, incoming: Cubic, outgoing: Cubic, *, tension:
     inx, iny = inx / lin, iny / lin
     outx, outy = outx / lout, outy / lout
     dist = math.hypot(q0[0] - p3[0], q0[1] - p3[1])
+    lean = outward_lean
     b.curveTo(
-        p3[0] + inx * dist * tension,
+        p3[0] + inx * dist * tension + lean,
         p3[1] + iny * dist * tension,
-        q0[0] - outx * dist * tension,
+        q0[0] - outx * dist * tension + lean,
         q0[1] - outy * dist * tension,
         q0[0],
         q0[1],
@@ -2924,12 +3037,14 @@ def s_from_o(
         _opening_bottom_slab_detour(b, l_bot[0], slab_l, slab_th)
     else:
         # G1 tip across the lower opening instead of a hard line stub.
-        _g1_tip_bridge(b, _rev(li_bot), l_bot)
+        lean = max(2.0, o.thickness_v * 0.14) if _italic_topology(c) else 0.0
+        _g1_tip_bridge(b, _rev(li_bot), l_bot, outward_lean=-lean)
     for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
         _curve(b, cubic)
     if c.style.serif not in ("slab", "bracketed"):
         # Close upper opening with G1 tip (path ends at ui_top start after reverse).
-        _g1_tip_bridge(b, _rev(ui_top), u_top)
+        lean = max(2.0, o.thickness_v * 0.14) if _italic_topology(c) else 0.0
+        _g1_tip_bridge(b, _rev(ui_top), u_top, outward_lean=lean)
     b.closePath()
     anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
     return _pack(c, o, anchors, _ccw(b.build()))

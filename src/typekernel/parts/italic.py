@@ -16,7 +16,10 @@ italic constructions (topology differs from shear). Non-diagonal branching: left
 fillets; mirrored ``u`` uses ``_soften_italic_branch_crotch`` (emit is unsafe on
 mirrored shoulders under weight relief). Sans stems get shared written
 ``_emit_italic_entry_kick`` / ``_emit_italic_exit_outstroke`` (and ``r`` a soft
-arm terminal); VF-compat upright shares the same segment recipe.
+arm terminal). Hook letters ``f``/``j``/``t`` reuse those kicks plus written arm
+/ belly lean; ``a`` gets a crown exit; ``c``/``e`` lean opening tips via band
+shear; ``s`` G1 tips take an italic outward lean. VF-compat upright shares the
+stem/hook segment recipe.
 """
 
 from __future__ import annotations

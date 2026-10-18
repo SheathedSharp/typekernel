@@ -295,3 +295,69 @@ def test_italic_r_arm_terminal_is_cubic_not_vertical_cut() -> None:
     g = Controls.from_context(ctx).build("r")
     assert "C" in topology_signature(g).contour_codes[0]
     assert _body_cubics(g) >= 6
+
+
+def test_italic_hook_letters_more_written_than_shear() -> None:
+    """``f``/``j``/``t``: entry kicks + written hook ends beat construct shear."""
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    deeper = 0
+    for ch in "fjt":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        if _body_cubics(drawn) > _body_cubics(sheared):
+            deeper += 1
+    assert deeper == 3
+
+
+def test_italic_f_descender_keeps_entry_kick() -> None:
+    """Italic ``f`` still reaches the descender and gains a foot cubic."""
+    from typekernel.geo.outline import bounds
+    from typekernel.geo.segment import CubicSegment
+
+    reg = Controls.from_context(DesignContext.code_clear())
+    ital = italic_design(reg)
+    f = ital.build("f")
+    assert bounds(f.solids[0])[1] < ital.context.descender * 0.5
+    # Lowest band should include a cubic (descender entry kick), not only lines.
+    low = [
+        seg
+        for seg in f.solids[0].contours[0].segments
+        if isinstance(seg, CubicSegment)
+        and min(p.y for p in seg.points) < ital.context.descender * 0.25
+    ]
+    assert low
+
+
+def test_italic_openings_and_a_differ_from_shear() -> None:
+    """``a``/``c``/``e``/``s`` italic openings read written vs sheared upright."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    for ch in "aces":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
+        assert topology_signature(drawn) != topology_signature(sheared)
+
+
+def test_italic_a_crown_exit_adds_cubic() -> None:
+    """Single-storey italic ``a`` crown exit is a cubic, not a sharp stem corner."""
+    reg = Controls.from_context(DesignContext.geometric_sans())
+    ital = italic_design(reg)
+    drawn = ital.build("a")
+    sheared = slant_composed_glyph(reg.build("a"), ital.context.italic_slant_deg)
+    assert _body_cubics(drawn) > _body_cubics(sheared)
+
+
+def test_italic_hook_and_opening_vf_pair_matches() -> None:
+    """Hook + opening terminal craft keeps VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    up, it = vf_italic_pair(Controls.from_context(DesignContext.humanist_sans()))
+    for ch in "fjtaces":
+        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
