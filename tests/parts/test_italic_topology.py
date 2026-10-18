@@ -229,3 +229,69 @@ def test_italic_u_emit_on_mirror_breaks_weight_relief() -> None:
         assert topology_signature(bold.build("u")) != topology_signature(sheet.build("u"))
     finally:
         ctl._u_branching_outline = orig
+
+
+def _body_cubics(g) -> int:
+    from typekernel.geo.segment import CubicSegment
+
+    return sum(
+        1
+        for seg in g.solids[0].contours[0].segments
+        if isinstance(seg, CubicSegment)
+    )
+
+
+def test_italic_stem_terminals_more_written_than_shear() -> None:
+    """Entry kick + exit outstroke: ``i``/``l``/``n``/``r`` body gains cubics vs shear."""
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    deeper = 0
+    for ch in "ilnr":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        assert "C" in topology_signature(drawn).contour_codes[0]
+        if _body_cubics(drawn) > _body_cubics(sheared):
+            deeper += 1
+    assert deeper == 4
+
+
+def test_italic_stem_terminals_vf_pair_matches() -> None:
+    """Written foot terminals keep VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    for factory in (
+        DesignContext.humanist_sans,
+        DesignContext.geometric_sans,
+        DesignContext.code_clear,
+    ):
+        up, it = vf_italic_pair(Controls.from_context(factory()))
+        for ch in "ilnhrum":
+            assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_r_arm_terminal_is_cubic_not_vertical_cut() -> None:
+    """Italic ``r`` arm end is a written cubic, not a sheer vertical lineTo."""
+    from typekernel.parts.control import _italic_arm_terminal_cubic, _r_pieces, n_metrics
+    from typekernel.parts.italic import italic_design
+
+    ctx = italic_design(Controls.from_context(DesignContext.geometric_sans())).context
+    m = n_metrics(ctx)
+    branch_y = m.x_height * 0.5
+    drop = m.x_height - branch_y
+    mm = m.tuned(
+        x_height=branch_y,
+        crown_y=m.crown_y - drop * 0.14,
+        leg_top=m.leg_top - drop * 0.2,
+        join_y=min(m.join_y, branch_y - m.stem * 0.32),
+        inner_crown=m.inner_crown - drop * 0.16,
+    )
+    _s, outer_arm, inner_arm, _x_t = _r_pieces(mm, 0.5)
+    cubic = _italic_arm_terminal_cubic(outer_arm[3], inner_arm[0], stem=m.stem)
+    # Lean to the right of a vertical cut (written exit).
+    assert cubic[1][0] > outer_arm[3][0]
+    assert cubic[2][0] > inner_arm[0][0]
+    g = Controls.from_context(ctx).build("r")
+    assert "C" in topology_signature(g).contour_codes[0]
+    assert _body_cubics(g) >= 6

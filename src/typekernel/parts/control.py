@@ -501,10 +501,14 @@ def _n_begin_left_stem(
     shelf_foot: bool,
 ) -> None:
     """Rise on the left stem from the baseline, with optional inlined foot."""
-    b.moveTo(l0, 0.0)
     if not _stem_serif_inlined(ctx):
+        if _italic_topology(ctx):
+            _emit_italic_entry_kick(b, l0, stem=stem, left_top=left_top)
+            return
+        b.moveTo(l0, 0.0)
         b.lineTo(l0, left_top)
         return
+    b.moveTo(l0, 0.0)
     if shelf_foot:
         from typekernel.parts.serifs import inline_stem_foot_serif_path
 
@@ -826,6 +830,92 @@ def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> floa
     return max(2.0, drop * 0.36)
 
 
+def _italic_kick_dims(stem: float) -> tuple[float, float]:
+    """``(dx, dy)`` for written entry kick / exit outstroke foot cuts.
+
+    Sized from stem so ``wght`` masters keep a fixed segment recipe under
+    ``_italic_topology`` (including VF-compat upright).
+    """
+    dx = max(2.5, stem * 0.18)
+    dy = max(3.5, stem * 0.32)
+    return dx, dy
+
+
+def _emit_italic_entry_kick(
+    b: PathBuilder,
+    l0: float,
+    *,
+    stem: float,
+    left_top: float,
+) -> None:
+    """Baseline entry kick into the left stem face (written lead-in).
+
+    Issues ``moveTo``: starts inset on the baseline, cubic into ``(l0, dy)``,
+    then rises to ``left_top``. Sans-only; serif feet keep their own path.
+    """
+    dx, dy = _italic_kick_dims(stem)
+    dy = min(dy, max(2.0, left_top * 0.22))
+    b.moveTo(l0 + dx, 0.0)
+    b.curveTo(l0 + dx * 0.35, 0.0, l0, dy * 0.45, l0, dy)
+    b.lineTo(l0, left_top)
+
+
+def _emit_italic_exit_outstroke(
+    b: PathBuilder,
+    r0: float,
+    r1: float,
+    *,
+    stem: float,
+) -> None:
+    """Outer-right baseline outstroke (written exit), then across to ``r0``.
+
+    Current point must lie on ``x=r1`` with ``y > 0``. Replaces a sharp
+    ``lineTo(r1, 0)`` + ``lineTo(r0, 0)`` foot corner.
+    """
+    dx, dy = _italic_kick_dims(stem)
+    b.lineTo(r1, dy)
+    b.curveTo(r1, dy * 0.45, r1 - dx * 0.35, 0.0, r1 - dx, 0.0)
+    b.lineTo(r0, 0.0)
+
+
+def _italic_arm_terminal_cubic(
+    outer_end: Pt,
+    inner_start: Pt,
+    *,
+    stem: float,
+) -> Cubic:
+    """Soft written cut between truncated shoulder arms (``r`` terminal)."""
+    lean = max(2.0, stem * 0.14)
+    return (
+        outer_end,
+        (outer_end[0] + lean, outer_end[1] - stem * 0.06),
+        (inner_start[0] + lean, inner_start[1] + stem * 0.06),
+        inner_start,
+    )
+
+
+def _italic_single_stem_outline(
+    ctx: DesignContext,
+    *,
+    stem: float,
+    top: float,
+) -> Outline:
+    """Vertical stem with italic entry kick + exit outstroke (sans)."""
+    dx, dy = _italic_kick_dims(stem)
+    dy = min(dy, max(2.0, top * 0.12))
+    inset = 0.0
+    if abs(ctx.contrast - 1.0) >= 1e-9:
+        inset = (stem - stem * ctx.contrast) / 2.0
+    b = PathBuilder()
+    b.moveTo(dx, 0.0)
+    b.curveTo(dx * 0.35, 0.0, 0.0, dy * 0.45, 0.0, dy)
+    b.lineTo(inset, top)
+    b.lineTo(stem - inset, top)
+    b.lineTo(stem, dy)
+    b.curveTo(stem, dy * 0.45, stem - dx * 0.35, 0.0, stem - dx, 0.0)
+    b.closePath()
+    return _ccw(b.build())
+
 
 def _soften_italic_branch_crotch(
     outline: Outline,
@@ -960,10 +1050,15 @@ def _n_branching_outline(
         b.lineTo(l1, branch_y)
         _curve(b, s.outer[0])
     _curve(b, s.outer[1])
-    b.lineTo(r1, 0.0)
     if ctx is not None and _stem_serif_inlined(ctx):
+        b.lineTo(r1, 0.0)
         _n_inline_right_stem_foot(b, r1, ctx, m.stem)
-    b.lineTo(r0, 0.0)
+        b.lineTo(r0, 0.0)
+    elif ctx is not None and _italic_topology(ctx):
+        _emit_italic_exit_outstroke(b, r0, r1, stem=m.stem)
+    else:
+        b.lineTo(r1, 0.0)
+        b.lineTo(r0, 0.0)
     b.lineTo(r0, mm.join_y)
     _curve(b, s.inner[0])
     _curve(b, s.inner[1])
@@ -1251,7 +1346,7 @@ def _r_outline(
 def _r_branching_outline(
     m: NMetrics, arm: float, ctx: DesignContext
 ) -> tuple[Outline, float]:
-    """Italic ``r``: branching shoulder truncated at the terminal."""
+    """Italic ``r``: branching shoulder, written entry, soft arm terminal."""
     branch_y = _italic_branch_y(m, m.x_height)
     drop = m.x_height - branch_y
     mm = m.tuned(
@@ -1263,12 +1358,14 @@ def _r_branching_outline(
     )
     s, outer_arm, inner_arm, x_t = _r_pieces(mm, arm)
     b = PathBuilder()
-    b.moveTo(s.l0, 0.0)
     if _stem_serif_inlined(ctx):
         from typekernel.parts.serifs import inline_stem_foot_serif_path
 
+        b.moveTo(s.l0, 0.0)
         inline_stem_foot_serif_path(b, s.l0, 0.0, ctx, m.stem)
-    b.lineTo(s.l0, m.x_height)
+        b.lineTo(s.l0, m.x_height)
+    else:
+        _emit_italic_entry_kick(b, s.l0, stem=m.stem, left_top=m.x_height)
     b.lineTo(s.l1, m.x_height)
     _emit_italic_branch_shoulder(
         b,
@@ -1278,7 +1375,10 @@ def _r_branching_outline(
         radius=_italic_branch_radius(m.stem, m.x_height, branch_y),
     )
     _curve(b, outer_arm)
-    b.lineTo(*inner_arm[0])
+    _curve(
+        b,
+        _italic_arm_terminal_cubic(outer_arm[3], inner_arm[0], stem=m.stem),
+    )
     _curve(b, inner_arm)
     _curve(b, s.inner[1])
     b.lineTo(s.l1, 0.0)
@@ -1594,14 +1694,17 @@ def m_from_n(
     s2 = _shoulder(mm, s1.r0)
 
     b = PathBuilder()
-    b.moveTo(s1.l0, 0.0)
     if _stem_serif_inlined(c):
         from typekernel.parts.serifs import inline_stem_foot_serif_path
 
+        b.moveTo(s1.l0, 0.0)
         inline_stem_foot_serif_path(b, s1.l0, 0.0, c, mm.stem)
         b.lineTo(s1.l0, xh)
         _n_inline_shoulder_left_cap_slab(b, s1.l0, xh, c, mm.stem)
+    elif branch_y is not None:
+        _emit_italic_entry_kick(b, s1.l0, stem=mm.stem, left_top=xh)
     else:
+        b.moveTo(s1.l0, 0.0)
         b.lineTo(s1.l0, xh)
     b.lineTo(s1.l1, xh)
     if branch_y is not None:
@@ -1625,10 +1728,15 @@ def m_from_n(
         _curve(b, s1.outer[1])
         _curve(b, s2.outer[0])
     _curve(b, s2.outer[1])
-    b.lineTo(s2.r1, 0.0)
     if _stem_serif_inlined(c):
+        b.lineTo(s2.r1, 0.0)
         _n_inline_right_stem_foot(b, s2.r1, c, mm.stem)
-    b.lineTo(s2.r0, 0.0)
+        b.lineTo(s2.r0, 0.0)
+    elif branch_y is not None:
+        _emit_italic_exit_outstroke(b, s2.r0, s2.r1, stem=mm.stem)
+    else:
+        b.lineTo(s2.r1, 0.0)
+        b.lineTo(s2.r0, 0.0)
     b.lineTo(s2.r0, mm.join_y)
     isplit2 = _split(s2.inner[0], xh, horizontal=True)
     isplit1 = _split(s1.inner[1], xh, horizontal=True)
@@ -1727,6 +1835,9 @@ def i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
     if _stem_serif_inlined(c):
         stem = _inline_single_stem_outline(c, m.stem, m.x_height)
         serif_anchors: dict[str, Pt] = {}
+    elif _italic_topology(c):
+        stem = _italic_single_stem_outline(c, stem=m.stem, top=m.x_height)
+        serif_anchors = {}
     else:
         stem = contrast_stem_caps(c, 0.0, 0.0, m.x_height, width=m.stem)
         serif_anchors = _n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False)
@@ -1748,6 +1859,9 @@ def dotless_i_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -
     if _stem_serif_inlined(c):
         outline = _inline_single_stem_outline(c, m.stem, m.x_height)
         serif_anchors: dict[str, Pt] = {}
+    elif _italic_topology(c):
+        outline = _italic_single_stem_outline(c, stem=m.stem, top=m.x_height)
+        serif_anchors = {}
     else:
         outline = vertical_stem(c, 0.0, 0.0, m.x_height, width=m.stem)
         serif_anchors = _n_stem_serif_anchors(m, left_top=m.x_height, right_foot=False)
@@ -1804,6 +1918,9 @@ def l_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         )
     elif _stem_serif_inlined(c):
         outline = _inline_single_stem_outline(c, m.stem, m.ascender)
+        stem_anchors = {}
+    elif _italic_topology(c):
+        outline = _italic_single_stem_outline(c, stem=m.stem, top=m.ascender)
         stem_anchors = {}
     else:
         outline = contrast_stem_caps(c, 0.0, 0.0, m.ascender, width=m.stem)

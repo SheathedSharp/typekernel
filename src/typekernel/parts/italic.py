@@ -14,7 +14,9 @@ unlocks the Latin body on this sheet (construct slant + branching skips).
 Diagonals ``k``/``v``/``w``/``x``/``y``/``z`` use cursive-cubic / asymmetric
 italic constructions (topology differs from shear). Non-diagonal branching: left-stem ``n``/``h``/``m``/``r`` use construction
 fillets; mirrored ``u`` uses ``_soften_italic_branch_crotch`` (emit is unsafe on
-mirrored shoulders under weight relief). Further terminal craft remains open.
+mirrored shoulders under weight relief). Sans stems get shared written
+``_emit_italic_entry_kick`` / ``_emit_italic_exit_outstroke`` (and ``r`` a soft
+arm terminal); VF-compat upright shares the same segment recipe.
 """
 
 from __future__ import annotations
