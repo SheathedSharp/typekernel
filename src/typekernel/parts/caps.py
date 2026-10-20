@@ -1009,11 +1009,21 @@ def G_from_O(
     for cubic in (_rev(ilower), _rev(i2), _rev(i1), _rev(itop)):
         _curve(b, cubic)
     b.closePath()
+    outline = _ccw(b.build())
+    if _cap_italic_sans(c):
+        # Top aperture + crossbar tip: same band-shear language as lowercase ``c``/``e``.
+        tips = (
+            top[0],
+            (x_bar, (bar_top + bar_bot) * 0.5),
+        )
+        outline = _apply_italic_opening_tip_shear(
+            c, outline, tips, stem=o.thickness_v
+        )
     return _pack(
         c,
         o,
         _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not inlined),
-        _ccw(b.build()),
+        outline,
     )
 
 
@@ -1370,11 +1380,17 @@ def R_from_H(
         b.lineTo(0.0, cap)
     b.closePath()
     _counter(b, t, x0, i3, i0)
+    outline = _with_counters(b)
+    if _cap_italic_sans(c):
+        # Leg foot tip: same band-shear language as open-arm caps.
+        outline = _apply_italic_opening_tip_shear(
+            c, outline, (foot_r,), stem=h.stem
+        )
     return _pack(
         c,
         h,
         _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
-        _with_counters(b),
+        outline,
     )
 
 
@@ -1552,6 +1568,33 @@ def U_from_H(
         b.lineTo(t + l, cap + th)
         b.lineTo(-l, cap + th)
         b.closePath()
+    elif _cap_italic_sans(c):
+        # Soft stem-top corners (written terminals); bowl path unchanged.
+        fr = min(c.join_radius * 0.35, t * 0.14)
+        fr = max(fr, 1.0)
+        b.moveTo(fr, cap)
+        b.curveTo(fr - fr * KAPPA, cap, 0.0, cap - fr + fr * KAPPA, 0.0, cap - fr)
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
+        b.lineTo(w, cap - fr)
+        b.curveTo(w, cap - fr + fr * KAPPA, w - fr + fr * KAPPA, cap, w - fr, cap)
+        b.lineTo(w - t + fr, cap)
+        b.curveTo(
+            w - t + fr - fr * KAPPA,
+            cap,
+            w - t,
+            cap - fr + fr * KAPPA,
+            w - t,
+            cap - fr,
+        )
+        b.lineTo(w - t, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(t, cap - fr)
+        b.curveTo(t, cap - fr + fr * KAPPA, t - fr + fr * KAPPA, cap, t - fr, cap)
+        b.lineTo(fr, cap)
+        b.closePath()
     else:
         b.moveTo(0.0, cap)
         b.lineTo(0.0, y_s)
@@ -1659,11 +1702,15 @@ def J_from_H(
             b.lineTo(w + l, cap + th)
             b.lineTo(w - t - l, cap + th)
     b.closePath()
+    outline = _ccw(b.build())
+    if _cap_italic_sans(c):
+        tip = ((ji[0] + jo[0]) * 0.5, (ji[1] + jo[1]) * 0.5)
+        outline = _apply_italic_opening_tip_shear(c, outline, (tip,), stem=t)
     half = w - t / 2.0
     anchors: dict[str, Pt] = {"top": (half, cap), "bottom": (cx, 0.0)}
     if _cap_stem_serif_anchors_enabled(c, baked=inlined):
         anchors["stem_R_t"] = (half, cap)
-    return _pack(c, h, anchors, _ccw(b.build()))
+    return _pack(c, h, anchors, outline)
 
 
 def _diag_cap(

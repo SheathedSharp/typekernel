@@ -418,6 +418,45 @@ def test_italic_cap_diagonals_vf_pair_matches() -> None:
         assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
 
 
+def test_italic_cap_bowls_more_written_than_shear() -> None:
+    """Sans bowl caps ``C``/``G``/``S``/``J``/``U``/``R``: tip craft ≠ shear."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.humanist_sans())
+    ital = italic_design(reg)
+    slant = ital.context.italic_slant_deg
+    deeper = 0
+    for ch in "CGSJUR":
+        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.build(ch), slant)
+        assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
+        assert topology_signature(drawn) != topology_signature(sheared)
+        if _body_cubics(drawn) >= _body_cubics(sheared):
+            deeper += 1
+    assert deeper >= 5
+
+
+def test_italic_cap_bowls_vf_pair_matches() -> None:
+    """Bowl-cap tip craft keeps VF upright/italic topology aligned."""
+    from typekernel.parts.italic import vf_italic_pair
+
+    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    for ch in "CGSJUR":
+        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+
+
+def test_italic_cap_g_tip_shear_changes_hash() -> None:
+    """Italic ``G`` tip shear is more than construct slant alone."""
+    from typekernel.qa.outline_hash import composed_glyph_hash
+
+    reg = Controls.from_context(DesignContext.code_clear())
+    ital = italic_design(reg)
+    drawn = ital.build("G")
+    sheared = slant_composed_glyph(reg.build("G"), ital.context.italic_slant_deg)
+    assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
+    assert _body_cubics(drawn) >= _body_cubics(sheared)
+
+
 def test_italic_caps_unlock_stays_complete() -> None:
     from typekernel.qa.design_sequence import unlock_controls_caps
 

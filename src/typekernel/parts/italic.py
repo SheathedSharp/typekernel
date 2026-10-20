@@ -19,7 +19,10 @@ mirrored shoulders under weight relief). Sans stems get shared written
 arm terminal). Hook letters ``f``/``j``/``t`` reuse those kicks plus written arm
 / belly lean; ``a`` gets a crown exit; ``c``/``e`` lean opening tips via band
 shear; ``s`` G1 tips take an italic outward lean. Sans caps ``H``/``I``/``L``/
-``E``/``F`` reuse the same entry/exit helpers. VF-compat upright shares the
+``E``/``F`` reuse the same entry/exit helpers. Bowl caps ``C``/``S`` inherit
+lowercase opening tip craft; ``G`` tip-shears aperture + bar, ``J`` the hook,
+``R`` the leg foot, ``U`` soft stem tops. Closed ``O``/``D``/``B``/``P`` stay
+construct-slant only (no aperture). VF-compat upright shares the
 stem/hook/cap segment recipe.
 """
 
