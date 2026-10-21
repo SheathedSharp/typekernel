@@ -816,7 +816,8 @@ def _e_oblique_shear(ctx: DesignContext) -> float | None:
 def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
     if stem_top > m.x_height + 1.0:
         return m.x_height + (stem_top - m.x_height) * 0.38
-    return m.x_height * 0.5
+    # Slightly above mid-x-height so the branch crotch is less pinched.
+    return m.x_height * 0.58
 
 
 def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> float:
@@ -827,7 +828,7 @@ def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> floa
     """
     del stem  # API keeps stem for call-site symmetry with other italic helpers.
     drop = max(0.0, stem_top - branch_y)
-    return max(2.0, drop * 0.36)
+    return max(2.0, drop * 0.42)
 
 
 def _italic_kick_dims(stem: float) -> tuple[float, float]:
@@ -917,11 +918,11 @@ def _italic_arm_terminal_cubic(
     stem: float,
 ) -> Cubic:
     """Soft written cut between truncated shoulder arms (``r`` terminal)."""
-    lean = max(2.0, stem * 0.14)
+    lean = max(2.5, stem * 0.22)
     return (
         outer_end,
-        (outer_end[0] + lean, outer_end[1] - stem * 0.06),
-        (inner_start[0] + lean, inner_start[1] + stem * 0.06),
+        (outer_end[0] + lean, outer_end[1] - stem * 0.10),
+        (inner_start[0] + lean, inner_start[1] + stem * 0.10),
         inner_start,
     )
 
@@ -1329,10 +1330,11 @@ def _r_outline(
             b.lineTo(s.l0, 0.0)
     if bar is not None:
         y0, y1, left, _ = bar
+        # Stay on the left stem face after the left crossbar detour. Jumping to
+        # ``(l1, y1)`` then climbing to ``(l0, x_height)`` cut a zero-width
+        # corridor through the stem (R2 keyhole on VF/italic ``f``).
         for p in ((s.l0, y0), (s.l0 - left, y0), (s.l0 - left, y1), (s.l0, y1)):
             b.lineTo(*p)
-        if hook_stem_knots:
-            b.lineTo(s.l1, y1)
     if (
         ctx is not None
         and _stem_serif_inlined(ctx)
@@ -1392,9 +1394,17 @@ def _r_outline(
             b.lineTo(*p)
     b.lineTo(s.l1, 0.0)
     if hook_stem_knots:
-        b.lineTo(s.l0, 0.0)
-        if abs(stem_floor) < 1e-6:
+        if stem_floor < -1e-6:
+            # Close under the entry kick: right face → floor → kick tip.
+            # Closing from ``(l0, 0)`` to the kick tip retraced the lead-in
+            # and read as a zero-width seam.
+            dx, _dy = _italic_kick_dims(m.stem)
+            b.lineTo(s.l1, stem_floor)
+            b.lineTo(s.l0 + dx, stem_floor)
+        else:
             b.lineTo(s.l0, 0.0)
+            if abs(stem_floor) < 1e-6:
+                b.lineTo(s.l0, 0.0)
     b.closePath()
     return _ccw(b.build()), x_t
 

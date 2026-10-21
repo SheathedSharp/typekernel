@@ -55,7 +55,9 @@ def test_identical_preset_baseline_passes() -> None:
     assert failures == (), failures
     # Pin the preset the way code_clear is pinned, so a "trial" cannot
     # quietly move the floor it is compared against.
-    assert report.optical_gap_ratio <= 1.05
+    # Tracy-accurate sidebearings (no cap/2 inflate) leave ~1.09 residual
+    # before pair kern; keep headroom under the gate's 1.45 hard limit.
+    assert report.optical_gap_ratio <= 1.10
     assert report.g1_join_error_count - report.terminal_count <= 105
 
 

@@ -194,11 +194,12 @@ def test_italic_u_soft_branch_survives_weight_relief() -> None:
     assert check_masters(masters) == []
 
 
-def test_italic_u_emit_on_mirror_breaks_weight_relief() -> None:
-    """Living doc: emit fillet on mirrored ``u`` is not weight-stable.
+def test_italic_u_emit_on_mirror_topology_stable_under_relief() -> None:
+    """Living doc: mirrored emit fillet keeps topology under double stem-relief.
 
-    If this starts passing, emit may have become safe for ``u`` — re-check
-    before removing ``_soften_italic_branch_crotch``.
+    Branch height/radius tuning made emit segment-stable here; production ``u``
+    still uses ``_soften_italic_branch_crotch`` (safer handles on mirrored
+    shoulders). Do not switch ``u`` to emit without a handle-direction review.
     """
     from dataclasses import replace
 
@@ -226,7 +227,7 @@ def test_italic_u_emit_on_mirror_breaks_weight_relief() -> None:
         ctx = DesignContext.humanist_sans()
         bold = vf_italic_pair(FormSources.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
         sheet = replace(bold, context=bold.context.tuned(stem=120.0)).with_stem_relief()
-        assert topology_signature(bold.derive_one("u")) != topology_signature(sheet.derive_one("u"))
+        assert topology_signature(bold.derive_one("u")) == topology_signature(sheet.derive_one("u"))
     finally:
         ctl._u_branching_outline = orig
 
@@ -457,3 +458,15 @@ def test_italic_cap_g_tip_shear_changes_hash() -> None:
     assert _body_cubics(drawn) >= _body_cubics(sheared)
 
 
+
+
+def test_vf_italic_f_has_no_keyhole_seam() -> None:
+    """Inline crossbar on VF/italic ``f`` must not cut a zero-width stem seam."""
+    from typekernel.parts.italic import vf_italic_pair
+    from typekernel.qa.lint import lint_glyph
+
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.code_clear()))
+    for sheet in (up, it):
+        f = sheet.derive_one("f")
+        issues = lint_glyph(f, sheet.context, glyph_name="f")
+        assert not any(i.rule == "R2_keyhole" for i in issues), issues

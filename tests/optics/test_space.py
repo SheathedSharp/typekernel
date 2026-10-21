@@ -77,3 +77,15 @@ def test_space_font_tabs_figures_and_sets_sidebearings() -> None:
     spaced = space_font(drawn, ctx)
     assert spaced["n"].advance > drawn["n"].advance * 0.5
     assert spaced["0"].advance == spaced["1"].advance
+
+
+def test_space_font_flat_stem_gap_tracks_rhythm() -> None:
+    """Flat-stem pairs after ``space_font`` land near ``rhythm.target_gap``."""
+    from typekernel.parts.metrics import rhythm_from_control_glyphs
+
+    ctx = DesignContext.code_clear()
+    drawn = FormSources.from_context(ctx).derive("nao")
+    rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
+    spaced = space_font(drawn, ctx, rhythm=rhythm)
+    gap = pair_gap_optical(spaced["n"], spaced["a"], kern=0.0)
+    assert abs(gap - rhythm.target_gap) <= 2.0

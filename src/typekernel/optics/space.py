@@ -187,12 +187,13 @@ def suggest_sidebearings_optical(
     right_inset = measure_side_whitespace(
         outlines, "right", y0=y0, y1=y1, samples=samples, depth=cap
     )
-    # Each side owns ``air`` plus half the depth budget; inset white is then
-    # subtracted so flat stems and open flanks carry the same optical white.
-    budget = air + cap * 0.5
-    floor = 0.0 * units
-    lsb = max(floor, budget - left_inset)
-    rsb = max(floor, budget - right_inset)
+    # ``air`` is the target mean white from silhouette to the sidebearing.
+    # Inset already counts corner white inside the depth cap — do not add
+    # ``cap/2`` or flat-stem pairs overshoot the rhythm gap (≈ 2 × air).
+    # Keep a hair of bearing on extreme open flanks (inset > air).
+    floor = 0.02 * units
+    lsb = max(floor, air - left_inset)
+    rsb = max(floor, air - right_inset)
     return (lsb, rsb)
 
 
