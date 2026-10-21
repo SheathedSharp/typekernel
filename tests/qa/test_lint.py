@@ -9,7 +9,7 @@ import pytest
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.qa.lint import lint_controls, lint_glyph
 
@@ -24,21 +24,21 @@ pytestmark = pytest.mark.skipif(
     ("humanist_sans", "code_clear", "geometric_sans"),
 )
 def test_lint_preset_charset_no_keyhole(preset: str) -> None:
-    report = lint_controls(Controls.from_context(getattr(DesignContext, preset)()))
+    report = lint_controls(FormSources.from_context(getattr(DesignContext, preset)()))
     keyholes = [i for i in report.issues if i.rule == "R2_keyhole"]
     assert not keyholes, keyholes
 
 
 def test_lint_quote_marks_fit_advance() -> None:
     ctx = DesignContext.humanist_sans()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     for ch in ('"', "'", "\u2019", "\u201d"):
-        issues = lint_glyph(controls.build(ch), ctx, glyph_name=ch)
+        issues = lint_glyph(controls.derive_one(ch), ctx, glyph_name=ch)
         assert not any(i.rule == "R7_sidebearing" for i in issues), ch
 
 
 def test_lint_humanist_charset_no_r1_winding_errors() -> None:
-    report = lint_controls(Controls.from_context(DesignContext.humanist_sans()))
+    report = lint_controls(FormSources.from_context(DesignContext.humanist_sans()))
     r1 = [i for i in report.issues if i.rule == "R1_winding" and i.severity == "error"]
     assert not r1, r1
 
@@ -46,9 +46,9 @@ def test_lint_humanist_charset_no_r1_winding_errors() -> None:
 def test_lint_multi_contour_solids_not_r1_false_positive() -> None:
     """Counters inside one solid outline are clockwise (negative area) by design."""
     ctx = DesignContext.humanist_sans()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     for ch in "aeobd":
-        issues = lint_glyph(controls.build(ch), ctx, glyph_name=ch)
+        issues = lint_glyph(controls.derive_one(ch), ctx, glyph_name=ch)
         assert not any(i.rule == "R1_winding" for i in issues), ch
 
 
@@ -73,21 +73,21 @@ def test_lint_r4_interior_axis_extremum() -> None:
 
 def test_lint_control_n_ok() -> None:
     ctx = DesignContext.code_clear()
-    glyph = Controls.from_context(ctx).build_all("n")["n"]
+    glyph = FormSources.from_context(ctx).derive("n")["n"]
     issues = lint_glyph(glyph, ctx, glyph_name="n")
     assert not any(i.severity == "error" for i in issues)
 
 
 def test_lint_r9_optional_thickness() -> None:
     ctx = DesignContext.humanist_sans()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     report = lint_controls(controls, "o", thickness=True)
     assert not any(i.rule == "R9_thickness_outlier" for i in report.issues)
 
 
 def test_lint_r8_counter_min() -> None:
     ctx = DesignContext.code_clear().tuned(stem=180.0)
-    controls = Controls.from_context(ctx).with_stem_relief()
+    controls = FormSources.from_context(ctx).with_stem_relief()
     report = lint_controls(controls, "m", counter_min=True)
     assert not any(i.rule == "R8_counter_min" for i in report.issues)
 

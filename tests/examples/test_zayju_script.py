@@ -1,4 +1,4 @@
-"""zayju_script skeleton face smoke (trace_letter, not Controls pipeline)."""
+"""zayju_script skeleton face smoke (trace_letter, not FormSources pipeline)."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _load_design():
 
 
 def test_zayju_script_charset_builds_and_lints_clean() -> None:
-    """Sequential DesignSequence unlock builds the script charset without lint errors."""
+    """Sequential compose + style report builds the script charset without lint errors."""
     design = _load_design()
     ctx = design.script_context()
     charset, report = design.build_charset_sequential(ctx)
@@ -59,7 +59,7 @@ def test_zayju_script_build_script() -> None:
 
 
 def test_zayju_script_sequential_style_gate_passes() -> None:
-    """Charset must unlock under designer-order style consistency."""
+    """Charset must pass designer-order style consistency report."""
     from examples.zayju_script import design
 
     _drawn, report = design.build_charset_sequential()

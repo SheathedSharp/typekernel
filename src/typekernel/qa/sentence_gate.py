@@ -1,4 +1,4 @@
-"""Agent-facing sentence quality gate (Controls pipeline, not legacy latin).
+"""Agent-facing sentence quality gate (FormSources pipeline, not legacy latin).
 
 Pass/fail always scores :data:`AGENT_SENTENCE`. A brief sentence is a second
 specimen, not a way to pass. When ``baseline`` is set, the trial must not be
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.optics.space import pair_gap_optical, space_font
 from typekernel.parts.compose import ComposedGlyph
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 from typekernel.parts.metrics import (
     ClassKernTable,
     RhythmSpec,
@@ -72,12 +72,12 @@ def _letters(text: str) -> str:
 
 
 def _spaced(
-    controls: Controls, charset: str
+    controls: FormSources, charset: str
 ) -> tuple[dict[str, ComposedGlyph], ClassKernTable, RhythmSpec]:
     ctx = controls.context
     drawn_chars = "".join(dict.fromkeys(charset + "no"))
     drawn = polish_glyph_map(
-        controls.build_all(drawn_chars),
+        controls.derive(drawn_chars),
         GlyphPolishOptions(joins_policy="tangent_fix"),
     )
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
@@ -88,10 +88,10 @@ def _spaced(
 
 
 def controls_sentence_report(
-    controls: Controls,
+    controls: FormSources,
     text: str = AGENT_SENTENCE,
 ) -> WordReport:
-    """Score ``text`` after optical spacing on a Controls draw."""
+    """Score ``text`` after optical spacing on a FormSources draw."""
     letters = _letters(text)
     spaced, kern, rhythm = _spaced(controls, letters)
     names = [ch for ch in text if ch.isalpha()]
@@ -100,7 +100,7 @@ def controls_sentence_report(
 
 
 def controls_pair_gaps(
-    controls: Controls,
+    controls: FormSources,
     pairs: tuple[str, ...] = AGENT_PAIRS,
 ) -> tuple[PairGap, ...]:
     """Score each fixed pair/word. ``min_gap <= 0`` is a silhouette collision."""
@@ -170,16 +170,16 @@ def collect_gate_failures(
 
 
 def check_sentence_gate(
-    controls: Controls,
+    controls: FormSources,
     *,
     text: str = AGENT_SENTENCE,
     limits: SentenceGateLimits | None = None,
-    baseline: Controls | None = None,
+    baseline: FormSources | None = None,
 ) -> tuple[WordReport, tuple[str, ...]]:
     """Return ``(report, failures)`` for :data:`AGENT_SENTENCE`.
 
     The report is always the locked sentence, even when ``text`` differs.
-    ``baseline`` is the unmodified preset (``Controls.from_context(preset())``);
+    ``baseline`` is the unmodified preset (``FormSources.from_context(preset())``);
     the trial must not worsen its optical gap ratio or non-terminal G1.
     """
     report = controls_sentence_report(controls, AGENT_SENTENCE)

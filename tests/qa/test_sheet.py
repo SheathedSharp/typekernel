@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.sheet import contact_sheet, diff_overlay, review_index, weight_ladder_sheet
 
 pytest.importorskip("PIL")
 
 
 def test_contact_sheet_writes(tmp_path) -> None:
-    controls = Controls.from_context(DesignContext.code_clear())
+    controls = FormSources.from_context(DesignContext.code_clear())
     path = contact_sheet(controls, tmp_path / "contact.png", chars="noa")
     assert path.is_file()
     assert path.stat().st_size > 500
@@ -21,15 +21,15 @@ def test_contact_sheet_full_charset_width_at_most_1600(tmp_path) -> None:
     """TK-104: agent-preview sheets stay within the documented width cap."""
     from PIL import Image
 
-    controls = Controls.from_context(DesignContext.humanist_sans())
+    controls = FormSources.from_context(DesignContext.humanist_sans())
     path = contact_sheet(controls, tmp_path / "full.png")
     with Image.open(path) as image:
         assert image.width <= 1600
 
 
 def test_diff_overlay_writes(tmp_path) -> None:
-    trial = Controls.from_context(DesignContext.slab_serif())
-    baseline = Controls.from_context(DesignContext.humanist_sans())
+    trial = FormSources.from_context(DesignContext.slab_serif())
+    baseline = FormSources.from_context(DesignContext.humanist_sans())
     path = diff_overlay(trial, baseline, tmp_path / "diff.png", chars="m")
     assert path.is_file()
     assert path.stat().st_size > 200

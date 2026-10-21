@@ -9,7 +9,7 @@ from typekernel.compile.oblique import oblique_font
 from typekernel.font import Font
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    Controls,
+    FormSources,
     DesignContext,
     auto_class_kern,
     auto_side_kern_classes,
@@ -20,10 +20,10 @@ HERE = Path(__file__).resolve().parent
 OUT_DIR = HERE / "out"
 
 
-def design(controls: Controls, family: str, style: str) -> Font:
+def design(controls: FormSources, family: str, style: str) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(spaced, auto_side_kern_classes(spaced, ctx), target=rhythm)
@@ -35,7 +35,7 @@ def design(controls: Controls, family: str, style: str) -> Font:
 
 def main() -> None:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     regular = design(controls, "Typekernel Oblique Demo", "Regular")
     build_font(regular, OUT_DIR / "regular")
     oblique = oblique_font(regular, 12.0, style_name="Oblique")

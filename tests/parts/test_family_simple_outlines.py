@@ -15,7 +15,7 @@ from fontTools.pens.areaPen import AreaPen
 
 from typekernel.font import Glyph
 from typekernel.geo.pens import draw_outline
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 PRESETS = (
     "geometric_sans",
@@ -44,7 +44,7 @@ def test_outlines_are_simple(preset: str) -> None:
     base = getattr(DesignContext, preset)()
     bad: dict[str, float] = {}
     for stem in (30.0, base.stem, 220.0):
-        for ch, g in Controls.from_context(base.tuned(stem=stem)).build_all().items():
+        for ch, g in FormSources.from_context(base.tuned(stem=stem)).derive().items():
             change = _area_change(Glyph.from_composed(ch, g).outline)
             if change > 1e-4:
                 bad[f"{ch}@{stem:g}"] = round(change, 5)

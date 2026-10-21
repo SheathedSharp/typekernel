@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.italic import italic_design, slant_composed_glyph
 from typekernel.qa.lint import lint_glyph
 from typekernel.qa.originality import topology_signature
@@ -14,25 +14,25 @@ _MIN_OUTLINE_DIFFS = 8
 def test_italic_n_outline_differs_from_sheared_regular() -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
-    sheared = slant_composed_glyph(reg.build_all("n")["n"], 10.0)
-    italic = italic_design(reg).build_all("n")["n"]
+    reg = FormSources.from_context(DesignContext.humanist_sans())
+    sheared = slant_composed_glyph(reg.derive("n")["n"], 10.0)
+    italic = italic_design(reg).derive("n")["n"]
     assert composed_glyph_hash(sheared) != composed_glyph_hash(italic)
 
 
 def test_italic_h_outline_differs_from_sheared_regular() -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.code_clear())
-    sheared = slant_composed_glyph(reg.build_all("h")["h"], 10.0)
-    italic = italic_design(reg).build_all("h")["h"]
+    reg = FormSources.from_context(DesignContext.code_clear())
+    sheared = slant_composed_glyph(reg.derive("h")["h"], 10.0)
+    italic = italic_design(reg).derive("h")["h"]
     assert composed_glyph_hash(sheared) != composed_glyph_hash(italic)
 
 
 def test_italic_branching_n_lint_clean() -> None:
-    controls = italic_design(Controls.from_context(DesignContext.geometric_sans()))
+    controls = italic_design(FormSources.from_context(DesignContext.geometric_sans()))
     for ch in "nhrum":
-        issues = lint_glyph(controls.build_all(ch)[ch], controls.context, glyph_name=ch)
+        issues = lint_glyph(controls.derive(ch)[ch], controls.context, glyph_name=ch)
         assert not [i for i in issues if i.severity == "error"]
 
 
@@ -40,9 +40,9 @@ def test_italic_f_reaches_descender_zone() -> None:
     from typekernel.geo.outline import bounds
 
     ctx = DesignContext.code_clear()
-    reg = Controls.from_context(ctx)
-    f_reg = reg.build_all("f")["f"]
-    f_ital = italic_design(reg).build_all("f")["f"]
+    reg = FormSources.from_context(ctx)
+    f_reg = reg.derive("f")["f"]
+    f_ital = italic_design(reg).derive("f")["f"]
     assert bounds(f_reg.solids[0])[1] == 0.0
     assert bounds(f_ital.solids[0])[1] < ctx.descender * 0.5
 
@@ -52,7 +52,7 @@ def test_italic_a_bowl_narrower_before_slant() -> None:
     from typekernel.parts.control import a_from_o, build_n, build_o
 
     ctx = DesignContext.code_clear().tuned(italic_slant_deg=10.0)
-    reg = Controls.from_context(DesignContext.code_clear())
+    reg = FormSources.from_context(DesignContext.code_clear())
     a_reg = a_from_o(build_o(reg.context), build_n(reg.context), reg.context)
     a_ital = a_from_o(build_o(ctx), build_n(ctx), ctx)
     w_reg = bounds(a_reg.solids[0])[2] - bounds(a_reg.solids[0])[0]
@@ -64,14 +64,14 @@ def test_italic_design_differs_from_construct_oblique_on_key_letters() -> None:
     """TK-403 acceptance: true italic vs sheared regular on branching letters."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     outline_diffs = 0
     topology_diffs = 0
     for ch in _OBLIQUE_VS_ITALIC_CHARS:
-        oblique = slant_composed_glyph(reg.build(ch), slant)
-        drawn = ital.build(ch)
+        oblique = slant_composed_glyph(reg.derive_one(ch), slant)
+        drawn = ital.derive_one(ch)
         if composed_glyph_hash(oblique) != composed_glyph_hash(drawn):
             outline_diffs += 1
         if topology_signature(oblique) != topology_signature(drawn):
@@ -83,10 +83,10 @@ def test_italic_design_differs_from_construct_oblique_on_key_letters() -> None:
 def test_italic_ru_topology_differs_from_sheared_regular() -> None:
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     for ch in "ru":
-        sheared = slant_composed_glyph(reg.build_all(ch)[ch], 10.0)
-        italic = italic_design(reg).build_all(ch)[ch]
+        sheared = slant_composed_glyph(reg.derive(ch)[ch], 10.0)
+        italic = italic_design(reg).derive(ch)[ch]
         assert composed_glyph_hash(sheared) != composed_glyph_hash(italic)
 
 
@@ -94,14 +94,14 @@ def test_italic_diagonals_topology_differs_from_shear() -> None:
     """``k/v/w/x/y/z`` cursive-cubic italic ≠ construct shear of upright."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     diffs = 0
     cubic = 0
     for ch in "kvwxyz":
-        sheared = slant_composed_glyph(reg.build(ch), slant)
-        drawn = ital.build(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
+        drawn = ital.derive_one(ch)
         assert composed_glyph_hash(sheared) != composed_glyph_hash(drawn)
         sig = topology_signature(drawn)
         if topology_signature(sheared) != sig:
@@ -116,16 +116,16 @@ def test_italic_diagonals_match_vf_upright_topology() -> None:
     """VF-compat upright shares italic diagonal topology (segment match)."""
     from typekernel.parts.italic import vf_italic_pair
 
-    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.geometric_sans()))
     for ch in "kvwxyz":
-        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+        assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_branch_fillet_deeper_than_shear() -> None:
     """Soft branch crotches: ``n``/``h``/``m``/``r``/``u`` gain cubics vs shear."""
     from typekernel.geo.segment import CubicSegment
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
 
@@ -140,8 +140,8 @@ def test_italic_branch_fillet_deeper_than_shear() -> None:
 
     deeper = 0
     for ch in "nhmru":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert topology_signature(drawn) != topology_signature(sheared)
         if n_cubics(drawn) > n_cubics(sheared):
             deeper += 1
@@ -157,9 +157,9 @@ def test_italic_branch_fillet_vf_pair_matches_on_presets() -> None:
         DesignContext.geometric_sans,
         DesignContext.code_clear,
     ):
-        up, it = vf_italic_pair(Controls.from_context(factory()))
+        up, it = vf_italic_pair(FormSources.from_context(factory()))
         for ch in "nhmru":
-            assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+            assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 
@@ -176,14 +176,14 @@ def test_italic_u_soft_branch_survives_weight_relief() -> None:
     from typekernel.parts.italic import vf_italic_pair
 
     ctx = DesignContext.humanist_sans()
-    up, it = vf_italic_pair(Controls.from_context(ctx))
-    bold = vf_italic_pair(Controls.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
+    up, it = vf_italic_pair(FormSources.from_context(ctx))
+    bold = vf_italic_pair(FormSources.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
     sheet = replace(bold, context=bold.context.tuned(stem=120.0)).with_stem_relief()
     codes = {
-        topology_signature(up.build("u")).contour_codes,
-        topology_signature(it.build("u")).contour_codes,
-        topology_signature(bold.build("u")).contour_codes,
-        topology_signature(sheet.build("u")).contour_codes,
+        topology_signature(up.derive_one("u")).contour_codes,
+        topology_signature(it.derive_one("u")).contour_codes,
+        topology_signature(bold.derive_one("u")).contour_codes,
+        topology_signature(sheet.derive_one("u")).contour_codes,
     }
     assert len(codes) == 1
     masters = [
@@ -224,9 +224,9 @@ def test_italic_u_emit_on_mirror_breaks_weight_relief() -> None:
     ctl._u_branching_outline = emit_mirror_u
     try:
         ctx = DesignContext.humanist_sans()
-        bold = vf_italic_pair(Controls.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
+        bold = vf_italic_pair(FormSources.from_context(ctx.tuned(stem=120.0)).with_stem_relief())[0]
         sheet = replace(bold, context=bold.context.tuned(stem=120.0)).with_stem_relief()
-        assert topology_signature(bold.build("u")) != topology_signature(sheet.build("u"))
+        assert topology_signature(bold.derive_one("u")) != topology_signature(sheet.derive_one("u"))
     finally:
         ctl._u_branching_outline = orig
 
@@ -243,13 +243,13 @@ def _body_cubics(g) -> int:
 
 def test_italic_stem_terminals_more_written_than_shear() -> None:
     """Entry kick + exit outstroke: ``i``/``l``/``n``/``r`` body gains cubics vs shear."""
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
     for ch in "ilnr":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert topology_signature(drawn) != topology_signature(sheared)
         assert "C" in topology_signature(drawn).contour_codes[0]
         if _body_cubics(drawn) > _body_cubics(sheared):
@@ -266,9 +266,9 @@ def test_italic_stem_terminals_vf_pair_matches() -> None:
         DesignContext.geometric_sans,
         DesignContext.code_clear,
     ):
-        up, it = vf_italic_pair(Controls.from_context(factory()))
+        up, it = vf_italic_pair(FormSources.from_context(factory()))
         for ch in "ilnhrum":
-            assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+            assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_r_arm_terminal_is_cubic_not_vertical_cut() -> None:
@@ -276,7 +276,7 @@ def test_italic_r_arm_terminal_is_cubic_not_vertical_cut() -> None:
     from typekernel.parts.control import _italic_arm_terminal_cubic, _r_pieces, n_metrics
     from typekernel.parts.italic import italic_design
 
-    ctx = italic_design(Controls.from_context(DesignContext.geometric_sans())).context
+    ctx = italic_design(FormSources.from_context(DesignContext.geometric_sans())).context
     m = n_metrics(ctx)
     branch_y = m.x_height * 0.5
     drop = m.x_height - branch_y
@@ -292,20 +292,20 @@ def test_italic_r_arm_terminal_is_cubic_not_vertical_cut() -> None:
     # Lean to the right of a vertical cut (written exit).
     assert cubic[1][0] > outer_arm[3][0]
     assert cubic[2][0] > inner_arm[0][0]
-    g = Controls.from_context(ctx).build("r")
+    g = FormSources.from_context(ctx).derive_one("r")
     assert "C" in topology_signature(g).contour_codes[0]
     assert _body_cubics(g) >= 6
 
 
 def test_italic_hook_letters_more_written_than_shear() -> None:
     """``f``/``j``/``t``: entry kicks + written hook ends beat construct shear."""
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
     for ch in "fjt":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert topology_signature(drawn) != topology_signature(sheared)
         if _body_cubics(drawn) > _body_cubics(sheared):
             deeper += 1
@@ -317,9 +317,9 @@ def test_italic_f_descender_keeps_entry_kick() -> None:
     from typekernel.geo.outline import bounds
     from typekernel.geo.segment import CubicSegment
 
-    reg = Controls.from_context(DesignContext.code_clear())
+    reg = FormSources.from_context(DesignContext.code_clear())
     ital = italic_design(reg)
-    f = ital.build("f")
+    f = ital.derive_one("f")
     assert bounds(f.solids[0])[1] < ital.context.descender * 0.5
     # Lowest band should include a cubic (descender entry kick), not only lines.
     low = [
@@ -335,22 +335,22 @@ def test_italic_openings_and_a_differ_from_shear() -> None:
     """``a``/``c``/``e``/``s`` italic openings read written vs sheared upright."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     for ch in "aces":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
         assert topology_signature(drawn) != topology_signature(sheared)
 
 
 def test_italic_a_crown_exit_adds_cubic() -> None:
     """Single-storey italic ``a`` crown exit is a cubic, not a sharp stem corner."""
-    reg = Controls.from_context(DesignContext.geometric_sans())
+    reg = FormSources.from_context(DesignContext.geometric_sans())
     ital = italic_design(reg)
-    drawn = ital.build("a")
-    sheared = slant_composed_glyph(reg.build("a"), ital.context.italic_slant_deg)
+    drawn = ital.derive_one("a")
+    sheared = slant_composed_glyph(reg.derive_one("a"), ital.context.italic_slant_deg)
     assert _body_cubics(drawn) > _body_cubics(sheared)
 
 
@@ -358,22 +358,22 @@ def test_italic_hook_and_opening_vf_pair_matches() -> None:
     """Hook + opening terminal craft keeps VF upright/italic topology aligned."""
     from typekernel.parts.italic import vf_italic_pair
 
-    up, it = vf_italic_pair(Controls.from_context(DesignContext.humanist_sans()))
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.humanist_sans()))
     for ch in "fjtaces":
-        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+        assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_caps_stems_more_written_than_shear() -> None:
     """Sans caps ``H``/``I``/``L``/``E``/``F``/``N``/``M``/``T``: entry/exit ≠ shear."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
     for ch in "HILEFNMT":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
         assert topology_signature(drawn) != topology_signature(sheared)
         if _body_cubics(drawn) >= _body_cubics(sheared):
@@ -386,22 +386,22 @@ def test_italic_caps_stems_vf_pair_matches() -> None:
     """Cap stem terminal craft keeps VF upright/italic topology aligned."""
     from typekernel.parts.italic import vf_italic_pair
 
-    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.geometric_sans()))
     for ch in "HILEFNMT":
-        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+        assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_cap_diagonals_more_written_than_shear() -> None:
     """Sans caps ``A``/``V``/``W``/``X``/``Y``/``K``/``Z``: crotch/tip craft ≠ shear."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
     for ch in "AVWXYKZ":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
         assert topology_signature(drawn) != topology_signature(sheared)
         if _body_cubics(drawn) >= _body_cubics(sheared):
@@ -413,22 +413,22 @@ def test_italic_cap_diagonals_vf_pair_matches() -> None:
     """Cap diagonal crotch craft keeps VF upright/italic topology aligned."""
     from typekernel.parts.italic import vf_italic_pair
 
-    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.geometric_sans()))
     for ch in "AVWXYKZ":
-        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+        assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_cap_bowls_more_written_than_shear() -> None:
     """Sans bowl caps ``C``/``G``/``S``/``J``/``U``/``R``: tip craft ≠ shear."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     slant = ital.context.italic_slant_deg
     deeper = 0
     for ch in "CGSJUR":
-        drawn = ital.build(ch)
-        sheared = slant_composed_glyph(reg.build(ch), slant)
+        drawn = ital.derive_one(ch)
+        sheared = slant_composed_glyph(reg.derive_one(ch), slant)
         assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
         assert topology_signature(drawn) != topology_signature(sheared)
         if _body_cubics(drawn) >= _body_cubics(sheared):
@@ -440,25 +440,20 @@ def test_italic_cap_bowls_vf_pair_matches() -> None:
     """Bowl-cap tip craft keeps VF upright/italic topology aligned."""
     from typekernel.parts.italic import vf_italic_pair
 
-    up, it = vf_italic_pair(Controls.from_context(DesignContext.geometric_sans()))
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.geometric_sans()))
     for ch in "CGSJUR":
-        assert topology_signature(up.build(ch)) == topology_signature(it.build(ch))
+        assert topology_signature(up.derive_one(ch)) == topology_signature(it.derive_one(ch))
 
 
 def test_italic_cap_g_tip_shear_changes_hash() -> None:
     """Italic ``G`` tip shear is more than construct slant alone."""
     from typekernel.qa.outline_hash import composed_glyph_hash
 
-    reg = Controls.from_context(DesignContext.code_clear())
+    reg = FormSources.from_context(DesignContext.code_clear())
     ital = italic_design(reg)
-    drawn = ital.build("G")
-    sheared = slant_composed_glyph(reg.build("G"), ital.context.italic_slant_deg)
+    drawn = ital.derive_one("G")
+    sheared = slant_composed_glyph(reg.derive_one("G"), ital.context.italic_slant_deg)
     assert composed_glyph_hash(drawn) != composed_glyph_hash(sheared)
     assert _body_cubics(drawn) >= _body_cubics(sheared)
 
 
-def test_italic_caps_unlock_stays_complete() -> None:
-    from typekernel.qa.design_sequence import unlock_controls_caps
-
-    ital = italic_design(Controls.from_context(DesignContext.humanist_sans()))
-    assert unlock_controls_caps(ital).is_complete

@@ -12,7 +12,7 @@ Run::
 
 from __future__ import annotations
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import FormSources, DesignContext
 from typekernel.parts.control import f_from_n, t_from_n
 
 FAMILY_NAME = "Trial Editorial Slab"
@@ -26,18 +26,18 @@ __all__ = [
 ]
 
 
-def baseline_controls() -> Controls:
-    return Controls.from_context(DesignContext.slab_serif())
+def baseline_controls() -> FormSources:
+    return FormSources.from_context(DesignContext.slab_serif())
 
 
-def _voice(stem: float, *, relief: bool) -> Controls:
+def _voice(stem: float, *, relief: bool) -> FormSources:
     ctx = DesignContext.slab_serif().tuned(
         stem=stem,
         roundness=0.24,
         tracking=0.015,
     )
     sheet = (
-        Controls.from_context(ctx)
+        FormSources.from_context(ctx)
         .with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.75))
         .with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.56))
         .tuned_glyph("s", top_scale=0.85)
@@ -47,9 +47,9 @@ def _voice(stem: float, *, relief: bool) -> Controls:
     return sheet.with_stem_relief() if relief else sheet
 
 
-def controls() -> Controls:
+def controls() -> FormSources:
     return _voice(DesignContext.slab_serif().stem, relief=False)
 
 
-def design_bold() -> Controls:
+def design_bold() -> FormSources:
     return _voice(_BOLD_STEM, relief=True)

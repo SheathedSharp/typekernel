@@ -28,10 +28,9 @@ Canonical product copy: [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md).
 parts / letter builders → Font.add_chars → space (agent-chosen) → build_font → proof
 ```
 
-There is **no** blessed aggregate pipeline. Do **not** treat `Controls.build_all`,
-`DesignSequence` / `unlock_*`, or “run the studio/family example” as the design
-method. Those APIs may still exist as **legacy** helpers; they are not the
-documented happy path. Prefer deleting or ignoring them for new faces.
+There is **no** blessed aggregate pipeline. Do **not** treat deleted Usage B APIs
+(`Controls` / `build_all` / `DesignSequence` / `unlock_*`) or “run the studio/family
+example” as the design method. Optional `FormSources.derive` is stock sugar only.
 
 ### Companion docs
 
@@ -130,7 +129,7 @@ glyph = (
 ```
 
 Both recipes end the same way: **you** own spacing and compile. Neither calls
-`Controls.build_all` or `DesignSequence`.
+deleted `Controls.build_all` / `DesignSequence`.
 
 For full parameter tables see [parts-catalog.md](parts-catalog.md). For fatten /
 serif / italic recipes see [recipes.md](recipes.md).

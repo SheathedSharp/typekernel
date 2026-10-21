@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typekernel.optics.stem import measure_oriented_stem
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.control import o_metrics
 from typekernel.parts.italic import horizontal_slant_compensation, italic_design
 from typekernel.qa.thickness import measurement_outline
@@ -24,8 +24,8 @@ def test_horizontal_slant_compensation_is_secant() -> None:
 
 def test_italic_o_top_stroke_near_upright_after_slant() -> None:
     ctx = DesignContext.geometric_sans()
-    reg = Controls.from_context(ctx).build("o")
-    ital = italic_design(Controls.from_context(ctx)).build("o")
+    reg = FormSources.from_context(ctx).derive_one("o")
+    ital = italic_design(FormSources.from_context(ctx)).derive_one("o")
     m = o_metrics(ctx)
     outline_reg = measurement_outline(reg)
     outline_ital = measurement_outline(ital)
@@ -41,8 +41,8 @@ def test_italic_o_top_stroke_near_upright_after_slant() -> None:
 
 def test_italic_e_crossbar_not_thinner_than_upright_after_slant() -> None:
     ctx = DesignContext.code_clear()
-    reg = Controls.from_context(ctx).build("e")
-    ital = italic_design(Controls.from_context(ctx)).build("e")
+    reg = FormSources.from_context(ctx).derive_one("e")
+    ital = italic_design(FormSources.from_context(ctx)).derive_one("e")
     y = ctx.x_height * 0.52
     w_reg = _horizontal_width_at_y(reg, y)
     w_ital = _horizontal_width_at_y(ital, y)

@@ -9,7 +9,7 @@ import pytest
 from tests.axes._rect_helpers import closed_rect
 from typekernel.axes import slant
 from typekernel.axes.slant import ObliqueTransform
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.italic import italic_design
 
 
@@ -25,7 +25,7 @@ def test_oblique_transform_shears_x_with_y() -> None:
 
 
 def test_designed_italic_is_separate_controls_sheet() -> None:
-    reg = Controls.from_context(DesignContext.code_clear())
+    reg = FormSources.from_context(DesignContext.code_clear())
     ital = italic_design(reg)
     assert ital.n.counter > reg.n.counter
     assert ital is not reg

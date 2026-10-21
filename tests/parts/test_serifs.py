@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from typekernel.font import Font, Master, check_masters
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.style import Style
 from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.identity import check_identity_controls
@@ -20,20 +20,20 @@ from typekernel.qa.outline_hash import composed_glyph_hash
 
 def test_default_serif_none_preserves_n_hash() -> None:
     ctx = DesignContext.geometric_sans()
-    base = Controls.from_context(ctx).build("n")
-    again = Controls.from_context(ctx, style=Style(serif="none")).build("n")
+    base = FormSources.from_context(ctx).derive_one("n")
+    again = FormSources.from_context(ctx, style=Style(serif="none")).derive_one("n")
     assert composed_glyph_hash(base) == composed_glyph_hash(again)
 
 
 def test_slab_serif_changes_n_outline() -> None:
-    plain = Controls.from_context(DesignContext.geometric_sans()).build("n")
-    slab = Controls.from_context(DesignContext.slab_serif()).build("n")
+    plain = FormSources.from_context(DesignContext.geometric_sans()).derive_one("n")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("n")
     assert composed_glyph_hash(plain) != composed_glyph_hash(slab)
 
 
 def test_slab_n_left_stem_foot_is_inlined() -> None:
-    humanist = Controls.from_context(DesignContext.humanist_sans()).build("n")
-    slab = Controls.from_context(DesignContext.slab_serif()).build("n")
+    humanist = FormSources.from_context(DesignContext.humanist_sans()).derive_one("n")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("n")
     assert composed_glyph_hash(humanist) != composed_glyph_hash(slab)
     assert len(slab.solids[0].contours[0].segments) > len(
         humanist.solids[0].contours[0].segments
@@ -45,11 +45,11 @@ def test_slab_nh_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in "nh":
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -62,7 +62,7 @@ def test_slab_nh_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_slab_serif_lint_clean_on_full_supported() -> None:
-    report = lint_controls(Controls.from_context(DesignContext.slab_serif()))
+    report = lint_controls(FormSources.from_context(DesignContext.slab_serif()))
     assert not report.errors, report.errors
 
 
@@ -71,9 +71,9 @@ def test_slab_n_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("n"))
+        font.add_chars(controls.derive("n"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -83,14 +83,14 @@ def test_slab_n_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_serif_changes_n_outline() -> None:
-    plain = Controls.from_context(DesignContext.humanist_sans()).build("n")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    plain = FormSources.from_context(DesignContext.humanist_sans()).derive_one("n")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("n")
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
 
 
 def test_bracketed_n_left_stem_foot_uses_cubic_bracket_fillet() -> None:
-    plain = Controls.from_context(DesignContext.humanist_sans()).build("n")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    plain = FormSources.from_context(DesignContext.humanist_sans()).derive_one("n")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("n")
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
     pk = [s.kind for s in plain.solids[0].contours[0].segments]
     bk = [s.kind for s in bracket.solids[0].contours[0].segments]
@@ -101,11 +101,11 @@ def test_slab_m_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.slab_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("m").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("m").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("m")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("m")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("m", g)
@@ -121,11 +121,11 @@ def test_slab_r_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.slab_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("r").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("r").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("r")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("r")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("r", g)
@@ -141,11 +141,11 @@ def test_bracketed_r_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("r").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("r").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("r")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("r")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("r", g)
@@ -161,11 +161,11 @@ def test_bracketed_m_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("m").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("m").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("m")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("m")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("m", g)
@@ -181,11 +181,11 @@ def test_slab_u_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.slab_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("u").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("u").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("u")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("u")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("u", g)
@@ -201,11 +201,11 @@ def test_bracketed_u_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     ref_n = len(
-        Controls.from_context(ctx.tuned(stem=stems[0])).build("u").solids[0].contours[0].segments
+        FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("u").solids[0].contours[0].segments
     )
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("u")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("u")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("u", g)
@@ -220,7 +220,7 @@ def test_bracketed_u_masters_interpolate_on_weight_ladder() -> None:
 def test_serif_u_has_no_spurious_left_foot_anchor() -> None:
     """``u`` only has a right stem foot; bowl side must not get ``stem_L_b``."""
     for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
-        g = Controls.from_context(factory()).build("u")
+        g = FormSources.from_context(factory()).derive_one("u")
         names = {a.name for a in g.anchors}
         assert "stem_L_b" not in names
         assert "stem_R_b" not in names
@@ -230,12 +230,12 @@ def test_serif_u_has_no_spurious_left_foot_anchor() -> None:
 
 def test_serif_h_ascender_cap_inlined_skips_left_top_anchor() -> None:
     for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
-        g = Controls.from_context(factory()).build("h")
+        g = FormSources.from_context(factory()).derive_one("h")
         names = {a.name for a in g.anchors}
         assert "stem_L_t" not in names
-    slab = Controls.from_context(DesignContext.slab_serif()).build("h")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("h")
     assert "stem_R_t" not in {a.name for a in slab.anchors}
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("h")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("h")
     assert "stem_R_t" not in {a.name for a in bracket.anchors}
 
 
@@ -244,7 +244,7 @@ def test_slab_h_right_leg_cap_inlined_without_boolean_serif() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.slab_serif()
-    n = Controls.from_context(ctx).control_glyphs()[0]
+    n = FormSources.from_context(ctx).control_glyphs()[0]
     h = h_from_n(n, ctx)
     assert not [i for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"]
     assert "stem_R_t" not in {a.name for a in h.anchors}
@@ -256,7 +256,7 @@ def test_bracketed_h_from_n_right_leg_cap_inlined_without_boolean_serif() -> Non
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.bracketed_serif()
-    n = Controls.from_context(ctx).control_glyphs()[0]
+    n = FormSources.from_context(ctx).control_glyphs()[0]
     h = h_from_n(n, ctx)
     assert not [i for i in lint_glyph(h, ctx, glyph_name="h") if i.severity == "error"]
     assert "stem_R_t" not in {a.name for a in h.anchors}
@@ -266,10 +266,10 @@ def test_bracketed_h_from_n_right_leg_cap_inlined_without_boolean_serif() -> Non
 def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
-    slab = Controls.from_context(DesignContext.slab_serif()).build("m")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("m")
     assert "stem_L_t" not in {a.name for a in slab.anchors}
     assert composed_glyph_hash(slab) == composed_glyph_hash(apply_glyph_serifs(slab))
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("m")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("m")
     assert "stem_L_t" not in {a.name for a in bracket.anchors}
     assert composed_glyph_hash(bracket) == composed_glyph_hash(apply_glyph_serifs(bracket))
 
@@ -277,10 +277,10 @@ def test_slab_m_shoulder_cap_inlined_skips_left_top_anchor() -> None:
 def test_slab_r_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
-    slab = Controls.from_context(DesignContext.slab_serif()).build("r")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("r")
     assert "stem_L_t" not in {a.name for a in slab.anchors}
     assert composed_glyph_hash(slab) == composed_glyph_hash(apply_glyph_serifs(slab))
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("r")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("r")
     assert "stem_L_t" not in {a.name for a in bracket.anchors}
     assert composed_glyph_hash(bracket) == composed_glyph_hash(apply_glyph_serifs(bracket))
 
@@ -332,10 +332,10 @@ def test_slab_apply_glyph_serifs_is_noop_on_supported() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.slab_serif()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     changed: list[tuple[str, list[str]]] = []
     for ch in controls.supported:
-        g = controls.build(ch)
+        g = controls.derive_one(ch)
         if composed_glyph_hash(g) != composed_glyph_hash(apply_glyph_serifs(g)):
             stems = [a.name for a in g.anchors if a.name.startswith("stem_")]
             changed.append((ch, stems))
@@ -414,9 +414,9 @@ def test_bracketed_apply_glyph_serifs_is_noop_on_supported() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
     ctx = DesignContext.bracketed_serif()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     for ch in controls.supported:
-        g = controls.build(ch)
+        g = controls.derive_one(ch)
         assert composed_glyph_hash(g) == composed_glyph_hash(apply_glyph_serifs(g))
 
 
@@ -478,7 +478,7 @@ def test_bracketed_h_slab_rect_stem_caps_lint_clean() -> None:
 def test_bracketed_n_shoulder_cap_inlined_skips_left_top_anchor() -> None:
     from typekernel.parts.serifs import apply_glyph_serifs
 
-    n = Controls.from_context(DesignContext.bracketed_serif()).build("n")
+    n = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("n")
     assert "stem_L_t" not in {a.name for a in n.anchors}
     assert composed_glyph_hash(n) == composed_glyph_hash(apply_glyph_serifs(n))
 
@@ -499,11 +499,11 @@ def test_serif_n_family_inlined_feet_omit_bottom_stem_anchors() -> None:
     for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
         ctx = factory()
         for ch in "nmru":
-            names = {a.name for a in Controls.from_context(ctx).build(ch).anchors}
+            names = {a.name for a in FormSources.from_context(ctx).derive_one(ch).anchors}
             assert "stem_L_b" not in names
             assert "stem_M_b" not in names
             assert "stem_R_b" not in names
-        r_names = {a.name for a in Controls.from_context(ctx).build("r").anchors}
+        r_names = {a.name for a in FormSources.from_context(ctx).derive_one("r").anchors}
         assert "stem_L_b" not in r_names
         assert "stem_R_b" not in r_names
 
@@ -513,11 +513,11 @@ def test_bracketed_nh_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in "nh":
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -534,8 +534,8 @@ def test_bracketed_hook_letters_cap_serif_adds_cubic_fillet() -> None:
     slab_ctx = DesignContext.slab_serif()
     br_ctx = DesignContext.bracketed_serif()
     for ch in "ftj":
-        slab = Controls.from_context(slab_ctx).build(ch)
-        br = Controls.from_context(br_ctx).build(ch)
+        slab = FormSources.from_context(slab_ctx).derive_one(ch)
+        br = FormSources.from_context(br_ctx).derive_one(ch)
         assert composed_glyph_hash(slab) != composed_glyph_hash(br)
         sk = [s.kind for s in slab.solids[0].contours[0].segments]
         bk = [s.kind for s in br.solids[0].contours[0].segments]
@@ -546,10 +546,10 @@ def test_bracketed_ftj_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in "ftj":
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -581,18 +581,18 @@ def test_bracketed_inline_bowl_foot_uses_cubic_bracket_corner() -> None:
 
 
 def test_bracketed_cap_v_foot_uses_cubic_bracket_fillet() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif()).build("V")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("V")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("V")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("V")
     assert composed_glyph_hash(slab) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 2
 
 
 def test_bracketed_cap_j_uses_cubic_bracket_fillet() -> None:
-    sans = Controls.from_context(DesignContext.humanist_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
-    h_g, s_g, b_g = sans.build("J"), slab.build("J"), bracket.build("J")
+    sans = FormSources.from_context(DesignContext.humanist_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
+    h_g, s_g, b_g = sans.derive_one("J"), slab.derive_one("J"), bracket.derive_one("J")
     assert composed_glyph_hash(h_g) != composed_glyph_hash(b_g)
     assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
     s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
@@ -604,10 +604,10 @@ def test_bracketed_cap_j_uses_cubic_bracket_fillet() -> None:
 def test_bracketed_cap_j_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("J").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("J").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("J")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("J")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("J", g)
@@ -620,11 +620,11 @@ def test_bracketed_cap_j_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_s_opening_uses_cubic_bracket_fillets() -> None:
-    sans = Controls.from_context(DesignContext.humanist_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    sans = FormSources.from_context(DesignContext.humanist_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("s", "S"):
-        h_g, s_g, b_g = sans.build(ch), slab.build(ch), bracket.build(ch)
+        h_g, s_g, b_g = sans.derive_one(ch), slab.derive_one(ch), bracket.derive_one(ch)
         assert composed_glyph_hash(h_g) != composed_glyph_hash(b_g)
         assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
         s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
@@ -638,11 +638,11 @@ def test_bracketed_s_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("s", "S"):
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -662,16 +662,16 @@ def test_bracketed_cap_inline_masters_interpolate_on_weight_ladder() -> None:
     wghts = (300.0, 400.0, 600.0, 700.0)
     ref = {
         ch: len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         for ch in charset
     }
     fonts = []
     for stem, wght in zip(stems, wghts, strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         for ch in charset:
-            g = controls.build(ch)
+            g = controls.derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref[ch]
             font.add_char(ch, g)
         fonts.append(font)
@@ -688,8 +688,8 @@ def test_opening_glyph_masters_interpolate_on_weight_ladder() -> None:
         ctx = factory()
         ref = {
             ch: len(
-                Controls.from_context(ctx.tuned(stem=stems[0]))
-                .build(ch)
+                FormSources.from_context(ctx.tuned(stem=stems[0]))
+                .derive_one(ch)
                 .solids[0]
                 .contours[0]
                 .segments
@@ -698,10 +698,10 @@ def test_opening_glyph_masters_interpolate_on_weight_ladder() -> None:
         }
         fonts = []
         for stem, wght in zip(stems, wghts, strict=True):
-            controls = Controls.from_context(ctx.tuned(stem=stem))
+            controls = FormSources.from_context(ctx.tuned(stem=stem))
             font = Font.from_context(ctx, "Serif", f"W{int(wght)}", weight_class=int(wght))
             for ch in charset:
-                g = controls.build(ch)
+                g = controls.derive_one(ch)
                 assert len(g.solids[0].contours[0].segments) == ref[ch]
                 font.add_char(ch, g)
             fonts.append(font)
@@ -710,9 +710,9 @@ def test_opening_glyph_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_e_opening_uses_cubic_bracket_fillet() -> None:
-    sans = Controls.from_context(DesignContext.humanist_sans())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
-    h_g, b_g = sans.build("e"), bracket.build("e")
+    sans = FormSources.from_context(DesignContext.humanist_sans())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
+    h_g, b_g = sans.derive_one("e"), bracket.derive_one("e")
     assert composed_glyph_hash(h_g) != composed_glyph_hash(b_g)
     h_k = [s.kind for s in h_g.solids[0].contours[0].segments]
     b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
@@ -722,10 +722,10 @@ def test_bracketed_e_opening_uses_cubic_bracket_fillet() -> None:
 def test_bracketed_e_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("e").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("e").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("e")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("e")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("e", g)
@@ -738,10 +738,10 @@ def test_bracketed_e_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_c_opening_uses_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("c", "C"):
-        s_g, b_g = slab.build(ch), bracket.build(ch)
+        s_g, b_g = slab.derive_one(ch), bracket.derive_one(ch)
         assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
         s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
         b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
@@ -753,11 +753,11 @@ def test_bracketed_c_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("c", "C"):
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -770,10 +770,10 @@ def test_bracketed_c_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_g_and_q_use_cubic_bracket_fillet() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("G", "Q"):
-        s_g, b_g = slab.build(ch), bracket.build(ch)
+        s_g, b_g = slab.derive_one(ch), bracket.derive_one(ch)
         assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
         s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
         b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
@@ -785,11 +785,11 @@ def test_bracketed_cap_gq_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("G", "Q"):
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -802,9 +802,9 @@ def test_bracketed_cap_gq_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_u_uses_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
-    s_g, b_g = slab.build("U"), bracket.build("U")
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
+    s_g, b_g = slab.derive_one("U"), bracket.derive_one("U")
     assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
     s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
     b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
@@ -815,10 +815,10 @@ def test_bracketed_cap_u_uses_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_u_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("U").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("U").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("U")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("U")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("U", g)
@@ -831,10 +831,10 @@ def test_bracketed_cap_u_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_bowl_caps_dprb_use_cubic_bracket_fillet() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("D", "P", "R", "B"):
-        s_g, b_g = slab.build(ch), bracket.build(ch)
+        s_g, b_g = slab.derive_one(ch), bracket.derive_one(ch)
         assert composed_glyph_hash(s_g) != composed_glyph_hash(b_g)
         s_k = [s.kind for s in s_g.solids[0].contours[0].segments]
         b_k = [s.kind for s in b_g.solids[0].contours[0].segments]
@@ -847,11 +847,11 @@ def test_bracketed_bowl_caps_dprb_masters_interpolate_on_weight_ladder() -> None
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("D", "P", "R", "B"):
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -864,8 +864,8 @@ def test_bracketed_bowl_caps_dprb_masters_interpolate_on_weight_ladder() -> None
 
 
 def test_bracketed_cap_n_uses_four_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif()).build("N")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("N")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("N")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("N")
     assert composed_glyph_hash(slab) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 4
@@ -874,10 +874,10 @@ def test_bracketed_cap_n_uses_four_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_n_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("N").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("N").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("N")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("N")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("N", g)
@@ -890,8 +890,8 @@ def test_bracketed_cap_n_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_m_uses_four_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif()).build("M")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("M")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("M")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("M")
     assert composed_glyph_hash(slab) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 4
@@ -900,10 +900,10 @@ def test_bracketed_cap_m_uses_four_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_m_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("M").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("M").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("M")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("M")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("M", g)
@@ -916,11 +916,11 @@ def test_bracketed_cap_m_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_e_f_t_use_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("E", "F", "T"):
-        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
-        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert composed_glyph_hash(slab.derive_one(ch)) != composed_glyph_hash(bracket.derive_one(ch))
+        kinds = [s.kind for s in bracket.derive_one(ch).solids[0].contours[0].segments]
         assert kinds.count("cubic") == 2
 
 
@@ -928,10 +928,10 @@ def test_bracketed_cap_eft_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("E", "F", "T"):
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -944,20 +944,20 @@ def test_bracketed_cap_eft_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_i_and_l_use_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("I", "L"):
-        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
-        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert composed_glyph_hash(slab.derive_one(ch)) != composed_glyph_hash(bracket.derive_one(ch))
+        kinds = [s.kind for s in bracket.derive_one(ch).solids[0].contours[0].segments]
         assert kinds.count("cubic") == 2
 
 
 def test_bracketed_lower_i_and_l_use_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("i", "l"):
-        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
-        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert composed_glyph_hash(slab.derive_one(ch)) != composed_glyph_hash(bracket.derive_one(ch))
+        kinds = [s.kind for s in bracket.derive_one(ch).solids[0].contours[0].segments]
         assert kinds.count("cubic") == 2
 
 
@@ -965,10 +965,10 @@ def test_bracketed_lower_il_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("i", "l"):
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -984,10 +984,10 @@ def test_bracketed_cap_il_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("I", "L"):
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -1000,8 +1000,8 @@ def test_bracketed_cap_il_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_h_uses_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif()).build("H")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("H")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("H")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("H")
     assert composed_glyph_hash(slab) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 4
@@ -1010,10 +1010,10 @@ def test_bracketed_cap_h_uses_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_h_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("H").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("H").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("H")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("H")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("H", g)
@@ -1026,8 +1026,8 @@ def test_bracketed_cap_h_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_a_uses_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif()).build("A")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("A")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("A")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("A")
     assert composed_glyph_hash(slab) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 2
@@ -1036,11 +1036,11 @@ def test_bracketed_cap_a_uses_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_a_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("A").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("A").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
-        g = controls.build("A")
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
+        g = controls.derive_one("A")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("A", g)
@@ -1053,8 +1053,8 @@ def test_bracketed_cap_a_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_y_uses_cubic_bracket_fillets() -> None:
-    plain = Controls.from_context(DesignContext.humanist_sans()).build("Y")
-    bracket = Controls.from_context(DesignContext.bracketed_serif()).build("Y")
+    plain = FormSources.from_context(DesignContext.humanist_sans()).derive_one("Y")
+    bracket = FormSources.from_context(DesignContext.bracketed_serif()).derive_one("Y")
     assert composed_glyph_hash(plain) != composed_glyph_hash(bracket)
     kinds = [s.kind for s in bracket.solids[0].contours[0].segments]
     assert kinds.count("cubic") == 3
@@ -1063,11 +1063,11 @@ def test_bracketed_cap_y_uses_cubic_bracket_fillets() -> None:
 def test_bracketed_cap_y_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("Y").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("Y").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
-        g = controls.build("Y")
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
+        g = controls.derive_one("Y")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("Y", g)
@@ -1080,11 +1080,11 @@ def test_bracketed_cap_y_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_z_and_k_use_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("Z", "K"):
-        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
-        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert composed_glyph_hash(slab.derive_one(ch)) != composed_glyph_hash(bracket.derive_one(ch))
+        kinds = [s.kind for s in bracket.derive_one(ch).solids[0].contours[0].segments]
         assert kinds.count("cubic") == 2
 
 
@@ -1092,10 +1092,10 @@ def test_bracketed_cap_zk_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("Z", "K"):
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -1108,11 +1108,11 @@ def test_bracketed_cap_zk_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_bracketed_cap_w_and_x_use_cubic_bracket_fillets() -> None:
-    slab = Controls.from_context(DesignContext.slab_serif())
-    bracket = Controls.from_context(DesignContext.bracketed_serif())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    bracket = FormSources.from_context(DesignContext.bracketed_serif())
     for ch in ("W", "X"):
-        assert composed_glyph_hash(slab.build(ch)) != composed_glyph_hash(bracket.build(ch))
-        kinds = [s.kind for s in bracket.build(ch).solids[0].contours[0].segments]
+        assert composed_glyph_hash(slab.derive_one(ch)) != composed_glyph_hash(bracket.derive_one(ch))
+        kinds = [s.kind for s in bracket.derive_one(ch).solids[0].contours[0].segments]
         assert kinds.count("cubic") == 2
 
 
@@ -1120,11 +1120,11 @@ def test_bracketed_cap_wx_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("W", "X"):
-        ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments)
+        ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments)
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            controls = Controls.from_context(ctx.tuned(stem=stem))
-            g = controls.build(ch)
+            controls = FormSources.from_context(ctx.tuned(stem=stem))
+            g = controls.derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -1139,11 +1139,11 @@ def test_bracketed_cap_wx_masters_interpolate_on_weight_ladder() -> None:
 def test_bracketed_cap_v_masters_interpolate_on_weight_ladder() -> None:
     ctx = DesignContext.bracketed_serif()
     stems = (70.0, 100.0, 140.0, 180.0)
-    ref_n = len(Controls.from_context(ctx.tuned(stem=stems[0])).build("V").solids[0].contours[0].segments)
+    ref_n = len(FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one("V").solids[0].contours[0].segments)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
-        g = controls.build("V")
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
+        g = controls.derive_one("V")
         assert len(g.solids[0].contours[0].segments) == ref_n
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
         font.add_char("V", g)
@@ -1191,7 +1191,7 @@ def test_bracketed_bowl_glyphs_inline_foot_extends_left_of_plain_stem() -> None:
 
 def test_bracketed_serif_lint_clean_on_full_supported() -> None:
     ctx = DesignContext.bracketed_serif()
-    report = lint_controls(Controls.from_context(ctx))
+    report = lint_controls(FormSources.from_context(ctx))
     assert not report.errors, report.errors
 
 
@@ -1203,7 +1203,7 @@ def test_serif_voice_meets_program_acceptance(factory) -> None:
     """Lint + identity + family gate + L3 + inlined stem serifs (no boolean)."""
     from typekernel.parts.serifs import apply_glyph_serifs
 
-    controls = Controls.from_context(factory())
+    controls = FormSources.from_context(factory())
     charset = controls.supported
     lint_report = lint_controls(controls)
     assert not lint_report.errors, lint_report.errors
@@ -1214,7 +1214,7 @@ def test_serif_voice_meets_program_acceptance(factory) -> None:
     assert nearest_voice_distance(controls) >= L3_VOICE_DISTANCE_THRESHOLD
     assert l3_voice_criteria_met(controls)
     for ch in charset:
-        glyph = controls.build(ch)
+        glyph = controls.derive_one(ch)
         assert composed_glyph_hash(glyph) == composed_glyph_hash(
             apply_glyph_serifs(glyph)
         )
@@ -1225,9 +1225,9 @@ def test_bracketed_n_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("n"))
+        font.add_chars(controls.derive("n"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1239,14 +1239,14 @@ def test_bracketed_n_masters_interpolate_on_weight_ladder() -> None:
 def test_bracketed_serif_masters_on_vf_stable_charset() -> None:
     """Bracketed voice: full supported charset on the four-master weight ladder."""
     ctx = DesignContext.bracketed_serif()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     charset = controls.supported
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        tuned = Controls.from_context(ctx.tuned(stem=stem))
+        tuned = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Bracket", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(tuned.build_all(charset))
+        font.add_chars(tuned.derive(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1260,9 +1260,9 @@ def test_slab_i_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("I"))
+        font.add_chars(controls.derive("I"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1276,9 +1276,9 @@ def test_slab_e_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("E"))
+        font.add_chars(controls.derive("E"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1294,9 +1294,9 @@ def test_slab_nhi_masters_interpolate_on_weight_ladder() -> None:
     charset = "nHI"
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all(charset))
+        font.add_chars(controls.derive(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1310,9 +1310,9 @@ def test_slab_l_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("L"))
+        font.add_chars(controls.derive("L"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1324,14 +1324,14 @@ def test_slab_l_masters_interpolate_on_weight_ladder() -> None:
 def test_slab_serif_masters_on_vf_stable_charset() -> None:
     """Slab voice: full supported charset on the four-master weight ladder."""
     ctx = DesignContext.slab_serif()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     charset = controls.supported
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        tuned = Controls.from_context(ctx.tuned(stem=stem))
+        tuned = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(tuned.build_all(charset))
+        font.add_chars(tuned.derive(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1341,23 +1341,23 @@ def test_slab_serif_masters_on_vf_stable_charset() -> None:
 
 
 def test_slab_opening_caps_change_c_and_g_outline() -> None:
-    sans = Controls.from_context(DesignContext.geometric_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
+    sans = FormSources.from_context(DesignContext.geometric_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
     for ch in ("c", "C", "G"):
-        assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
+        assert composed_glyph_hash(sans.derive_one(ch)) != composed_glyph_hash(slab.derive_one(ch))
 
 
 def test_slab_e_opening_changes_outline() -> None:
-    sans = Controls.from_context(DesignContext.geometric_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
-    assert composed_glyph_hash(sans.build("e")) != composed_glyph_hash(slab.build("e"))
+    sans = FormSources.from_context(DesignContext.geometric_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
+    assert composed_glyph_hash(sans.derive_one("e")) != composed_glyph_hash(slab.derive_one("e"))
 
 
 def test_slab_s_opening_changes_outline() -> None:
-    sans = Controls.from_context(DesignContext.geometric_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
+    sans = FormSources.from_context(DesignContext.geometric_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
     for ch in ("s", "S"):
-        assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
+        assert composed_glyph_hash(sans.derive_one(ch)) != composed_glyph_hash(slab.derive_one(ch))
 
 
 def test_slab_s_masters_interpolate_on_weight_ladder() -> None:
@@ -1365,11 +1365,11 @@ def test_slab_s_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     for ch in ("s", "S"):
         ref_n = len(
-            Controls.from_context(ctx.tuned(stem=stems[0])).build(ch).solids[0].contours[0].segments
+            FormSources.from_context(ctx.tuned(stem=stems[0])).derive_one(ch).solids[0].contours[0].segments
         )
         fonts = []
         for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-            g = Controls.from_context(ctx.tuned(stem=stem)).build(ch)
+            g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one(ch)
             assert len(g.solids[0].contours[0].segments) == ref_n
             font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
             font.add_char(ch, g)
@@ -1387,9 +1387,9 @@ def test_slab_cap_cg_masters_interpolate_on_weight_ladder() -> None:
     charset = "CG"
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all(charset))
+        font.add_chars(controls.derive(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1399,8 +1399,8 @@ def test_slab_cap_cg_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_slab_t_baked_foot_changes_outline() -> None:
-    sans = Controls.from_context(DesignContext.geometric_sans()).build("t")
-    slab = Controls.from_context(DesignContext.slab_serif()).build("t")
+    sans = FormSources.from_context(DesignContext.geometric_sans()).derive_one("t")
+    slab = FormSources.from_context(DesignContext.slab_serif()).derive_one("t")
     assert composed_glyph_hash(sans) != composed_glyph_hash(slab)
 
 
@@ -1409,9 +1409,9 @@ def test_slab_t_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("t"))
+        font.add_chars(controls.derive("t"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1421,10 +1421,10 @@ def test_slab_t_masters_interpolate_on_weight_ladder() -> None:
 
 
 def test_slab_j_and_q_baked_feet_change_outline() -> None:
-    sans = Controls.from_context(DesignContext.geometric_sans())
-    slab = Controls.from_context(DesignContext.slab_serif())
+    sans = FormSources.from_context(DesignContext.geometric_sans())
+    slab = FormSources.from_context(DesignContext.slab_serif())
     for ch in ("j", "Q"):
-        assert composed_glyph_hash(sans.build(ch)) != composed_glyph_hash(slab.build(ch))
+        assert composed_glyph_hash(sans.derive_one(ch)) != composed_glyph_hash(slab.derive_one(ch))
 
 
 def test_slab_cap_q_masters_interpolate_on_weight_ladder() -> None:
@@ -1432,9 +1432,9 @@ def test_slab_cap_q_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("Q"))
+        font.add_chars(controls.derive("Q"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1448,9 +1448,9 @@ def test_slab_j_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("j"))
+        font.add_chars(controls.derive("j"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1465,9 +1465,9 @@ def test_slab_gqjt_masters_interpolate_on_weight_ladder() -> None:
     charset = "GQjt"
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all(charset))
+        font.add_chars(controls.derive(charset))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1481,9 +1481,9 @@ def test_slab_cap_r_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("R"))
+        font.add_chars(controls.derive("R"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1497,9 +1497,9 @@ def test_slab_cap_b_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("B"))
+        font.add_chars(controls.derive("B"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1513,9 +1513,9 @@ def test_slab_cap_p_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("P"))
+        font.add_chars(controls.derive("P"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1529,9 +1529,9 @@ def test_slab_cap_d_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("D"))
+        font.add_chars(controls.derive("D"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1545,9 +1545,9 @@ def test_slab_cap_a_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("A"))
+        font.add_chars(controls.derive("A"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1561,9 +1561,9 @@ def test_slab_cap_w_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("W"))
+        font.add_chars(controls.derive("W"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1577,9 +1577,9 @@ def test_slab_cap_v_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("V"))
+        font.add_chars(controls.derive("V"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1593,9 +1593,9 @@ def test_slab_cap_u_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("U"))
+        font.add_chars(controls.derive("U"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1609,9 +1609,9 @@ def test_slab_cap_y_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("Y"))
+        font.add_chars(controls.derive("Y"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1625,9 +1625,9 @@ def test_slab_cap_x_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("X"))
+        font.add_chars(controls.derive("X"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1641,9 +1641,9 @@ def test_slab_cap_z_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("Z"))
+        font.add_chars(controls.derive("Z"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1657,9 +1657,9 @@ def test_slab_cap_k_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("K"))
+        font.add_chars(controls.derive("K"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1673,9 +1673,9 @@ def test_slab_cap_m_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("M"))
+        font.add_chars(controls.derive("M"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1689,9 +1689,9 @@ def test_slab_cap_n_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 100.0, 140.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 400.0, 600.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("N"))
+        font.add_chars(controls.derive("N"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1705,9 +1705,9 @@ def test_slab_cap_t_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("T"))
+        font.add_chars(controls.derive("T"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1721,9 +1721,9 @@ def test_slab_f_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("F"))
+        font.add_chars(controls.derive("F"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)
@@ -1738,9 +1738,9 @@ def test_slab_h_masters_interpolate_on_weight_ladder() -> None:
     stems = (70.0, 120.0, 180.0)
     fonts = []
     for stem, wght in zip(stems, (300.0, 500.0, 700.0), strict=True):
-        controls = Controls.from_context(ctx.tuned(stem=stem))
+        controls = FormSources.from_context(ctx.tuned(stem=stem))
         font = Font.from_context(ctx, "Slab", f"W{int(wght)}", weight_class=int(wght))
-        font.add_chars(controls.build_all("H"))
+        font.add_chars(controls.derive("H"))
         fonts.append(font)
     masters = [
         Master({"wght": wght}, font)

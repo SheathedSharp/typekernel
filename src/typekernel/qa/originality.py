@@ -11,7 +11,7 @@ from typekernel.geo.rounding import DEFAULT_NDIGITS, quantize
 from typekernel.geo.segment import LineSegment
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.lint import lint_controls
 
@@ -107,7 +107,7 @@ def normalized_shape_signature(glyph: ComposedGlyph, *, ndigits: int = DEFAULT_N
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _shared_charset(a: Controls, b: Controls, charset: str | None) -> str:
+def _shared_charset(a: FormSources, b: FormSources, charset: str | None) -> str:
     if charset is not None:
         return charset
     if a.supported == b.supported:
@@ -117,16 +117,16 @@ def _shared_charset(a: Controls, b: Controls, charset: str | None) -> str:
 
 
 def voice_distance(
-    a: Controls,
-    b: Controls,
+    a: FormSources,
+    b: FormSources,
     charset: str | None = None,
 ) -> VoiceDistance:
     """Share of glyphs that differ in topology or normalized shape."""
     wanted = _shared_charset(a, b, charset)
     if not wanted:
         return VoiceDistance(0.0, 0.0, 0.0)
-    ga = a.build_all(wanted)
-    gb = b.build_all(wanted)
+    ga = a.derive(wanted)
+    gb = b.derive(wanted)
     topo_diffs = 0
     shape_diffs = 0
     for ch in wanted:
@@ -143,13 +143,13 @@ def voice_distance(
     return VoiceDistance(topo_f, shape_f, (topo_diffs + shape_diffs) / n)
 
 
-def originality_report(controls: Controls, charset: str | None = None) -> OriginalityReport:
+def originality_report(controls: FormSources, charset: str | None = None) -> OriginalityReport:
     """Compare ``controls`` against every built-in preset; return the nearest."""
     by_preset: dict[str, VoiceDistance] = {}
     nearest_name = ""
     nearest = float("inf")
     for name, factory in BUILTIN_PRESET_FACTORIES.items():
-        ref = Controls.from_context(factory())
+        ref = FormSources.from_context(factory())
         dist = voice_distance(controls, ref, charset)
         by_preset[name] = dist
         if dist.combined < nearest:
@@ -159,7 +159,7 @@ def originality_report(controls: Controls, charset: str | None = None) -> Origin
 
 
 def topology_fraction_vs_nearest_presets(
-    controls: Controls,
+    controls: FormSources,
     charset: str | None = None,
 ) -> float:
     """Topology divergence from the closest built-in preset (or max if tied)."""
@@ -171,12 +171,12 @@ def topology_fraction_vs_nearest_presets(
     return max(vd.topology_fraction for vd in report.by_preset.values())
 
 
-def nearest_voice_distance(controls: Controls, charset: str | None = None) -> float:
+def nearest_voice_distance(controls: FormSources, charset: str | None = None) -> float:
     """Combined distance to the closest preset (used by agent trials / L3)."""
     return originality_report(controls, charset).nearest_distance
 
 
-def l3_voice_criteria_met(controls: Controls) -> bool:
+def l3_voice_criteria_met(controls: FormSources) -> bool:
     """L3 voice distance plus lint/identity gate (human review still required)."""
     if nearest_voice_distance(controls) < L3_VOICE_DISTANCE_THRESHOLD:
         return False

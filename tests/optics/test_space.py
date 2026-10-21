@@ -10,11 +10,11 @@ from typekernel.optics.space import (
     space_word_optical,
     suggest_sidebearings_optical,
 )
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def _zayju(ctx: DesignContext):
-    drawn = Controls.from_context(ctx).build_all("zayju")
+    drawn = FormSources.from_context(ctx).derive("zayju")
     return [drawn[ch] for ch in "zayju"]
 
 
@@ -73,7 +73,7 @@ def test_space_word_optical_evens_optical_gaps() -> None:
 
 def test_space_font_tabs_figures_and_sets_sidebearings() -> None:
     ctx = DesignContext.code_clear()
-    drawn = Controls.from_context(ctx).build_all("no012")
+    drawn = FormSources.from_context(ctx).derive("no012")
     spaced = space_font(drawn, ctx)
     assert spaced["n"].advance > drawn["n"].advance * 0.5
     assert spaced["0"].advance == spaced["1"].advance

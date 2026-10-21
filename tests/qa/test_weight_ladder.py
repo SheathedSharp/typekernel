@@ -6,7 +6,7 @@ import importlib.util
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.lint import lint_controls
 from typekernel.qa.trial_protocol import WEIGHT_LADDER_STEMS
@@ -36,7 +36,7 @@ _LADDER_STEMS = WEIGHT_LADDER_STEMS
 @pytest.mark.parametrize("stem", _LADDER_STEMS)
 def test_counter_pinch_charset_passes_r8(preset: str, stem: float) -> None:
     ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     if stem >= STEM_RELIEF_ONSET:
         controls = controls.with_stem_relief()
     report = lint_controls(controls, counter_min=True)
@@ -62,7 +62,7 @@ def test_angled_terminal_counter_pinch_charset_passes_r8(
 ) -> None:
     """TK-304: ``terminal_style=angled`` must not re-open R8 pinches on the ladder."""
     ctx = getattr(DesignContext, preset)().tuned(stem=stem, terminal_style="angled")
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     if stem >= STEM_RELIEF_ONSET:
         controls = controls.with_stem_relief()
     report = lint_controls(controls, counter_min=True)
@@ -91,7 +91,7 @@ def test_alt_terminal_counter_pinch_charset_passes_r8(
     ctx = getattr(DesignContext, preset)().tuned(
         stem=stem, terminal_style=terminal_style
     )
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     if stem >= STEM_RELIEF_ONSET:
         controls = controls.with_stem_relief()
     report = lint_controls(controls, counter_min=True)

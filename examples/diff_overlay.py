@@ -7,7 +7,7 @@ from pathlib import Path
 
 from _design_presets import PRESET_FACTORIES as _PRESETS
 
-from typekernel.parts import Controls
+from typekernel.parts import FormSources
 from typekernel.qa.sheet import diff_overlay, review_index
 
 
@@ -42,8 +42,8 @@ def main(argv: list[str] | None = None) -> int:
         help="also write index.json beside the PNG",
     )
     args = parser.parse_args(argv)
-    trial = Controls.from_context(_PRESETS[args.trial_preset]())
-    baseline = Controls.from_context(_PRESETS[args.baseline_preset]())
+    trial = FormSources.from_context(_PRESETS[args.trial_preset]())
+    baseline = FormSources.from_context(_PRESETS[args.baseline_preset]())
     path = diff_overlay(trial, baseline, args.out, chars=args.chars)
     print(path)
     if args.index:

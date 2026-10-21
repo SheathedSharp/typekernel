@@ -1,7 +1,7 @@
 # Recipes (parts only — no aggregate APIs)
 
 All recipes assume Usage A: compose → `Font` → space → compile → proof.
-Do **not** reach for `Controls.build_all` / `DesignSequence` / `unlock_*` here.
+Do **not** reach for deleted `Controls` / `build_all` / `DesignSequence` / `unlock_*` here.
 
 ## Fatten (heavier master)
 
@@ -45,7 +45,7 @@ Presets `slab_serif()` / `bracketed_serif()` only seed metrics + `Style.serif`; 
 
 ```python
 from typekernel.parts.italic import italic_design
-from typekernel.parts import DesignContext, Controls  # Controls only if calling italic_design helper
+from typekernel.parts import DesignContext, FormSources  # FormSources only if calling italic_design helper
 
 # Prefer: compose italic topology yourself, or:
 # italic_design(regular_controls_or_context) → italic sheet with construct slant + branching n/h/...

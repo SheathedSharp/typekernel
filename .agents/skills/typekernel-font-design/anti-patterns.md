@@ -22,7 +22,7 @@ Tweaking floats that do not change the glyphs you ship (e.g. unused `aperture` w
 
 ## Aggregate factory as design
 
-`Controls.build_all`, ungated charset dumps, `DesignSequence` / `unlock_*` as the *only* legal path, or copying `examples/_legacy/agent_*` as the product.
+deleted `Controls.build_all`, ungated charset dumps, `DesignSequence` / `unlock_*` as the *only* legal path, or copying `examples/_legacy/agent_*` as the product.
 
 **Do instead:** Usage A — compose parts in your own script.
 

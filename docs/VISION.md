@@ -35,8 +35,8 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 **Geo-kernel**, **optical semantics**, **parts → Font** composition,
 **compile bridge** (static + variable OTF/TTF/WOFF2, UFO round-trip), and
-**qa.proof** specimen helpers are in the tree. Aggregate `Controls` / `DesignSequence`
-pipelines are legacy (see `examples/_legacy/`), not the product happy path.
+**qa.proof** specimen helpers are in the tree. Usage B aggregate pipelines (`Controls` / `DesignSequence` / `unlock_*` / `build_all`) were removed. Agents compose parts (Usage A); optional `FormSources.derive` is stock sugar only.
+
 **Italic**: `italic_design` construct slant + branching letters; do not ship mechanical
 oblique as Italic. OpenType `case` / `liga` / `frac` / `ordn` and width/`opsz` examples
 are in-tree. See [dev-standards.md](dev-standards.md) and `approvals/*.json`.

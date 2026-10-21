@@ -7,9 +7,9 @@ holes with pathops, then pack sidebearings from the shared
 
 Boolean / heal policy (library-wide)
 ------------------------------------
-1. **Controls stock Latin (``Controls.build`` / ``build_all``)** — prefer
+1. **FormSources stock Latin (``FormSources.derive`` / ``derive``)** — prefer
    single-contour, interpolation-safe constructions. Do **not** auto-heal or
-   auto-union on the Controls path; VF masters need stable point counts.
+   auto-union on the FormSources path; VF masters need stable point counts.
 2. **Custom / skeleton / multi-part assemble** — call
    :meth:`GlyphAssembler.union_solids`, :meth:`GlyphAssembler.subtract_holes`,
    and/or :meth:`GlyphAssembler.heal_self_intersections` **explicitly**. Heal

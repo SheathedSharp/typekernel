@@ -7,7 +7,7 @@ import pytest
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import Controls, DesignContext, h_cap_metrics
+from typekernel.parts import DesignContext, FormSources, h_cap_metrics
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def ctx() -> DesignContext:
 
 @pytest.fixture
 def caps(ctx: DesignContext):
-    return Controls.from_context(ctx).build_all("PRB")
+    return FormSources.from_context(ctx).derive("PRB")
 
 
 @pytest.mark.parametrize(("ch", "counters"), [("P", 1), ("R", 1), ("B", 2)])

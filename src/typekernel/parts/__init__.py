@@ -10,9 +10,10 @@ Boolean union / difference of overlapping solids needs the optional extra::
 
 Coding agents (Usage A): compose :mod:`typekernel.parts.primitives` and letter
 builders, then ``Font.add_chars`` + agent-chosen spacing (see
-``.agents/skills/typekernel-font-design/SKILL.md``). ``Controls`` remains for
-legacy examples/tests only — not the documented happy path. Legacy
-``parts.latin`` / ``parts.skeleton_recipes`` are not re-exported here.
+``.agents/skills/typekernel-font-design/SKILL.md``). Optional
+:class:`~typekernel.parts.family.FormSources` / ``RELATED_FORMS`` sugar is not
+the documented happy path. Legacy ``parts.latin`` / ``parts.skeleton_recipes``
+are not re-exported here.
 """
 
 from __future__ import annotations
@@ -105,7 +106,7 @@ from typekernel.parts.diagonals import (
     y_from_n,
     z_from_n,
 )
-from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS, Controls
+from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS, FormSources
 from typekernel.parts.figures import tabular
 from typekernel.parts.metrics import (
     ClassKernPair,
@@ -197,12 +198,12 @@ __all__ = [
     "ClassKernPair",
     "ClassKernTable",
     "ComposedGlyph",
-    "Controls",
     "D_from_H",
     "DesignContext",
     "E_from_H",
     "EndTreatment",
     "F_from_H",
+    "FormSources",
     "G_from_O",
     "GlyphAssembler",
     "HMetrics",

@@ -15,13 +15,13 @@ from fontTools.varLib.instancer import instantiateVariableFont
 
 from typekernel.compile import build_variable_font, write_masters_designspace
 from typekernel.font import Font, Master
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def _master(stem: float, style: str, wght: float) -> Master:
     ctx = DesignContext.code_clear()
     font = Font.from_context(ctx, "Var Sans", style, weight_class=int(wght))
-    font.add_chars(Controls.from_context(ctx.tuned(stem=stem)).build_all())
+    font.add_chars(FormSources.from_context(ctx.tuned(stem=stem)).derive())
     return Master({"wght": wght}, font)
 
 

@@ -6,13 +6,13 @@ import pytest
 
 from typekernel.font import Font, Glyph, Master, axis_ranges, check_masters
 from typekernel.geo.outline import Outline
-from typekernel.parts import ClassKernTable, Controls, DesignContext, KernClass
+from typekernel.parts import ClassKernTable, DesignContext, FormSources, KernClass
 
 
 def _font(stem: float, style: str, family: str = "M Sans") -> Font:
     ctx = DesignContext.code_clear()
     f = Font.from_context(ctx, family, style)
-    f.add_chars(Controls.from_context(ctx.tuned(stem=stem)).build_all("nohb"))
+    f.add_chars(FormSources.from_context(ctx.tuned(stem=stem)).derive("nohb"))
     return f
 
 

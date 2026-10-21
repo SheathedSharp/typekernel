@@ -1,15 +1,16 @@
-"""Proof export (OTF + PNG) from agent-authored :class:`~typekernel.parts.Controls`.
+"""Proof export (OTF + PNG) from agent-authored glyphs / FormSources sugar.
 
-This module does **not** choose proportions or draw letters. Pass ``Controls`` you
-built via ``DesignContext``, ``tuned_*``, ``with_glyph``, etc.
+This module does **not** choose proportions or draw letters. Pass ``FormSources``
+you built via ``DesignContext``, ``tuned_*``, ``with_glyph``, etc., or compose
+glyphs yourself (Usage A) and call :func:`~typekernel.compile.compose_font`.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
-from typekernel.parts import Controls
+from typekernel.compile import FamilyBuildOptions, build_font, compose_font
+from typekernel.parts import FormSources
 from typekernel.qa.proof import proof_charset_grid, proof_context
 
 __all__ = [
@@ -30,29 +31,23 @@ def charset_for_preview(focus: str, sentence: str) -> str:
 
 
 def build_glyph_preview(
-    controls: Controls,
+    controls: FormSources,
     *,
     family: str,
     focus: str = DEFAULT_FOCUS_GLYPHS,
     sentence: str,
     out_dir: str | Path = "out",
-    require_body_unlock: bool = True,
 ) -> dict[str, Path]:
-    """Compile *controls* and write grid + sentence PNGs; return paths.
-
-    Requires DesignSequence unlock for subsets in the preview charset (body /
-    caps / digits / punct) by default — same as compose. Pass
-    ``require_body_unlock=False`` only for documented stock / specimen previews.
-    """
+    """Compile *controls* and write grid + sentence PNGs; return paths."""
     out_dir = Path(out_dir)
     charset = charset_for_preview(focus, sentence)
     liga = all(ch in charset for ch in "fil")
-    opts = FamilyBuildOptions(chars=charset, liga=liga)
-    font = compose_font_from_controls(
-        controls,
+    opts = FamilyBuildOptions(liga=liga)
+    font = compose_font(
+        controls.derive(charset),
+        controls.context,
         family,
         options=opts,
-        require_body_unlock=require_body_unlock,
     )
     result = build_font(font, out_dir, formats=("otf",))
     otf = Path(result.binaries["otf"])

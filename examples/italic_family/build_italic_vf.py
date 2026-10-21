@@ -13,7 +13,7 @@ from typekernel.compile import build_font, build_variable_font
 from typekernel.font import Font, Master
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    Controls,
+    FormSources,
     DesignContext,
     auto_class_kern,
     auto_side_kern_classes,
@@ -32,14 +32,14 @@ VF_LADDER_TEXT = (
 
 
 def master_font(
-    controls: Controls,
+    controls: FormSources,
     style: str,
     weight_class: int,
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(spaced, kern_classes, target=rhythm)
@@ -62,14 +62,14 @@ def main() -> None:
     args = parser.parse_args()
     out_dir = args.out
     base = DesignContext.code_clear()
-    reg, ital = vf_italic_pair(Controls.from_context(base))
+    reg, ital = vf_italic_pair(FormSources.from_context(base))
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    ref_drawn = reg.build_all()
+    ref_drawn = reg.derive()
     ref_rhythm = rhythm_from_control_glyphs(ref_drawn["n"], ref_drawn["o"])
     ref_spaced = space_font(ref_drawn, base, rhythm=ref_rhythm)
     kern_classes = auto_side_kern_classes(ref_spaced, base)
     bold, bold_ital = vf_italic_pair(
-        Controls.from_context(base.tuned(stem=120.0)).with_stem_relief()
+        FormSources.from_context(base.tuned(stem=120.0)).with_stem_relief()
     )
     masters = [
         Master({"wght": 400, "ital": 0}, master_font(reg, "Regular", 400, kern_classes)),

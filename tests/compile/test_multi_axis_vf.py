@@ -13,16 +13,16 @@ from fontTools.ttLib import TTFont
 
 from typekernel.compile import build_variable_font
 from typekernel.font import Font, Master
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def _font(stem: float, wdth: float, style: str) -> Font:
     scale = wdth / 100.0
     ctx = DesignContext.code_clear().tuned(stem=stem)
-    sheet = Controls.from_context(ctx).with_stem_relief()
+    sheet = FormSources.from_context(ctx).with_stem_relief()
     if scale != 1.0:
         sheet = sheet.tuned_n(counter=sheet.n.counter * scale).tuned_o(rx=sheet.o.rx * scale)
-    drawn = sheet.build_all("no")
+    drawn = sheet.derive("no")
     font = Font.from_context(ctx, "Two Axis", style)
     font.add_chars(drawn)
     return font

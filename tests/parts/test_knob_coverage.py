@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def _shape_changed(base: dict[str, object], other: dict[str, object]) -> list[str]:
@@ -42,7 +42,7 @@ def _shape_changed(base: dict[str, object], other: dict[str, object]) -> list[st
 
 
 def _build(ctx: DesignContext) -> dict[str, object]:
-    return Controls.from_context(ctx).build_all()
+    return FormSources.from_context(ctx).derive()
 
 
 def test_contrast_moves_round_letters() -> None:
@@ -107,8 +107,8 @@ def test_stress_moves_round_stroke_counters() -> None:
     """TK-302: stress rotates the thin point on bowl / ring glyphs."""
     ctx = DesignContext.geometric_sans().tuned(contrast=0.55, stem=90.0)
     probe = "ocCO0s235689"
-    a = {ch: Controls.from_context(ctx).build(ch) for ch in probe}
-    b = {ch: Controls.from_context(ctx.tuned(stress=25.0)).build(ch) for ch in probe}
+    a = {ch: FormSources.from_context(ctx).derive_one(ch) for ch in probe}
+    b = {ch: FormSources.from_context(ctx.tuned(stress=25.0)).derive_one(ch) for ch in probe}
     changed = set(_shape_changed(a, b))
     assert "o" in changed
     assert "s" in changed

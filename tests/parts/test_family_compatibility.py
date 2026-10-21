@@ -6,7 +6,7 @@ import pytest
 
 from typekernel.axes.interpolatable import check_interpolatable
 from typekernel.font import Glyph
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 PRESETS = (
     "geometric_sans",
@@ -23,7 +23,7 @@ PRESETS = (
 def test_controls_family_interpolates_across_stems(preset: str) -> None:
     base = getattr(DesignContext, preset)()
     families = [
-        Controls.from_context(base.tuned(stem=s)).build_all() for s in (30.0, base.stem, 220.0)
+        FormSources.from_context(base.tuned(stem=s)).derive() for s in (30.0, base.stem, 220.0)
     ]
     problems: dict[str, list[str]] = {}
     for ch in families[0]:
@@ -36,8 +36,8 @@ def test_controls_family_interpolates_across_stems(preset: str) -> None:
 
 def test_tuned_counter_keeps_topology() -> None:
     ctx = DesignContext.code_clear()
-    narrow = Controls.from_context(ctx).tuned_n(counter=200.0).tuned_o(rx=230.0).build_all()
-    wide = Controls.from_context(ctx).tuned_n(counter=360.0).tuned_o(rx=330.0).build_all()
+    narrow = FormSources.from_context(ctx).tuned_n(counter=200.0).tuned_o(rx=230.0).derive()
+    wide = FormSources.from_context(ctx).tuned_n(counter=360.0).tuned_o(rx=330.0).derive()
     for ch in narrow:
         a = Glyph.from_composed(ch, narrow[ch]).outline
         b = Glyph.from_composed(ch, wide[ch]).outline

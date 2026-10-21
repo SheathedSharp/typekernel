@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 _GOLDEN = Path(__file__).resolve().parents[1] / "golden" / "outline_hashes.json"
@@ -32,8 +32,8 @@ def test_outline_hashes_match_golden() -> None:
     golden = _load_golden()
     assert set(golden) == set(_PRESET_FACTORIES)
     for preset_name, factory in _PRESET_FACTORIES.items():
-        controls = Controls.from_context(factory())
-        glyphs = controls.build_all()
+        controls = FormSources.from_context(factory())
+        glyphs = controls.derive()
         expected = golden[preset_name]
         assert set(expected) == set(controls.supported)
         mismatches = [

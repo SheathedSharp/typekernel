@@ -9,8 +9,8 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
-    Controls,
     DesignContext,
+    FormSources,
     build_n,
     build_o,
     g_from_o,
@@ -73,12 +73,12 @@ def test_g_hook_outer_segment_count_fixed_across_stems() -> None:
 def test_g_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
     charset = "g"
-    light = Controls.from_context(ctx.tuned(stem=30.0))
-    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    light = FormSources.from_context(ctx.tuned(stem=30.0))
+    bold = FormSources.from_context(ctx.tuned(stem=220.0))
     reg_font = Font.from_context(ctx, "G Sans", "Regular", weight_class=400)
-    reg_font.add_chars(light.build_all(charset))
+    reg_font.add_chars(light.derive(charset))
     bold_font = Font.from_context(ctx, "G Sans", "Bold", weight_class=700)
-    bold_font.add_chars(bold.build_all(charset))
+    bold_font.add_chars(bold.derive(charset))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
 
@@ -105,12 +105,12 @@ def test_s_outer_segment_count_fixed_across_stems() -> None:
 
 def test_s_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
-    light = Controls.from_context(ctx.tuned(stem=30.0))
-    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    light = FormSources.from_context(ctx.tuned(stem=30.0))
+    bold = FormSources.from_context(ctx.tuned(stem=220.0))
     reg_font = Font.from_context(ctx, "S Sans", "Regular", weight_class=400)
-    reg_font.add_chars(light.build_all("s"))
+    reg_font.add_chars(light.derive("s"))
     bold_font = Font.from_context(ctx, "S Sans", "Bold", weight_class=700)
-    bold_font.add_chars(bold.build_all("s"))
+    bold_font.add_chars(bold.derive("s"))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
 

@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.identity import check_identity_controls
@@ -115,15 +115,15 @@ class TrialSnapshot:
         )
 
 
-def voice_distance(controls: Controls) -> float:
+def voice_distance(controls: FormSources) -> float:
     """Distance to the nearest built-in preset (see ``qa.originality``)."""
     return nearest_voice_distance(controls)
 
 
-def controls_at_ladder_stem(template: Controls, stem: float) -> Controls:
+def controls_at_ladder_stem(template: FormSources, stem: float) -> FormSources:
     """Rebuild ``template`` at another stem (keeps ``Style``, specs, overrides)."""
     ctx = template.context.tuned(stem=stem)
-    sheet = Controls.from_context(ctx, style=template.style)
+    sheet = FormSources.from_context(ctx, style=template.style)
     sheet = replace(
         sheet,
         glyph_specs=dict(template.glyph_specs),
@@ -134,12 +134,12 @@ def controls_at_ladder_stem(template: Controls, stem: float) -> Controls:
     return sheet
 
 
-def weight_ladder_r8_failures(controls: Controls | DesignContext) -> int:
+def weight_ladder_r8_failures(controls: FormSources | DesignContext) -> int:
     """Count ladder stems where R8 fails on the counter-pinch charset."""
     template = (
         controls
-        if isinstance(controls, Controls)
-        else Controls.from_context(controls)
+        if isinstance(controls, FormSources)
+        else FormSources.from_context(controls)
     )
     failures = 0
     for stem in WEIGHT_LADDER_STEMS:
@@ -150,7 +150,7 @@ def weight_ladder_r8_failures(controls: Controls | DesignContext) -> int:
     return failures
 
 
-def _api_tags(controls: Controls, extra: Sequence[str] = ()) -> tuple[str, ...]:
+def _api_tags(controls: FormSources, extra: Sequence[str] = ()) -> tuple[str, ...]:
     tags: list[str] = list(extra)
     if controls.glyph_specs:
         tags.append("tuned_glyph")
@@ -161,7 +161,7 @@ def _api_tags(controls: Controls, extra: Sequence[str] = ()) -> tuple[str, ...]:
     return tuple(dict.fromkeys(tags))
 
 
-def _infer_cheating_flags(controls: Controls) -> tuple[str, ...]:
+def _infer_cheating_flags(controls: FormSources) -> tuple[str, ...]:
     """TK-307/502: high voice_distance with no topology change (e.g. stem-only scale)."""
     voice_distance_val = voice_distance(controls)
     topology = topology_fraction_vs_nearest_presets(controls)
@@ -174,7 +174,7 @@ def _infer_cheating_flags(controls: Controls) -> tuple[str, ...]:
 
 
 def snapshot_trial(
-    controls: Controls,
+    controls: FormSources,
     *,
     brief: TrialBrief,
     round: int = 1,

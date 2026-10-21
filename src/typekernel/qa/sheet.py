@@ -10,7 +10,7 @@ from typing import Any
 from typekernel.geo.outline import Outline
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 
 __all__ = [
     "contact_sheet",
@@ -57,7 +57,7 @@ def _zone_lines(ctx: DesignContext, cell_h: int, margin: int) -> list[tuple[int,
 
 
 def contact_sheet(
-    controls: Controls,
+    controls: FormSources,
     out: str | Path,
     *,
     chars: str | None = None,
@@ -72,7 +72,7 @@ def contact_sheet(
     Image, ImageDraw, ImageFont = _require_pil()
     charset = chars if chars is not None else controls.supported
     ctx = controls.context
-    drawn = controls.build_all(charset)
+    drawn = controls.derive(charset)
     label_h = 14
     row_h = cell + label_h
     cols = max(1, max_width // cell)
@@ -115,7 +115,7 @@ def weight_ladder_sheet(
     size: int = 48,
 ) -> Path:
     """Same snippet at increasing stem values (counter collapse check)."""
-    from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
+    from typekernel.compile import FamilyBuildOptions, build_font, compose_font
 
     Image, ImageDraw, ImageFont = _require_pil()
     out_path = Path(out)
@@ -131,19 +131,17 @@ def weight_ladder_sheet(
 
     for row, stem in enumerate(stems):
         ctx = preset.tuned(stem=float(stem))
-        controls = Controls.from_context(ctx)
+        controls = FormSources.from_context(ctx)
         from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 
         if stem >= STEM_RELIEF_ONSET:
             controls = controls.with_stem_relief()
-        # Specimen ladder: opt out of DesignSequence unlock — heavy masters can
-        # refuse body/caps while still being useful counter-collapse proof.
-        # Agent compose / preview / export keep unlock on by default.
-        built = compose_font_from_controls(
-            controls,
+        ladder_chars = "".join(dict.fromkeys(chars + "no"))
+        built = compose_font(
+            controls.derive(ladder_chars),
+            controls.context,
             "Ladder",
-            options=FamilyBuildOptions(chars=chars, liga=False),
-            require_body_unlock=False,
+            options=FamilyBuildOptions(liga=False),
         )
         result = build_font(built, tmp_dir, formats=("otf",))
         otf = result.binaries["otf"]
@@ -158,8 +156,8 @@ def weight_ladder_sheet(
 
 
 def diff_overlay(
-    trial: Controls,
-    baseline: Controls,
+    trial: FormSources,
+    baseline: FormSources,
     out: str | Path,
     *,
     chars: str = "mutj&#!$",
@@ -171,8 +169,8 @@ def diff_overlay(
     Image, _, _ = _require_pil()
     out_path = Path(out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    trial_g = trial.build_all(chars)
-    base_g = baseline.build_all(chars)
+    trial_g = trial.derive(chars)
+    base_g = baseline.derive(chars)
     cell = size + 16
     cols = len(chars)
     sheet = Image.new("RGBA", (cols * cell, cell), (255, 255, 255, 255))

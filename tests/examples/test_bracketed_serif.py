@@ -36,7 +36,7 @@ def test_bracketed_voice_masters_interpolate_on_vf_ladder() -> None:
     for stem, wght, relief in ladder:
         controls = design._voice(stem, relief=relief)
         font = Font.from_context(ctx, "Bracket", f"W{wght}", weight_class=wght)
-        font.add_chars(controls.build_all())
+        font.add_chars(controls.derive())
         fonts.append(font)
     masters = [Master({"wght": float(w)}, f) for (_, w, _), f in zip(ladder, fonts, strict=True)]
     assert check_masters(masters) == []

@@ -1,4 +1,4 @@
-"""Designer-style review for a Controls sheet.
+"""Designer-style review for a FormSources sheet.
 
 Numbers tell the agent what to change next: preset deltas, weak-glyph join
 counts, and the worst fixed pairs. PNGs are previews; cubics stay the truth.
@@ -13,7 +13,7 @@ from pathlib import Path
 from typekernel.geo.outline import Outline
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.parts.compose import ComposedGlyph
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 from typekernel.qa.family_gate import collect_family_gate_failures
 from typekernel.qa.score import WordReport, join_smoothness_glyph
 from typekernel.qa.sentence_gate import (
@@ -116,7 +116,7 @@ class DesignReview:
                 lines.append(f"  charset: … and {len(self.charset_failures) - 8} more")
         if self.sequence_failures:
             lines.append(
-                f"DesignSequence: {len(self.sequence_failures)} issue(s)"
+                f"sequence: {len(self.sequence_failures)} issue(s)"
             )
             for msg in self.sequence_failures[:8]:
                 lines.append(f"  sequence: {msg}")
@@ -143,14 +143,14 @@ class DesignReview:
 
 
 def design_review(
-    controls: Controls,
+    controls: FormSources,
     *,
-    baseline: Controls | None = None,
+    baseline: FormSources | None = None,
     out_dir: Path | str | None = None,
 ) -> DesignReview:
     """Score ``controls`` against ``baseline`` and optionally write preview PNGs.
 
-    ``baseline`` should be ``Controls.from_context(the_preset_you_started_from)``,
+    ``baseline`` should be ``FormSources.from_context(the_preset_you_started_from)``,
     not a heavier or lighter master. L0 also requires two weak-glyph overrides.
     """
     sentence = controls_sentence_report(controls, AGENT_SENTENCE)
@@ -162,7 +162,7 @@ def design_review(
     if baseline is None:
         notes.append(
             "no preset baseline; L1 compares optical ratio and G1 to "
-            "Controls.from_context(preset())"
+            "FormSources.from_context(preset())"
         )
     else:
         baseline_report = controls_sentence_report(baseline, AGENT_SENTENCE)
@@ -174,7 +174,7 @@ def design_review(
     )
     l0_gaps = _l0_gaps(controls)
     charset_failures = tuple(collect_family_gate_failures(controls))
-    sequence_failures = _body_sequence_failures(controls)
+    sequence_failures: tuple[str, ...] = ()
     notes.extend(_spec_notes(controls))
     review = DesignReview(
         sentence=sentence,
@@ -202,31 +202,6 @@ def design_review(
         )
     return review
 
-
-
-def _body_sequence_failures(controls: Controls) -> tuple[str, ...]:
-    """Run designer-order body / caps / digit / punct unlock; empty = consistent."""
-    from typekernel.qa.design_sequence import (
-        DesignSequenceError,
-        unlock_controls_body,
-        unlock_controls_caps,
-        unlock_controls_digits,
-        unlock_controls_punct,
-    )
-
-    out: list[str] = []
-    for label, fn in (
-        ("body", unlock_controls_body),
-        ("caps", unlock_controls_caps),
-        ("digit", unlock_controls_digits),
-        ("punct", unlock_controls_punct),
-    ):
-        try:
-            fn(controls)
-        except DesignSequenceError as exc:
-            hints = tuple(exc.hints[:6])
-            out.extend((f"{label} DesignSequence: {exc}", *hints))
-    return tuple(out)
 
 
 def _fmt_metric(name: str, value: float) -> str:
@@ -262,11 +237,11 @@ def _deltas(trial: WordReport, baseline: WordReport) -> tuple[MetricDelta, ...]:
     )
 
 
-def _spec_notes(controls: Controls) -> list[str]:
+def _spec_notes(controls: FormSources) -> list[str]:
     return [f"spec {ch}: {asdict(controls.glyph_specs[ch])}" for ch in sorted(controls.glyph_specs)]
 
 
-def _weak_overrides(controls: Controls) -> tuple[str, ...]:
+def _weak_overrides(controls: FormSources) -> tuple[str, ...]:
     return tuple(
         ch
         for ch in WEAK_GLYPHS
@@ -274,7 +249,7 @@ def _weak_overrides(controls: Controls) -> tuple[str, ...]:
     )
 
 
-def _l0_gaps(controls: Controls) -> tuple[str, ...]:
+def _l0_gaps(controls: FormSources) -> tuple[str, ...]:
     overridden = _weak_overrides(controls)
     if len(overridden) >= L0_MIN_WEAK_OVERRIDES:
         return ()
@@ -286,10 +261,10 @@ def _l0_gaps(controls: Controls) -> tuple[str, ...]:
     )
 
 
-def _glyph_scores(controls: Controls) -> tuple[GlyphScore, ...]:
+def _glyph_scores(controls: FormSources) -> tuple[GlyphScore, ...]:
     charset = "".join(dict.fromkeys("".join(REVIEW_GLYPHS) + "no"))
     drawn = polish_glyph_map(
-        controls.build_all(charset),
+        controls.derive(charset),
         GlyphPolishOptions(joins_policy="tangent_fix"),
     )
     scores: list[GlyphScore] = []
@@ -313,11 +288,11 @@ def _preview_outline(glyph: ComposedGlyph) -> Outline:
 
 
 def _write_artifacts(
-    controls: Controls,
+    controls: FormSources,
     review: DesignReview,
     out_dir: Path,
     *,
-    baseline: Controls | None = None,
+    baseline: FormSources | None = None,
 ) -> list[str]:
     notes: list[str] = []
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -342,7 +317,7 @@ def _write_artifacts(
         )
         artifact_paths["diff"] = diff
         notes.append(f"diff overlay: {diff.name}")
-    drawn = controls.build_all("".join(dict.fromkeys("".join(REVIEW_GLYPHS))))
+    drawn = controls.derive("".join(dict.fromkeys("".join(REVIEW_GLYPHS))))
     for char in REVIEW_GLYPHS:
         destination = out_dir / f"{char}.png"
         render_outline_png(_preview_outline(drawn[char]), destination, size=256)

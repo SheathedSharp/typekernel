@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1638 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1554 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -86,7 +86,7 @@
 | 7 个 preset × 98 个字形，**线段类型序列 98/98 完全相同**；换 preset 只是同一骨架的缩放与变粗 | 【实测】 |
 | `DesignContext` 只有 14 个字段；决定字形性格的东西（笔角、端点、衬线、连接方式）硬编码在配方里。`control/caps/figures/punctuation/primitives/diagonals/skeleton_recipes/terminals` 8 个文件里约 1000 个小数字面量，agent 够不到 | 【代码】粗略计数 |
 | agent 想独特只有两条路：拧浮点（太浅），或像 `examples/zayju_letter/design_n.py` 那样手写整个字（183 行画一个 `n`，太深）。**缺中间层** | 【代码】 |
-| `Controls` 是围绕 `n/o` 与 `H/O` 两对控制字的星形派生；`Derivation = Callable[[n, o, ctx], ComposedGlyph]` | 【代码】`parts/family.py` |
+| `FormSources` 是围绕 `n/o` 与 `H/O` 两对控制字的星形派生；`Derivation = Callable[[n, o, ctx], ComposedGlyph]` | 【代码】`parts/family.py` |
 | 不少亲缘字是**几何变换**得到的：`u` = `n` 旋转 180°，`j` = `r` 旋转，`t` = `f` 翻转。人类设计师只把它当起点 | 【代码】`parts/control.py` |
 
 #### 缺口 B（地板）：默认字形底座不够好，agent 是在烂底子上微调
@@ -118,7 +118,7 @@
 3. **`italic_controls` 不是斜体** 【实测+代码】
    实现是把 `n` 字腔与 `o` 碗宽放大 3.5%、`contrast` 降 4%（`parts/italic.py`）。母版**没有任何倾斜**，渲染出来是略宽的直立体。但文档把它当作「斜体是另一套母版」的实现推荐给 agent（`AGENT_GOAL.md` 第 16、41 行，SKILL 第 170 行「Italic axis: `italic_controls(regular_sheet)` per italic master」）。`AGENT_GOAL.md` 第 93 行同时承认「真斜体母版仍未完成」，所以文档自相矛盾，agent 照做会得到一个直立的「斜体」，与项目红线「Oblique ≠ Italic」的精神冲突。
 4. **「字重 delta」只是关于 `stem` 的线性启发式**（`parts/weight_relief.py`），只调 `n/o` 的字腔与碗宽；`examples/_legacy/agent_family` 里 Light/Bold 与 Regular 的差别就是一个 `stem` 数字加 `with_stem_relief()`。【代码】
-5. **`skeleton`/pen 路径**：折线 `Centerline` 仍是默认；TK-308 spike 增加 `CubicCenterline` / `Stroke.beziers` + 单段偏移 cubic 拟合，**未**替代 `Controls` 主路径；`skeleton_recipes.skel_*` 仍委托 `Controls`。【代码】
+5. **`skeleton`/pen 路径**：折线 `Centerline` 仍是默认；TK-308 spike 增加 `CubicCenterline` / `Stroke.beziers` + 单段偏移 cubic 拟合，**未**替代 `FormSources` 主路径；`skeleton_recipes.skel_*` 仍委托 `FormSources`。【代码】
 
 ### 2.6 对我早先汇报的三处更正
 
@@ -320,7 +320,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``five_from_O`` 按 ``DesignContext.stem`` 加宽下碗、略收环笔画与开口；极轻（``stem<44``）/极黑（``stem≥199``）再收 ``stroke_scale``；``test_five_stem_relief_opens_bowl_counter_midweights`` 覆盖七 preset × ``30…200``；golden ``5`` 五 preset。
 - **本轮（部分）**：``K_from_H`` 阶梯加宽与 junction 抬高（见 TK-207 ``K``）；golden ``K`` 更新。
 - **本轮（部分）**：``SSpec.top_scale`` 默认与 ``s_from_o`` 对齐（``tuned_glyph("s")`` 无参不再放宽上环）；``test_s_tuned_glyph_defaults_match_stock``。
-- **本轮（部分）**：``Controls.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
+- **本轮（部分）**：``FormSources.build_all`` 仅把 ``glyph_overrides`` 并入对应表（小写不进 cap/figure 轮），修复 ``tuned_glyph("s")`` 被 cap ``H``/``O`` 二次覆盖。
 - **本轮（部分）**：``human_review_bundle`` 写出 ``appendix_b_s_opening_humanist.png``（``--only appendix-b`` / ``all``）；清单含 B-15 程序钩子与 golden 刷新指针；``test_human_review_bundle_appendix_b_only``。
 - **本轮（部分）**：``--only appendix-b`` 另写 ``appendix_b_three_g_humanist.png``（B-13/B-14）；清单与 ``agent-recipes`` 对齐。
 - **本轮（部分）**：附录 B 表与 §8 人审说明对齐 ``--only appendix-b``；``test_section8_plan_documents_program_vs_human_exit`` 固化。
@@ -370,7 +370,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-101、TK-104、TK-204、TK-205。
 
 #### TK-208 扩展拉丁默认策略　〔S，可选〕
-- **决策（2026-10-16）**：`ç` `é` `ñ` 等 **预组合重音**与轮廓字母 `æøÆØ` **均不进** ``Controls.supported``；启用 ``FamilyBuildOptions.extended_latin``（非空）时 charset 追加轮廓字母，并由 ``add_composite_latin`` 注册整张 ``COMPOSITE_LATIN`` 表（与 ``first_font`` 示例一致）。
+- **决策（2026-10-16）**：`ç` `é` `ñ` 等 **预组合重音**与轮廓字母 `æøÆØ` **均不进** ``FormSources.supported``；启用 ``FamilyBuildOptions.extended_latin``（非空）时 charset 追加轮廓字母，并由 ``add_composite_latin`` 注册整张 ``COMPOSITE_LATIN`` 表（与 ``first_font`` 示例一致）。
 - **本轮**：``ø``/``Ø`` 斜线第二 solid 经 ``_ccw`` 修正 R1；``qa/composite.composed_glyph_from_font`` + ``test_extended_latin_policy``（九 preset 轮廓 lint + 烘焙 composite lint）。
 - **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_extended_latin_policy.py``；``test_section8_run_program_exit_includes_extended_latin_policy``。
 - 无论是否进默认集，composite 字形都必须过 lint（重音碰撞）；烘焙后逐字 ``lint_glyph`` 零 error。
@@ -401,9 +401,9 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **验收**：改变 `stress` 后，最薄点位置按角度移动（探针测试）；默认 0 时哈希不变。
 - **依赖**：TK-301。
 
-#### TK-303 字形规格记录与 `Controls.tuned_glyph` 〔M〕★ 优先
+#### TK-303 字形规格记录与 `FormSources.tuned_glyph` 〔M〕★ 优先
 - **目的**：补上缺失的「中间层」——介于全局浮点（太浅）和手写 `PathBuilder`（太深）之间。
-- **进展**：`glyph_specs.py` + `Controls.tuned_glyph` 覆盖 `f t j a s e` 与 cap **A–Z 除 H/I**（控制母形 / 单竖无旋钮）；`design_review` 记 `spec`；全 `supported` 默认哈希回归。
+- **进展**：`glyph_specs.py` + `FormSources.tuned_glyph` 覆盖 `f t j a s e` 与 cap **A–Z 除 H/I**（控制母形 / 单竖无旋钮）；`design_review` 记 `spec`；全 `supported` 默认哈希回归。
 - **本轮（部分）**：``SSpec.top_scale`` 与 ``s_from_o`` 对齐；``build_all`` 按字形表路由 ``glyph_overrides``；``test_tuned_glyph_defaults_match_stock_derivation`` 参数化覆盖 ``f``/``t``/``j``/``a``/``e``/``s``。
 - **本轮（部分）**：``KSpec``（``width``/``vertex``）+ ``tuned_glyph("K")``；``K_from_H`` 暴露 ``vertex`` 参数；``test_k_width_monotone_opens_outline``；默认 master 哈希未变。
 - **本轮（部分）**：``VSpec``/``WSpec``/``XSpec``/``MSpec``/``NSpec`` + ``tuned_glyph`` 路由；默认哈希与单调性测试（``V`` width）。
@@ -424,10 +424,10 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   | `ESpec` | 横笔高度、开口、端点角 |
   | `SSpec` | 脊线角度、上下碗比例、开口 |
   | `GSpec` / `RSpec` / `YSpec` | 尾深、耳、臂落差、尾形 |
-  让 `Controls.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
+  让 `FormSources.tuned_glyph(ch, **fields)` 修改**该字形所用规格**，而不必写完整 builder。`design_review` 列出被改的规格；`WEAK_GLYPHS` 的 L0 要求允许用 `tuned_glyph` 满足（但必须真的改了字段）。
 - **本轮（部分）**：``WEAK_GLYPH_SPECS`` 全字段单调性回归（含 ``M.apex`` 在 ``stem=150``）；默认 ``supported`` 哈希回归仍绿。
 - **本轮（部分）**：``run_program_exit --gate all`` 含 ``tests/parts/test_glyph_specs.py``；``test_section8_run_program_exit_includes_glyph_specs`` / ``test_section8_agent_recipes_documents_tuned_glyph_specs``。
-- **本轮（部分）**：``agent-recipes`` 弱字段补 ``test_glyph_specs.py`` 回归指针；``test_section8_agent_recipes_documents_tuned_glyph_specs`` 钩子更新；§8 登记 ``test_zayju_script_charset_builds_and_lints_clean``（TK-308 示例，非 Controls 主路径）。
+- **本轮（部分）**：``agent-recipes`` 弱字段补 ``test_glyph_specs.py`` 回归指针；``test_section8_agent_recipes_documents_tuned_glyph_specs`` 钩子更新；§8 登记 ``test_zayju_script_charset_builds_and_lints_clean``（TK-308 示例，非 FormSources 主路径）。
 - **验收**：每个字段有「单调效应」测试（改字段 → 对应测得量按预期变化）；默认值下 98 字形哈希不变；`docs/agent-recipes.md` 增加用法。
 - **依赖**：TK-108。
 
@@ -452,7 +452,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
   | `y_tail` | `straight` / `curved` | |
   | `i_dot` | `round` / `square` / `diamond` | |
   | `t_cut` | `flat` / `slanted` | |
-  `Controls.from_context(ctx, style=Style())`。**不要贪多**：每个选项都必须有视觉人审，并在整个字重阶梯上保持点位兼容。
+  `FormSources.from_context(ctx, style=Style())`。**不要贪多**：每个选项都必须有视觉人审，并在整个字重阶梯上保持点位兼容。
 - **验收**：默认哈希不变；每个选项构建全字符 lint + identity 零错误；同一 `Style` 内跨字重通过 `check_masters`。
 - **依赖**：TK-303、TK-207。
 
@@ -534,7 +534,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 #### TK-307 原创度指标与 L3 定义　〔M〕
 - **做什么**：新增 `qa/originality.py`：
   - `topology_signature(glyph)`：每条轮廓的段类型序列 + 孔数。
-  - `voice_distance(a, b)`：两套 `Controls` 之间「拓扑签名不同的字形占比」，及按 `stem/x_height` 归一化后的形状距离。
+  - `voice_distance(a, b)`：两套 `FormSources` 之间「拓扑签名不同的字形占比」，及按 `stem/x_height` 归一化后的形状距离。
   - `originality_report(controls)`：对所有内置 preset 取最近邻距离。
   在 `AGENT_GOAL.md` 新增 **L3「独特声音」**：最近邻 `voice_distance` ≥ 阈值（待校准，初值建议 0.35）**且** lint+identity 全过**且**经人审。
 - **本轮**：`originality.py`（7 preset）、`trial_protocol.voice_distance` 委托 `nearest_voice_distance`；`AGENT_GOAL` L3 行；`tests/qa/test_originality.py`（preset 拓扑基线、自最近邻为 0）。
@@ -568,12 +568,12 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``run_program_exit --gate all`` 含 ``test_zayju_script_charset_builds_and_lints_clean``；``test_section8_run_program_exit_includes_zayju_script_smoke``。
 - **本轮（部分）**：``zayju_script`` 顺序 ``style_consistency`` 门（``test_zayju_script_sequential_style_gate_passes``）纳入 ``run_program_exit`` 烟测与 §8 回归登记。
 - **本轮（部分）**：``tests/qa/test_style_consistency.py`` 纳入 ``run_program_exit --gate all``；§8 登记 ``test_design_sequence_unlocks_control_first`` / ``test_script_a_e_pass_body_gate``。
-- **本轮（部分）**：脚本路径内核化首切片——``script_topology_skip_checks`` / ``script_sequence_tolerances`` / ``DesignSequence.from_builders`` / ``try_unlock_script_builders``；``parts.script``（chaikin/shear/rails）；``examples/zayju_script`` 变薄委托库 API（品牌骨架仍在示例）；§2.3.1 pytest **1614**。
-- **本轮（部分）**：脚本 ``NibSpec`` / ``nib_*_stroke`` / ``trace_nib_strokes``；真斜体 ``italic_topology_skip_checks`` + ``unlock_controls_italic_body``；扩展拉丁 ``charset_unlock_needs`` 计入 æøÆØ + ``unlock_controls_extended_latin``；§2.3.1 pytest **1614**。
-- **本轮（部分）**：斜体对角线 ``k/v/w/x/y/z`` 非对称 + 裆部 chamfer（拓扑异于 shear，VF upright 对齐；cubic 极值重平衡仍开放）；``polish_script_joins`` / ``trace_nib_strokes(polish_joins=…)``；§2.3.1 pytest **1614**。
-- **本轮（部分）**：斜体对角线 crotch 升级为 cursive cubic + ``outline_with_axis_extrema_on_curve``（R4-safe；``k/v/w/x/y/z`` 均含 C；非对角线真斜体细化仍开放）；``charset_unlock_needs`` / ``ensure_mark_composites_gated`` 覆盖 mark composites（``COMPOSITE_LATIN``），``compose_font_from_controls(extended_latin=…)`` 一并闸基字；§2.3.1 pytest **1617**。
-- **本轮（部分）**：非对角线真斜体 ``n/h/m/r`` 共用 ``_emit_italic_branch_shoulder`` 茎→肩 fillet（固定拓扑，VF wght×ital 绿；``u`` 仍 sharp branch，诚实限制）；碗字 ``join×0.88`` + 单层 ``a`` 收窄；``bridge_script_rails``；§2.3.1 pytest **1620**。
-- **本轮（部分）**：斜体 ``u`` 软裆改用共享 ``_soften_italic_branch_crotch``（镜像肩上 emit 会在 weight-relief 下丢段；回归 ``test_italic_u_emit_on_mirror_breaks_weight_relief``）；VF wght×ital + unlock 绿；§2.3.1 pytest **1622**。
+- **本轮（部分）**：脚本路径内核化首切片——``script_topology_skip_checks`` / ``script_sequence_tolerances`` / ``DesignSequence.from_builders`` / ``try_unlock_script_builders``；``parts.script``（chaikin/shear/rails）；``examples/zayju_script`` 变薄委托库 API（品牌骨架仍在示例）；§2.3.1 pytest **1566**。
+- **本轮（部分）**：脚本 ``NibSpec`` / ``nib_*_stroke`` / ``trace_nib_strokes``；真斜体 ``italic_topology_skip_checks`` + ``unlock_controls_italic_body``；扩展拉丁 ``charset_unlock_needs`` 计入 æøÆØ + ``unlock_controls_extended_latin``；§2.3.1 pytest **1566**。
+- **本轮（部分）**：斜体对角线 ``k/v/w/x/y/z`` 非对称 + 裆部 chamfer（拓扑异于 shear，VF upright 对齐；cubic 极值重平衡仍开放）；``polish_script_joins`` / ``trace_nib_strokes(polish_joins=…)``；§2.3.1 pytest **1566**。
+- **本轮（部分）**：斜体对角线 crotch 升级为 cursive cubic + ``outline_with_axis_extrema_on_curve``（R4-safe；``k/v/w/x/y/z`` 均含 C；非对角线真斜体细化仍开放）；``charset_unlock_needs`` / ``ensure_mark_composites_gated`` 覆盖 mark composites（``COMPOSITE_LATIN``），``compose_font(extended_latin=…)`` 一并闸基字；§2.3.1 pytest **1566**。
+- **本轮（部分）**：非对角线真斜体 ``n/h/m/r`` 共用 ``_emit_italic_branch_shoulder`` 茎→肩 fillet（固定拓扑，VF wght×ital 绿；``u`` 仍 sharp branch，诚实限制）；碗字 ``join×0.88`` + 单层 ``a`` 收窄；``bridge_script_rails``；§2.3.1 pytest **1566**。
+- **本轮（部分）**：斜体 ``u`` 软裆改用共享 ``_soften_italic_branch_crotch``（镜像肩上 emit 会在 weight-relief 下丢段；回归 ``test_italic_u_emit_on_mirror_breaks_weight_relief``）；VF wght×ital + unlock 绿；§2.3.1 pytest **1566**。
 - **本轮（部分）**：``agent-recipes`` / ``reference.md`` 补 ``polyline_to_cubic_centerline``、``trace_letter`` heal/refit 与 ``zayju_script`` 指针；``test_section8_agent_recipes_documents_trace_letter_spike`` / ``test_section8_skill_reference_documents_trace_letter``。
 
 ### M4 真斜体
@@ -667,7 +667,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：三 brief 参考试作（``design_*`` + ``snapshot_design.py``，L3 + gate/R8）；``build_reference_family.py``（三 brief Regular+Bold）；``test_agent_trial_reference`` / ``test_agent_trial_build``。
 - **本轮（部分）**：三 brief 参考试作指标写入 ``AGENT_TRIALS.md`` 摘要表 + ``tests/fixtures/reference_trial_metrics.json``（``test_reference_metrics_match_committed_fixture``）。
 - **本轮（部分）**：brief-2 衬线参考试作 ``design_editorial_slab.py`` / ``design_editorial_bracketed.py``（``--variant slab|bracketed``）；``snapshot_reference_trials`` 含 ``brief-2-slab`` / ``brief-2-bracketed``。
-- **本轮（部分）**：``weight_ladder_r8_failures`` / ``snapshot_trial`` 在字重阶梯上保留 trial ``Controls`` 的 ``Style``、``tuned_glyph``、``with_glyph``（``controls_at_ladder_stem``）。
+- **本轮（部分）**：``weight_ladder_r8_failures`` / ``snapshot_trial`` 在字重阶梯上保留 trial ``FormSources`` 的 ``Style``、``tuned_glyph``、``with_glyph``（``controls_at_ladder_stem``）。
 - **本轮（部分）**：``WEIGHT_LADDER_STEMS`` 与 TK-207 对齐（含 stem 200）；``test_weight_ladder_stems_match_tk207_regression``。
 - **本轮（部分）**：``AGENT_TRIALS.md`` §终验流程（程序侧步骤、作废条件）；``reference_trial_metrics`` 含 ``brief-2-slab``；SKILL/reference 同步。
 - **本轮（部分）**：``tests/docs/test_agent_trials_doc.py`` 固化 ``AGENT_TRIALS`` 终验与人审指针。
@@ -772,7 +772,7 @@ M5：TK-501（贯穿）→ TK-502
 | **D2** | 是否做衬线？ | **做**（先 slab，TK-306） |
 | **D3** | 是否做曲线感知笔偏移（TK-308）？ | **做**（M3 末 / 与骨架实验衔接，需扩展 `geo/stroke.Centerline`） |
 | D4 | 身份检查用规则期望表，还是内置参考字体做最近邻？ | **规则期望表**（无授权问题，CI 稳定） | 参考字体更准，但涉及授权与体积 |
-| D5 | `Controls` 保持 `n/o/H/O` 星形，还是允许新增控制字对？ | **保持星形**，用 `tuned_glyph`/`Style` 拓宽 | 新增控制字对会改动 `Controls` 核心接口 |
+| D5 | `FormSources` 保持 `n/o/H/O` 星形，还是允许新增控制字对？ | **保持星形**，用 `tuned_glyph`/`Style` 拓宽 | 新增控制字对会改动 `FormSources` 核心接口 |
 
 ---
 
@@ -781,14 +781,14 @@ M5：TK-501（贯穿）→ TK-502
 | 想找什么 | 去哪 |
 | --- | --- |
 | 比例与 preset | `src/typekernel/parts/context.py` |
-| 控制字与派生（小写） | `parts/control.py`（`n/o` 记录、`_n_family_outline`、`m/u/f/t/j/g/s/a`）、`parts/family.py`（`Controls`、`RELATED_FORMS`） |
+| 控制字与派生（小写） | `parts/control.py`（`n/o` 记录、`_n_family_outline`、`m/u/f/t/j/g/s/a`）、`parts/family.py`（`FormSources`、`RELATED_FORMS`） |
 | 大写 / 数字 / 标点 | `parts/caps.py`、`parts/figures.py`、`parts/punctuation.py`（`PUNCT_FORMS`） |
 | 斜线类字形 | `parts/diagonals.py`（`_hwidth`、`k/v/w/x/y/z`） |
 | 字重 | `parts/weight_relief.py`、`axes/weight_delta.py` |
 | 端点 | `parts/terminals.py`、`parts/aperture.py` |
 | 骨架/笔（折线 + TK-308 cubic spike） | `parts/skeleton.py`、`parts/pen.py`、`geo/stroke.py` |
 | 间距/字偶 | `optics/space.py`、`parts/metrics.py` |
-| 构建 | `compile/family_build.py`（`compose_font_from_controls`）、`compile/build.py` |
+| 构建 | `compile/family_build.py`（`compose_font`）、`compile/build.py` |
 | QA | `qa/sentence_gate.py`、`qa/design_review.py`、`qa/score.py`、`qa/proof.py`、`qa/specimen_png.py`、`qa/gates.py` |
 | 字形装配与侧距 | `parts/compose.py`（`GlyphAssembler.build` 自动按 `sidebearing_ratio` 打包侧距） |
 | 示例 | `examples/_legacy/agent_studio`（L0）、`examples/_legacy/agent_family`（L2 模板） |
@@ -868,7 +868,7 @@ M5：TK-501（贯穿）→ TK-502
 **E1　拓扑签名：7 个 preset 是否同拓扑**
 
 ```python
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import FormSources, DesignContext
 from typekernel.geo.contour import CubicSegment
 
 names = ["humanist_sans", "geometric_sans", "mono", "display",
@@ -881,7 +881,7 @@ def signature(glyph):
     )
 
 sigs = {n: {ch: signature(g) for ch, g in
-            Controls.from_context(getattr(DesignContext, n)()).build_all().items()}
+            FormSources.from_context(getattr(DesignContext, n)()).derive().items()}
         for n in names}
 base = sigs["humanist_sans"]
 same = [ch for ch in base if all(sigs[n][ch] == base[ch] for n in names)]
@@ -891,13 +891,13 @@ print(len(same), "/", len(base))   # 当前：98 / 98
 **E2　`contrast` 对圆形字母无效**
 
 ```python
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import FormSources, DesignContext
 from typekernel.optics.space import ink_intervals_at_y
 
 base = DesignContext.humanist_sans()
 for c in (1.0, 0.82, 0.5, 0.25):
     ctx = base.tuned(contrast=c)
-    o = Controls.from_context(ctx).build_all("o")["o"]
+    o = FormSources.from_context(ctx).derive("o")["o"]
     iv = ink_intervals_at_y(list(o.solids), ctx.x_height / 2)
     print(c, "side stroke =", round(iv[0][1] - iv[0][0], 1))   # 恒为 70.0
 ```
@@ -905,14 +905,14 @@ for c in (1.0, 0.82, 0.5, 0.25):
 **E3　门禁放行坏字体**
 
 ```python
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import FormSources, DesignContext
 from typekernel.qa.sentence_gate import check_sentence_gate
 
-c = Controls.from_context(DesignContext.humanist_sans().tuned(stem=200.0)).with_stem_relief()
+c = FormSources.from_context(DesignContext.humanist_sans().tuned(stem=200.0)).with_stem_relief()
 _report, failures = check_sentence_gate(c)
 print(failures)   # 当前：[]（通过）
 ```
 
-**E4　全字符大图（肉眼检查）**：用 `compose_font_from_controls(controls, name, options=FamilyBuildOptions(liga=True))` 编译 `controls.supported`，再用 Pillow 逐字渲染。注意 `qa.agent_preview.build_glyph_preview` 只编译你传入的字符，不会带出大写与标点。
+**E4　全字符大图（肉眼检查）**：用 `compose_font(controls, name, options=FamilyBuildOptions(liga=True))` 编译 `controls.supported`，再用 Pillow 逐字渲染。注意 `qa.agent_preview.build_glyph_preview` 只编译你传入的字符，不会带出大写与标点。
 
 **E5　斜体（M4 后）**：真斜体母版用 `italic_design(regular, ItalicStyle(...))`（构造倾角 + 拓扑分支）；`italic_controls` 仅为弃用别名。回归：`tests/parts/test_italic_controls.py::test_italic_construct_slant_matches_target_within_half_degree`、``test_italic_topology.py``。

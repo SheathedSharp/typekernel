@@ -8,7 +8,7 @@ from typekernel.font import Font, Master, check_masters
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import Controls, DesignContext, cap_o_metrics, h_cap_metrics
+from typekernel.parts import DesignContext, FormSources, cap_o_metrics, h_cap_metrics
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def ctx() -> DesignContext:
 
 @pytest.fixture
 def caps(ctx: DesignContext):
-    return Controls.from_context(ctx).build_all("OCGQSDUJ")
+    return FormSources.from_context(ctx).derive("OCGQSDUJ")
 
 
 def _box(g):
@@ -66,22 +66,22 @@ def test_q_tail_below_baseline_and_counter_untouched(caps, ctx: DesignContext) -
 
 def test_j_outer_segment_count_fixed_across_stems() -> None:
     ctx = DesignContext.humanist_sans()
-    ref = Controls.from_context(ctx).build("J")
+    ref = FormSources.from_context(ctx).derive_one("J")
     ref_n = len(ref.solids[0].contours[0].segments)
     for stem in (30.0, 86.0, 220.0):
         heavy = ctx.tuned(stem=stem)
-        j = Controls.from_context(heavy).build("J")
+        j = FormSources.from_context(heavy).derive_one("J")
         assert len(j.solids[0].contours[0].segments) == ref_n
 
 
 def test_j_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
-    light = Controls.from_context(ctx.tuned(stem=30.0))
-    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    light = FormSources.from_context(ctx.tuned(stem=30.0))
+    bold = FormSources.from_context(ctx.tuned(stem=220.0))
     reg_font = Font.from_context(ctx, "J Sans", "Regular", weight_class=400)
-    reg_font.add_chars(light.build_all("J"))
+    reg_font.add_chars(light.derive("J"))
     bold_font = Font.from_context(ctx, "J Sans", "Bold", weight_class=700)
-    bold_font.add_chars(bold.build_all("J"))
+    bold_font.add_chars(bold.derive("J"))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
 

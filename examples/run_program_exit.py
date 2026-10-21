@@ -23,9 +23,7 @@ from typekernel.qa.gates import load_approval
 ROOT = Path(__file__).resolve().parents[1]
 SECTION8 = "tests/docs/test_development_plan_section8.py"
 _TRIAL_SMOKE = (
-    "tests/examples/test_agent_trial.py",
-    "tests/examples/test_agent_trial_reference.py",
-    "tests/examples/test_weight_ladder_sheet.py",
+            "tests/examples/test_weight_ladder_sheet.py",
     "tests/examples/test_contact_sheet.py",
     "tests/examples/test_diff_overlay.py",
     "tests/examples/test_regenerate_outline_hashes.py",

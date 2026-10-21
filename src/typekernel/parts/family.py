@@ -1,14 +1,16 @@
-"""The control sheet: draw ``n`` and ``o``, derive the lowercase from them.
+"""Stock Latin derivation tables and optional ``FormSources`` sugar.
 
-:class:`Controls` holds the family proportions plus the ``n`` and ``o``
-design records. :data:`RELATED_FORMS` says how every other letter derives
-from those two drawn glyphs, so one adjustment (``tuned_n(counter=...)``)
-moves the whole ``n`` family and ``tuned_o(rx=...)`` the ``o`` family.
+:data:`RELATED_FORMS` / :data:`CAP_FORMS` / :data:`FIGURE_FORMS` map characters
+to letter builders (``h_from_n``, …). Agents compose those builders directly
+(Usage A). :class:`FormSources` is optional sugar that holds ``n``/``o`` (and
+cap) metrics and :meth:`FormSources.derive` applies the tables — not a design
+gate, and not the documented happy path.
 """
+
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -94,8 +96,8 @@ __all__ = [
     "FIGURE_FORMS",
     "PUNCT_FORMS",
     "RELATED_FORMS",
-    "Controls",
     "Derivation",
+    "FormSources",
 ]
 
 Derivation = Callable[[ComposedGlyph, ComposedGlyph, DesignContext], ComposedGlyph]
@@ -176,16 +178,14 @@ FIGURE_FORMS: dict[str, Derivation] = {
 
 
 @dataclass(frozen=True, slots=True)
-class Controls:
-    """The family's control sheet: proportions plus the control-glyph records.
+class FormSources:
+    """Optional metrics bag + stock :meth:`derive` over RELATED/CAP/FIGURE forms.
 
-    Lowercase derives from ``n`` / ``o``, capitals from ``H`` / ``O``::
+    Prefer calling letter builders directly (Usage A). This type exists so tests
+    and specimen helpers can derive a charset without an unlock gate::
 
-        controls = Controls.from_context(ctx).tuned_n(counter=280)
-        glyphs = controls.build_all()          # {"n": ..., "h": ..., "H": ...}
-
-    The cap records follow the current ``n`` stem unless set explicitly with
-    :meth:`tuned_cap_h` / :meth:`tuned_cap_o`.
+        sheet = FormSources.from_context(ctx).tuned_n(counter=280)
+        glyphs = sheet.derive("nhomar")
     """
 
     context: DesignContext
@@ -198,12 +198,12 @@ class Controls:
     style: Style = field(default_factory=Style)
 
     @classmethod
-    def from_context(cls, ctx: DesignContext, *, style: Style | None = None) -> Controls:
+    def from_context(cls, ctx: DesignContext, *, style: Style | None = None) -> FormSources:
         chosen = style or DEFAULT_STYLE
         effective = ctx if chosen == DEFAULT_STYLE else replace(ctx, style=chosen)
         return cls(effective, n_metrics(ctx), o_metrics(ctx), style=chosen)
 
-    def with_style(self, **kwargs: str) -> Controls:
+    def with_style(self, **kwargs: str) -> FormSources:
         """Return a sheet with updated :class:`~typekernel.parts.style.Style` fields."""
         return self.from_context(self.context, style=self.style.tuned(**kwargs))
 
@@ -215,19 +215,19 @@ class Controls:
     def O(self) -> OMetrics:
         return self.cap_o or cap_o_metrics(self.context, self.n)
 
-    def tuned_n(self, **kwargs: float) -> Controls:
+    def tuned_n(self, **kwargs: float) -> FormSources:
         return replace(self, n=self.n.tuned(**kwargs))
 
-    def tuned_o(self, **kwargs: float) -> Controls:
+    def tuned_o(self, **kwargs: float) -> FormSources:
         return replace(self, o=self.o.tuned(**kwargs))
 
-    def tuned_cap_h(self, **kwargs: float) -> Controls:
+    def tuned_cap_h(self, **kwargs: float) -> FormSources:
         return replace(self, cap_h=self.H.tuned(**kwargs))
 
-    def tuned_cap_o(self, **kwargs: float) -> Controls:
+    def tuned_cap_o(self, **kwargs: float) -> FormSources:
         return replace(self, cap_o=self.O.tuned(**kwargs))
 
-    def with_stem_relief(self) -> Controls:
+    def with_stem_relief(self) -> FormSources:
         """Widen ``n``/``o`` counters for heavy ``context.stem`` (black masters)."""
         from typekernel.parts.weight_relief import STEM_RELIEF_ONSET, relieve_n_o
 
@@ -236,19 +236,19 @@ class Controls:
         n, o = relieve_n_o(self.n, self.o, self.context.stem)
         return replace(self, n=n, o=o)
 
-    def with_glyph(self, ch: str, builder: Derivation) -> Controls:
+    def with_glyph(self, ch: str, builder: Derivation) -> FormSources:
         """Replace one codepoint's derivation (designer-style single-glyph master)."""
         merged = dict(self.glyph_overrides)
         merged[ch] = builder
         return replace(self, glyph_overrides=merged)
 
-    def with_glyphs(self, builders: Mapping[str, Derivation]) -> Controls:
+    def with_glyphs(self, builders: Mapping[str, Derivation]) -> FormSources:
         """Replace several derivations at once."""
         merged = dict(self.glyph_overrides)
         merged.update(builders)
         return replace(self, glyph_overrides=merged)
 
-    def tuned_glyph(self, ch: str, **kwargs: float) -> Controls:
+    def tuned_glyph(self, ch: str, **kwargs: float) -> FormSources:
         """Override one weak glyph via its typed spec (see ``glyph_specs``)."""
         if ch not in WEAK_GLYPH_SPECS:
             raise KeyError(
@@ -282,200 +282,11 @@ class Controls:
         """The drawn ``H`` and ``O`` every capital derives from."""
         return build_H(self.context, self.H), build_O(self.context, self.O)
 
-    def build(self, ch: str) -> ComposedGlyph:
-        return self.build_all(ch)[ch]
+    def derive_one(self, ch: str) -> ComposedGlyph:
+        return self.derive(ch)[ch]
 
-    def design_sequence(
-        self,
-        order: Sequence[str] | None = None,
-        *,
-        control: str = "n",
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Start a gated :class:`~typekernel.qa.design_sequence.DesignSequence`.
-
-        Builds **only** the control glyph. Agents must ``try_add`` / ``add``
-        each next letter (typically ``self.build(ch)``) and redesign on refuse.
-        Do **not** use :meth:`build_all` as the design method for new letters —
-        ``build_all`` is stock derivation after controls are locked.
-        """
-        from typekernel.qa.design_sequence import DesignSequence, controls_body_tolerances
-
-        tol = tolerances if tolerances is not None else controls_body_tolerances()
-        return DesignSequence.from_controls(
-            self,
-            control=control,
-            order=order,
-            tolerances=tol,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_body(
-        self,
-        order: Sequence[str] | None = None,
-        *,
-        control: str = "n",
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Run the Latin body through :class:`~typekernel.qa.DesignSequence` gates.
-
-        Required after locking controls (and any ``with_glyph`` / ``tuned_glyph``
-        masters). Raises on refuse. Prefer this over ungated :meth:`build_all`
-        when proving the body is style-consistent. Use :meth:`build_all` only
-        afterward for punctuation / figures / caps at compose time.
-        """
-        from typekernel.qa.design_sequence import DesignSequence
-
-        return DesignSequence.unlock_controls_body(
-            self,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_body_ladder(
-        self,
-        stems: Sequence[float] | None = None,
-        *,
-        control: str = "n",
-        order: Sequence[str] | None = None,
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Unlock the Latin body on each weight-ladder master (VF / family).
-
-        See :func:`~typekernel.qa.design_sequence.unlock_controls_body_ladder`.
-        """
-        from typekernel.qa.design_sequence import unlock_controls_body_ladder
-
-        return unlock_controls_body_ladder(
-            self,
-            stems,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_caps(
-        self,
-        order: Sequence[str] | None = None,
-        *,
-        control: str = "H",
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Run capitals through :func:`~typekernel.qa.design_sequence.unlock_controls_caps`."""
-        from typekernel.qa.design_sequence import unlock_controls_caps
-
-        return unlock_controls_caps(
-            self,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_digits(
-        self,
-        order: Sequence[str] | None = None,
-        *,
-        control: str = "1",
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Run lining figures through :func:`~typekernel.qa.design_sequence.unlock_controls_digits`."""
-        from typekernel.qa.design_sequence import unlock_controls_digits
-
-        return unlock_controls_digits(
-            self,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_punct(
-        self,
-        *,
-        control: str = ".",
-        order: Sequence[str] | None = None,
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Run punctuation through :func:`~typekernel.qa.design_sequence.unlock_controls_punct`."""
-        from typekernel.qa.design_sequence import unlock_controls_punct
-
-        return unlock_controls_punct(
-            self,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def unlock_for_charset(
-        self,
-        charset: str,
-        *,
-        require: bool = True,
-    ) -> Controls:
-        """Run body / caps / digits / punct DesignSequence unlocks present in ``charset``.
-
-        See :func:`~typekernel.qa.design_sequence.ensure_controls_unlocked_for_charset`.
-        """
-        from typekernel.qa.design_sequence import ensure_controls_unlocked_for_charset
-
-        return ensure_controls_unlocked_for_charset(self, charset, require=require)
-
-    def unlock_digits_ladder(
-        self,
-        stems: Sequence[float] | None = None,
-        *,
-        control: str = "1",
-        order: Sequence[str] | None = None,
-        tolerances: object | None = None,
-        compare_to_previous: bool = True,
-        skip_checks_for_pair: object | None = None,
-    ) -> object:
-        """Unlock lining figures on each weight-ladder master.
-
-        See :func:`~typekernel.qa.design_sequence.unlock_controls_digits_ladder`.
-        """
-        from typekernel.qa.design_sequence import unlock_controls_digits_ladder
-
-        return unlock_controls_digits_ladder(
-            self,
-            stems,
-            control=control,
-            order=order,
-            tolerances=tolerances,  # type: ignore[arg-type]
-            compare_to_previous=compare_to_previous,
-            skip_checks_for_pair=skip_checks_for_pair,  # type: ignore[arg-type]
-        )
-
-    def build_all(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
-        """Derive ``chars`` from locked controls (default: all supported).
-
-        Stock derivation helper for compose / VF after the designer-order body
-        gate (:meth:`unlock_body` / :class:`~typekernel.qa.DesignSequence`).
-        Not a substitute for sequential design of new letters.
-        """
+    def derive(self, chars: str | None = None) -> dict[str, ComposedGlyph]:
+        """Apply RELATED/CAP/FIGURE/PUNCT tables for ``chars`` (default: all supported)."""
         wanted = self.supported if chars is None else "".join(dict.fromkeys(chars))
         cap_forms = {**CAP_FORMS, **FIGURE_FORMS}
         extended = {**EXTENDED_LATIN_FORMS, **EXTENDED_LATIN_CAP_FORMS}

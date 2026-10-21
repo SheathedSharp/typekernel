@@ -15,7 +15,7 @@ from design import FAMILY_NAME, _voice, baseline_controls
 from typekernel.compile import build_variable_font, reference_kern_classes
 from typekernel.font import Font, Master, check_masters
 from typekernel.optics.space import space_font
-from typekernel.parts import Controls, auto_class_kern, rhythm_from_control_glyphs
+from typekernel.parts import FormSources, auto_class_kern, rhythm_from_control_glyphs
 from typekernel.qa.proof import proof_weight_ladder
 
 HERE = Path(__file__).resolve().parent
@@ -24,14 +24,14 @@ TEXT = "Bracket nHIL GQjt — the quick brown fox jumps over 0123456789."
 
 
 def master_font(
-    controls: Controls,
+    controls: FormSources,
     style: str,
     weight_class: int,
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(spaced, kern_classes, target=rhythm)
@@ -71,7 +71,7 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
 
     ref = baseline_controls()
-    kern_classes = reference_kern_classes(ref)
+    kern_classes = reference_kern_classes(ref.derive(), ref.context)
     masters = bracket_masters(kern_classes)
     topo = check_masters(masters)
     if topo:

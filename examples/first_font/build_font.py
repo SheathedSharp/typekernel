@@ -1,6 +1,6 @@
 """From proportions to an installable font file — the designer's order.
 
-Example compile path (may still call legacy Controls helpers). Prefer Usage A
+Example compile path (may still call legacy FormSources helpers). Prefer Usage A
 parts composition in new faces — see ``.agents/skills/typekernel-font-design/``.
 """
 
@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
-from typekernel.parts import Controls, DesignContext
+from typekernel.compile import FamilyBuildOptions, build_font, compose_font
+from typekernel.parts import FormSources, DesignContext
 from typekernel.qa.proof import proof_labeled_waterfall
 from typekernel.qa.sentence_gate import AGENT_SENTENCE, check_sentence_gate
 
@@ -29,13 +29,18 @@ FIRST_FONT_OPTIONS = FamilyBuildOptions(
 )
 
 
-def design(controls: Controls, family: str = FAMILY):
-    return compose_font_from_controls(controls, family, options=FIRST_FONT_OPTIONS)
+def design(controls: FormSources, family: str = FAMILY):
+    return compose_font(
+        controls.derive(),
+        controls.context,
+        family,
+        options=FIRST_FONT_OPTIONS,
+    )
 
 
 def main() -> None:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     _report, gate_fail = check_sentence_gate(controls, text=AGENT_SENTENCE)
     if gate_fail:
         print("sentence gate (warning):", *gate_fail, sep="\n  ")

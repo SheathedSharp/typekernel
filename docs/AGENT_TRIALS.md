@@ -55,7 +55,7 @@
 python examples/_legacy/agent_trial/snapshot_presets.py --out artifacts/trials/preset-baseline
 ```
 
-输出每个 preset 的 `snapshot.json`（未改动的 `Controls.from_context`），用于对比 agent 试验是否真有 voice 距离。
+输出每个 preset 的 `snapshot.json`（未改动的 `FormSources.from_context`），用于对比 agent 试验是否真有 voice 距离。
 
 衬线 L3 voice 基线（`slab_serif` / `bracketed_serif`，brief-2 上下文）：
 

@@ -6,7 +6,7 @@ import math
 
 from typekernel.font import Font, Master, check_masters
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.italic import italic_design, slant_composed_glyph, vf_italic_pair
 from typekernel.qa.identity import check_identity_controls
@@ -27,7 +27,7 @@ def _stem_slant_degrees(glyph: ComposedGlyph, y_lo: float, y_hi: float) -> float
     return math.degrees(math.atan2(x_hi - x_lo, y_hi - y_lo))
 
 
-def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
+def _font(controls: FormSources, style: str, *, stem: float | None = None) -> Font:
     from dataclasses import replace
 
     from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
@@ -39,13 +39,13 @@ def _font(controls: Controls, style: str, *, stem: float | None = None) -> Font:
     if stem is not None and stem >= STEM_RELIEF_ONSET:
         sheet = sheet.with_stem_relief()
     font = Font.from_context(ctx, "ItalicAccept", style)
-    font.add_chars(sheet.build_all())
+    font.add_chars(sheet.derive())
     return font
 
 
 def test_italic_vf_meets_program_acceptance_on_humanist() -> None:
     """Lint/identity, construct slant, oblique delta, wght×ital ``check_masters``."""
-    reg = Controls.from_context(DesignContext.humanist_sans())
+    reg = FormSources.from_context(DesignContext.humanist_sans())
     ital = italic_design(reg)
     charset = ital.supported
 
@@ -58,14 +58,14 @@ def test_italic_vf_meets_program_acceptance_on_humanist() -> None:
     target = ctx.italic_slant_deg
     y_lo, y_hi = ctx.x_height * 0.15, ctx.x_height * 0.85
     for ch in "iln":
-        measured = _stem_slant_degrees(ital.build(ch), y_lo, y_hi)
+        measured = _stem_slant_degrees(ital.derive_one(ch), y_lo, y_hi)
         assert abs(measured - target) <= 0.5
 
     outline_diffs = 0
     topology_diffs = 0
     for ch in _OBLIQUE_VS_ITALIC_CHARS:
-        oblique = slant_composed_glyph(reg.build(ch), target)
-        drawn = ital.build(ch)
+        oblique = slant_composed_glyph(reg.derive_one(ch), target)
+        drawn = ital.derive_one(ch)
         if composed_glyph_hash(oblique) != composed_glyph_hash(drawn):
             outline_diffs += 1
         if topology_signature(oblique) != topology_signature(drawn):
@@ -75,7 +75,7 @@ def test_italic_vf_meets_program_acceptance_on_humanist() -> None:
 
     upright, italic_sheet = vf_italic_pair(reg)
     bold = vf_italic_pair(
-        Controls.from_context(DesignContext.humanist_sans().tuned(stem=120.0)).with_stem_relief()
+        FormSources.from_context(DesignContext.humanist_sans().tuned(stem=120.0)).with_stem_relief()
     )[0]
     masters = [
         Master({"wght": 400, "ital": 0}, _font(upright, "Regular")),

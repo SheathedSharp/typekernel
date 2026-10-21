@@ -1,7 +1,7 @@
 """Latin lowercase recipes built from shared parts (demo family).
 
 .. deprecated::
-    Experimental demo recipes. Prefer :class:`~typekernel.parts.family.Controls`
+    Experimental demo recipes. Prefer :class:`~typekernel.parts.family.FormSources`
     and ``RELATED_FORMS`` for production families.
 
 All letters take the same :class:`~typekernel.parts.context.DesignContext` so

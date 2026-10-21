@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import FormSources, DesignContext
 from typekernel.qa.outline_hash import composed_glyph_hash
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -27,9 +27,9 @@ _PRESET_FACTORIES: dict[str, Callable[[], DesignContext]] = {
 def _build_golden() -> dict[str, dict[str, str]]:
     presets: dict[str, dict[str, str]] = {}
     for name, factory in _PRESET_FACTORIES.items():
-        controls = Controls.from_context(factory())
+        controls = FormSources.from_context(factory())
         # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-        glyphs = controls.build_all()
+        glyphs = controls.derive()
         presets[name] = {
             ch: composed_glyph_hash(glyphs[ch]) for ch in controls.supported
         }

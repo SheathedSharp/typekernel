@@ -14,7 +14,7 @@ from typekernel.compile import build_variable_font, reference_kern_classes
 from typekernel.font import Font, Master
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    Controls,
+    FormSources,
     DesignContext,
     auto_class_kern,
     rhythm_from_control_glyphs,
@@ -29,20 +29,20 @@ FAMILY = "Typekernel Var"
 TEXT = "SPHINX OF QUARTZ 2048 judge my vow"
 
 
-def master_controls(base: DesignContext, stem: float) -> Controls:
+def master_controls(base: DesignContext, stem: float) -> FormSources:
     """A control sheet for one weight: stems change, counters give way."""
-    return Controls.from_context(base.tuned(stem=stem)).with_stem_relief()
+    return FormSources.from_context(base.tuned(stem=stem)).with_stem_relief()
 
 
 def master_font(
-    controls: Controls,
+    controls: FormSources,
     style: str,
     weight_class: int,
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(spaced, kern_classes, target=rhythm)
@@ -56,8 +56,8 @@ def master_font(
 
 def main() -> None:
     base = DesignContext.code_clear()
-    ref = Controls.from_context(base)
-    kern_classes = reference_kern_classes(ref)
+    ref = FormSources.from_context(base)
+    kern_classes = reference_kern_classes(ref.derive(), ref.context)
     masters = [
         Master(
             {"wght": 400},

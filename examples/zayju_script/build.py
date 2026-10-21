@@ -8,7 +8,7 @@ Honest topology: calligraphy skeletons in ``design.py`` expanded with a
 contrast broad-nib pen via ``trace_letter``. Writing slant is baked into
 centerline coordinates — not ``oblique_font`` / lean / tracking.
 
-``check_sentence_gate`` does **not** apply (not a Controls-derived face).
+``check_sentence_gate`` does **not** apply (not a FormSources-derived face).
 Primary acceptance artifacts are the filled brief PNGs.
 """
 
@@ -288,7 +288,7 @@ def main() -> int:
     if worst:
         print(f"worst pair: {worst[1]}{worst[2]} gap={worst[0]:.1f} kern={worst[3]:.1f}")
 
-    print("NOTE: Controls sentence_gate does not apply to this skeleton face.")
+    print("NOTE: FormSources sentence_gate does not apply to this skeleton face.")
     print("Style sequence gate passed; brief PNG is a late specimen only.")
     return 0
 

@@ -9,8 +9,8 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
-    Controls,
     DesignContext,
+    FormSources,
     build_n,
     f_from_n,
     j_from_n,
@@ -91,20 +91,20 @@ def test_j_hook_outer_segment_count_fixed_across_stems() -> None:
 def test_j_body_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
     charset = "j"
-    light = Controls.from_context(ctx.tuned(stem=30.0))
-    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    light = FormSources.from_context(ctx.tuned(stem=30.0))
+    bold = FormSources.from_context(ctx.tuned(stem=220.0))
     reg_font = Font.from_context(ctx, "J Sans", "Regular", weight_class=400)
     bold_font = Font.from_context(ctx, "J Sans", "Bold", weight_class=700)
     reg_font.add_chars(
         {
             ch: ComposedGlyph((g.solids[0],), (), g.advance, ctx)
-            for ch, g in light.build_all(charset).items()
+            for ch, g in light.derive(charset).items()
         }
     )
     bold_font.add_chars(
         {
             ch: ComposedGlyph((g.solids[0],), (), g.advance, ctx)
-            for ch, g in bold.build_all(charset).items()
+            for ch, g in bold.derive(charset).items()
         }
     )
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]

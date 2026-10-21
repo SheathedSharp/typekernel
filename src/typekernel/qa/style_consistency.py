@@ -5,7 +5,7 @@ against control and previously unlocked letters. A brief phrase is a late
 specimen — not the design method.
 
 This module works on abstract :class:`~typekernel.parts.compose.ComposedGlyph`
-outlines (Controls-derived **or** skeleton / ``trace_letter`` faces).
+outlines (FormSources-derived **or** skeleton / ``trace_letter`` faces).
 """
 
 from __future__ import annotations
@@ -34,6 +34,8 @@ __all__ = [
     "extract_glyph_style_metrics",
     "fix_hint_for_check",
     "script_body_tolerances",
+    "script_sequence_tolerances",
+    "script_topology_skip_checks",
 ]
 
 
@@ -870,6 +872,68 @@ class SequenceStyleReport:
     @property
     def failures(self) -> tuple[StyleConsistencyReport, ...]:
         return tuple(r for r in self.reports if not r.passed)
+
+
+# --- Script face topology skips / tolerances (no DesignSequence gate) ---
+
+_SCRIPT_CLOSED_BOWLS: frozenset[str] = frozenset({"o", "O"})
+_SCRIPT_ASCENDERS: frozenset[str] = frozenset(
+    {"d", "h", "D", "l", "b", "k", "f", "t"}
+)
+_SCRIPT_DESCENDERS: frozenset[str] = frozenset({"j", "y", "g", "p", "q"})
+_SCRIPT_DOTTED: frozenset[str] = frozenset({"i", "j"})
+
+
+def script_topology_skip_checks(ref: str, cand: str) -> tuple[str, ...]:
+    """Metric skips across script topology roles (rails stay meaningful).
+
+    Unlike :func:`latin_topology_skip_checks`, entry/exit rails and exit slant
+    are **gated** for same-role body letters — they are the writing-connection
+    language. Closed bowls omit rails; ascenders/descenders/dotted letters omit
+    extents and rail metrics that topology makes meaningless.
+    """
+    skip: list[str] = []
+    if ref in _SCRIPT_CLOSED_BOWLS or cand in _SCRIPT_CLOSED_BOWLS:
+        skip.extend(["entry_rail_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_ASCENDERS or ref in _SCRIPT_ASCENDERS:
+        skip.extend(["ink_ymax", "bowl_center_y", "exit_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_DESCENDERS or ref in _SCRIPT_DESCENDERS:
+        # Descender loops poison lower-band exit-angle samples.
+        skip.extend(["ink_ymin", "bowl_center_y", "entry_rail_y", "exit_slant_deg"])
+    if cand in _SCRIPT_DOTTED or ref in _SCRIPT_DOTTED:
+        # Single stem + tittle: vertical-stem probes are not comparable to
+        # dual-stem body letters.
+        skip.extend(
+            [
+                "exit_rail_y",
+                "exit_slant_deg",
+                "ink_ymax",
+                "bowl_center_y",
+                "stem_median",
+            ]
+        )
+    return tuple(dict.fromkeys(skip))
+
+
+def script_sequence_tolerances() -> StyleConsistencyTolerances:
+    """Budgets for full script style-check walk (control → charset).
+
+    Rails/slant/stem stay near body defaults. Contrast is wider than
+    :func:`~typekernel.qa.style_consistency.script_body_tolerances` to allow
+    multi-vertical pen stress (``u``/``h``) without phrase-batch fudge — still
+    paired with :func:`script_topology_skip_checks`, not a blank cheque.
+    Same-role pairs (``a`` vs ``e``) should prefer ``script_body_tolerances``.
+    """
+    return StyleConsistencyTolerances(
+        stem_median=14.0,
+        contrast_ratio=0.95,
+        entry_rail_y=40.0,
+        exit_rail_y=42.0,
+        exit_slant_deg=40.0,
+        bowl_center_y=55.0,
+        ink_ymin=55.0,
+        ink_ymax=120.0,
+    )
 
 
 def check_design_sequence(

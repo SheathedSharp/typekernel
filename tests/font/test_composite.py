@@ -28,10 +28,10 @@ def test_add_composite_aligns_mark_to_base_top() -> None:
 def test_add_composite_latin_registers_cedilla() -> None:
     ctx = DesignContext.code_clear()
     font = Font.from_context(ctx, "Latin")
-    from typekernel.parts import Controls
+    from typekernel.parts import FormSources
 
-    controls = Controls.from_context(ctx)
-    font.add_chars(controls.build_all())
+    controls = FormSources.from_context(ctx)
+    font.add_chars(controls.derive())
     add_composite_latin(font, controls.control_glyphs())
     assert "ccedilla" in font
     assert font.cmap()[ord("ç")] == "ccedilla"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.style_consistency import (
     StyleConsistencyTolerances,
     check_design_sequence,
@@ -13,7 +13,7 @@ from typekernel.qa.style_consistency import (
 
 
 def test_extract_metrics_on_control_n() -> None:
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("no")
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive("no")
     m = extract_glyph_style_metrics(drawn["n"])
     assert m.stem_median is not None and m.stem_median > 10.0
     assert m.ink_ymax > m.ink_ymin
@@ -21,7 +21,7 @@ def test_extract_metrics_on_control_n() -> None:
 
 
 def test_same_glyph_compare_passes() -> None:
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("n")
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive("n")
     report = compare_glyph_styles(
         drawn["n"], drawn["n"], reference_name="n", candidate_name="n"
     )
@@ -30,7 +30,7 @@ def test_same_glyph_compare_passes() -> None:
 
 
 def test_n_o_stem_within_budget() -> None:
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("no")
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive("no")
     report = compare_glyph_styles(
         drawn["n"], drawn["o"], reference_name="n", candidate_name="o"
     )
@@ -41,7 +41,7 @@ def test_n_o_stem_within_budget() -> None:
 
 def test_design_sequence_unlocks_control_first() -> None:
     charset = "nhu"
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all(charset)
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive(charset)
     tol = StyleConsistencyTolerances(
         stem_median=30.0,
         contrast_ratio=8.0,
@@ -80,7 +80,7 @@ def test_script_a_e_pass_body_gate() -> None:
 
 
 def test_stem_median_rel_widens_limit() -> None:
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("nh")
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive("nh")
     tight = StyleConsistencyTolerances(stem_median=1.0, stem_median_rel=0.5)
     # Force a large absolute floor via rel so same-family stems still pass.
     report = compare_glyph_styles(
@@ -96,5 +96,5 @@ def test_stem_median_rel_widens_limit() -> None:
 
 
 def test_extract_oriented_stem_on_diagonal() -> None:
-    drawn = Controls.from_context(DesignContext.geometric_sans()).build_all("nv")
+    drawn = FormSources.from_context(DesignContext.geometric_sans()).derive("nv")
     assert extract_glyph_style_metrics(drawn["v"]).oriented_stem is not None

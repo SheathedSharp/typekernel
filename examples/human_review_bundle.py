@@ -204,10 +204,10 @@ def _italic_bundle(out: Path) -> None:
 
 
 def _appendix_b_review_bundle(out: Path) -> None:
-    from typekernel.parts import Controls, DesignContext
+    from typekernel.parts import FormSources, DesignContext
     from typekernel.qa.sheet import contact_sheet
 
-    controls = Controls.from_context(DesignContext.humanist_sans())
+    controls = FormSources.from_context(DesignContext.humanist_sans())
     contact_sheet(controls, out / "appendix_b_three_g_humanist.png", chars="3G")
     contact_sheet(controls, out / "appendix_b_s_opening_humanist.png", chars="sS")
 

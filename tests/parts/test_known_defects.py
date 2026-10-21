@@ -5,12 +5,12 @@ from __future__ import annotations
 import pytest
 
 from typekernel.geo.outline import bounds
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.identity import check_identity_glyph
 from typekernel.qa.lint import lint_controls, lint_glyph
 
 _CTX = DesignContext.humanist_sans()
-_CONTROLS = Controls.from_context(_CTX)
+_CONTROLS = FormSources.from_context(_CTX)
 
 _BUILTIN_PRESETS = (
     "humanist_sans",
@@ -24,12 +24,12 @@ _BUILTIN_PRESETS = (
 
 
 def _glyph(ch: str):
-    return _CONTROLS.build_all(ch)[ch]
+    return _CONTROLS.derive(ch)[ch]
 
 
 def _glyph_for(preset: str, ch: str):
     ctx = getattr(DesignContext, preset)()
-    return Controls.from_context(ctx).build(ch)
+    return FormSources.from_context(ctx).derive_one(ch)
 
 
 def test_b01_exclam() -> None:
@@ -100,7 +100,7 @@ def test_b15_s_spine_ink_is_continuous_band(preset: str) -> None:
     from typekernel.optics.space import ink_intervals_at_y
 
     ctx = getattr(DesignContext, preset)()
-    s = Controls.from_context(ctx).build("s")
+    s = FormSources.from_context(ctx).derive_one("s")
     y = 0.5 * ctx.x_height
     intervals = ink_intervals_at_y(list(s.solids), y)
     assert len(intervals) == 1

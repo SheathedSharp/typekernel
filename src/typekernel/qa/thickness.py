@@ -12,7 +12,7 @@ from typekernel.parts.caps import HMetrics
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.control import OMetrics, o_metrics
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 
 REFERENCE_THICKNESS_CHARS = "noHO"
 THICKNESS_OUTLIER_FACTOR = 1.15
@@ -82,10 +82,10 @@ def m_crotch_shelf_thickness_over_stem(glyph: ComposedGlyph) -> float:
     return width / ctx.stem
 
 
-def control_max_thickness_ratio(controls: Controls) -> float:
+def control_max_thickness_ratio(controls: FormSources) -> float:
     """Largest ``max_local_thickness / stem`` among control letters ``n/o/H/O``."""
     ctx = controls.context
-    drawn = controls.build_all(REFERENCE_THICKNESS_CHARS)
+    drawn = controls.derive(REFERENCE_THICKNESS_CHARS)
     return max(
         thickness_ratio_to_stem(drawn[ch], ctx.stem, grid=LINT_THICKNESS_GRID)
         for ch in REFERENCE_THICKNESS_CHARS

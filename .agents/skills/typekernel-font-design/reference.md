@@ -63,8 +63,8 @@ APIs: `snapshot_trial`, `validate_trial_snapshot`, `trial_snapshot_exit_code`,
 `style_consistency` live under `typekernel.qa` for sequential QA — **not** the
 Usage A happy path. Tests: `test_zayju_script.py`, `test_style_consistency.py`.
 
-## Weak-glyph specs (legacy Controls surface)
+## Weak-glyph specs (legacy FormSources surface)
 
-If you still touch `tuned_glyph` on legacy Controls sheets: see `parts/glyph_specs.py`
+If you still touch `tuned_glyph` on legacy FormSources sheets: see `parts/glyph_specs.py`
 (`GSpec`, `RSpec`, `YSpec`, `spec_fields`, e.g. `spec f:`). Regressions:
 `tests/parts/test_glyph_specs.py`.

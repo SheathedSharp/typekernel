@@ -17,7 +17,7 @@ from typekernel.geo.layout import union_bounds
 from typekernel.geo.segment import LineSegment
 from typekernel.parts import (
     ComposedGlyph,
-    Controls,
+    FormSources,
     DesignContext,
     default_sans_kern,
     layout_glyphs,
@@ -202,8 +202,8 @@ def compose_triad() -> Path:
     sub_font = _font(FALLBACK_FONT, 15)
 
     for i, (title, sub, ctx) in enumerate(DIRECTIONS):
-        # Specimen/compose-time derive from locked Controls (not DesignSequence design; phrase is late proof only).
-        drawn = Controls.from_context(ctx).build_all("zayju")
+        # Specimen/compose-time derive from locked FormSources (not DesignSequence design; phrase is late proof only).
+        drawn = FormSources.from_context(ctx).derive("zayju")
         glyphs = [drawn[ch] for ch in "zayju"]
         names = list("zayju")
         font_path = bake_otf(glyphs, names, OUT_DIR / f"zayju_{title.lower().replace(' ', '_')}")

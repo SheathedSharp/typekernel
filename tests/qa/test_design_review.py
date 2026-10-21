@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.control import f_from_n, t_from_n
 from typekernel.qa.design_review import WEAK_GLYPHS, design_review
 
 
-def _l0_trial() -> Controls:
+def _l0_trial() -> FormSources:
     ctx = DesignContext.humanist_sans().tuned(sidebearing_ratio=0.11)
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     controls = controls.with_glyph("f", lambda n, o, c: f_from_n(n, c, arm=0.82))
     controls = controls.with_glyph("t", lambda n, o, c: t_from_n(n, c, arm=0.58))
     return controls
@@ -22,7 +22,7 @@ def _l0_trial() -> Controls:
 def test_l0_trial_beats_or_matches_preset() -> None:
     review = design_review(
         _l0_trial(),
-        baseline=Controls.from_context(DesignContext.humanist_sans()),
+        baseline=FormSources.from_context(DesignContext.humanist_sans()),
     )
     assert review.failures == (), review.failures
     assert review.l0_gaps == ()
@@ -37,7 +37,7 @@ def test_l0_trial_beats_or_matches_preset() -> None:
 
 
 def test_missing_weak_overrides_is_an_l0_gap() -> None:
-    review = design_review(Controls.from_context(DesignContext.code_clear()))
+    review = design_review(FormSources.from_context(DesignContext.code_clear()))
     assert review.l0_gaps
     assert any("with_glyph" in gap for gap in review.l0_gaps)
     assert any("no preset baseline" in note for note in review.notes)
@@ -47,7 +47,7 @@ def test_review_writes_json_and_control_pngs(tmp_path: Path) -> None:
     pytest.importorskip("PIL")
     review = design_review(
         _l0_trial(),
-        baseline=Controls.from_context(DesignContext.humanist_sans()),
+        baseline=FormSources.from_context(DesignContext.humanist_sans()),
         out_dir=tmp_path,
     )
     assert (tmp_path / "review.json").is_file()

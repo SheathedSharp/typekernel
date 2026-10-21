@@ -125,11 +125,11 @@ def test_with_pair_and_default_classes() -> None:
 def test_split_side_classes_export_different_kern1_kern2() -> None:
     from typekernel.font import Font
     from typekernel.optics.space import space_font
-    from typekernel.parts import Controls, DesignContext, auto_side_kern_classes
+    from typekernel.parts import DesignContext, FormSources, auto_side_kern_classes
 
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
-    spaced = space_font(controls.build_all(), ctx)
+    controls = FormSources.from_context(ctx)
+    spaced = space_font(controls.derive(), ctx)
     classes = auto_side_kern_classes(spaced, ctx)
     font = Font.from_context(ctx, "Side Kern")
     font.add_chars({ch: spaced[ch] for ch in "bno"})
@@ -152,16 +152,16 @@ def test_capitals_are_classed_without_ho_controls() -> None:
     from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
     from typekernel.optics.space import pair_gap_optical, space_font
     from typekernel.parts import (
-        Controls,
         DesignContext,
+        FormSources,
         auto_class_kern,
         auto_side_kern_classes,
         rhythm_from_control_glyphs,
     )
 
-    controls = Controls.from_context(DesignContext.code_clear())
+    controls = FormSources.from_context(DesignContext.code_clear())
     drawn = polish_glyph_map(
-        controls.build_all("IdrBuno"),
+        controls.derive("IdrBuno"),
         GlyphPolishOptions(joins_policy="tangent_fix"),
     )
     assert "H" not in drawn and "O" not in drawn

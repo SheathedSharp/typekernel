@@ -63,8 +63,8 @@ a time — not unlocked by widening the gate.
 - **Required:** `build_charset_sequential` → library
   `try_unlock_script_builders` / `DesignSequence.from_builders` (style
   consistency vs control + previous).
-- Controls `check_sentence_gate` does **not** apply — this face is not derived
-  from `Controls.build_all`.
+- FormSources `check_sentence_gate` does **not** apply — this face is not derived
+  from `FormSources.build_all`.
 
 ## Files
 

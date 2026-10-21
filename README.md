@@ -41,7 +41,7 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 **编译桥**（`typekernel.compile`）— `build_font` / `build_variable_font` → OTF、TTF、可选 WOFF2；UFO 回流 `read_font_from_ufo`；斜体母版 `italic_design`（`ital` 轴）、机械倾斜 `oblique_font`（`slnt`）；基础 `tnum` 特性文本。人审见 `approvals/compile-bridge.json`。
 
 **推荐路径（Usage A）**：`DesignContext` → 零件 / letter builders 拼字形 → `Font.add_chars` → 自选间距（如 `space_font`）→ `build_font` / `build_variable_font`。  
-**不要**把 `Controls.build_all` / `DesignSequence` / `unlock_*` 当设计方法（旧示例见 `examples/_legacy/`）。
+**不要**把 `FormSources.build_all` / `DesignSequence` / `unlock_*` 当设计方法（旧示例见 `examples/_legacy/`）。
 
 **校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 

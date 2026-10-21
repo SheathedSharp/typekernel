@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.originality import L3_MIN_TOPOLOGY_FRACTION
 from typekernel.qa.trial_protocol import (
     FIXED_TRIAL_BRIEFS,
@@ -29,7 +29,7 @@ from typekernel.qa.trial_protocol import (
 )
 
 _ROOT = Path(__file__).resolve().parents[2]
-_SLAB_TRIAL = _ROOT / "examples" / "_legacy" / "agent_trial" / "design_editorial_slab.py"
+_SLAB_TRIAL = _ROOT / "examples" / "voices" / "editorial_slab.py"
 
 _PRESET_FACTORIES = {
     "humanist_sans": DesignContext.humanist_sans,
@@ -51,7 +51,7 @@ def test_fixed_briefs_are_three_and_unique() -> None:
 def test_preset_brief_snapshots_pass_gate(brief) -> None:
     """Unmodified presets must pass §6 gate metrics (M5 baseline)."""
     factory = _PRESET_FACTORIES[brief.preset]
-    controls = Controls.from_context(factory())
+    controls = FormSources.from_context(factory())
     snap = snapshot_trial(controls, brief=brief, round=0, apis_used=("preset_only",))
     assert snap.family_gate_ok, snap.family_gate_failures
     assert snap.metrics_ok
@@ -69,7 +69,7 @@ def test_preset_brief_snapshots_pass_gate(brief) -> None:
 )
 def test_serif_voice_trial_snapshots_meet_l3(factory) -> None:
     """TK-306 voices are valid L3 trial starting points (TK-502 baseline)."""
-    controls = Controls.from_context(factory())
+    controls = FormSources.from_context(factory())
     snap = snapshot_trial(
         controls,
         brief=FIXED_TRIAL_BRIEFS[1],
@@ -174,7 +174,7 @@ def test_validate_trial_snapshot_record_rejects_forged_l3_with_zero_topology() -
 
 def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
     ctx = DesignContext.humanist_sans()
-    tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
+    tweaked = FormSources.from_context(ctx.tuned(stem=ctx.stem * 1.05))
     snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0])
     assert not snap.l3_voice_ok
     assert snap.topology_fraction < L3_MIN_TOPOLOGY_FRACTION
@@ -187,7 +187,7 @@ def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
 def test_trial_snapshot_json_exit_code_matches_live_snapshot(tmp_path: Path) -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "voices" / "warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
@@ -204,7 +204,7 @@ def test_trial_snapshot_json_exit_code_matches_live_snapshot(tmp_path: Path) -> 
 def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "voices" / "warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
@@ -221,7 +221,7 @@ def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
 def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "voices" / "warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
@@ -233,7 +233,7 @@ def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:
 def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:
     """TK-502 / TK-307: trial JSON must not treat pure stem scaling as L3."""
     ctx = DesignContext.humanist_sans()
-    tweaked = Controls.from_context(ctx.tuned(stem=ctx.stem * 1.05))
+    tweaked = FormSources.from_context(ctx.tuned(stem=ctx.stem * 1.05))
     snap = snapshot_trial(tweaked, brief=FIXED_TRIAL_BRIEFS[0], apis_used=("stem_tweak",))
     assert snap.voice_distance >= L3_VOICE_DISTANCE_THRESHOLD
     assert not snap.l3_voice_ok
@@ -242,12 +242,12 @@ def test_snapshot_l3_voice_ok_rejects_stem_only_tweak() -> None:
 
 
 def test_voice_distance_zero_on_unchanged_preset() -> None:
-    controls = Controls.from_context(DesignContext.humanist_sans())
+    controls = FormSources.from_context(DesignContext.humanist_sans())
     assert voice_distance(controls) < 1e-6
 
 
 def test_voice_distance_increases_with_tuned_glyph() -> None:
-    base = Controls.from_context(DesignContext.humanist_sans())
+    base = FormSources.from_context(DesignContext.humanist_sans())
     tuned = base.tuned_glyph("f", arm=0.55).tuned_glyph("t", arm=0.45)
     assert voice_distance(tuned) > voice_distance(base)
     assert voice_distance(tuned) > 0.0
@@ -259,9 +259,9 @@ def test_weight_ladder_r8_uses_glyph_overrides_not_context_only() -> None:
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    sheet: Controls = mod.controls()
+    sheet: FormSources = mod.controls()
     assert weight_ladder_r8_failures(sheet) == 0
-    bare = Controls.from_context(sheet.context)
+    bare = FormSources.from_context(sheet.context)
     assert weight_ladder_r8_failures(bare) == 0
     at_70 = controls_at_ladder_stem(sheet, 70.0)
     assert "f" in at_70.glyph_overrides
@@ -269,7 +269,7 @@ def test_weight_ladder_r8_uses_glyph_overrides_not_context_only() -> None:
 
 def test_snapshot_records_glyph_specs(tmp_path) -> None:
     brief = FIXED_TRIAL_BRIEFS[0]
-    controls = Controls.from_context(DesignContext.humanist_sans()).tuned_glyph("f", arm=0.8)
+    controls = FormSources.from_context(DesignContext.humanist_sans()).tuned_glyph("f", arm=0.8)
     snap = snapshot_trial(controls, brief=brief, apis_used=("manual",))
     assert "f" in snap.glyph_spec_chars
     assert "tuned_glyph" in snap.apis_used

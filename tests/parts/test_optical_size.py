@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext, context_for_opsz
+from typekernel.parts import DesignContext, FormSources, context_for_opsz
 from typekernel.parts.optical_size import DEFAULT_DISPLAY_OPSZ, DEFAULT_TEXT_OPSZ
 
 
@@ -38,6 +38,6 @@ def test_context_for_opsz_midpoint_lerps() -> None:
 
 def test_opsz_masters_build_same_charset() -> None:
     base = DesignContext.code_clear()
-    text = Controls.from_context(context_for_opsz(base, DEFAULT_TEXT_OPSZ))
-    display = Controls.from_context(context_for_opsz(base, DEFAULT_DISPLAY_OPSZ))
-    assert set(text.build_all()) == set(display.build_all())
+    text = FormSources.from_context(context_for_opsz(base, DEFAULT_TEXT_OPSZ))
+    display = FormSources.from_context(context_for_opsz(base, DEFAULT_DISPLAY_OPSZ))
+    assert set(text.derive()) == set(display.derive())

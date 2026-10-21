@@ -1,12 +1,12 @@
-"""Assemble a :class:`~typekernel.font.Font` from a control sheet (agent path).
+"""Assemble a :class:`~typekernel.font.Font` from already-derived glyphs (Usage A).
 
 Wires spacing, kerning, and OpenType feature text so referenced glyphs always
-exist. Prefer this over hand-rolling ``Font`` + ``standard_feature_text``.
+exist. Agents compose parts → glyph map, then call :func:`compose_font`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from typekernel.compile.features import (
@@ -21,8 +21,9 @@ from typekernel.font import Font
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph_map
 from typekernel.optics.joins import JoinPolicy
 from typekernel.optics.space import space_font
+from typekernel.parts.compose import ComposedGlyph
+from typekernel.parts.context import DesignContext
 from typekernel.parts.diacritics import add_composite_latin
-from typekernel.parts.family import Controls
 from typekernel.parts.metrics import (
     KernClass,
     auto_class_kern,
@@ -34,7 +35,7 @@ from typekernel.parts.metrics import (
 __all__ = [
     "DEFAULT_PAIR_KERN_EXCEPTIONS",
     "FamilyBuildOptions",
-    "compose_font_from_controls",
+    "compose_font",
     "reference_kern_classes",
 ]
 
@@ -58,7 +59,6 @@ class FamilyBuildOptions:
     frac: bool = False
     ordn: bool = False
     extended_latin: str = ""
-    chars: str | None = None
     space_width_factor: float = 0.45
     pair_kern_exceptions: tuple[tuple[str, str], ...] = DEFAULT_PAIR_KERN_EXCEPTIONS
     joins_policy: JoinPolicy = "tangent_fix"
@@ -77,86 +77,40 @@ class FamilyBuildOptions:
         )
 
 
-def _compose_charset(controls: Controls, opts: FamilyBuildOptions) -> str:
-    """Charset that ``build_all`` will derive for this compose call."""
-    if opts.chars is not None:
-        return "".join(dict.fromkeys(opts.chars + "no"))
-    if opts.extended_latin:
-        return controls.supported + opts.extended_latin
-    return controls.supported
-
-
 def reference_kern_classes(
-    controls: Controls,
+    glyphs: Mapping[str, ComposedGlyph],
+    ctx: DesignContext,
     *,
-    require_body_unlock: bool = True,
+    options: FamilyBuildOptions | None = None,
 ) -> tuple[KernClass, ...]:
-    """Kern classes from the regular control draw (reuse for VF masters).
-
-    Defaults to the same charset DesignSequence unlock as
-    :func:`compose_font_from_controls` (body / caps / digits as present).
-    Pass ``require_body_unlock=False`` only for documented stock / specimen
-    compiles.
-    """
-    from typekernel.qa.design_sequence import ensure_controls_unlocked_for_charset
-
-    charset = controls.supported if controls.supported else ""
-    ensure_controls_unlocked_for_charset(
-        controls, charset, require=require_body_unlock
-    )
-    ctx = controls.context
-    opts = FamilyBuildOptions()
-    drawn = polish_glyph_map(
-        controls.build_all(charset if charset else None),
-        opts.polish_options(),
-    )
+    """Kern classes from a derived glyph map (reuse for VF masters)."""
+    opts = options or FamilyBuildOptions()
+    drawn = polish_glyph_map(dict(glyphs), opts.polish_options())
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     return auto_side_kern_classes(spaced, ctx)
 
 
-def compose_font_from_controls(
-    controls: Controls,
+def compose_font(
+    glyphs: Mapping[str, ComposedGlyph],
+    ctx: DesignContext,
     family: str,
     style: str = "Regular",
     *,
     weight_class: int = 400,
     options: FamilyBuildOptions | None = None,
     kern_classes: Sequence[KernClass] | None = None,
-    require_body_unlock: bool = True,
+    control_pair: tuple[ComposedGlyph, ComposedGlyph] | None = None,
 ) -> Font:
     """Design-time font: spaced glyphs, class kern, feature-safe defaults.
 
-    By default runs DesignSequence unlocks for every subset present in the
-    compose charset (body, caps, digits) before ``build_all``, so agents cannot
-    ship ungated capitals or figures after only unlocking lowercase. Pass
-    ``require_body_unlock=False`` only for already-validated stock compile
-    paths (unit tests of features / polish), never as a design method.
+    ``glyphs`` must already include every character you want shipped (Usage A
+    composition or :meth:`~typekernel.parts.family.FormSources.derive`).
     """
     opts = options or FamilyBuildOptions()
-    charset = _compose_charset(controls, opts)
-    if require_body_unlock:
-        from typekernel.parts.diacritics import composite_latin_charset
-        from typekernel.qa.design_sequence import (
-            DesignSequenceError,
-            ensure_controls_unlocked_for_charset,
-        )
-
-        # Mark composites ship with extended_latin — gate their bases too.
-        unlock_chars = charset
-        if opts.extended_latin:
-            unlock_chars = "".join(dict.fromkeys(charset + composite_latin_charset()))
-        try:
-            ensure_controls_unlocked_for_charset(controls, unlock_chars, require=True)
-        except DesignSequenceError as exc:
-            raise DesignSequenceError(
-                "compose_font_from_controls requires DesignSequence unlock "
-                "(body / caps / digits / punct as present in charset) before compile — "
-                "redesign refused glyphs, then retry (or unlock via "
-                f"Controls.unlock_body / unlock_caps / unlock_digits / unlock_punct). {exc}"
-            ) from exc
-    ctx = controls.context
-    drawn = polish_glyph_map(controls.build_all(charset), opts.polish_options())
+    drawn = polish_glyph_map(dict(glyphs), opts.polish_options())
+    if "n" not in drawn or "o" not in drawn:
+        raise KeyError("compose_font requires glyphs for both 'n' and 'o'")
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     classes = (
@@ -174,12 +128,13 @@ def compose_font_from_controls(
         space_width=spaced["n"].advance * opts.space_width_factor,
     )
     font.add_chars(spaced)
+    pair = control_pair or (drawn["n"], drawn["o"])
     if opts.extended_latin:
-        add_composite_latin(font, controls.control_glyphs())
+        add_composite_latin(font, pair)
     if opts.tnum:
         add_tabular_alternates(font, spaced)
     if opts.liga:
-        add_standard_ligatures(font, controls.control_glyphs())
+        add_standard_ligatures(font, pair)
     if opts.case:
         add_case_punctuation(font, spaced)
     if opts.frac:

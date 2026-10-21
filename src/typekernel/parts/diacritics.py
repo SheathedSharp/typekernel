@@ -17,7 +17,7 @@ __all__ = [
 
 # TK-208: outline letters are opt-in via ``FamilyBuildOptions.extended_latin``;
 # precomposed accents are registered when that option is non-empty (see
-# ``compose_font_from_controls``), not in ``Controls.supported``.
+# ``compose_font``), not in ``FormSources.supported``.
 EXTENDED_LATIN_OUTLINE_CHARS = "æøÆØ"
 
 

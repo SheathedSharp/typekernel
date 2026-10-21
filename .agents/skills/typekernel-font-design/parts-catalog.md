@@ -127,11 +127,11 @@ Built on primitives; return `ComposedGlyph`.
 | `Font.from_context` / `add_char` / `add_chars` | font model |
 | `Glyph.from_composed` / `for_char` | ComposedGlyph → Glyph |
 | `build_font` / `build_variable_font` | binaries |
-| `compose_font_from_controls` | **legacy** Controls → Font helper (default still runs unlock gates) |
+| `compose_font` | **legacy** FormSources → Font helper (default still runs unlock gates) |
 
 ## Legacy (not catalog happy path)
 
-`Controls`, `DesignSequence`, `unlock_*`, `build_all` — still in tree for old examples/tests.
+`Controls` / `DesignSequence` / `unlock_*` / `build_all` — **deleted**. Optional `FormSources.derive` is stock sugar only, not the happy path.
 Do not document them as the way to design. Prefer parts + `Font` as above.
 
 ## Skeleton / pen (marked)

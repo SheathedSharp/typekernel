@@ -9,8 +9,7 @@ for ``n`` / ``h`` / ``r`` / ``u`` / ``m`` when ``italic_slant_deg`` ≥ 6°
 For mechanical oblique on a finished font, use
 :func:`~typekernel.compile.oblique.oblique_font` — do not label that as Italic.
 
-Agent gate: :func:`~typekernel.qa.design_sequence.unlock_controls_italic_body`
-unlocks the Latin body on this sheet (construct slant + branching skips).
+True italic masters use construct slant + branching topology on this sheet.
 Diagonals ``k``/``v``/``w``/``x``/``y``/``z`` use cursive-cubic / asymmetric
 italic constructions (topology differs from shear). Non-diagonal branching: left-stem ``n``/``h``/``m``/``r`` use construction
 fillets; mirrored ``u`` uses ``_soften_italic_branch_crotch`` (emit is unsafe on
@@ -35,7 +34,7 @@ from dataclasses import dataclass, replace
 from typekernel.axes.slant import ObliqueTransform
 from typekernel.geo.layout import union_bounds
 from typekernel.parts.compose import Anchor, ComposedGlyph
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 from typekernel.parts.slant_compensate import horizontal_slant_compensation
 from typekernel.parts.transforms import translate
 
@@ -59,7 +58,7 @@ class ItalicStyle:
     contrast_scale: float = 0.96
 
 
-def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Controls:
+def italic_design(regular: FormSources, *, style: ItalicStyle | None = None) -> FormSources:
     """Return an italic master: wider counters + construct slant on every glyph."""
     s = style or ItalicStyle()
     ctx = regular.context.tuned(
@@ -79,7 +78,7 @@ def italic_design(regular: Controls, *, style: ItalicStyle | None = None) -> Con
     return replace(regular, context=ctx, n=n, o=o)
 
 
-def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
+def italic_controls(regular: FormSources, *, lean: float = 1.035) -> FormSources:
     """Deprecated name for :func:`italic_design` (kept for examples and VF demos)."""
     warnings.warn(
         "italic_controls() is deprecated; use italic_design(regular, style=ItalicStyle(...))",
@@ -89,7 +88,7 @@ def italic_controls(regular: Controls, *, lean: float = 1.035) -> Controls:
     return italic_design(regular, style=ItalicStyle(lean=lean))
 
 
-def vf_upright_controls(regular: Controls, *, oblique_split_deg: float = 10.0) -> Controls:
+def vf_upright_controls(regular: FormSources, *, oblique_split_deg: float = 10.0) -> FormSources:
     """Upright sheet for ``wght×ital`` VFs (TK-404 segment compatibility)."""
     return replace(
         regular,
@@ -102,10 +101,10 @@ def vf_upright_controls(regular: Controls, *, oblique_split_deg: float = 10.0) -
 
 
 def vf_italic_pair(
-    regular: Controls,
+    regular: FormSources,
     *,
     style: ItalicStyle | None = None,
-) -> tuple[Controls, Controls]:
+) -> tuple[FormSources, FormSources]:
     """Upright + italic sheets with matched oblique pre-split angle (TK-404)."""
     s = style or ItalicStyle()
     upright = vf_upright_controls(regular, oblique_split_deg=s.slant_deg)

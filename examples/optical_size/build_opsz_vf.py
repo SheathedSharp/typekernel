@@ -15,7 +15,7 @@ from typekernel.compile import build_font, build_variable_font, reference_kern_c
 from typekernel.font import Font, Master
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    Controls,
+    FormSources,
     DesignContext,
     auto_class_kern,
     context_for_opsz,
@@ -32,14 +32,14 @@ VF_LADDER_TEXT = "Hamburgevons 0123 — opsz ladder (text → display)."
 
 
 def master_font(
-    controls: Controls,
+    controls: FormSources,
     style: str,
     weight_class: int,
     kern_classes: tuple,
 ) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(spaced, kern_classes, target=rhythm)
@@ -69,9 +69,9 @@ def main() -> None:
     base = DesignContext.code_clear()
     text_ctx = context_for_opsz(base, DEFAULT_TEXT_OPSZ)
     display_ctx = context_for_opsz(base, DEFAULT_DISPLAY_OPSZ)
-    text = Controls.from_context(text_ctx)
-    display = Controls.from_context(display_ctx)
-    kern_classes = reference_kern_classes(text)
+    text = FormSources.from_context(text_ctx)
+    display = FormSources.from_context(display_ctx)
+    kern_classes = reference_kern_classes(text.derive(), text.context)
 
     masters = [
         Master(

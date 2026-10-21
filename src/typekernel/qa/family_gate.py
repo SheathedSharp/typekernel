@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 from typekernel.qa.identity import check_identity_controls
 from typekernel.qa.lint import lint_controls
 
@@ -16,7 +16,7 @@ __all__ = [
 
 
 def collect_family_gate_failures(
-    controls: Controls,
+    controls: FormSources,
     charset: str | None = None,
 ) -> list[str]:
     """Return human-readable failures for lint/identity errors on ``charset``."""
@@ -34,11 +34,11 @@ def collect_family_gate_failures(
 
 
 def check_family_gate(
-    controls: Controls,
+    controls: FormSources,
     charset: str | None = None,
     *,
-    baseline: Controls | None = None,
-    masters: tuple[Controls, ...] | None = None,
+    baseline: FormSources | None = None,
+    masters: tuple[FormSources, ...] | None = None,
 ) -> list[str]:
     """Lint + identity on the declared charset (and optional extra masters).
 

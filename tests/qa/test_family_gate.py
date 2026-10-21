@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.family_gate import (
     FAMILY_GATE_VERSION,
     check_family_gate,
@@ -39,7 +39,7 @@ _SECTION8_GATE_PRESETS = (
 @pytest.mark.parametrize("preset", _PRESETS)
 def test_preset_passes_family_gate(preset: str) -> None:
     failures = collect_family_gate_failures(
-        Controls.from_context(getattr(DesignContext, preset)())
+        FormSources.from_context(getattr(DesignContext, preset)())
     )
     assert not failures, failures
 
@@ -47,14 +47,14 @@ def test_preset_passes_family_gate(preset: str) -> None:
 @pytest.mark.parametrize("preset", _SECTION8_GATE_PRESETS)
 def test_section8_family_gate_on_main_and_serif_voices(preset: str) -> None:
     failures = collect_family_gate_failures(
-        Controls.from_context(getattr(DesignContext, preset)())
+        FormSources.from_context(getattr(DesignContext, preset)())
     )
     assert not failures, failures
 
 
 def test_check_family_gate_multiple_masters() -> None:
     ctx = DesignContext.humanist_sans()
-    regular = Controls.from_context(ctx)
-    bold = Controls.from_context(ctx.tuned(stem=140.0)).with_stem_relief()
+    regular = FormSources.from_context(ctx)
+    bold = FormSources.from_context(ctx.tuned(stem=140.0)).with_stem_relief()
     failures = check_family_gate(regular, masters=(regular, bold))
     assert not failures, failures

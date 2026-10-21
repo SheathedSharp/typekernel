@@ -7,17 +7,16 @@
 > [anti-patterns](../.agents/skills/typekernel-font-design/anti-patterns.md)) and
 > [AGENT_GOAL.md](AGENT_GOAL.md).
 
-The old Controls / DesignSequence / `unlock_*` / `build_all`-as-design cookbook is
-quarantined at [`docs/_legacy/agent-recipes.md`](_legacy/agent-recipes.md) and
-scheduled for deletion. Do not teach it as the happy path.
+Usage B (`Controls` / `DesignSequence` / `unlock_*` / `build_all`) has been **deleted**.
+Optional `FormSources.derive` is stock RELATED_FORMS sugar only — not the design method.
 
 ## Product rule
 
 | Do | Don't |
 | --- | --- |
-| Write Python that composes `typekernel.parts` | Treat `Controls.build_all` as design |
-| Space with `space_font` / manual advances | Require `DesignSequence` / `unlock_*` to “be legal” |
-| Compile with `build_font` and proof | Copy `examples/_legacy/agent_*` as templates |
+| Write Python that composes `typekernel.parts` | Treat `FormSources.derive` as design |
+| Space with `space_font` / manual advances | Require any unlock / DesignSequence gate |
+| Compile with `build_font` and proof | Revive deleted Controls / build_all APIs |
 
 ## Maintenance CLIs (library keepers)
 
@@ -29,7 +28,6 @@ PYTHONPATH=src python examples/contact_sheet.py
 PYTHONPATH=src python examples/diff_overlay.py
 PYTHONPATH=src python examples/regenerate_outline_hashes.py
 PYTHONPATH=src python examples/weight_ladder_sheet.py
-PYTHONPATH=src python examples/_legacy/agent_trial/validate_snapshot.py
 ```
 
 Trial helpers: `snapshot_trial`, `validate_trial_snapshot`, `trial_snapshot_exit_code`,
@@ -47,6 +45,6 @@ Trial helpers: `snapshot_trial`, `validate_trial_snapshot`, `trial_snapshot_exit
 ### Skeleton spike (not default)
 
 `trace_letter`, `polyline_to_cubic_centerline`, `examples/zayju_script/`
-(`build_charset_sequential`), QA helpers `try_unlock_script_builders` /
-`style_consistency` — see `tests/examples/test_zayju_script.py`,
-`tests/qa/test_style_consistency.py`.
+(`build_charset_sequential`), QA helpers `script_topology_skip_checks` /
+`script_sequence_tolerances` / `style_consistency` — see
+`tests/examples/test_zayju_script.py`, `tests/qa/test_style_consistency.py`.

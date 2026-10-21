@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("ufoLib2")
 pytest.importorskip("ufo2ft")
 
-from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
+from typekernel.compile import FamilyBuildOptions, build_font, compose_font
 from typekernel.compile.features import (
     add_fraction_forms,
     add_ordn_forms,
@@ -15,14 +15,14 @@ from typekernel.compile.features import (
     standard_feature_text,
 )
 from typekernel.font import Font
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def test_liga_glyphs_and_fea(tmp_path) -> None:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     font = Font.from_context(ctx, "Feat")
-    font.add_chars(controls.build_all("fli"))
+    font.add_chars(controls.derive("fli"))
     add_standard_ligatures(font, controls.control_glyphs())
     font.features = standard_feature_text(tnum=False, case=False)
     build_font(font, tmp_path, formats=("otf",))
@@ -32,9 +32,9 @@ def test_liga_glyphs_and_fea(tmp_path) -> None:
 
 def test_frac_and_ordn_glyphs_and_fea(tmp_path) -> None:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     font = Font.from_context(ctx, "FracOrdn")
-    drawn = controls.build_all("0123456789/aoNnMm")
+    drawn = controls.derive("0123456789/aoNnMm")
     font.add_chars(drawn)
     add_fraction_forms(font, {ch: drawn[ch] for ch in "0123456789"}, slash=drawn["/"])
     add_ordn_forms(font, drawn)
@@ -49,9 +49,10 @@ def test_frac_and_ordn_glyphs_and_fea(tmp_path) -> None:
 
 
 def test_compose_font_frac_ordn_options(tmp_path) -> None:
-    controls = Controls.from_context(DesignContext.humanist_sans())
-    font = compose_font_from_controls(
-        controls,
+    controls = FormSources.from_context(DesignContext.humanist_sans())
+    font = compose_font(
+        controls.derive(),
+        controls.context,
         "ComposeFrac",
         options=FamilyBuildOptions(frac=True, ordn=True),
     )

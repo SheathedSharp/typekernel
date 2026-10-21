@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.weight_relief import counter_gap_floor
 from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM, min_counter_gap
 
@@ -12,10 +12,10 @@ from typekernel.qa.counter import COUNTER_SCAN_MIN_RUN_OVER_STEM, min_counter_ga
 def test_descender_letters_skip_baseline_stem_pinch() -> None:
     """Stem–bowl slivers below the body band must not drive R8 on ``p``/``q``."""
     ctx = DesignContext.humanist_sans().tuned(stem=180.0)
-    controls = Controls.from_context(ctx).with_stem_relief()
+    controls = FormSources.from_context(ctx).with_stem_relief()
     floor = counter_gap_floor(ctx.stem)
     for ch in "pq":
-        assert min_counter_gap(controls.build(ch)) >= floor
+        assert min_counter_gap(controls.derive_one(ch)) >= floor
 
 
 @pytest.mark.parametrize("ch", ("p", "q"))
@@ -24,8 +24,8 @@ def test_descender_micro_sliver_below_min_run_gap_ignored(ch: str) -> None:
     from typekernel.optics.space import ink_intervals_at_y
 
     ctx = DesignContext.humanist_sans().tuned(stem=180.0)
-    controls = Controls.from_context(ctx).with_stem_relief()
-    glyph = controls.build(ch)
+    controls = FormSources.from_context(ctx).with_stem_relief()
+    glyph = controls.derive_one(ch)
     min_run = max(1.0, COUNTER_SCAN_MIN_RUN_OVER_STEM * ctx.stem)
     # Grid-audit y where ink splits but gap is far below the R8 scan threshold.
     y_audit = -17.343161198288144
@@ -38,14 +38,14 @@ def test_descender_micro_sliver_below_min_run_gap_ignored(ch: str) -> None:
 
 def test_bowl_stem_uses_inner_contour_not_even_odd_sliver() -> None:
     ctx = DesignContext.humanist_sans().tuned(stem=30.0)
-    gap = min_counter_gap(Controls.from_context(ctx).build("b"))
+    gap = min_counter_gap(FormSources.from_context(ctx).derive_one("b"))
     assert gap >= counter_gap_floor(ctx.stem)
 
 
 def test_round_bowl_still_reports_counter_gap() -> None:
     ctx = DesignContext.humanist_sans().tuned(stem=110.0)
-    controls = Controls.from_context(ctx).with_stem_relief()
-    gap = min_counter_gap(controls.build("o"))
+    controls = FormSources.from_context(ctx).with_stem_relief()
+    gap = min_counter_gap(controls.derive_one("o"))
     floor = counter_gap_floor(ctx.stem)
     assert gap >= floor
 
@@ -53,7 +53,7 @@ def test_round_bowl_still_reports_counter_gap() -> None:
 def test_cap_k_ignores_stem_diagonal_micro_slivers() -> None:
     """``K`` stem–arm wedges must not dominate R8 (see TK-207 ``K`` charset audit)."""
     ctx = DesignContext.humanist_sans().tuned(stem=70.0)
-    gap = min_counter_gap(Controls.from_context(ctx).build("K"))
+    gap = min_counter_gap(FormSources.from_context(ctx).derive_one("K"))
     assert gap >= counter_gap_floor(ctx.stem)
 
 
@@ -74,10 +74,10 @@ def test_stem_lowercase_pass_counter_floor_across_ladder(char: str) -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build(char))
+            gap = min_counter_gap(controls.derive_one(char))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -97,10 +97,10 @@ def test_asterisk_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("*"))
+            gap = min_counter_gap(controls.derive_one("*"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -121,10 +121,10 @@ def test_cap_stem_letters_pass_counter_floor_across_ladder(char: str) -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build(char))
+            gap = min_counter_gap(controls.derive_one(char))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -144,10 +144,10 @@ def test_cap_v_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("V"))
+            gap = min_counter_gap(controls.derive_one("V"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -167,10 +167,10 @@ def test_cap_w_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("W"))
+            gap = min_counter_gap(controls.derive_one("W"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -190,10 +190,10 @@ def test_cap_x_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("X"))
+            gap = min_counter_gap(controls.derive_one("X"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -213,10 +213,10 @@ def test_cap_y_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("Y"))
+            gap = min_counter_gap(controls.derive_one("Y"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -236,10 +236,10 @@ def test_cap_m_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("M"))
+            gap = min_counter_gap(controls.derive_one("M"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -259,10 +259,10 @@ def test_cap_n_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("N"))
+            gap = min_counter_gap(controls.derive_one("N"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -282,10 +282,10 @@ def test_k_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("k"))
+            gap = min_counter_gap(controls.derive_one("k"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -305,10 +305,10 @@ def test_x_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("x"))
+            gap = min_counter_gap(controls.derive_one("x"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -328,10 +328,10 @@ def test_w_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("w"))
+            gap = min_counter_gap(controls.derive_one("w"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -351,10 +351,10 @@ def test_v_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("v"))
+            gap = min_counter_gap(controls.derive_one("v"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -374,10 +374,10 @@ def test_y_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("y"))
+            gap = min_counter_gap(controls.derive_one("y"))
             assert gap >= counter_gap_floor(stem)
 
 
@@ -397,8 +397,8 @@ def test_cap_k_passes_counter_floor_across_ladder() -> None:
     for preset in presets:
         for stem in (30.0, 70.0, 110.0, 150.0, 180.0, 200.0):
             ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-            controls = Controls.from_context(ctx)
+            controls = FormSources.from_context(ctx)
             if stem >= STEM_RELIEF_ONSET:
                 controls = controls.with_stem_relief()
-            gap = min_counter_gap(controls.build("K"))
+            gap = min_counter_gap(controls.derive_one("K"))
             assert gap >= counter_gap_floor(stem)

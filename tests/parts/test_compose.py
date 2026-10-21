@@ -6,7 +6,13 @@ import importlib.util
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext, GlyphAssembler, horizontal_bar, vertical_stem
+from typekernel.parts import (
+    DesignContext,
+    FormSources,
+    GlyphAssembler,
+    horizontal_bar,
+    vertical_stem,
+)
 from typekernel.parts.latin import letter_a, letter_z
 
 HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
@@ -40,7 +46,7 @@ def test_assembler_union_merges_solids() -> None:
 
 def test_controls_zayju_shares_one_context() -> None:
     ctx = DesignContext.geometric_sans()
-    drawn = Controls.from_context(ctx).build_all("zayju")
+    drawn = FormSources.from_context(ctx).derive("zayju")
     glyphs = [drawn[ch] for ch in "zayju"]
     assert len(glyphs) == 5
     assert all(g.context is ctx for g in glyphs)
@@ -68,7 +74,7 @@ def test_heal_composed_glyph_roundtrip() -> None:
     from typekernel.parts import heal_composed_glyph
 
     ctx = DesignContext.geometric_sans()
-    raw = Controls.from_context(ctx).build("a")
+    raw = FormSources.from_context(ctx).derive_one("a")
     healed = heal_composed_glyph(raw, heal=True, min_contour_area=25.0, refit_budget=2.5)
     assert healed.advance > 0
     assert len(healed.solids) >= 1

@@ -72,6 +72,6 @@ When creating or extending faces in this repo:
 
 1. Follow `.agents/skills/typekernel-font-design/` **Usage A** (parts → Font → space → compile → proof).
 2. Compose glyphs from parts / letter builders in your own script. Do **not** treat
-   `Controls.build_all`, `DesignSequence`, or `unlock_*` as the design method.
+   `FormSources.build_all`, `DesignSequence`, or `unlock_*` as the design method.
 3. Specimen sentences are late proofs, not the design driver.
 4. Prefer new examples under `examples/<face>/`; do not copy `examples/_legacy/agent_*`.

@@ -23,7 +23,7 @@ from typekernel.compile.build import (
 from typekernel.compile.family_build import (
     DEFAULT_PAIR_KERN_EXCEPTIONS,
     FamilyBuildOptions,
-    compose_font_from_controls,
+    compose_font,
     reference_kern_classes,
 )
 from typekernel.compile.features import (
@@ -54,7 +54,7 @@ __all__ = [
     "build_font",
     "build_ttf_from_ufo",
     "build_variable_font",
-    "compose_font_from_controls",
+    "compose_font",
     "deep_check_masters",
     "font_to_ufo",
     "oblique_font",

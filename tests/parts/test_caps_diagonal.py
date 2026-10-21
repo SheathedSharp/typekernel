@@ -7,7 +7,7 @@ import pytest
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import CAP_FORMS, Controls, DesignContext, h_cap_metrics
+from typekernel.parts import CAP_FORMS, DesignContext, FormSources, h_cap_metrics
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def ctx() -> DesignContext:
 
 @pytest.fixture
 def caps(ctx: DesignContext):
-    return Controls.from_context(ctx).build_all("AVWXYZKMN")
+    return FormSources.from_context(ctx).derive("AVWXYZKMN")
 
 
 def test_full_cap_alphabet_registered() -> None:
@@ -43,7 +43,7 @@ def test_a_has_bar_and_counter(caps, ctx: DesignContext) -> None:
 
 def test_heavy_a_widens_to_keep_its_counter() -> None:
     heavy = DesignContext.code_clear().tuned(stem=220.0)
-    a = Controls.from_context(heavy).build("A")
+    a = FormSources.from_context(heavy).derive_one("A")
     assert len(a.solids[0].contours) == 2
     x0, _, x1, _ = bounds(a.solids[0])
     assert x1 - x0 >= 3.2 * h_cap_metrics(heavy).stem - 1e-6

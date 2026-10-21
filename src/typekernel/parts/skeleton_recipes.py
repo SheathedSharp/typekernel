@@ -1,7 +1,7 @@
 """Compatibility letter entry points — prefer :mod:`typekernel.parts.control`.
 
 .. deprecated::
-    Legacy ``skel_*`` aliases. Use :class:`~typekernel.parts.family.Controls`
+    Legacy ``skel_*`` aliases. Use :class:`~typekernel.parts.family.FormSources`
     instead.
 
 ``skel_n`` / ``skel_h`` / ``skel_o`` / ``skel_u`` / ``skel_i`` delegate to the

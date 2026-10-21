@@ -25,12 +25,12 @@ Agent **必须**用代码表达 brief、比例与字形决策（`DesignContext`�
 
 以下 **不是** 产品快乐路径，文档与 skill 不再教它们当设计方法：
 
-- `Controls.build_all` / 整句 charset 批量当设计
+- `FormSources.build_all` / 整句 charset 批量当设计
 - `DesignSequence` / `unlock_*` 当作「唯一合法设计」
 - `examples/_legacy/agent_studio|agent_family|…` 当模板
 - 把 aggregate family factory 当「快捷糖」保留双轨教学
 
-`Controls` 等模块可暂时留在库里供旧测试；计划隔离删除。新面子请走 Usage A。
+`FormSources` 等模块可暂时留在库里供旧测试；计划隔离删除。新面子请走 Usage A。
 
 ## 完成分级
 
@@ -54,7 +54,7 @@ pip install -e ".[compile,specimen,boolean]"
 
 - Skill：[`.agents/skills/typekernel-font-design/SKILL.md`](../.agents/skills/typekernel-font-design/SKILL.md)（含同一 brief 的 ≥2 种配方）
 - 零件表：`parts-catalog.md`；配方：`recipes.md`
-- 示例方向：`examples/first_font/`、`examples/zayju_letter/`（优先学零件拼装，而不是 Controls 工厂）
+- 示例方向：`examples/first_font/`、`examples/zayju_letter/`（优先学零件拼装，而不是 FormSources 工厂）
 
 ## 工程债 / 程序验收（维护者）
 
@@ -66,7 +66,7 @@ pip install -e ".[compile,specimen,boolean]"
 - 试验快照：`examples/_legacy/agent_trial/validate_snapshot.py`（legacy）
 - 烟测指针：`test_knob_coverage`、`test_extended_latin_policy`、`test_multi_voice_exit`、`test_style_consistency`、`test_originality`、`test_stress`、`test_glyph_specs`、`test_stroke_program_acceptance`、`test_zayju_script`、`test_serif_voice_meets_program_acceptance`
 
-配方指针与维护 CLI：[agent-recipes.md](agent-recipes.md)。旧 Controls 菜谱：[docs/_legacy/agent-recipes.md](_legacy/agent-recipes.md)。
+配方指针与维护 CLI：[agent-recipes.md](agent-recipes.md)。旧 FormSources 菜谱：[docs/_legacy/agent-recipes.md](_legacy/agent-recipes.md)。
 
 ## 维护
 

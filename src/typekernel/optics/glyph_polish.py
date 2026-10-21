@@ -64,7 +64,7 @@ def polish_glyph_map(
     glyphs: Mapping[str, ComposedGlyph],
     options: GlyphPolishOptions | None = None,
 ) -> dict[str, ComposedGlyph]:
-    """Polish every entry (typical post-:meth:`~typekernel.parts.family.Controls.build_all`)."""
+    """Polish every entry (typical post-:meth:`~typekernel.parts.family.FormSources.derive`)."""
     opts = options or GlyphPolishOptions()
     if opts.joins_policy == "noop" and not opts.ease_curvature:
         return dict(glyphs)

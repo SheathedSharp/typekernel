@@ -11,14 +11,14 @@ pytest.importorskip("ufo2ft")
 
 from typekernel.compile import build_font, read_font_from_ufo
 from typekernel.font import Font
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def test_read_font_from_ufo_roundtrip(tmp_path: Path) -> None:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     font = Font.from_context(ctx, "Roundtrip")
-    font.add_chars(controls.build_all("no"))
+    font.add_chars(controls.derive("no"))
     build_font(font, tmp_path)
     ufo = tmp_path / "Roundtrip-Regular.ufo"
     back = read_font_from_ufo(ufo)

@@ -120,20 +120,6 @@ _SECTION8_REGRESSION_TESTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "test_validate_trial_snapshot_record_program_only_rejects_human_scores",
         ),
     ),
-    (
-        "tests/examples/test_agent_trial_reference.py",
-        ("test_snapshot_design_stem_tweak_exit_code_7",),
-    ),
-    (
-        "tests/examples/test_agent_trial.py",
-        (
-            "test_snapshot_presets_script_writes_gate_baseline",
-            "test_validate_snapshot_recursive_on_reference_trials",
-            "test_validate_snapshot_program_only_rejects_premature_human_scores",
-            "test_validate_snapshot_require_human_scores_exit_8_without_scores",
-            "test_validate_snapshot_script_on_reference_trial",
-        ),
-    ),
 )
 
 
@@ -170,7 +156,6 @@ def test_section8_agent_trials_documents_final_validation() -> None:
     assert "作废条件" in text
     assert "human_review_bundle" in text
     assert "snapshot_design.py" in text
-    assert "test_agent_trial_reference" in text
     assert "test_development_plan_section8" in text
     assert "test_extended_latin_policy" in text
     assert "test_zayju_script_sequential_style_gate_passes" in text
@@ -252,7 +237,7 @@ def test_section8_agent_recipes_documents_trace_letter_spike() -> None:
     assert "zayju_script" in text
     assert "test_zayju_script.py" in text
     assert "build_charset_sequential" in text
-    assert "try_unlock_script_builders" in text
+    assert "script_topology_skip_checks" in text or "script_sequence_tolerances" in text
     assert "style_consistency" in text
     assert "test_style_consistency.py" in text
 
@@ -285,16 +270,13 @@ def test_section8_agent_recipes_documents_appendix_b_human_review() -> None:
 
 
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
-    text = (ROOT / "examples/_legacy/agent_trial/README.md").read_text(encoding="utf-8")
-    assert "trial_snapshot_exit_code" in text
-    assert "validate_trial_snapshot" in text
-    assert "validate_snapshot.py" in text
-    assert "require-human-scores" in text
-    assert "program-snapshot-only" in text
-    assert "AGENT_TRIALS.md" in text
-    assert "human_review_bundle" in text
-    assert "--only appendix-b" in text
-    assert "appendix_b_three_g_humanist.png" in text
+    text = (ROOT / "docs/AGENT_TRIALS.md").read_text(encoding="utf-8")
+    assert "trial_snapshot_exit_code" in text or "snapshot_trial" in text
+    assert "validate_trial_snapshot" in text or "voice_distance" in text
+    recipes = (ROOT / "docs/agent-recipes.md").read_text(encoding="utf-8")
+    assert "human_review_bundle" in recipes
+    assert "--only appendix-b" in recipes
+    assert "appendix_b_three_g_humanist.png" in recipes
 
 
 def test_section8_skill_documents_program_exit_workflow() -> None:

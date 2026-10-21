@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.weight_relief import STEM_RELIEF_ONSET
 from typekernel.qa.thickness import hook_min_thin_floor, min_hook_thickness
@@ -21,12 +21,12 @@ _HOOK_CHARS = ("f", "t", "g", "J", "j")
 @pytest.mark.parametrize("stem", _LADDER_STEMS)
 def test_hook_root_thickness_weight_ladder(preset: str, stem: float) -> None:
     ctx = getattr(DesignContext, preset)().tuned(stem=stem)
-    controls = Controls.from_context(ctx)
+    controls = FormSources.from_context(ctx)
     if stem >= STEM_RELIEF_ONSET:
         controls = controls.with_stem_relief()
     floor = hook_min_thin_floor(ctx)
     for char in _HOOK_CHARS:
-        glyph = controls.build(char)
+        glyph = controls.derive_one(char)
         if char == "j":
             glyph = ComposedGlyph((glyph.solids[0],), (), glyph.advance, ctx)
         assert min_hook_thickness(glyph, char, ctx) >= floor
@@ -36,9 +36,9 @@ def test_hook_root_thickness_weight_ladder(preset: str, stem: float) -> None:
 def test_hook_root_thickness_humanist_stem_200_with_relief(char: str) -> None:
     """Black master + relief: main UI preset must keep hook spring (TK-205)."""
     ctx = DesignContext.humanist_sans().tuned(stem=200.0)
-    controls = Controls.from_context(ctx).with_stem_relief()
+    controls = FormSources.from_context(ctx).with_stem_relief()
     floor = hook_min_thin_floor(ctx)
-    glyph = controls.build(char)
+    glyph = controls.derive_one(char)
     if char == "j":
         glyph = ComposedGlyph((glyph.solids[0],), (), glyph.advance, ctx)
     assert min_hook_thickness(glyph, char, ctx) >= floor

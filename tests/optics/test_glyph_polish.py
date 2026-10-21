@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typekernel.geo.smoothness import is_g1_join
 from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 
 
 def _non_g1_count(g):
@@ -19,13 +19,13 @@ def _non_g1_count(g):
 
 def test_polish_reduces_kinks_on_control_n() -> None:
     ctx = DesignContext.code_clear()
-    raw = Controls.from_context(ctx).build("n")
+    raw = FormSources.from_context(ctx).derive_one("n")
     polished = polish_glyph(raw, GlyphPolishOptions(joins_policy="tangent_fix"))
     assert _non_g1_count(polished) <= _non_g1_count(raw)
 
 
 def test_compose_polish_noop_identity() -> None:
     ctx = DesignContext.code_clear()
-    g = Controls.from_context(ctx).build("o")
+    g = FormSources.from_context(ctx).derive_one("o")
     same = polish_glyph(g, GlyphPolishOptions.noop())
     assert same is g

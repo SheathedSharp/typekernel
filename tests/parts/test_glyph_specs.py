@@ -1,4 +1,4 @@
-"""TK-303: typed weak-glyph specs and Controls.tuned_glyph."""
+"""TK-303: typed weak-glyph specs and FormSources.tuned_glyph."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.glyph_specs import WEAK_GLYPH_SPECS, FSpec, TSpec, merge_spec
 from typekernel.qa.outline_hash import composed_glyph_hash
 
@@ -14,21 +14,21 @@ from typekernel.qa.outline_hash import composed_glyph_hash
 @pytest.mark.parametrize("ch", ("f", "t", "j", "a", "e", "s"))
 def test_tuned_glyph_defaults_match_stock_derivation(ch: str) -> None:
     ctx = DesignContext.humanist_sans()
-    base = Controls.from_context(ctx).build(ch)
-    tuned = Controls.from_context(ctx).tuned_glyph(ch).build(ch)
+    base = FormSources.from_context(ctx).derive_one(ch)
+    tuned = FormSources.from_context(ctx).tuned_glyph(ch).derive_one(ch)
     assert composed_glyph_hash(base) == composed_glyph_hash(tuned)
 
 
 def test_cap_glyph_specs_default_match_stock() -> None:
     ctx = DesignContext.humanist_sans()
-    base = Controls.from_context(ctx).build_all("GKRY")
+    base = FormSources.from_context(ctx).derive("GKRY")
     tuned = (
-        Controls.from_context(ctx)
+        FormSources.from_context(ctx)
         .tuned_glyph("G")
         .tuned_glyph("K")
         .tuned_glyph("R")
         .tuned_glyph("Y")
-        .build_all("GKRY")
+        .derive("GKRY")
     )
     for ch in "GKRY":
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(tuned[ch])
@@ -36,13 +36,13 @@ def test_cap_glyph_specs_default_match_stock() -> None:
 
 def test_tuned_glyph_defaults_preserve_supported_charset_hashes() -> None:
     ctx = DesignContext.humanist_sans()
-    base = Controls.from_context(ctx)
-    tuned = Controls.from_context(ctx)
+    base = FormSources.from_context(ctx)
+    tuned = FormSources.from_context(ctx)
     for ch in sorted(WEAK_GLYPH_SPECS):
         tuned = tuned.tuned_glyph(ch)
     chars = base.supported
-    base_glyphs = base.build_all(chars)
-    tuned_glyphs = tuned.build_all(chars)
+    base_glyphs = base.derive(chars)
+    tuned_glyphs = tuned.derive(chars)
     mismatches = [
         ch
         for ch in chars
@@ -54,103 +54,103 @@ def test_tuned_glyph_defaults_preserve_supported_charset_hashes() -> None:
 def test_cap_vwx_mn_specs_default_match_stock() -> None:
     ctx = DesignContext.humanist_sans()
     chars = "VWXMN"
-    base = Controls.from_context(ctx).build_all(chars)
-    tuned = Controls.from_context(ctx)
+    base = FormSources.from_context(ctx).derive(chars)
+    tuned = FormSources.from_context(ctx)
     for ch in chars:
         tuned = tuned.tuned_glyph(ch)
-    built = tuned.build_all(chars)
+    built = tuned.derive(chars)
     for ch in chars:
         assert composed_glyph_hash(base[ch]) == composed_glyph_hash(built[ch])
 
 
 def test_k_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("K", width=0.86).build("K")
-    wide = Controls.from_context(ctx).tuned_glyph("K", width=0.98).build("K")
+    narrow = FormSources.from_context(ctx).tuned_glyph("K", width=0.86).derive_one("K")
+    wide = FormSources.from_context(ctx).tuned_glyph("K", width=0.98).derive_one("K")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_b_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("B", width=0.86).build("B")
-    wide = Controls.from_context(ctx).tuned_glyph("B", width=0.98).build("B")
+    narrow = FormSources.from_context(ctx).tuned_glyph("B", width=0.86).derive_one("B")
+    wide = FormSources.from_context(ctx).tuned_glyph("B", width=0.98).derive_one("B")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_u_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("U", width=0.88).build("U")
-    wide = Controls.from_context(ctx).tuned_glyph("U", width=1.04).build("U")
+    narrow = FormSources.from_context(ctx).tuned_glyph("U", width=0.88).derive_one("U")
+    wide = FormSources.from_context(ctx).tuned_glyph("U", width=1.04).derive_one("U")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_q_tail_reach_monotone_moves_tip() -> None:
     ctx = DesignContext.humanist_sans()
-    short = Controls.from_context(ctx).tuned_glyph("Q", tail_reach=0.92).build("Q")
-    long = Controls.from_context(ctx).tuned_glyph("Q", tail_reach=1.08).build("Q")
+    short = FormSources.from_context(ctx).tuned_glyph("Q", tail_reach=0.92).derive_one("Q")
+    long = FormSources.from_context(ctx).tuned_glyph("Q", tail_reach=1.08).derive_one("Q")
     assert composed_glyph_hash(short) != composed_glyph_hash(long)
 
 
 def test_cap_s_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("S", width=0.78).build("S")
-    wide = Controls.from_context(ctx).tuned_glyph("S", width=0.94).build("S")
+    narrow = FormSources.from_context(ctx).tuned_glyph("S", width=0.78).derive_one("S")
+    wide = FormSources.from_context(ctx).tuned_glyph("S", width=0.94).derive_one("S")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_d_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("D", width=0.98).build("D")
-    wide = Controls.from_context(ctx).tuned_glyph("D", width=1.12).build("D")
+    narrow = FormSources.from_context(ctx).tuned_glyph("D", width=0.98).derive_one("D")
+    wide = FormSources.from_context(ctx).tuned_glyph("D", width=1.12).derive_one("D")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_cap_e_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("E", width=0.76).build("E")
-    wide = Controls.from_context(ctx).tuned_glyph("E", width=0.92).build("E")
+    narrow = FormSources.from_context(ctx).tuned_glyph("E", width=0.76).derive_one("E")
+    wide = FormSources.from_context(ctx).tuned_glyph("E", width=0.92).derive_one("E")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_cap_t_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("T", width=0.84).build("T")
-    wide = Controls.from_context(ctx).tuned_glyph("T", width=1.0).build("T")
+    narrow = FormSources.from_context(ctx).tuned_glyph("T", width=0.84).derive_one("T")
+    wide = FormSources.from_context(ctx).tuned_glyph("T", width=1.0).derive_one("T")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_v_width_monotone_opens_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("V", width=0.88).build("V")
-    wide = Controls.from_context(ctx).tuned_glyph("V", width=1.06).build("V")
+    narrow = FormSources.from_context(ctx).tuned_glyph("V", width=0.88).derive_one("V")
+    wide = FormSources.from_context(ctx).tuned_glyph("V", width=1.06).derive_one("V")
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_g_bar_reach_moves_crossbar() -> None:
     ctx = DesignContext.humanist_sans()
-    short = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.05).build("G")
-    long = Controls.from_context(ctx).tuned_glyph("G", bar_reach=0.18).build("G")
+    short = FormSources.from_context(ctx).tuned_glyph("G", bar_reach=0.05).derive_one("G")
+    long = FormSources.from_context(ctx).tuned_glyph("G", bar_reach=0.18).derive_one("G")
     assert composed_glyph_hash(short) != composed_glyph_hash(long)
 
 
 def test_cap_a_bar_moves_crossbar() -> None:
     ctx = DesignContext.humanist_sans()
-    low = Controls.from_context(ctx).tuned_glyph("A", bar=0.22).build("A")
-    high = Controls.from_context(ctx).tuned_glyph("A", bar=0.34).build("A")
+    low = FormSources.from_context(ctx).tuned_glyph("A", bar=0.22).derive_one("A")
+    high = FormSources.from_context(ctx).tuned_glyph("A", bar=0.34).derive_one("A")
     assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
 def test_y_junction_moves_crotch() -> None:
     ctx = DesignContext.humanist_sans()
-    low = Controls.from_context(ctx).tuned_glyph("Y", junction=0.34).build("Y")
-    high = Controls.from_context(ctx).tuned_glyph("Y", junction=0.52).build("Y")
+    low = FormSources.from_context(ctx).tuned_glyph("Y", junction=0.34).derive_one("Y")
+    high = FormSources.from_context(ctx).tuned_glyph("Y", junction=0.52).derive_one("Y")
     assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
 def test_t_arm_monotone_moves_terminal() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("t", arm=0.45).build("t")
-    wide = Controls.from_context(ctx).tuned_glyph("t", arm=0.72).build("t")
+    narrow = FormSources.from_context(ctx).tuned_glyph("t", arm=0.45).derive_one("t")
+    wide = FormSources.from_context(ctx).tuned_glyph("t", arm=0.72).derive_one("t")
     _, _, x_n, _ = bounds(narrow.solids[0])
     _, _, x_w, _ = bounds(wide.solids[0])
     assert x_w > x_n + 2.0
@@ -158,8 +158,8 @@ def test_t_arm_monotone_moves_terminal() -> None:
 
 def test_f_arm_monotone_moves_terminal() -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph("f", arm=0.55).build("f")
-    wide = Controls.from_context(ctx).tuned_glyph("f", arm=0.88).build("f")
+    narrow = FormSources.from_context(ctx).tuned_glyph("f", arm=0.55).derive_one("f")
+    wide = FormSources.from_context(ctx).tuned_glyph("f", arm=0.88).derive_one("f")
     _, _, x_n, _ = bounds(narrow.solids[0])
     _, _, x_w, _ = bounds(wide.solids[0])
     assert x_w > x_n + 2.0
@@ -167,15 +167,15 @@ def test_f_arm_monotone_moves_terminal() -> None:
 
 def test_e_bar_raise_changes_outline() -> None:
     ctx = DesignContext.humanist_sans()
-    low = Controls.from_context(ctx).tuned_glyph("e", bar_raise=-0.2).build("e")
-    high = Controls.from_context(ctx).tuned_glyph("e", bar_raise=0.35).build("e")
+    low = FormSources.from_context(ctx).tuned_glyph("e", bar_raise=-0.2).derive_one("e")
+    high = FormSources.from_context(ctx).tuned_glyph("e", bar_raise=0.35).derive_one("e")
     assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
 def test_s_spine_monotone_moves_midline() -> None:
     ctx = DesignContext.humanist_sans()
-    low = Controls.from_context(ctx).tuned_glyph("s", spine=0.42).build("s")
-    high = Controls.from_context(ctx).tuned_glyph("s", spine=0.58).build("s")
+    low = FormSources.from_context(ctx).tuned_glyph("s", spine=0.42).derive_one("s")
+    high = FormSources.from_context(ctx).tuned_glyph("s", spine=0.58).derive_one("s")
     y = ctx.x_height * 0.5
     runs_lo = ink_intervals_at_y(list(low.solids), y)
     runs_hi = ink_intervals_at_y(list(high.solids), y)
@@ -202,8 +202,8 @@ def test_s_spine_monotone_moves_midline() -> None:
 )
 def test_width_spec_monotone_changes_outline(ch: str, low: float, high: float) -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph(ch, width=low).build(ch)
-    wide = Controls.from_context(ctx).tuned_glyph(ch, width=high).build(ch)
+    narrow = FormSources.from_context(ctx).tuned_glyph(ch, width=low).derive_one(ch)
+    wide = FormSources.from_context(ctx).tuned_glyph(ch, width=high).derive_one(ch)
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
@@ -238,16 +238,16 @@ def test_glyph_spec_field_monotone_changes_outline(
     ch: str, field: str, low: float, high: float
 ) -> None:
     ctx = DesignContext.humanist_sans()
-    narrow = Controls.from_context(ctx).tuned_glyph(ch, **{field: low}).build(ch)
-    wide = Controls.from_context(ctx).tuned_glyph(ch, **{field: high}).build(ch)
+    narrow = FormSources.from_context(ctx).tuned_glyph(ch, **{field: low}).derive_one(ch)
+    wide = FormSources.from_context(ctx).tuned_glyph(ch, **{field: high}).derive_one(ch)
     assert composed_glyph_hash(narrow) != composed_glyph_hash(wide)
 
 
 def test_m_apex_monotone_moves_baseline_vertex() -> None:
     """``MSpec.apex`` is ladder-overridden on light stems (see ``M_from_H``)."""
     ctx = DesignContext.humanist_sans().tuned(stem=150.0)
-    low = Controls.from_context(ctx).tuned_glyph("M", apex=0.30).build("M")
-    high = Controls.from_context(ctx).tuned_glyph("M", apex=0.48).build("M")
+    low = FormSources.from_context(ctx).tuned_glyph("M", apex=0.30).derive_one("M")
+    high = FormSources.from_context(ctx).tuned_glyph("M", apex=0.48).derive_one("M")
     assert composed_glyph_hash(low) != composed_glyph_hash(high)
 
 
@@ -260,7 +260,7 @@ def test_tuned_glyph_l0_counts_toward_design_review() -> None:
     from typekernel.qa.design_review import design_review
 
     controls = (
-        Controls.from_context(DesignContext.humanist_sans())
+        FormSources.from_context(DesignContext.humanist_sans())
         .tuned_glyph("f", arm=0.8)
         .tuned_glyph("t", arm=0.55)
     )

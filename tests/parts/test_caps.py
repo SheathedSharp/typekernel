@@ -9,8 +9,8 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
-    Controls,
     DesignContext,
+    FormSources,
     build_H,
     build_O,
     cap_o_metrics,
@@ -57,28 +57,28 @@ def test_o_overshoots_cap_zone(ctx: DesignContext) -> None:
 
 def test_g_outer_segment_count_fixed_across_stems() -> None:
     ctx = DesignContext.humanist_sans()
-    ref = Controls.from_context(ctx).build("G")
+    ref = FormSources.from_context(ctx).derive_one("G")
     ref_n = len(ref.solids[0].contours[0].segments)
     for stem in (30.0, 86.0, 220.0):
-        g = Controls.from_context(ctx.tuned(stem=stem)).build("G")
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("G")
         assert len(g.solids[0].contours[0].segments) == ref_n
 
 
 def test_g_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
-    light = Controls.from_context(ctx.tuned(stem=30.0))
-    bold = Controls.from_context(ctx.tuned(stem=220.0))
+    light = FormSources.from_context(ctx.tuned(stem=30.0))
+    bold = FormSources.from_context(ctx.tuned(stem=220.0))
     reg_font = Font.from_context(ctx, "G Sans", "Regular", weight_class=400)
-    reg_font.add_chars(light.build_all("G"))
+    reg_font.add_chars(light.derive("G"))
     bold_font = Font.from_context(ctx, "G Sans", "Bold", weight_class=700)
-    bold_font.add_chars(bold.build_all("G"))
+    bold_font.add_chars(bold.derive("G"))
     masters = [Master({"wght": 400.0}, reg_font), Master({"wght": 700.0}, bold_font)]
     assert check_masters(masters) == []
 
 
 def test_g_spur_ends_with_cubic_fillet(ctx: DesignContext) -> None:
     """TK-206: inward bar turns into the bowl with a curve, not a sharp chamfer."""
-    g = Controls.from_context(ctx).build("G")
+    g = FormSources.from_context(ctx).derive_one("G")
     kinds = [s.kind for s in g.solids[0].contours[0].segments]
     # Spur stack: horiz bar, vertical drop, cubic join, then bowl cubics resume.
     assert kinds.count("cubic") >= 5
@@ -88,7 +88,7 @@ def test_g_spur_ends_with_cubic_fillet(ctx: DesignContext) -> None:
 
 
 def test_tuned_n_stem_reaches_caps_unless_overridden(ctx: DesignContext) -> None:
-    sheet = Controls.from_context(ctx).tuned_n(stem=120.0)
+    sheet = FormSources.from_context(ctx).tuned_n(stem=120.0)
     assert sheet.H.stem == pytest.approx(120.0 * CAP_STEM_RATIO)
     assert sheet.O.thickness == pytest.approx(120.0 * CAP_STEM_RATIO)
     fixed = sheet.tuned_cap_h(stem=100.0)
@@ -97,9 +97,9 @@ def test_tuned_n_stem_reaches_caps_unless_overridden(ctx: DesignContext) -> None
 
 
 def test_tuned_cap_h_width_moves_straight_caps(ctx: DesignContext) -> None:
-    base = Controls.from_context(ctx)
+    base = FormSources.from_context(ctx)
     wide = base.tuned_cap_h(width=base.H.width + 80.0)
-    a, b = base.build_all("HLEFT"), wide.build_all("HLEFT")
+    a, b = base.derive("HLEFT"), wide.derive("HLEFT")
     for ch in "HLEFT":
         wa, wb = _box(a[ch])[2] - _box(a[ch])[0], _box(b[ch])[2] - _box(b[ch])[0]
         assert wb > wa, ch
@@ -111,7 +111,7 @@ def test_tuned_cap_h_width_moves_straight_caps(ctx: DesignContext) -> None:
     [("I", 1, 1), ("L", 1, 1), ("E", 1, 1), ("F", 1, 1), ("T", 1, 1)],
 )
 def test_straight_caps_shapes(ctx: DesignContext, ch: str, runs_mid: int, runs_top: int) -> None:
-    g = Controls.from_context(ctx).build(ch)
+    g = FormSources.from_context(ctx).derive_one(ch)
     (contour,) = g.solids[0].contours
     assert signed_area(contour) > 0
     assert len(ink_intervals_at_y(list(g.solids), ctx.cap_height * 0.3)) == runs_mid
@@ -119,7 +119,7 @@ def test_straight_caps_shapes(ctx: DesignContext, ch: str, runs_mid: int, runs_t
 
 
 def test_e_arm_lengths(ctx: DesignContext) -> None:
-    g = Controls.from_context(ctx).build("E")
+    g = FormSources.from_context(ctx).derive_one("E")
     h = h_cap_metrics(ctx)
     (top,) = ink_intervals_at_y(list(g.solids), ctx.cap_height - 2.0)
     (mid,) = ink_intervals_at_y(list(g.solids), h.bar_y)

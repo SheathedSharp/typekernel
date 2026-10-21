@@ -14,7 +14,7 @@ from typekernel.geo.pens import draw_outline
 from typekernel.geo.segment import CubicSegment
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 
 Severity = Literal["error", "warn"]
 
@@ -262,15 +262,15 @@ def lint_glyph(
 
 
 def lint_controls(
-    controls: Controls,
+    controls: FormSources,
     chars: str | None = None,
     *,
     thickness: bool = False,
     counter_min: bool = False,
 ) -> LintReport:
-    """Lint every glyph from ``controls.build_all(chars)``."""
+    """Lint every glyph from ``controls.derive(chars)``."""
     charset = chars if chars is not None else controls.supported
-    drawn = controls.build_all(charset)
+    drawn = controls.derive(charset)
     ctx = controls.context
     control_ratio: float | None = None
     if thickness:

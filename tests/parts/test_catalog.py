@@ -1,4 +1,4 @@
-"""Coverage for the public ``typekernel.parts`` catalog (Controls path)."""
+"""Coverage for the public ``typekernel.parts`` catalog (FormSources path)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import importlib.util
 import pytest
 
 from typekernel.parts import (
-    Controls,
     DesignContext,
+    FormSources,
     capsule,
     crossbar,
     default_sans_kern,
@@ -75,7 +75,7 @@ def test_ink_trap_builds_wedge() -> None:
 
 def test_controls_build_zayju_word_layout() -> None:
     ctx = DesignContext.geometric_sans()
-    drawn = Controls.from_context(ctx).build_all("zayju")
+    drawn = FormSources.from_context(ctx).derive("zayju")
     glyphs = [drawn[ch] for ch in "zayju"]
     table = default_sans_kern().with_pair("z", "a", -8.0)
     assert table.lookup("z", "a") == -8.0

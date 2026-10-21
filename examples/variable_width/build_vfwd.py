@@ -8,7 +8,7 @@ from typekernel.compile import build_variable_font
 from typekernel.font import Font, Master
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    Controls,
+    FormSources,
     DesignContext,
     auto_class_kern,
     auto_side_kern_classes,
@@ -20,10 +20,10 @@ OUT_DIR = HERE / "out"
 FAMILY = "Typekernel Var WD"
 
 
-def master_controls(base: DesignContext, *, stem: float, wdth: float) -> Controls:
+def master_controls(base: DesignContext, *, stem: float, wdth: float) -> FormSources:
     scale = wdth / 100.0
     ctx = base.tuned(stem=stem)
-    sheet = Controls.from_context(ctx).with_stem_relief()
+    sheet = FormSources.from_context(ctx).with_stem_relief()
     if abs(scale - 1.0) > 0.01:
         sheet = sheet.tuned_n(counter=sheet.n.counter * scale).tuned_o(
             rx=sheet.o.rx * scale,
@@ -32,10 +32,10 @@ def master_controls(base: DesignContext, *, stem: float, wdth: float) -> Control
     return sheet
 
 
-def master_font(controls: Controls, style: str, weight_class: int) -> Font:
+def master_font(controls: FormSources, style: str, weight_class: int) -> Font:
     ctx = controls.context
     # Compose-time stock derivation after locked controls (not a DesignSequence design session).
-    drawn = controls.build_all()
+    drawn = controls.derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     kerning = auto_class_kern(

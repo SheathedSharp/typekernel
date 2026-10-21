@@ -15,7 +15,7 @@ from design import (
     design_light,
 )
 
-from typekernel.compile import FamilyBuildOptions, build_font, compose_font_from_controls
+from typekernel.compile import FamilyBuildOptions, build_font, compose_font
 from typekernel.qa.design_review import design_review
 from typekernel.qa.proof import proof_labeled_waterfall
 from typekernel.qa.sentence_gate import AGENT_SENTENCE, check_sentence_gate
@@ -56,8 +56,9 @@ def main() -> int:
     )
     otfs: list[tuple[str, Path]] = []
     for controls, style_name, weight in styles:
-        font = compose_font_from_controls(
-            controls,
+        font = compose_font(
+            controls.derive(),
+            controls.context,
             FAMILY_NAME,
             style_name,
             weight_class=weight,

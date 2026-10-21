@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from typekernel.compile import FamilyBuildOptions, compose_font_from_controls
-from typekernel.parts import Controls, DesignContext
+from typekernel.compile import FamilyBuildOptions, compose_font
+from typekernel.parts import DesignContext, FormSources
 from typekernel.parts.diacritics import (
     COMPOSITE_LATIN,
     EXTENDED_LATIN_OUTLINE_CHARS,
@@ -30,7 +30,7 @@ _ACCENT_SAMPLES = "çéñ"
 
 
 def test_extended_latin_not_in_default_supported() -> None:
-    controls = Controls.from_context(DesignContext.humanist_sans())
+    controls = FormSources.from_context(DesignContext.humanist_sans())
     supported = controls.supported
     for ch in _ACCENT_SAMPLES + EXTENDED_LATIN_OUTLINE_CHARS:
         assert ch not in supported
@@ -45,16 +45,17 @@ def test_composite_charset_matches_composite_latin_table() -> None:
 
 @pytest.mark.parametrize("preset", _BUILTIN_PRESETS)
 def test_outline_extended_latin_lint_clean(preset: str) -> None:
-    controls = Controls.from_context(getattr(DesignContext, preset)())
+    controls = FormSources.from_context(getattr(DesignContext, preset)())
     report = lint_controls(controls, EXTENDED_LATIN_OUTLINE_CHARS)
     assert not report.errors
 
 
 @pytest.mark.parametrize("preset", _BUILTIN_PRESETS)
 def test_opt_in_composites_bake_to_lint_clean_glyphs(preset: str) -> None:
-    controls = Controls.from_context(getattr(DesignContext, preset)())
-    font = compose_font_from_controls(
-        controls,
+    controls = FormSources.from_context(getattr(DesignContext, preset)())
+    font = compose_font(
+        controls.derive(),
+        controls.context,
         "Extended Latin",
         options=FamilyBuildOptions(liga=True, extended_latin=EXTENDED_LATIN_OUTLINE_CHARS),
     )

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from typekernel.parts import Controls, DesignContext, default_sans_kern, layout_glyphs
+from typekernel.parts import FormSources, DesignContext, default_sans_kern, layout_glyphs
 from typekernel.qa.score import word_report, zayju_report
 
 OUT_DIR = Path(__file__).resolve().parent / "out"
@@ -135,8 +135,8 @@ def main() -> int:
     ctx = DesignContext.geometric_sans()
     names = list("zayju")
 
-    # Specimen/compose-time derive from locked Controls (not DesignSequence design; phrase is late proof only).
-    drawn = Controls.from_context(ctx).build_all("zayju")
+    # Specimen/compose-time derive from locked FormSources (not DesignSequence design; phrase is late proof only).
+    drawn = FormSources.from_context(ctx).derive("zayju")
     before_glyphs = [drawn[ch] for ch in "zayju"]
     before_kern = default_sans_kern()
     before_rep = word_report(before_glyphs, names, kerning=before_kern)

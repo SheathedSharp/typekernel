@@ -25,7 +25,7 @@ python examples/first_font/build_font.py
 
 ## 用了哪些 API
 
-- `typekernel.parts.Controls` — 控制表：`DesignContext` + `n` / `o` / `H` / `O` 的设计记录；`tuned_n` / `tuned_o` / `tuned_cap_h` / `tuned_cap_o` 改一处。正文先经 `DesignSequence` / `unlock_body` 一字一闸；锁定后再用 `build_all()` 派生标点/大写/数字（compose）
+- `typekernel.parts.FormSources` — 控制表：`DesignContext` + `n` / `o` / `H` / `O` 的设计记录；`tuned_n` / `tuned_o` / `tuned_cap_h` / `tuned_cap_o` 改一处。正文先经 `DesignSequence` / `unlock_body` 一字一闸；锁定后再用 `build_all()` 派生标点/大写/数字（compose）
 - `typekernel.parts.tabular` — 数字统一字宽、墨迹居中（等宽数字）
 - `typekernel.font.Font.from_context` — 字族信息、竖直度量、对齐区（blue zones）、`.notdef`、`space` 都从 `DesignContext` 来
 - `Font.add_chars` — `{字符: ComposedGlyph}`，自动取 AGL 字形名、映射码位、统一轮廓绕向，并带上控制字的锚点

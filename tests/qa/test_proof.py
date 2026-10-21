@@ -12,7 +12,7 @@ pytest.importorskip("PIL")
 
 from typekernel.compile import build_font
 from typekernel.font import Font, Glyph
-from typekernel.parts import Controls, DesignContext
+from typekernel.parts import DesignContext, FormSources
 from typekernel.qa.proof import (
     proof_charset_grid,
     proof_context,
@@ -25,8 +25,8 @@ from typekernel.qa.proof import (
 @pytest.fixture
 def otf_path(tmp_path: Path) -> Path:
     ctx = DesignContext.code_clear()
-    controls = Controls.from_context(ctx)
-    drawn = controls.build_all("no")
+    controls = FormSources.from_context(ctx)
+    drawn = controls.derive("no")
     font = Font.from_context(ctx, "Proof Test")
     for ch, g in drawn.items():
         font.add_glyph(Glyph.for_char(ch, g))

@@ -10,7 +10,7 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.layout import union_bounds
 from typekernel.parts.compose import ComposedGlyph
 from typekernel.parts.context import DesignContext
-from typekernel.parts.family import Controls
+from typekernel.parts.family import FormSources
 
 Severity = Literal["error", "warn"]
 
@@ -257,13 +257,13 @@ def check_identity_glyph(
 
 
 def check_identity_controls(
-    controls: Controls,
+    controls: FormSources,
     chars: str | None = None,
 ) -> IdentityReport:
     charset = chars if chars is not None else controls.supported
     ctx = controls.context
     expectations = _expectations_for(ctx)
-    drawn = controls.build_all(charset)
+    drawn = controls.derive(charset)
     all_issues: list[IdentityIssue] = []
     for ch in charset:
         if ch not in drawn:

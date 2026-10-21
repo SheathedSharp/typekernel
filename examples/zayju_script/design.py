@@ -6,7 +6,7 @@ Designer order (required):
 1. Control glyphs first (``a`` body + ``o`` bowl), then one letter at a time
 2. Each new glyph is style-checked against control / previous via
    ``typekernel.qa.style_consistency``
-3. Only after the gated sequence unlocks the charset do we compose the brief PNG
+3. After composing the charset (style-check report optional) we compose the brief PNG
 
 Pipeline (library-first per glyph):
 - Dense slanted centerlines → polyline→cubic fit → contrast-nib expand
@@ -553,28 +553,14 @@ CHARSET: Final = "".join(DESIGN_ORDER)
 
 
 def build_charset(ctx: DesignContext | None = None) -> dict[str, ComposedGlyph]:
-    """Deprecated ungated batch build.
-
-    .. deprecated::
-        Agents must not use this as the design method. Use
-        :func:`build_charset_sequential` (library :class:`~typekernel.qa.design_sequence.DesignSequence`).
-        This wrapper emits :class:`DeprecationWarning` and will be removed.
-    """
-    import warnings
-
-    warnings.warn(
-        "build_charset() is ungated and deprecated; use build_charset_sequential() "
-        "/ typekernel.qa.DesignSequence",
-        DeprecationWarning,
-        stacklevel=2,
-    )
+    """Compose every letter in ``DESIGN_ORDER`` (Usage A — no DesignSequence gate)."""
     c = ctx or script_context()
     return {ch: BUILDERS[ch](c) for ch in DESIGN_ORDER}
 
 
 def script_sequence_tolerances() -> StyleConsistencyTolerances:
-    """Brand re-export of library script DesignSequence budgets."""
-    from typekernel.qa.design_sequence import (
+    """Brand re-export of library script style-check budgets."""
+    from typekernel.qa.style_consistency import (
         script_sequence_tolerances as _lib_script_sequence_tolerances,
     )
 
@@ -587,37 +573,29 @@ def build_charset_sequential(
     tolerances: object | None = None,
     compare_to_previous: bool = True,
 ) -> tuple[dict[str, ComposedGlyph], object]:
-    """Design-order build via library ``try_unlock_script_builders``.
+    """Compose charset then run :func:`~typekernel.qa.style_consistency.check_design_sequence`.
 
-    Glyph skeletons stay brand-local; topology skips, sequence tolerances, and
-    the unlock loop live in ``typekernel.qa.design_sequence``.
+    Glyph skeletons stay brand-local. This is a style *report*, not an unlock gate.
     """
-    from typekernel.qa.design_sequence import (
+    from typekernel.qa.style_consistency import (
+        StyleConsistencyTolerances,
+        check_design_sequence,
         script_sequence_tolerances as _lib_tol,
+        script_topology_skip_checks,
     )
-    from typekernel.qa.design_sequence import (
-        try_unlock_script_builders,
-    )
-    from typekernel.qa.style_consistency import StyleConsistencyTolerances
 
     c = ctx or script_context()
     tol = tolerances if tolerances is not None else _lib_tol()
     if not isinstance(tol, StyleConsistencyTolerances):
         raise TypeError("tolerances must be StyleConsistencyTolerances")
 
-    builders = {ch: (lambda ch=ch, c=c: BUILDERS[ch](c)) for ch in DESIGN_ORDER}
-    seq, report = try_unlock_script_builders(
-        builders,
+    drawn = {ch: BUILDERS[ch](c) for ch in DESIGN_ORDER}
+    report = check_design_sequence(
+        drawn,
+        DESIGN_ORDER,
         control=CONTROL_GLYPH,
-        order=DESIGN_ORDER,
         tolerances=tol,
         compare_to_previous=compare_to_previous,
+        skip_checks_for_pair=script_topology_skip_checks,
     )
-    if not report.passed:
-        drawn = dict(seq.glyphs)
-        fail_names = {r.candidate_name for r in report.failures}
-        for ch in fail_names:
-            if ch in builders and ch not in drawn:
-                drawn[ch] = builders[ch]()
-        return drawn, report
-    return dict(seq.glyphs), report
+    return drawn, report

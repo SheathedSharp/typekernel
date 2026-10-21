@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typekernel.compile import FamilyBuildOptions, compose_font_from_controls
+from typekernel.compile import FamilyBuildOptions, compose_font
 from typekernel.optics.space import pair_gap_optical, space_font
 from typekernel.parts import (
-    Controls,
     DesignContext,
+    FormSources,
     fit_glyph_pair_kerns,
     rhythm_from_control_glyphs,
 )
@@ -14,7 +14,7 @@ from typekernel.parts import (
 
 def test_fit_glyph_pair_kerns_hits_rhythm_target() -> None:
     ctx = DesignContext.humanist_sans()
-    drawn = Controls.from_context(ctx).build_all()
+    drawn = FormSources.from_context(ctx).derive()
     rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
     spaced = space_font(drawn, ctx, rhythm=rhythm)
     table = fit_glyph_pair_kerns(spaced, (("o", "w"), ("T", "o")), target=rhythm)
@@ -28,9 +28,10 @@ def test_fit_glyph_pair_kerns_hits_rhythm_target() -> None:
 
 
 def test_compose_font_merges_pair_kern_exceptions() -> None:
-    controls = Controls.from_context(DesignContext.code_clear())
-    font = compose_font_from_controls(
-        controls,
+    controls = FormSources.from_context(DesignContext.code_clear())
+    font = compose_font(
+        controls.derive(),
+        controls.context,
         "KernEx",
         options=FamilyBuildOptions(pair_kern_exceptions=(("o", "w"), ("a", "v"))),
     )
@@ -43,7 +44,7 @@ def test_compose_font_merges_pair_kern_exceptions() -> None:
 def test_compose_font_applies_default_pair_kern_exceptions() -> None:
     from typekernel.compile import DEFAULT_PAIR_KERN_EXCEPTIONS
 
-    controls = Controls.from_context(DesignContext.humanist_sans())
-    font = compose_font_from_controls(controls, "KernDefault")
+    controls = FormSources.from_context(DesignContext.humanist_sans())
+    font = compose_font(controls.derive(), controls.context, "KernDefault")
     assert ("o", "w") in DEFAULT_PAIR_KERN_EXCEPTIONS
     assert ("o", "w") in font.kerning or any(k == ("o", "w") for k in font.kerning)

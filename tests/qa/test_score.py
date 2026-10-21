@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typekernel.parts import Controls, DesignContext, default_sans_kern
+from typekernel.parts import DesignContext, FormSources, default_sans_kern
 from typekernel.qa.score import word_report, zayju_report
 
 
 def _zayju(ctx: DesignContext):
-    drawn = Controls.from_context(ctx).build_all("zayju")
+    drawn = FormSources.from_context(ctx).derive("zayju")
     return [drawn[ch] for ch in "zayju"]
 
 
