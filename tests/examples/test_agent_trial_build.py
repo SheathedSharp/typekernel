@@ -13,7 +13,7 @@ pytest.importorskip("ufoLib2")
 pytest.importorskip("ufo2ft")
 
 ROOT = Path(__file__).resolve().parents[2]
-TRIAL = ROOT / "examples" / "agent_trial"
+TRIAL = ROOT / "examples" / "_legacy" / "agent_trial"
 
 
 @pytest.mark.parametrize(

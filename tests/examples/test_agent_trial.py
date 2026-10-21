@@ -14,7 +14,7 @@ from typekernel.qa.trial_protocol import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-TRIAL = ROOT / "examples" / "agent_trial"
+TRIAL = ROOT / "examples" / "_legacy" / "agent_trial"
 
 
 def test_snapshot_presets_script_writes_gate_baseline(tmp_path: Path) -> None:

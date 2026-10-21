@@ -251,7 +251,7 @@ Text↔display deltas via `context_for_opsz(base, opsz)` (defaults 14 / 72). Exa
 参考试作 ≠ 终验：终验须从 brief 的 preset 自行改字并留痕，见 `docs/AGENT_TRIALS.md` §终验流程。
 
 ```bash
-PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
+PYTHONPATH=src python examples/_legacy/agent_trial/snapshot_design.py \
   --brief brief-1 --design path/to/your_design.py --out artifacts/trials/my-run/brief-1
 ```
 

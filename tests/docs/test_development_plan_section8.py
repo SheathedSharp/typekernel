@@ -285,7 +285,7 @@ def test_section8_agent_recipes_documents_appendix_b_human_review() -> None:
 
 
 def test_section8_agent_trial_readme_documents_snapshot_exit_codes() -> None:
-    text = (ROOT / "examples/agent_trial/README.md").read_text(encoding="utf-8")
+    text = (ROOT / "examples/_legacy/agent_trial/README.md").read_text(encoding="utf-8")
     assert "trial_snapshot_exit_code" in text
     assert "validate_trial_snapshot" in text
     assert "validate_snapshot.py" in text

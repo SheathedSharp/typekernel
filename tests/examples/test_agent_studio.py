@@ -12,7 +12,7 @@ pytest.importorskip("ufoLib2")
 pytest.importorskip("PIL")
 
 ROOT = Path(__file__).resolve().parents[2]
-STUDIO = ROOT / "examples" / "agent_studio"
+STUDIO = ROOT / "examples" / "_legacy" / "agent_studio"
 
 
 def test_agent_studio_build_script(tmp_path: Path) -> None:

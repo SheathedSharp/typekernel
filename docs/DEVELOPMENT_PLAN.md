@@ -61,7 +61,7 @@
 
 ### 2.2 不需要动的部分
 
-- 编译链路机械上可用：静态 OTF/TTF、`build_variable_font`、`wght×ital` VF、`examples/agent_family` 三字重、`examples/variable_family` 均能构建 **【实测】**。
+- 编译链路机械上可用：静态 OTF/TTF、`build_variable_font`、`wght×ital` VF、`examples/_legacy/agent_family` 三字重、`examples/variable_family` 均能构建 **【实测】**。
 - 基线测试：撰写时 593 个全部通过 **【实测】**；当前见 §2.3.1。
 - `geo/`（三次曲线核、路径、join、boolean）与 `optics/` 的主体不是瓶颈。
 
@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1622 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1638 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -117,7 +117,7 @@
 2. **`terminal_style` 只影响 5 个字形**（`c C ( ) ?`）【实测】。`a e r f t j s y g k` 等该有端点的字都没有。
 3. **`italic_controls` 不是斜体** 【实测+代码】
    实现是把 `n` 字腔与 `o` 碗宽放大 3.5%、`contrast` 降 4%（`parts/italic.py`）。母版**没有任何倾斜**，渲染出来是略宽的直立体。但文档把它当作「斜体是另一套母版」的实现推荐给 agent（`AGENT_GOAL.md` 第 16、41 行，SKILL 第 170 行「Italic axis: `italic_controls(regular_sheet)` per italic master」）。`AGENT_GOAL.md` 第 93 行同时承认「真斜体母版仍未完成」，所以文档自相矛盾，agent 照做会得到一个直立的「斜体」，与项目红线「Oblique ≠ Italic」的精神冲突。
-4. **「字重 delta」只是关于 `stem` 的线性启发式**（`parts/weight_relief.py`），只调 `n/o` 的字腔与碗宽；`examples/agent_family` 里 Light/Bold 与 Regular 的差别就是一个 `stem` 数字加 `with_stem_relief()`。【代码】
+4. **「字重 delta」只是关于 `stem` 的线性启发式**（`parts/weight_relief.py`），只调 `n/o` 的字腔与碗宽；`examples/_legacy/agent_family` 里 Light/Bold 与 Regular 的差别就是一个 `stem` 数字加 `with_stem_relief()`。【代码】
 5. **`skeleton`/pen 路径**：折线 `Centerline` 仍是默认；TK-308 spike 增加 `CubicCenterline` / `Stroke.beziers` + 单段偏移 cubic 拟合，**未**替代 `Controls` 主路径；`skeleton_recipes.skel_*` 仍委托 `Controls`。【代码】
 
 ### 2.6 对我早先汇报的三处更正
@@ -231,8 +231,8 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **依赖**：TK-101。
 
 #### TK-105 家族级门禁 `qa/family_gate.py`　〔M〕
-- **本轮**：`examples/agent_studio/build.py` 与 `examples/agent_family/build_family.py` 在 `charset_failures` 非空时 `exit(1)`（与 sentence/L0 门禁并列）。
-- **做什么**：`check_family_gate(controls, charset=None, baseline=None, masters=None) -> list[str]`：对**声明字符集**（默认 `controls.supported`）跑 lint + identity，error 级即失败；对多母版逐个检查。接入 `examples/agent_studio/build.py`、`examples/agent_family/build_family.py` 与 `design_review`。
+- **本轮**：`examples/_legacy/agent_studio/build.py` 与 `examples/_legacy/agent_family/build_family.py` 在 `charset_failures` 非空时 `exit(1)`（与 sentence/L0 门禁并列）。
+- **做什么**：`check_family_gate(controls, charset=None, baseline=None, masters=None) -> list[str]`：对**声明字符集**（默认 `controls.supported`）跑 lint + identity，error 级即失败；对多母版逐个检查。接入 `examples/_legacy/agent_studio/build.py`、`examples/_legacy/agent_family/build_family.py` 与 `design_review`。
 - **防钻空子**：
   - 声明字符集必须来自 `FamilyBuildOptions.chars` / `controls.supported`，门禁不接受更小的字符集。
   - 新增 `tests/qa/test_gate_thresholds_locked.py`，断言所有阈值常量等于冻结值：改阈值必须显式改这个测试。
@@ -630,7 +630,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``validate_snapshot.py --program-snapshot-only``（预填人评 → 退出码 5）；``test_validate_snapshot_program_only_rejects_premature_human_scores``。
 - **本轮（部分）**：``approvals/README.md`` 补签字后维护步骤（更新 ``_PENDING_HUMAN_GATES``，全签后改写 §8 人审测试）。
 - **本轮（部分）**：``SKILL.md`` M5 段补 ``human_review_bundle`` / §8 / ``test_multi_voice_exit`` 指针；``test_section8_skill_documents_program_exit_workflow``。
-- **本轮（部分）**：``dev-standards.md`` / ``examples/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
+- **本轮（部分）**：``dev-standards.md`` / ``examples/_legacy/agent_trial/README.md`` 补 §8 与校样指针；``test_section8_dev_standards_documents_program_exit``。
 - **本轮（部分）**：``AGENT_TRIALS`` 终验流程 + ``human_review_bundle`` 指针（TK-502 与人审分工）。
 - **本轮（部分）**：``agent-recipes`` + ``reference.md`` 补 TK-308 骨架/三次中线（非默认管线、勿当字重轴）。
 - **本轮（部分）**：``test_skeleton`` 闭合 cubic stroke 烟测（``trace_letter`` → 环带实体）。
@@ -662,7 +662,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 
 #### TK-502 Agent 试验协议与基线对比　〔M〕
 - 见第 6 节。**这是程序级验收，不可省略。**
-- **本轮**：`docs/AGENT_TRIALS.md`、`qa/trial_protocol.py`（`voice_distance`、快照 JSON）、`examples/agent_trial/snapshot_presets.py`、`artifacts/trials/` gitignore。
+- **本轮**：`docs/AGENT_TRIALS.md`、`qa/trial_protocol.py`（`voice_distance`、快照 JSON）、`examples/_legacy/agent_trial/snapshot_presets.py`、`artifacts/trials/` gitignore。
 - **本轮（部分）**：``snapshot_serif_voices.py`` + ``AGENT_TRIALS`` brief-2/衬线基线说明；``test_serif_voice_trial_snapshots_meet_l3`` + ``test_snapshot_serif_voices_script``。
 - **本轮（部分）**：三 brief 参考试作（``design_*`` + ``snapshot_design.py``，L3 + gate/R8）；``build_reference_family.py``（三 brief Regular+Bold）；``test_agent_trial_reference`` / ``test_agent_trial_build``。
 - **本轮（部分）**：三 brief 参考试作指标写入 ``AGENT_TRIALS.md`` 摘要表 + ``tests/fixtures/reference_trial_metrics.json``（``test_reference_metrics_match_committed_fixture``）。
@@ -680,7 +680,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``validate_trial_snapshot`` / ``validate_trial_snapshot_record``（TK-502 快照一致性）；``trial_snapshot_exit_code`` 供 ``snapshot_design`` / ``snapshot_reference_trials``；退出码 5/6/7；``_infer_cheating_flags``（stem-only → ``stem_only_or_scale_voice``）；``test_stem_only_tweak_records_cheating_flag_and_exit_code_7`` / ``test_snapshot_design_stem_tweak_exit_code_7``。
 - **本轮（部分）**：``TrialSnapshot.program_pass_ok`` 写入快照 JSON；``reference_trial_metrics`` 含 ``cheating_flags`` / ``program_pass_ok``。
 - **本轮（部分）**：``validate_trial_snapshot_record`` 校验 ``program_pass_ok`` 与字段一致；``test_validate_trial_snapshot_record_rejects_forged_program_pass_ok``。
-- **本轮（部分）**：``read_trial_snapshot_json`` / ``validate_trial_snapshot_json`` / ``trial_snapshot_json_exit_code``；``examples/agent_trial/validate_snapshot.py``；``test_validate_snapshot_script``。
+- **本轮（部分）**：``read_trial_snapshot_json`` / ``validate_trial_snapshot_json`` / ``trial_snapshot_json_exit_code``；``examples/_legacy/agent_trial/validate_snapshot.py``；``test_validate_snapshot_script``。
 - **待续**：**终验**（独立 agent 试验 + 人评 1–5）；参考试作 ≠ 终验。
 - **本轮（部分）**：库维护者跑 `snapshot_presets.py` → `artifacts/trials/preset-baseline-2026-10-14/`；三 brief 未改 preset 现 `gate_ok=True`（`preset-baseline-2026-10-14-gate-clear/`），`test_preset_brief_snapshots_pass_gate` 固化。
 
@@ -791,7 +791,7 @@ M5：TK-501（贯穿）→ TK-502
 | 构建 | `compile/family_build.py`（`compose_font_from_controls`）、`compile/build.py` |
 | QA | `qa/sentence_gate.py`、`qa/design_review.py`、`qa/score.py`、`qa/proof.py`、`qa/specimen_png.py`、`qa/gates.py` |
 | 字形装配与侧距 | `parts/compose.py`（`GlyphAssembler.build` 自动按 `sidebearing_ratio` 打包侧距） |
-| 示例 | `examples/agent_studio`（L0）、`examples/agent_family`（L2 模板） |
+| 示例 | `examples/_legacy/agent_studio`（L0）、`examples/_legacy/agent_family`（L2 模板） |
 
 ---
 

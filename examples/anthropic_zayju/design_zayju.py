@@ -5,7 +5,7 @@ Columns: Apple system default | Anthropic Sans (site font) | typekernel recreati
 The typekernel column is assembled like Three.js meshes: one shared
 ``DesignContext``, reusable parts (stem, bowl, fillet pads, hook, …),
 boolean joins when pathops is available, and minimal kerning — not one-off
-hard paths. See ``examples/agent_catalog/`` for the full agent API index.
+hard paths. Agent API: ``.agents/skills/typekernel-font-design/`` (Usage A). Legacy catalog: ``examples/_legacy/agent_catalog/``.
 
 Requires::
 

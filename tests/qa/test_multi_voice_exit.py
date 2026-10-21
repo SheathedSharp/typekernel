@@ -9,7 +9,7 @@ from typekernel.parts import Controls, DesignContext
 from typekernel.qa.originality import l3_voice_criteria_met, voice_distance
 
 _ROOT = Path(__file__).resolve().parents[2]
-_WARM_HUMANIST = _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py"
+_WARM_HUMANIST = _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py"
 
 
 def _load_controls(path: Path) -> Controls:

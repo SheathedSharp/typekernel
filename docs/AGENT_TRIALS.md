@@ -40,8 +40,8 @@
 2. **工作目录**：`artifacts/trials/<YYYY-MM-DD>-<模型或代号>/`，内含 `brief-1/` … `brief-3/`（若 brief-2 做衬线，可另存 `brief-2-slab/` 快照，仍对照 brief-2 指标）。
 3. **每个 brief**：
    - 实现 `controls()`（Regular）并记录 API（`Style` / `tuned_glyph` / `with_glyph` / `with_stem_relief`）。
-   - `PYTHONPATH=src python examples/agent_trial/snapshot_design.py --brief brief-N --design <你的模块.py> --out <dir>/brief-N`
-   - 审计已写 JSON：`PYTHONPATH=src python examples/agent_trial/validate_snapshot.py <dir>/brief-N/snapshot.json`；整次试验目录：`validate_snapshot.py --recursive artifacts/trials/<run>/`；**程序阶段**（确认 agent 未预填人评）：`--program-snapshot-only`（退出码 **5**=已含 `human_review_scores`）；**终验归档**（人评已写入 JSON 后）：`--require-human-scores`（退出码 **8**=缺维度）。
+   - `PYTHONPATH=src python examples/_legacy/agent_trial/snapshot_design.py --brief brief-N --design <你的模块.py> --out <dir>/brief-N`
+   - 审计已写 JSON：`PYTHONPATH=src python examples/_legacy/agent_trial/validate_snapshot.py <dir>/brief-N/snapshot.json`；整次试验目录：`validate_snapshot.py --recursive artifacts/trials/<run>/`；**程序阶段**（确认 agent 未预填人评）：`--program-snapshot-only`（退出码 **5**=已含 `human_review_scores`）；**终验归档**（人评已写入 JSON 后）：`--require-human-scores`（退出码 **8**=缺维度）。
    - 检查 JSON：`program_pass_ok`（程序侧全过，含空 `cheating_flags`）、`family_gate_ok`、`metrics_ok`、`l3_voice_ok`（= `l3_voice_criteria_met`：距离 + 拓扑 + gate/lint，非纯 stem 缩放）、`topology_fraction`（≥ `L3_MIN_TOPOLOGY_FRACTION` 0.05 当 `l3_voice_ok`）、`weight_ladder_r8_failures==0`（阶梯 stem 与 weight-ladder 回归一致，含 **200**，且含试作上的改字）、`cheating_flags` 为空（纯 stem 缩放会写入 `stem_only_or_scale_voice`）。`snapshot_design.py` 在写 JSON 前跑 `validate_trial_snapshot`（拒 forged `l3_voice_ok`）；退出码 **5**=字段不一致、**6**=未达 L3、**7**=`cheating_flags` 非空。
    - 可选：`build_reference_family.py` 同 brief 产出 OTF + `proof.png`（**不得**改 `AGENT_SENTENCE`）。
 4. **人评**（1–5）：可读、统一、独特、符号完整——写入本文件摘要表「终验」行；衬线/斜体视觉接受写 `approvals/*.json`（见 `human_review_bundle.py`）。附录 B-13–B-15（`--only appendix-b`）仅看图签字或笔记，不写 approval 文件。
@@ -52,7 +52,7 @@
 ## 跑预设基线快照（库维护者）
 
 ```bash
-python examples/agent_trial/snapshot_presets.py --out artifacts/trials/preset-baseline
+python examples/_legacy/agent_trial/snapshot_presets.py --out artifacts/trials/preset-baseline
 ```
 
 输出每个 preset 的 `snapshot.json`（未改动的 `Controls.from_context`），用于对比 agent 试验是否真有 voice 距离。
@@ -60,7 +60,7 @@ python examples/agent_trial/snapshot_presets.py --out artifacts/trials/preset-ba
 衬线 L3 voice 基线（`slab_serif` / `bracketed_serif`，brief-2 上下文）：
 
 ```bash
-PYTHONPATH=src python examples/agent_trial/snapshot_serif_voices.py --out artifacts/trials/serif-voices
+PYTHONPATH=src python examples/_legacy/agent_trial/snapshot_serif_voices.py --out artifacts/trials/serif-voices
 ```
 
 CI 覆盖：`test_serif_voice_trial_snapshots_meet_l3`（`tests/qa/test_trial_protocol.py`）。
@@ -68,11 +68,11 @@ CI 覆盖：`test_serif_voice_trial_snapshots_meet_l3`（`tests/qa/test_trial_pr
 brief-1 **改字**参考（`Style` + `tuned_glyph`，非 preset 快照）：
 
 ```bash
-PYTHONPATH=src python examples/agent_trial/snapshot_design.py \
+PYTHONPATH=src python examples/_legacy/agent_trial/snapshot_design.py \
   --brief brief-1 --out artifacts/trials/warm-humanist-ref
 
 # Regular + Bold OTF + proof（三 brief 均两档字重）
-PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
+PYTHONPATH=src python examples/_legacy/agent_trial/build_reference_family.py \
   --brief brief-1 --out artifacts/trials/warm-humanist-family
 ```
 
@@ -81,9 +81,9 @@ PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
 brief-2 衬线构建：
 
 ```bash
-PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
+PYTHONPATH=src python examples/_legacy/agent_trial/build_reference_family.py \
   --brief brief-2 --variant slab --out artifacts/trials/editorial-slab-family
 
-PYTHONPATH=src python examples/agent_trial/build_reference_family.py \
+PYTHONPATH=src python examples/_legacy/agent_trial/build_reference_family.py \
   --brief brief-2 --variant bracketed --out artifacts/trials/editorial-bracket-family
 ```

@@ -15,7 +15,7 @@ pytest.importorskip("ufoLib2")
 pytest.importorskip("PIL")
 
 ROOT = Path(__file__).resolve().parents[2]
-FAMILY = ROOT / "examples" / "agent_family"
+FAMILY = ROOT / "examples" / "_legacy" / "agent_family"
 
 
 def _load_design():

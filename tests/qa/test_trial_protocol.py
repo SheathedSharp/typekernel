@@ -29,7 +29,7 @@ from typekernel.qa.trial_protocol import (
 )
 
 _ROOT = Path(__file__).resolve().parents[2]
-_SLAB_TRIAL = _ROOT / "examples" / "agent_trial" / "design_editorial_slab.py"
+_SLAB_TRIAL = _ROOT / "examples" / "_legacy" / "agent_trial" / "design_editorial_slab.py"
 
 _PRESET_FACTORIES = {
     "humanist_sans": DesignContext.humanist_sans,
@@ -187,7 +187,7 @@ def test_stem_only_tweak_records_cheating_flag_and_exit_code_7() -> None:
 def test_trial_snapshot_json_exit_code_matches_live_snapshot(tmp_path: Path) -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
@@ -204,7 +204,7 @@ def test_trial_snapshot_json_exit_code_matches_live_snapshot(tmp_path: Path) -> 
 def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
@@ -221,7 +221,7 @@ def test_written_snapshot_json_passes_validate_record(tmp_path: Path) -> None:
 def test_validate_trial_snapshot_clean_on_reference_warm_humanist() -> None:
     spec = importlib.util.spec_from_file_location(
         "warm",
-        _ROOT / "examples" / "agent_trial" / "design_warm_humanist.py",
+        _ROOT / "examples" / "_legacy" / "agent_trial" / "design_warm_humanist.py",
     )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
