@@ -40,26 +40,30 @@ geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
 
 **编译桥**（`typekernel.compile`）— `build_font` / `build_variable_font` → OTF、TTF、可选 WOFF2；UFO 回流 `read_font_from_ufo`；斜体母版 `italic_design`（`ital` 轴）、机械倾斜 `oblique_font`（`slnt`）；基础 `tnum` 特性文本。人审见 `approvals/compile-bridge.json`。
 
-**推荐路径**：`DesignContext` → `Controls.build_all()` → `space_font` → `Font` → `build_font` / `build_variable_font`。实验性 `parts/latin.py`、`skel_*` 已标弃用。
+**推荐路径（Usage A）**：`DesignContext` → 零件 / letter builders 拼字形 → `Font.add_chars` → 自选间距（如 `space_font`）→ `build_font` / `build_variable_font`。  
+**不要**把 `Controls.build_all` / `DesignSequence` / `unlock_*` 当设计方法（旧示例见 `examples/_legacy/`）。
 
 **校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 
 ## 做一个能安装的字体
 
-[`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样：
+[`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样。
 
-**Coding agent 用库做字**：L0 试字改 [`examples/agent_studio/design.py`](examples/agent_studio/design.py) 再跑 `build.py`（过关句锁死，brief 句只是第二张校样）。完整字族从 [`examples/agent_family/`](examples/agent_family/) 复制。需 `pip install -e ".[compile,specimen,boolean]"`。不是一键出字脚本。
+**Coding agent 用库做字**：按 [`.agents/skills/typekernel-font-design/`](.agents/skills/typekernel-font-design/SKILL.md) 的 Usage A 自己写拼装脚本（同一 brief ≥2 种拼法见 skill）。需 `pip install -e ".[compile,specimen,boolean]"`。不是一键出字脚本。
 
 ```python
 from typekernel.compile import build_font
 from typekernel.font import Font
-from typekernel.parts import Controls, DesignContext
+from typekernel.optics.space import space_font
+from typekernel.parts import DesignContext, build_n, build_o, h_from_n
 
-ctx = DesignContext.code_clear()
-controls = Controls.from_context(ctx).tuned_n(counter=290)  # 控制表：改 n，h m r u 跟着变
-font = Font.from_context(ctx, "My Sans")          # 含 .notdef、space、度量、对齐区
-font.add_chars(controls.build_all())              # a–z from n / o, A–Z from H / O
-build_font(font, "out/")                          # MySans-Regular.ufo / .otf / .ttf
+ctx = DesignContext.code_clear().tuned(stem=80)
+n, o = build_n(ctx), build_o(ctx)
+drawn = {"n": n, "o": o, "h": h_from_n(n, ctx)}
+spaced = space_font(drawn, ctx)
+font = Font.from_context(ctx, "My Sans")
+font.add_chars(spaced)
+build_font(font, "out/")
 ```
 
 ![first font proof](docs/images/first-font-proof.png)
@@ -68,7 +72,7 @@ build_font(font, "out/")                          # MySans-Regular.ufo / .otf / 
 
 ![variable family proof](docs/images/variable-family-proof.png)
 
-**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体与附录 B-13–B-15 校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)（`--only serif|italic|appendix-b`）；字重阶梯 PNG[`examples/weight_ladder_sheet.py`](examples/weight_ladder_sheet.py)；全字符校样/叠图[`examples/contact_sheet.py`](examples/contact_sheet.py)、[`examples/diff_overlay.py`](examples/diff_overlay.py)；轮廓 golden 刷新[`examples/regenerate_outline_hashes.py`](examples/regenerate_outline_hashes.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)（`examples/agent_trial/snapshot_design.py` 写快照、`validate_snapshot.py` 复核 JSON）。合成 O 样品：
+**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体与附录 B-13–B-15 校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)（`--only serif|italic|appendix-b`）；字重阶梯 PNG[`examples/weight_ladder_sheet.py`](examples/weight_ladder_sheet.py)；全字符校样/叠图[`examples/contact_sheet.py`](examples/contact_sheet.py)、[`examples/diff_overlay.py`](examples/diff_overlay.py)；轮廓 golden 刷新[`examples/regenerate_outline_hashes.py`](examples/regenerate_outline_hashes.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)（`examples/_legacy/agent_trial/snapshot_design.py` 写快照、`validate_snapshot.py` 复核 JSON）。合成 O 样品：
 
 ![合成 O 样品](docs/images/synthetic-O.png)
 

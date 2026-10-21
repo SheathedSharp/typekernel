@@ -38,7 +38,7 @@ Track these so strangers can use and understand the library:
 | --- | --- |
 | Product narrative | `README.md`, `docs/VISION.md`, `docs/AGENT_GOAL.md` |
 | Contributor norms | `docs/dev-standards.md`, `.agents/skills/**/SKILL.md` |
-| API / recipe docs | `docs/agent-recipes.md`, module docstrings, typed `__all__` |
+| API / recipe docs | `.agents/skills/typekernel-font-design/`, `docs/agent-recipes.md` (pointer), module docstrings, typed `__all__` |
 | Examples that teach | `examples/*/build.py`, `design.py`, `README.md`, key showcase PNGs |
 | Tests and fixtures | `tests/**`, small golden hashes |
 | Program history (public) | `docs/DEVELOPMENT_PLAN.md`, `docs/AGENT_TRIALS.md` (summaries only) |
@@ -70,10 +70,8 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 
 When creating or extending faces in this repo:
 
-1. Follow `.agents/skills/typekernel-font-design/` **designer order**.
-2. Design **one glyph at a time** via `typekernel.qa.DesignSequence` /
-   `Controls.design_sequence` (try_add → fix_hints → unlock). Do not
-   ungated `build_all` / deprecated `build_charset` as the design method.
-3. Do **not** use a brief phrase (`BRIEF_SENTENCE`) as the design driver — only
-   as a late specimen after `export_glyphs`.
-4. Skeleton / script examples must use the same discipline as Controls faces.
+1. Follow `.agents/skills/typekernel-font-design/` **Usage A** (parts → Font → space → compile → proof).
+2. Compose glyphs from parts / letter builders in your own script. Do **not** treat
+   `Controls.build_all`, `DesignSequence`, or `unlock_*` as the design method.
+3. Specimen sentences are late proofs, not the design driver.
+4. Prefer new examples under `examples/<face>/`; do not copy `examples/_legacy/agent_*`.

@@ -1,7 +1,7 @@
 """From proportions to an installable font file — the designer's order.
 
-Uses :func:`~typekernel.compile.compose_font_from_controls` so OpenType
-features match shipped glyphs. See ``.agents/skills/typekernel-font-design/``.
+Example compile path (may still call legacy Controls helpers). Prefer Usage A
+parts composition in new faces — see ``.agents/skills/typekernel-font-design/``.
 """
 
 from __future__ import annotations

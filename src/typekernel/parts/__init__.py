@@ -8,9 +8,11 @@ Boolean union / difference of overlapping solids needs the optional extra::
 
     pip install "typekernel[boolean]"
 
-Coding agents: use :class:`~typekernel.parts.family.Controls` (see
-``.agents/skills/typekernel-font-design/SKILL.md``). Legacy ``parts.latin`` /
-``parts.skeleton_recipes`` are not re-exported here.
+Coding agents (Usage A): compose :mod:`typekernel.parts.primitives` and letter
+builders, then ``Font.add_chars`` + agent-chosen spacing (see
+``.agents/skills/typekernel-font-design/SKILL.md``). ``Controls`` remains for
+legacy examples/tests only — not the documented happy path. Legacy
+``parts.latin`` / ``parts.skeleton_recipes`` are not re-exported here.
 """
 
 from __future__ import annotations

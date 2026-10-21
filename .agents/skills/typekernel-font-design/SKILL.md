@@ -1,256 +1,176 @@
 ---
 name: typekernel-font-design
 description: >-
-  Design and build complete font families with typekernel the way a human type
-  designer would—proportions, control glyphs, weights, punctuation, OpenType,
-  spacing, proof. Use when creating fonts, adding masters, extending glyph sets,
-  writing examples/* build scripts, or when the user mentions typekernel,
-  DesignContext, Controls, or font-as-code in this repo.
+  Compose installable fonts from typekernel parts (Usage A only). Use when
+  building faces, writing examples/*/design scripts, or when the user mentions
+  typekernel, DesignContext, parts, Font, or font-as-code in this repo.
 ---
 
 # typekernel font design (coding agent)
 
 ## Product goal
 
-**typekernel 的定位应该是让 coding agent 通过使用这个基础库，像人类字体设计时一样去创建一种字体「包括各个字重，符号等等」。**
+**typekernel is a composable parts toolbox for coding agents.**
 
-Canonical copy: [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md)
+You write Python that:
+
+1. picks a `DesignContext` (proportions),
+2. **composes glyphs from parts** (or letter builders built from those parts),
+3. puts them on a `Font`,
+4. spaces them **your way** (sidebearings / kern / `space_font`),
+5. compiles and proofs.
+
+Canonical product copy: [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md).
+
+### Only Usage A
+
+```
+parts / letter builders → Font.add_chars → space (agent-chosen) → build_font → proof
+```
+
+There is **no** blessed aggregate pipeline. Do **not** treat `Controls.build_all`,
+`DesignSequence` / `unlock_*`, or “run the studio/family example” as the design
+method. Those APIs may still exist as **legacy** helpers; they are not the
+documented happy path. Prefer deleting or ignoring them for new faces.
+
+### Companion docs
+
+| File | Content |
+| --- | --- |
+| [parts-catalog.md](parts-catalog.md) | Stable parts: params, effect, copy-paste calls |
+| [recipes.md](recipes.md) | Fatten / contrast / serif foot / italic via **parts** |
+| [anti-patterns.md](anti-patterns.md) | Stroke-expand weight, shear-as-italic, dead knobs |
+| [reference.md](reference.md) | Maintenance CLIs + acceptance hooks (not design method) |
 
 ## Mindset
 
-Design **one glyph at a time**, then check style consistency against the control
-and the previous unlocked letter(s). Think **family** when the letter is done
-(sidebearings, neighbors, specimen)—not by generating a whole phrase or charset
-in one shot.
+- A font is a **family of decisions**, expressed in code — not a preset dump.
+- Weight = **redesigned masters** (new stem / relief / counters), not stroke expand.
+- Italic = **another master set** (`italic_design` / rewritten topology), not shear.
+- Proof is part of design. Installable ≠ done.
 
-Do **not** simulate weight with stroke expand, script with oblique shear, or OpenType features without the referenced glyphs.
+## Two recipes for the same brief
 
-## Definition of done
+Brief: *“a slightly wider geometric UI sans Regular, ASCII lowercase first.”*
 
-`check_sentence_gate` is a **regression brake**, not a design award. Pick a level before editing. Stopping at a lower level when the brief asks for a family is a failed delivery.
-
-| Level | Where | Done when |
-| --- | --- | --- |
-| **L0 trial** | `examples/agent_studio/` | Named preset + **one documented delta** from that preset's fields + `tuned_glyph` / `with_glyph` on **≥2** of `f t j a s e` + `Controls.unlock_body` / `DesignSequence`. Gate text is `AGENT_SENTENCE` only. `design_review(..., baseline=Controls.from_context(preset))` shows optical gap ratio and non-terminal G1 **not worse** than that preset, and empty `sequence_failures`. |
-| **L1 one style** | still one weight | L0, and the fixed pairs `Ta To fi fl rn 011` have **no silhouette collision** (`min optical gap > 0`). |
-| **L2 family** | `examples/agent_family/` or `examples/<family>/build_*.py` | Regular + Light and Bold (or a VF) as **separate** `Controls` masters. Bold uses `with_stem_relief()`. `compose_font_from_controls` + `reference_kern_classes` shared across masters. |
-
-The pair check is inside `check_sentence_gate`, so L0's build already runs it. L1 is the bar for calling that single style readable. L2 is the bar for "a family".
-
-### Anti-patterns (these are not done)
-
-- Defining `BRIEF_SENTENCE` / a specimen phrase and **batch-building the whole charset** as the design method (Controls `build_all` without inspecting controls first, or skeleton `build_charset()` / any ungated batch without `DesignSequence`).
-- Editing the proof sentence, or passing the brief sentence into `check_sentence_gate`, until the gate prints ok.
-- Declaring success from `sentence gate ok` plus a PNG.
-- Untethered floats (`stem=78`, `x_height=520`) with no preset field to compare. Tune **one field** as a delta from the preset (its `sidebearing_ratio` is `0.10`; `0.11` is a decision). Stay near the preset on a Regular voice — large stem jumps belong on a **new master**, and they must not worsen that master's own baseline.
-- One `with_glyph("f", ...)` and a `tuned_n` / `tuned_o` scale (`* 1.03`) treated as a new design.
-- Shipping Light/Bold by editing only `agent_studio/design.py`.
-- Naming oblique shear, `lean`, or tracking as italic or as copperplate / connected script.
-
-### Unsupported voices
-
-Copperplate and fully connected script still need honest topology (skeleton /
-`trace_letter`, or UFO import)—not oblique shear. Semi-connected script must
-still follow designer-order + `style_consistency` (see `examples/zayju_script/`).
-
-Recipes (patch shapes, when to leave `Controls` for a `PathBuilder`): [`docs/agent-recipes.md`](../../../docs/agent-recipes.md).
-
-## Designer-order workflow
-
-Copy and track:
-
-```
-- [ ] 0. Level: L0 trial / L1 one style / L2 family (see Definition of done)
-- [ ] 1. Brief (use, scripts, weights, italic yes/no, symbol set)
-- [ ] 2. DesignContext (named preset + documented deltas, not free floats)
-- [ ] 3. Control glyphs n/o (+ H/O for caps/figures) — inspect outlines, then edit
-- [ ] 4. Unlock charset via `DesignSequence` / `Controls.design_sequence` (one glyph → style-check → unlock); do **not** phrase-batch or ungated `build_all` as design
-- [ ] 5. Fix ≥2 weak letters (f,t,j,a,s,e) with with_glyph or a dedicated builder
-- [ ] 6. space_font + auto_class_kern (shared kern classes for VF)
-- [ ] 7. Font: names, space_width, features matching actual glyphs
-- [ ] 8. build_font / build_variable_font (L2: one master per weight)
-- [ ] 9. design_review + locked AGENT_SENTENCE gate; brief sentence is a second specimen
-- [ ] 10. pytest if touching library; example script committed
-```
-
-### Designer-order session (required for every new face)
-
-Use the library object — not an example-only helper:
+### Recipe 1 — letter builders (n/o family)
 
 ```python
-from typekernel.qa import DesignSequence, StyleConsistencyTolerances
+from pathlib import Path
 
-seq = controls.design_sequence(order=("n", "o", "h", "u"), control="n")
-# or DesignSequence.start("a", glyph_a(), planned_order=DESIGN_ORDER, ...)
-for ch in seq.planned_order:
-    if ch == seq.control:
-        continue
-    report = seq.try_add(ch, build_one(ch))  # Controls.build(ch) or skeleton builder
-    if not report.passed:
-        print(seq.hints_from_last())  # redesign this glyph — do not skip
-        break
-glyphs = seq.export_glyphs(require_complete=True)
-```
-
-Rules:
-
-1. Pick control letter(s) first (Controls: `n`/`o`; script: `a` then `o`).
-2. Design **one** glyph; `try_add` / `add` style-checks vs control + previous.
-3. Unlock only on pass. On refuse, read `fix_hints()` and redesign — never
-   widen tolerances to batch-unlock, never `build_all` / deprecated
-   `build_charset()` as the design method.
-4. `BRIEF_SENTENCE` is a **late specimen** after `export_glyphs`.
-5. `build.py` must exit non-zero if the sequence is incomplete / gate fails.
-
-APIs: `typekernel.qa.DesignSequence`, `Controls.design_sequence`,
-`compare_glyph_styles`, `fix_hint_for_check`, `script_body_tolerances`.
-`Controls.build_all` is stock derivation **after** controls are locked — not
-sequential design of new letters.
-
-### Step details
-
-**1 — Brief**  
-Record: family name, target style (geometric sans / humanist / mono / …), axes (wght, wdth, ital), minimum charset (ASCII, Latin-1, punctuation), tabular nums, ligatures.
-
-**2 — DesignContext**  
-Start from a preset: `code_clear()`, `humanist_sans()`, `geometric_sans()`, `display()`, `open_print()`, `paper_ink()`, `mono()`, or serif voices `slab_serif()` / `bracketed_serif()` (`Style.serif` slab / bracketed). Override with `.tuned(...)` as a **documented delta from that preset's fields** (read the preset, then change one knob). `contrast` / `stress` (default `stress=0`) change round-stroke geometry — see [agent-recipes.md](../../docs/agent-recipes.md) §对比度与应力 before shipping non-default values. One context per **voice**; do not mix voices in one master set. A new weight is a new master, not a bigger `stem` on the Regular sheet you are comparing to the preset. New serif presets must pass `AGENT_SENTENCE` gate and L3 `voice_distance` (see `tests/qa/test_originality.py`).
-
-**3 — Controls**  
-`Controls.from_context(ctx)` or `Controls.from_context(ctx, style=Style(...))` / `with_style(...)` for discrete topology (`a_form`, `g_form`, `l_tail`, `y_tail`, `i_dot`, `t_cut`, `serif` — defaults match stock presets). Full table: [agent-recipes.md](../../docs/agent-recipes.md) and [reference.md](reference.md). Tune with `tuned_n`, `tuned_o`, `tuned_cap_h`, `tuned_cap_o`. Weak letters: `.tuned_glyph("f", arm=0.82)` (see `parts/glyph_specs.py`; caps A–Z except `H`/`I` have specs). Heavy masters: `.with_stem_relief()` on that master’s sheet only.
-
-**4 — Unlock body, then derive the rest**  
-First: `seq = controls.unlock_body()` (or the per-glyph `design_sequence` / `try_add` loop above). Do **not** treat ungated `build_all` as design.  
-After the body gate: `drawn = controls.build_all()` (or an explicit substring) for punctuation / figures / caps at compose time. Extended Latin / composites: `add_composite_latin` after spacing (see `examples/first_font/build_font.py`).  
-`compose_font_from_controls` runs **join polish** (`tangent_fix`) on every outline before spacing; disable with `FamilyBuildOptions(joins_policy="noop")` for VF debugging. VF / optical-size `build_*.py` scripts that call `build_all` after locked controls are **compile** paths, not design sessions.
-
-**5 — Spacing & kerning**  
-```python
-rhythm = rhythm_from_control_glyphs(drawn["n"], drawn["o"])
-spaced = space_font(drawn, ctx, rhythm=rhythm)
-classes = auto_side_kern_classes(spaced, ctx)
-kern = auto_class_kern(spaced, classes, target=rhythm)
-```
-
-**VF**: compute `kern_classes` once from the **regular** spaced set; reuse for every master. Italic axis: `vf_italic_pair(regular)` per weight (`examples/italic_family/build_italic_vf.py`).
-
-**6 — Font + features (prefer helper)**  
-```python
-from typekernel.compile import FamilyBuildOptions, compose_font_from_controls, build_font
-
-font = compose_font_from_controls(
-    controls,
-    "My Family",
-    options=FamilyBuildOptions(liga=True),  # only liga — no ghost .tf/.case refs
+from typekernel.compile import build_font
+from typekernel.font import Font
+from typekernel.optics.space import space_font
+from typekernel.parts import (
+    DesignContext,
+    a_from_o,
+    build_n,
+    build_o,
+    e_from_o,
+    f_from_n,
+    h_from_n,
+    i_from_n,
+    l_from_n,
+    m_from_n,
+    r_from_n,
+    s_from_o,
+    t_from_n,
+    u_from_n,
 )
-build_font(font, out_dir, formats=("otf", "ttf"))
+from typekernel.qa.proof import proof_labeled_waterfall
+
+ctx = DesignContext.geometric_sans().tuned(stem=88.0, x_height=548.0, sidebearing_ratio=0.09)
+n, o = build_n(ctx), build_o(ctx)
+drawn = {
+    "n": n,
+    "o": o,
+    "h": h_from_n(n, ctx),
+    "m": m_from_n(n, ctx),
+    "u": u_from_n(n, ctx),
+    "r": r_from_n(n, ctx),
+    "i": i_from_n(n, ctx),
+    "l": l_from_n(n, ctx),
+    "f": f_from_n(n, ctx, arm=0.82),
+    "t": t_from_n(n, ctx, arm=0.58),
+    "a": a_from_o(o, n, ctx),
+    "e": e_from_o(o, ctx),
+    "s": s_from_o(o, ctx, aperture=0.62),
+}
+spaced = space_font(drawn, ctx)  # agent-chosen spacing pass
+font = Font.from_context(ctx, "Agent Wide UI")
+font.add_chars(spaced)
+out = build_font(font, Path("out/wide_ui"))
+proof_labeled_waterfall([("Regular", out.binaries["otf"])], "nhmuarf tiles", Path("out/wide_ui/proof.png"))
 ```
 
-Single-glyph master: `controls.tuned_glyph("f", arm=0.9)` or `with_glyph(...)` for custom topology.
-
-**7 — Variable fonts**  
-```python
-from typekernel.compile import build_variable_font, reference_kern_classes
-classes = reference_kern_classes(regular_controls)
-# reuse classes for every Master font
-```
-
-Extras: `pip install -e ".[compile,specimen,boolean]"` (boolean optional).
-
-**8 — Proof + sentence gate**  
-```python
-from typekernel.parts import Controls, DesignContext
-from typekernel.qa.design_review import design_review
-from typekernel.qa.proof import proof_context
-from typekernel.qa.sentence_gate import AGENT_SENTENCE, check_sentence_gate
-
-baseline = Controls.from_context(DesignContext.humanist_sans())  # the preset you started from
-review = design_review(controls, baseline=baseline)
-# review.failures, review.l0_gaps, and review.charset_failures must all be empty.
-# charset_failures = full supported charset lint + identity (family_gate).
-# Do not pass the brief sentence here — it cannot make the gate pass.
-_report, failures = check_sentence_gate(controls, baseline=baseline)
-
-proof_context(otf_path, AGENT_SENTENCE, out_png, size=32)  # pass/fail specimen
-proof_context(otf_path, brief_sentence, brief_png, size=32)  # second specimen only
-```
-
-Read `review.summary()`: optical-ratio / G1 deltas, worst pair, weak-glyph overrides. Then edit the design. Empty `failures` means the regression brake held, not that the family is finished.
-
-Use the locked sentence and the brief sentence at **body** size (24–36 px), `features=["kern","liga"]` when enabled.
-
-## Agent studio (L0) and agent family (L2)
-
-**Do not** treat the repo as “run one script → finished font.” The agent **writes** the design in Python, then exports proofs.
-
-**L0 trial** — edit **`examples/agent_studio/design.py`**, run **`python examples/agent_studio/build.py`**. One Regular voice. The gate scores `AGENT_SENTENCE`; `BRIEF_SENTENCE` is `sentence_brief.png` only. A failing review (sentence, L0 gaps, or **charset / family_gate**) exits non-zero. Built-in presets pass charset gate; agent deltas must keep it green. Read `out/review/` (deltas, worst pair, control PNGs) before a second pass.
-
-Agent trial metrics: `snapshot_trial` + `examples/agent_trial/snapshot_presets.py` (baselines) and `design_warm_humanist.py` / `design_editorial_geometric.py` / `design_editorial_slab.py` / `design_coding_clear.py` (L3 reference edits; `snapshot_design.py` / `snapshot_reference_trials.py`; audit JSON with `validate_snapshot.py`). Ladder R8 uses `controls_at_ladder_stem` (stems through 200). Program exit hooks: `examples/run_program_exit.py` (`--gate all`: §8 + `test_knob_coverage` / `test_extended_latin_policy` / `test_multi_voice_exit` / `test_style_consistency` / `test_originality` / `test_stress` / `test_glyph_specs` / `test_stroke_program_acceptance` / `test_zayju_script` charset + sequential style gate smoke + pending gate `test_evidence`; `--with-linters` for ruff/mypy), `tests/docs/test_development_plan_section8.py`, `tests/qa/test_multi_voice_exit.py`, serif/italic acceptance in `reference.md`. Visual review bundle (no `approvals/` writes): `examples/human_review_bundle.py` (`--only serif|italic` or `--only appendix-b` for appendix B-13–B-15 `3G` / `sS` review sheets); optional charset/diff/ladder/golden: `contact_sheet.py`, `diff_overlay.py`, `weight_ladder_sheet.py`, `regenerate_outline_hashes.py`. End-state checklist: `docs/AGENT_TRIALS.md` §终验流程; human `approvals/*.json` after PNG review (B-15 has no approval file).
-
-**L2 family** — copy **`examples/agent_family/`** to `examples/<family>/`. Implement `design_controls` / `design_light` / `design_bold` (or VF masters) and `build_family.py` (`compose_font_from_controls`, shared kern classes). Do not deliver Light/Bold inside `agent_studio`.
-
-Proof helper (requires **your** `Controls`):
+### Recipe 2 — raw parts + `GlyphAssembler` (same brief, different construction)
 
 ```python
-from typekernel.qa.agent_preview import build_glyph_preview
-from typekernel.qa.sentence_gate import AGENT_SENTENCE
+from typekernel.parts import DesignContext, GlyphAssembler, bowl, vertical_stem
 
-paths = build_glyph_preview(
-    controls,
-    family="My Trial",
-    focus="n o a f t",
-    sentence=AGENT_SENTENCE,  # locked pass/fail specimen
-    out_dir="out/preview",
+ctx = DesignContext.geometric_sans().tuned(stem=88.0, x_height=548.0)
+left = vertical_stem(ctx, 40.0, 0.0, ctx.x_height)
+outer, hole = bowl(
+    ctx,
+    cx=220.0,
+    cy=ctx.x_height / 2.0,
+    rx=150.0,
+    ry=ctx.x_height / 2.0 + ctx.overshoot,
 )
-# paths["grid"], paths["sentence"], paths["otf"]
-# Brief sentence: proof_context(paths["otf"], brief, "sentence_brief.png") — not the gate.
+glyph = (
+    GlyphAssembler(ctx)
+    .add(left)
+    .add(outer)
+    .add_hole(hole)
+    .union_solids()
+    .subtract_holes()
+    .build()
+)
+# Then put glyph in a dict, space_font, Font.add_chars, build_font — same as Recipe 1.
 ```
 
-Show the user **`grid.png`**, **`sentence.png`**, and the review summary (deltas, worst pair, which weak glyphs you overrode). Requires **boolean** for best `f`/`t` crossbars.
+Both recipes end the same way: **you** own spacing and compile. Neither calls
+`Controls.build_all` or `DesignSequence`.
 
-## Weights & variable fonts
+For full parameter tables see [parts-catalog.md](parts-catalog.md). For fatten /
+serif / italic recipes see [recipes.md](recipes.md).
 
-- **Static family**: one `Controls` + one `build_font` per weight/style file.
-- **VF**: each location is a full redrawn `Font` inside `Master({axis: value}, font)`. Minimum masters so **each axis** min ≠ max (`check_masters`).
-- Italic axis: `italic_design(regular)` (construct slant + counter lean; `italic_controls` is a deprecated alias). Branching `n/h/r/u/m` and italic `f` descender ship with italic stage; use `vf_upright_controls` for upright VF masters. Do **not** use `oblique_font` / `ObliqueTransform` for `ital=1` style names.
+## Definition of done (Usage A)
 
-## Symbols & charset
-
-Default punctuation/figures live in `Controls.supported` via `PUNCT_FORMS`, caps, figures. Opt-in extended Latin through `build_all` + diacritic helpers. If a symbol overlaps at extreme stems, fix topology in `parts/punctuation.py`—do not hide missing glyphs.
-
-## When the library is not enough
-
-| User ask | Wrong approach | Right approach |
-| --- | --- | --- |
-| Copperplate / connected script | Crank `lean`, oblique, tracking | Say the topology is missing; add it in `parts` or import UFO and let typekernel space / feature it |
-| One ugly letter | Global context only | `with_glyph` or a dedicated builder; re-read `design_review` glyphs |
-| “Make it bolder” | Scale outline or raise `stem` on the Regular sheet | New master: higher `stem` + `with_stem_relief()` |
-| Gate fails on the brief sentence | Shorten or swap the proof string | Keep `AGENT_SENTENCE` as the only pass/fail text; fix spacing, joins, or the weak glyph |
-
-## Reference examples
-
-| Example | Teaches |
+| Level | Done when |
 | --- | --- |
-| `examples/agent_studio/` | **L0 trial** — `design.py` + locked gate + `design_review` |
-| `examples/agent_family/` | **L2 template** — Regular / Light / Bold, shared kern, TODOs for italic and extended Latin |
-| `examples/first_font/` | Full static family pipeline + features |
-| `examples/zayju_letter/` | Hand-built `n` with `PathBuilder` when `Controls` is not enough |
-| `examples/variable_family/` | wght VF, designed counters |
-| `examples/italic_family/` | wght × ital via `vf_italic_pair`, shared kern (`build_italic_vf.py`) |
-| `examples/agent_trial/` | `snapshot_*.py` + `design_*.py` reference trials (incl. brief-2 slab variant) |
-| `examples/slab_serif/` | **L2 serif** — slab voice, static three masters + `build_vf.py` |
-| `examples/bracketed_serif/` | **L2 serif** — bracketed voice, same ladder as slab VF tests |
-| `examples/variable_width/build_vfwd.py` | wght × wdth |
-| `examples/oblique_font/` | slnt via shear only |
+| **Trial** | Named brief + ≥2 different composition approaches considered; glyphs you care about are composed in code; one proof PNG. |
+| **One style** | ASCII (or declared charset) composed; spacing chosen; `build_font` succeeds; waterfall / pair proof readable. |
+| **Family** | Separate masters per weight (and italic if promised); shared kern groups if VF; proofs per master. |
 
-## Maintenance (for agents editing the repo)
+Human visual sign-off (`approvals/*.json`) is still required for gated voices.
+Do **not** flip approval flags unless the user explicitly signs off.
 
-When changing default build order, `standard_feature_text`, master checks, or presets:
+## Workflow checklist
 
-1. Update this `SKILL.md` (and [reference.md](reference.md) if API paths moved).
-2. Update [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md) if the product goal shifts.
-3. Add or adjust an `examples/*` script that demonstrates the new convention.
+```
+- [ ] 1. Brief (use, scripts, weights, italic yes/no, charset)
+- [ ] 2. DesignContext preset + documented field deltas
+- [ ] 3. Compose control letters (n/o or H/O) from parts / builders
+- [ ] 4. Compose remaining letters (builders or PathBuilder / GlyphAssembler)
+- [ ] 5. Agent-chosen spacing (`space_font` and/or manual advances + kern)
+- [ ] 6. Font names / features matching glyphs you actually added
+- [ ] 7. build_font / build_variable_font
+- [ ] 8. Proof + fix; commit example script
+```
 
-## More detail
+## Maintenance / acceptance (not design)
 
-- Module map & pitfalls: [reference.md](reference.md)
-- Human-facing vision: [docs/VISION.md](../../../docs/VISION.md)
+Program exit and human-review CLIs: [reference.md](reference.md) and
+[docs/agent-recipes.md](../../../docs/agent-recipes.md) (ops index).
+
+```bash
+pip install -e ".[compile,specimen,boolean]"
+PYTHONPATH=src python examples/run_program_exit.py
+PYTHONPATH=src python examples/human_review_bundle.py --only appendix-b
+PYTHONPATH=src python examples/contact_sheet.py
+PYTHONPATH=src python examples/regenerate_outline_hashes.py
+PYTHONPATH=src python examples/_legacy/agent_trial/validate_snapshot.py
+pytest -q tests/docs/test_development_plan_section8.py
+pytest -q tests/parts/test_knob_coverage.py tests/qa/test_style_consistency.py tests/qa/test_originality.py tests/qa/test_multi_voice_exit.py tests/examples/test_zayju_script.py
+```

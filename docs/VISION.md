@@ -8,7 +8,7 @@
 
 typekernel 补的是那一层：**可编程的光学与结构内核**，不是又一个编辑器，也不是又一个 fontmake 包装器。
 
-**Coding agent 目标**：让 agent 用本库 **像人类字体设计师一样** 完成整族创作（字重、符号、spacing、特性、proof）。见 [AGENT_GOAL.md](AGENT_GOAL.md) 与仓库 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。
+**Coding agent 目标**：让 agent 用本库零件 **像人类字体设计师一样** 拼出整族（字重、符号、spacing、特性、proof）。**唯一用法**：自己写 Python 组合 parts → Font → 自选间距 → compile → proof（Usage A）。见 [AGENT_GOAL.md](AGENT_GOAL.md) 与 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。
 
 ## 分层（目标架构）
 
@@ -33,9 +33,10 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 ## 状态
 
-**Geo-kernel**, **optical semantics**, **Controls → Font** family workflow,
+**Geo-kernel**, **optical semantics**, **parts → Font** composition,
 **compile bridge** (static + variable OTF/TTF/WOFF2, UFO round-trip), and
-**qa.proof** specimen helpers are in the tree. **Italic**: `italic_design` construct slant + branching `n/h/r/u/m` (M4); `wght×ital`
-VF via `vf_upright_controls`. OpenType `case` / `liga` / `frac` / `ordn` and width/`opsz` axis examples are in-tree
-(`examples/variable_width`, `examples/optical_size`). See
-[dev-standards.md](dev-standards.md) and `approvals/*.json`.
+**qa.proof** specimen helpers are in the tree. Aggregate `Controls` / `DesignSequence`
+pipelines are legacy (see `examples/_legacy/`), not the product happy path.
+**Italic**: `italic_design` construct slant + branching letters; do not ship mechanical
+oblique as Italic. OpenType `case` / `liga` / `frac` / `ordn` and width/`opsz` examples
+are in-tree. See [dev-standards.md](dev-standards.md) and `approvals/*.json`.
