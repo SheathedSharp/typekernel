@@ -911,6 +911,42 @@ def shoulder(
     )
 
 
+
+def _shoulder_outer_left(
+    l1: float,
+    spring: float,
+    mid: float,
+    crown: float,
+    k: float,
+    *,
+    horizontal_leave: bool,
+) -> tuple[
+    tuple[float, float],
+    tuple[float, float],
+    tuple[float, float],
+    tuple[float, float],
+]:
+    """First outer shoulder cubic from stem spring to crown mid.
+
+    ``horizontal_leave=True`` (upright ``n``/``m``/``r``) matches a flat stem
+    top — G1 into the arch, no kit-of-parts corner. ``False`` keeps a vertical
+    first handle for overshoot / ascender branch fillets (``h``, italic).
+    """
+    if horizontal_leave:
+        return (
+            (l1, spring),
+            (l1 + k * (mid - l1), spring),
+            (mid - k * (mid - l1), crown),
+            (mid, crown),
+        )
+    return (
+        (l1, spring),
+        (l1, spring + k * (crown - spring)),
+        (mid - k * (mid - l1), crown),
+        (mid, crown),
+    )
+
+
 def shoulder_yoke(
     ctx: DesignContext,
     x_left: float,
@@ -946,6 +982,11 @@ def shoulder_yoke(
     adds a colinear on-curve knot on upright x-height stems so segment counts
     match branching italics (TK-404); ascender ``h`` already has the spring
     descent and does not need the duplicate.
+
+    Upright spring seal: non-ascender bodies leave the outer shoulder with a
+    **horizontal** first handle (G1 into a flat stem top). Ascender ``h`` keeps
+    the vertical overshoot handle and, when ``soft_branch``, blends the stem→
+    shoulder corner so even-odd scans show no hairline slit at the spring.
     """
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
@@ -991,11 +1032,12 @@ def shoulder_yoke(
         leg_top = upright_spring - t * 0.02
         if by is not None:
             leg_top = leg_top - (top - by) * 0.2
-    o0 = (
-        (l1, spring),
-        (l1, spring + k * (crown - spring)),
-        (mid - k * (mid - l1), crown),
-        (mid, crown),
+    is_h = shoulder_top is not None and abs(top - upright_spring) > 0.5
+    upright = by is None
+    # Upright n/r: horizontal leave → G1 with flat stem top (no corner seam).
+    # Ascender h / italic branch: vertical leave for overshoot + branch fillet.
+    o0 = _shoulder_outer_left(
+        l1, spring, mid, crown, k, horizontal_leave=upright and not is_h
     )
     o1 = (
         (mid, crown),
@@ -1016,9 +1058,6 @@ def shoulder_yoke(
         (l1, join),
     )
     serif = inline_serifs and ctx.style.serif in ("slab", "bracketed")
-    # Upright-only caps (branching private path skips these).
-    is_h = shoulder_top is not None and abs(top - upright_spring) > 0.5
-    upright = by is None
     slab_n_cap = serif and upright and ctx.style.serif == "slab" and not is_h
     bracket_n_shoulder = serif and upright and ctx.style.serif == "bracketed" and not is_h
     right_leg_top_cap = serif and upright and (
@@ -1140,6 +1179,16 @@ def shoulder_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
+    if upright and soft_branch and is_h:
+        # Blend the stem→shoulder spring corner (removes cusp hairline on h).
+        from typekernel.geo.joins import blend_corners, default_selector
+
+        outline = blend_corners(
+            outline,
+            max(ctx.join_radius * 1.35, t * 0.38),
+            select=default_selector,
+            tension=1.0,
+        )
     return outline
 
 
@@ -1352,11 +1401,13 @@ def double_shoulder_yoke(
             lt = top - t * 0.02
             if by is not None:
                 lt = lt - (top - by) * 0.2
-        o0 = (
-            (l1, spring),
-            (l1, spring + k * (crown - spring)),
-            (mid - k * (mid - l1), crown),
-            (mid, crown),
+        o0 = _shoulder_outer_left(
+            l1,
+            spring,
+            mid,
+            crown,
+            k,
+            horizontal_leave=by is None,
         )
         o1 = (
             (mid, crown),
@@ -1474,6 +1525,16 @@ def double_shoulder_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
+    if by is None:
+        # Soften stem–shoulder outer corners and middle crotch kink (hairlines).
+        from typekernel.geo.joins import blend_corners, default_selector
+
+        outline = blend_corners(
+            outline,
+            max(ctx.join_radius * 0.9, t * 0.22),
+            select=default_selector,
+            tension=1.0,
+        )
     return outline
 
 
@@ -1551,11 +1612,8 @@ def u_yoke(
         leg_top = upright_spring - t * 0.02
         if by is not None:
             leg_top = leg_top - drop * 0.2
-    o0 = (
-        (l1, spring),
-        (l1, spring + k * (crown - spring)),
-        (mid - k * (mid - l1), crown),
-        (mid, crown),
+    o0 = _shoulder_outer_left(
+        l1, spring, mid, crown, k, horizontal_leave=by is None
     )
     o1 = (
         (mid, crown),
@@ -1829,11 +1887,8 @@ def r_yoke(
         leg_top = top - t * 0.02
         if by is not None:
             leg_top = leg_top - (top - by) * 0.2
-    o0 = (
-        (l1, spring),
-        (l1, spring + k * (crown - spring)),
-        (mid - k * (mid - l1), crown),
-        (mid, crown),
+    o0 = _shoulder_outer_left(
+        l1, spring, mid, crown, k, horizontal_leave=by is None
     )
     o1 = (
         (mid, crown),
