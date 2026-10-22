@@ -832,14 +832,10 @@ def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> floa
 
 
 def _italic_kick_dims(stem: float) -> tuple[float, float]:
-    """``(dx, dy)`` for written entry kick / exit outstroke foot cuts.
+    """``(dx, dy)`` for written entry kick / exit outstroke foot cuts."""
+    from typekernel.parts.italic_strokes import italic_kick_dims
 
-    Sized from stem so ``wght`` masters keep a fixed segment recipe under
-    ``_italic_topology`` (including VF-compat upright).
-    """
-    dx = max(2.5, stem * 0.18)
-    dy = max(3.5, stem * 0.32)
-    return dx, dy
+    return italic_kick_dims(stem)
 
 
 def _emit_italic_entry_kick(
@@ -850,18 +846,10 @@ def _emit_italic_entry_kick(
     left_top: float,
     y0: float = 0.0,
 ) -> None:
-    """Entry kick into the left stem face (written lead-in).
+    """Entry kick into the left stem face (written lead-in)."""
+    from typekernel.parts.italic_strokes import emit_italic_entry_kick
 
-    Issues ``moveTo``: starts inset at ``y0``, cubic into ``(l0, y0+dy)``,
-    then rises to ``left_top``. ``y0`` is the descender floor for italic ``f``.
-    Sans-only; serif feet keep their own path.
-    """
-    dx, dy = _italic_kick_dims(stem)
-    rise = max(2.0, left_top - y0)
-    dy = min(dy, max(2.0, rise * 0.22))
-    b.moveTo(l0 + dx, y0)
-    b.curveTo(l0 + dx * 0.35, y0, l0, y0 + dy * 0.45, l0, y0 + dy)
-    b.lineTo(l0, left_top)
+    emit_italic_entry_kick(b, l0, stem=stem, left_top=left_top, y0=y0)
 
 
 def _italic_opening_tip_angle(ctx: DesignContext) -> float:
@@ -900,15 +888,10 @@ def _emit_italic_exit_outstroke(
     *,
     stem: float,
 ) -> None:
-    """Outer-right baseline outstroke (written exit), then across to ``r0``.
+    """Outer-right baseline outstroke (written exit), then across to ``r0``."""
+    from typekernel.parts.italic_strokes import emit_italic_exit_outstroke
 
-    Current point must lie on ``x=r1`` with ``y > 0``. Replaces a sharp
-    ``lineTo(r1, 0)`` + ``lineTo(r0, 0)`` foot corner.
-    """
-    dx, dy = _italic_kick_dims(stem)
-    b.lineTo(r1, dy)
-    b.curveTo(r1, dy * 0.45, r1 - dx * 0.35, 0.0, r1 - dx, 0.0)
-    b.lineTo(r0, 0.0)
+    emit_italic_exit_outstroke(b, r0, r1, stem=stem)
 
 
 def _italic_arm_terminal_cubic(
@@ -934,20 +917,9 @@ def _italic_single_stem_outline(
     top: float,
 ) -> Outline:
     """Vertical stem with italic entry kick + exit outstroke (sans)."""
-    dx, dy = _italic_kick_dims(stem)
-    dy = min(dy, max(2.0, top * 0.12))
-    inset = 0.0
-    if abs(ctx.contrast - 1.0) >= 1e-9:
-        inset = (stem - stem * ctx.contrast) / 2.0
-    b = PathBuilder()
-    b.moveTo(dx, 0.0)
-    b.curveTo(dx * 0.35, 0.0, 0.0, dy * 0.45, 0.0, dy)
-    b.lineTo(inset, top)
-    b.lineTo(stem - inset, top)
-    b.lineTo(stem, dy)
-    b.curveTo(stem, dy * 0.45, stem - dx * 0.35, 0.0, stem - dx, 0.0)
-    b.closePath()
-    return _ccw(b.build())
+    from typekernel.parts.italic_strokes import italic_written_stem
+
+    return italic_written_stem(ctx, 0.0, stem=stem, top=top, contrast_inset=True)
 
 
 def _soften_italic_branch_crotch(

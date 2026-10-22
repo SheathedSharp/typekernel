@@ -9,6 +9,7 @@ from typekernel.geo.outline import Outline, bounds
 from typekernel.parts.context import DesignContext
 
 __all__ = [
+    "apply_flare_terminal",
     "apply_terminal_shear",
     "opening_closure",
     "r_arm_scale",
@@ -161,3 +162,35 @@ def apply_terminal_shear(
         band=band,
         ball_radius=ball_radius,
     )
+
+
+def apply_flare_terminal(
+    ctx: DesignContext,
+    outline: Outline,
+    *,
+    at: tuple[float, float] | None = None,
+    amount: float = 0.35,
+    along: Literal["x", "y"] = "y",
+    inward: Literal["auto", "+", "-"] = "-",
+    band: float | None = None,
+) -> Outline:
+    """Opt-in real tip flare via :func:`~typekernel.parts.terminals.flare_end`.
+
+    Stock ``DesignContext.terminal_style == "flared"`` still routes through
+    :func:`apply_terminal_shear` (shear recipe) so weight-ladder R8 stays
+    stable. Agents who want a true widening flare call this explicitly —
+    Usage A opt-in, not a silent stock-path change.
+    """
+    from typekernel.parts.terminals import flare_end
+
+    if at is None:
+        try:
+            _min_x, _min_y, max_x, max_y = bounds(outline)
+        except ValueError:
+            return outline
+        at = (max_x, max_y - ctx.stem * 0.12)
+    shear_band = band if band is not None else max(6.0, ctx.stem * 0.38)
+    return flare_end(
+        outline, at, amount=amount, band=shear_band, along=along, inward=inward
+    )
+

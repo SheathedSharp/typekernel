@@ -109,6 +109,14 @@ from typekernel.parts.diagonals import (
 )
 from typekernel.parts.family import CAP_FORMS, FIGURE_FORMS, PUNCT_FORMS, RELATED_FORMS, FormSources
 from typekernel.parts.figures import tabular
+from typekernel.parts.italic_strokes import (
+    emit_italic_entry_kick,
+    emit_italic_exit_outstroke,
+    italic_entry_kick,
+    italic_exit_outstroke,
+    italic_kick_dims,
+    italic_written_stem,
+)
 from typekernel.parts.metrics import (
     ClassKernPair,
     ClassKernTable,
@@ -145,6 +153,7 @@ from typekernel.parts.primitives import (
     crotch_join,
     crotch_opener,
     diagonal_stem,
+    double_shoulder_yoke,
     fillet_pad,
     hook_terminal,
     horizontal_bar,
@@ -170,6 +179,7 @@ from typekernel.parts.skeleton import (
     Stroke,
     trace_letter,
 )
+from typekernel.parts.terminal_openings import apply_flare_terminal
 from typekernel.parts.terminals import (
     ball_end,
     ball_terminal_piece,
@@ -241,6 +251,7 @@ __all__ = [
     "Z_from_H",
     "a_from_o",
     "aperture_bite",
+    "apply_flare_terminal",
     "apply_ink_trap",
     "arch",
     "auto_class_kern",
@@ -272,7 +283,10 @@ __all__ = [
     "default_latin_kern_classes",
     "default_sans_kern",
     "diagonal_stem",
+    "double_shoulder_yoke",
     "e_from_o",
+    "emit_italic_entry_kick",
+    "emit_italic_exit_outstroke",
     "expand",
     "expand_polyline",
     "f_from_n",
@@ -292,6 +306,10 @@ __all__ = [
     "horizontal_bar",
     "i_from_n",
     "ink_trap",
+    "italic_entry_kick",
+    "italic_exit_outstroke",
+    "italic_kick_dims",
+    "italic_written_stem",
     "j_from_n",
     "k_from_n",
     "l_from_n",
