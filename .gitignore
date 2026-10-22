@@ -58,6 +58,8 @@ Thumbs.db
 *.woff2
 !tests/fixtures/**/*.otf
 !tests/fixtures/**/*.ttf
+!artifacts/skill-validate/**/*.otf
+!artifacts/skill-validate/**/*.ttf
 
 # Local agent notes (skills are tracked)
 .agents/*
