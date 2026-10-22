@@ -73,7 +73,7 @@
 
 ### 2.3.1 质量门禁（当前）【实测，2026-10-16】
 
-- `pytest -q`：**1594 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
+- `pytest -q`：**1598 passed**；`ruff check src tests`、`mypy -p typekernel`：**退出码 0**（TK-001 已完成）；收集数与 §2.3.1 文案由 ``test_section8_plan_quality_gate_pytest_count_matches_suite`` 冻结。
 - §8 程序钩子：`tests/docs/test_development_plan_section8.py`、`tests/qa/test_multi_voice_exit.py`、TK-306/402 程序验收测试在库内。
 - **仍未满足 §8 全文**：人审 `approvals/serif-*-voice.json`、`italic-vf-construct.json` 仍为 `approved: false`；第 6 节 **Agent 终验**（独立 agent + 人评 1–5）未填 `AGENT_TRIALS.md` 摘要表。
 
@@ -604,6 +604,7 @@ M0 基线与诚实化 ──► M1 眼睛(lint/identity/校样/gate) ──► M
 - **本轮（部分）**：``agent-recipes`` 增加 TK-207 ``weight_ladder_sheet`` 人审片段（本地 ``artifacts/specimens/``）。
 - **本轮（部分）**：SKILL preset 表补 ``slab_serif``/``bracketed_serif``、L3 指针与 ``examples/*_serif``；TK-306 验收行与 bracketed 对齐。
 - **本轮（部分）**：``agent-recipes`` 补 ``Style`` 默认值行 + ``serif``；``AGENT_GOAL`` L3 行对齐 ``Style`` API（不再写「待 TK-305」）。
+- **本轮（部分）**：公开连续 opening yoke ``a_yoke``/``c_yoke``/``e_yoke``/``s_yoke``；直立无衬线下 ``a_from_o``/``c_from_o``/``e_from_o``/``s_from_o`` 优先走 yoke （同 ``_prefer_public_yoke`` 衬线/italic/VF 退出）；§2.3.1 pytest **1598**。
 - **本轮（部分）**：直立无衬线 Usage A 路径下 ``build_n``/``h``/``m``/``u``/``r``/``bdpq`` 优先走公开连续 yoke（``n_yoke``/``h_yoke``/``double_shoulder_yoke``/``u_yoke``/``r_yoke``/``bowl_stem_yoke``）；衬线内联 / VF stem knots / italic 分支仍走私有路径并注明原因；§2.3.1 pytest **1594**。
 - **本轮（部分）**：``real_flare`` 补齐 ``x``/``z``/单层 ``g``（显式 flag；stock flared 仍 shear）；公开连续 ``r_yoke`` + ``bowl_stem_yoke``（Usage A ``r``/``bdpq`` 体，无 boolean 缝）；§2.3.1 pytest **1590**。
 - **本轮（部分）**：``reference.md`` 补 Style DNA 表 + 斜体 / ``oblique_compat`` 指针。

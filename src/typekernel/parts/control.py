@@ -2248,13 +2248,15 @@ def bowl_stem_yoke(
     stem_width: float | None = None,
     rx: float | None = None,
     ry: float | None = None,
+    stem_top: float | None = None,
 ) -> Outline:
-    """Continuous bowl + stem as two contours (outer + counter) — Usage A ``b/d/p/q``.
+    """Continuous bowl + stem as two contours (outer + counter) — Usage A ``b/d/p/q``/``a``.
 
     One continuous outer (bowl cut into the stem face) and one counter stretched
     to the stem — no boolean kit-of-parts seam. ``stem_left=True`` mirrors for
     ``b``/``p``; ``descends=True`` drops the stem to ``ctx.descender`` for
-    ``p``/``q``. Geometry matches the letter-builder path used by ``d_from_o``.
+    ``p``/``q``. ``stem_top`` overrides the upright stem crown (default
+    ``ctx.ascender``; single-storey ``a`` passes x-height).
     """
     from typekernel.geo.contour import reverse_contour
     from typekernel.parts.transforms import mirror_x
@@ -2271,7 +2273,8 @@ def bowl_stem_yoke(
     if descends:
         bottom, top = ctx.descender, o.x_height
     else:
-        bottom, top = 0.0, ctx.ascender
+        bottom = 0.0
+        top = ctx.ascender if stem_top is None else stem_top
     bowl_join = join * 0.88 if _italic_topology(ctx) else join
     outline = _bowl_stem_outline(
         o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join
@@ -2281,6 +2284,201 @@ def bowl_stem_yoke(
         outline = Outline(
             tuple(reverse_contour(k) for k in mirror_x(outline, at_x=cx).contours)
         )
+    return outline
+
+
+
+def a_yoke(
+    ctx: DesignContext,
+    *,
+    join: float = 0.85,
+    stem_width: float | None = None,
+    rx: float | None = None,
+    ry: float | None = None,
+) -> Outline:
+    """Continuous single-storey ``a`` body — bowl + stem to x-height (two contours).
+
+    Usage A parallel to :func:`bowl_stem_yoke`. Double-storey ``a`` stays on the
+    private letter-builder path.
+    """
+    o = o_metrics(ctx)
+    if rx is not None or ry is not None:
+        o = o.tuned(rx=o.rx if rx is None else rx, ry=o.ry if ry is None else ry)
+    return bowl_stem_yoke(
+        ctx,
+        join=join,
+        stem_width=stem_width,
+        rx=o.rx,
+        ry=o.ry,
+        stem_top=o.x_height,
+    )
+
+
+def _c_opening_outline(
+    c: DesignContext,
+    o: OMetrics,
+    *,
+    aperture: float | None = None,
+) -> Outline:
+    """Sans continuous ``c``: open ``o`` ring with vertical terminals (one contour)."""
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
+    ap = c.aperture if aperture is None else aperture
+    x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
+    top = _cut(q0, x_t, horizontal=False)[1]
+    bot = _cut(q3, x_t, horizontal=False)[0]
+    itop = _cut(i0, x_t, horizontal=False)[1]
+    ibot = _cut(i3, x_t, horizontal=False)[0]
+    b = PathBuilder()
+    b.moveTo(*top[0])
+    for cubic in (top, q1, q2, bot):
+        _curve(b, cubic)
+    b.lineTo(*ibot[3])
+    for cubic in (_rev(ibot), _rev(i2), _rev(i1), _rev(itop)):
+        _curve(b, cubic)
+    b.closePath()
+    return _ccw(b.build())
+
+
+def c_yoke(
+    ctx: DesignContext,
+    *,
+    aperture: float | None = None,
+    rx: float | None = None,
+    ry: float | None = None,
+) -> Outline:
+    """Continuous open ``c`` aperture — Usage A (one contour, no boolean)."""
+    o = o_metrics(ctx)
+    if rx is not None or ry is not None:
+        o = o.tuned(rx=o.rx if rx is None else rx, ry=o.ry if ry is None else ry)
+    return _c_opening_outline(ctx, o, aperture=aperture)
+
+
+def _e_opening_outline(
+    c: DesignContext,
+    o: OMetrics,
+    *,
+    aperture: float | None = None,
+    bar_raise: float = 0.25,
+) -> Outline:
+    """Sans continuous ``e``: crossbar + lower aperture (outer + eye)."""
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
+    cy = o.x_height / 2.0
+    room = 0.75 * (o.ry - o.thickness_h)
+    bar_t = min(o.thickness_h * _horizontal_slant_scale(c), 1.2 * room)
+    raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
+    raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
+    bar_bot, bar_top = cy + raise_ - bar_t / 2.0, cy + raise_ + bar_t / 2.0
+    x_t = _terminal_x(
+        o, c.aperture if aperture is None else aperture, opening_closure(c, 0.45)
+    )
+    below, right = _cut(q3, bar_bot, horizontal=True)
+    lower = _cut(below, x_t, horizontal=False)[0]
+    ilower = _cut(i3, x_t, horizontal=False)[0]
+    iwall = _cut(i2, bar_bot, horizontal=True)[1]
+    b = PathBuilder()
+    b.moveTo(*right[0])
+    for cubic in (right, q0, q1, q2, lower):
+        _curve(b, cubic)
+    b.lineTo(*ilower[3])
+    _curve(b, _rev(ilower))
+    _curve(b, _rev(iwall))
+    b.closePath()
+    eye_r = _cut(i0, bar_top, horizontal=True)[1]
+    eye_l = _cut(i1, bar_top, horizontal=True)[0]
+    b.moveTo(*eye_r[0])
+    _curve(b, eye_r)
+    _curve(b, eye_l)
+    b.closePath()
+    outer, eye = b.build().contours
+    return Outline((outer, reverse_contour(eye)))
+
+
+def e_yoke(
+    ctx: DesignContext,
+    *,
+    aperture: float | None = None,
+    bar_raise: float = 0.25,
+    rx: float | None = None,
+    ry: float | None = None,
+) -> Outline:
+    """Continuous open ``e`` — Usage A (outer + eye, no boolean)."""
+    o = o_metrics(ctx)
+    if rx is not None or ry is not None:
+        o = o.tuned(rx=o.rx if rx is None else rx, ry=o.ry if ry is None else ry)
+    return _e_opening_outline(ctx, o, aperture=aperture, bar_raise=bar_raise)
+
+
+def _s_opening_outline(
+    c: DesignContext,
+    o: OMetrics,
+    *,
+    aperture: float | None = None,
+    width: float = 0.82,
+    top_scale: float = 0.90,
+    spine: float = 0.50,
+) -> tuple[Outline, tuple[Pt, Pt]]:
+    """Sans continuous ``s``: stacked half-rings. Returns ``(outline, tip_pts)``."""
+    xh, os_, e = o.x_height, o.overshoot, o.exponent
+    ym = spine * xh
+    rx_l = width * o.rx
+    rx_u = rx_l * top_scale
+    tv = min(o.thickness_h, 0.3 * xh)
+    ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
+    ry_l = (ym + tv / 2.0 + os_) / 2.0
+    tv = min(tv, 0.6 * min(ry_u, ry_l))
+    ry_u = (xh + os_ - ym + tv / 2.0) / 2.0
+    ry_l = (ym + tv / 2.0 + os_) / 2.0
+    th = min(o.thickness_v, 0.6 * rx_u)
+    cx = rx_l
+    cy_u, cy_l = xh + os_ - ry_u, ry_l - os_
+    u0, u1, u2, _ = _quarters(cx, cy_u, rx_u, ry_u, e)
+    ui0, ui1, ui2, ui3 = _quarters(cx, cy_u, rx_u - th, ry_u - tv, e)
+    l0, _, l2, l3 = _quarters(cx, cy_l, rx_l, ry_l, e)
+    li0, li1, li2, li3 = _quarters(cx, cy_l, rx_l - th, ry_l - tv, e)
+    if abs(c.stress) > 1e-9:
+        ui0, ui1, ui2, ui3 = tuple(
+            _rotate_cubic(cubic, c.stress, cx, cy_u) for cubic in (ui0, ui1, ui2, ui3)
+        )
+        li0, li1, li2, li3 = tuple(
+            _rotate_cubic(cubic, c.stress, cx, cy_l) for cubic in (li0, li1, li2, li3)
+        )
+    ap = max(0.0, min(1.0, c.aperture if aperture is None else aperture))
+    reach = min(0.99, s_opening_factor(c, ap) + S_OPENING_REACH_RELIEF)
+    x_tu = cx + (rx_u - th) * reach
+    x_tl = cx - (rx_l - th) * reach
+    u_top = _cut(u0, x_tu, horizontal=False)[1]
+    ui_top = _cut(ui0, x_tu, horizontal=False)[1]
+    l_bot = _cut(l2, x_tl, horizontal=False)[1]
+    li_bot = _cut(li2, x_tl, horizontal=False)[1]
+    b = PathBuilder()
+    b.moveTo(*u_top[0])
+    for cubic in (u_top, u1, u2, _rev(li0), _rev(li3), _rev(li_bot)):
+        _curve(b, cubic)
+    _g1_tip_bridge(b, _rev(li_bot), l_bot, outward_lean=0.0)
+    for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
+        _curve(b, cubic)
+    _g1_tip_bridge(b, _rev(ui_top), u_top, outward_lean=0.0)
+    b.closePath()
+    return _ccw(b.build()), (u_top[0], l_bot[0])
+
+
+def s_yoke(
+    ctx: DesignContext,
+    *,
+    aperture: float | None = None,
+    width: float = 0.82,
+    top_scale: float = 0.90,
+    spine: float = 0.50,
+    rx: float | None = None,
+    ry: float | None = None,
+) -> Outline:
+    """Continuous open ``s`` spine — Usage A (one contour, no boolean)."""
+    o = o_metrics(ctx)
+    if rx is not None or ry is not None:
+        o = o.tuned(rx=o.rx if rx is None else rx, ry=o.ry if ry is None else ry)
+    outline, _tips = _s_opening_outline(
+        ctx, o, aperture=aperture, width=width, top_scale=top_scale, spine=spine
+    )
     return outline
 
 
@@ -2416,14 +2614,21 @@ def _single_storey_a_from_o(
         a_join = join * 0.88
         top_exit = c.style.serif not in ("slab", "bracketed")
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
-    outline = _bowl_stem_outline(
-        o,
-        stem,
-        stem_bottom=0.0,
-        stem_top=o.x_height,
-        join=a_join,
-        top_exit=top_exit,
-    )
+    if _prefer_public_yoke(c):
+        # Public continuous single-storey ``a`` (bowl_stem to x-height).
+        outline = _bowl_stem_outline(
+            o, stem, stem_bottom=0.0, stem_top=o.x_height, join=a_join
+        )
+    else:
+        # Opt-out: italic top_exit / serif path.
+        outline = _bowl_stem_outline(
+            o,
+            stem,
+            stem_bottom=0.0,
+            stem_top=o.x_height,
+            join=a_join,
+            top_exit=top_exit,
+        )
     # Written top_exit already shapes the crown; keep style shear for non-vertical tips.
     tip = (2.0 * o.rx - stem * 0.35, o.x_height * 0.92)
     if real_flare:
@@ -2819,9 +3024,25 @@ def c_from_o(
 
     ``aperture`` (default: the context's) moves both cuts toward the centre.
     One contour: outer arc, terminal, counter arc back, terminal.
+    Prefers :func:`c_yoke` on the Usage A upright sans path.
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
+    if _prefer_public_yoke(c):
+        outline = _c_opening_outline(c, o, aperture=aperture)
+        if real_flare:
+            (q0, _q1, _q2, q3), _inner = _ring(o, c)
+            ap = c.aperture if aperture is None else aperture
+            x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
+            top = _cut(q0, x_t, horizontal=False)[1]
+            bot = _cut(q3, x_t, horizontal=False)[0]
+            for tip in (bot[3], top[0]):
+                outline = apply_terminal_shear(
+                    c, outline, at=tip, along="y", inward="-", real_flare=True
+                )
+        anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
+        return _pack(c, o, anchors, outline)
+    # Opt-out: serif opening slabs / italic tip shear / VF recipes.
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     ap = c.aperture if aperture is None else aperture
     x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
@@ -2885,9 +3106,32 @@ def e_from_o(
     thickness above the centre and runs from the inner left wall to the outer
     right edge. Below it the ring is cut at a vertical lower terminal, so the
     lower counter opens into the aperture. Two contours: outer and eye.
+    Prefers :func:`e_yoke` on the Usage A upright sans path.
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
+    if _prefer_public_yoke(c):
+        outline = _e_opening_outline(c, o, aperture=aperture, bar_raise=bar_raise)
+        if real_flare:
+            # Tip at lower terminal (recompute cut for coordinates).
+            (_q0, _q1, _q2, q3), (_i0, _i1, _i2, i3) = _ring(o, c)
+            cy = o.x_height / 2.0
+            room = 0.75 * (o.ry - o.thickness_h)
+            bar_t = min(o.thickness_h * _horizontal_slant_scale(c), 1.2 * room)
+            raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
+            raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
+            bar_bot = cy + raise_ - bar_t / 2.0
+            x_t = _terminal_x(
+                o, c.aperture if aperture is None else aperture, opening_closure(c, 0.45)
+            )
+            below, _right = _cut(q3, bar_bot, horizontal=True)
+            lower = _cut(below, x_t, horizontal=False)[0]
+            outline = apply_terminal_shear(
+                c, outline, at=lower[3], along="y", inward="-", real_flare=True
+            )
+        anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
+        return _pack(c, o, anchors, outline)
+    # Opt-out: serif slabs / italic tip / oblique e splits.
     (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
     cy = o.x_height / 2.0
     # Heavy weights thin the bar so it still fits inside the counter.
@@ -3189,9 +3433,23 @@ def s_from_o(
     smooth at ``spine`` × x-height. The lower ring is ``width`` × the ``o``,
     the upper ``top_scale`` × narrower. Strokes thin in heavy weights so the
     counters stay open. One contour.
+    Prefers :func:`s_yoke` on the Usage A upright sans path.
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
+    if _prefer_public_yoke(c):
+        outline, tips = _s_opening_outline(
+            c, o, aperture=aperture, width=width, top_scale=top_scale, spine=spine
+        )
+        if real_flare:
+            for tip in tips:
+                outline = apply_terminal_shear(
+                    c, outline, at=tip, along="y", inward="-", real_flare=True
+                )
+        cx = width * o.rx
+        anchors = {"top": (cx, o.x_height), "bottom": (cx, 0.0)}
+        return _pack(c, o, anchors, outline)
+    # Opt-out: serif opening slabs / italic G1 lean.
     xh, os_, e = o.x_height, o.overshoot, o.exponent
     ym = spine * xh
     rx_l = width * o.rx
