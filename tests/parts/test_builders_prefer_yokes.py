@@ -46,12 +46,40 @@ def _bad(glyph, ctx, name: str) -> list[str]:
     ]
 
 
-def test_prefer_public_yoke_upright_sans_only() -> None:
+def test_prefer_public_yoke_sans_including_italic() -> None:
+    """Sans upright + italic prefer yokes; inlined serifs still opt out."""
     assert _prefer_public_yoke(DesignContext.humanist_sans()) is True
     assert _prefer_public_yoke(DesignContext.slab_serif()) is False
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
-    assert _prefer_public_yoke(italic) is False
+    assert _prefer_public_yoke(italic) is True
+    assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is False
 
+
+
+def test_italic_u_opts_out_of_public_yoke() -> None:
+    """Mirrored italic ``u_yoke`` breaks VF wght×ital segment recipes vs soften.
+
+    ``n``/``h``/``r``/``m`` italic stay on continuous yokes; ``u`` stays private.
+    """
+    from typekernel.parts.italic import italic_design
+    from typekernel.parts import FormSources
+
+    ctx = italic_design(FormSources.from_context(DesignContext.humanist_sans())).context
+    assert _prefer_public_yoke(ctx) is True
+    m = n_metrics(ctx)
+    uy = GlyphAssembler(ctx).add(
+        u_yoke(
+            ctx,
+            0.0,
+            counter=m.counter,
+            stem_width=m.stem,
+            stem_top=m.x_height,
+            crown_y=m.crown_y,
+            kappa=m.kappa,
+            branch_y=True,
+        )
+    ).build()
+    assert _pts(build_u(ctx).solids[0]) != _pts(uy.solids[0])
 
 def test_build_n_h_match_public_yokes() -> None:
     ctx = DesignContext.humanist_sans()

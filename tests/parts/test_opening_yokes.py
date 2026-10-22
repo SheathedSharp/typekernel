@@ -73,10 +73,11 @@ def test_builders_prefer_opening_yokes_upright_sans() -> None:
     assert _pts(a_from_o(o, n, ctx)) == _pts(GlyphAssembler(ctx).add(sheared).build())
 
 
-def test_opening_yoke_opt_out_serif_and_italic() -> None:
+def test_opening_yoke_opt_out_serif_only() -> None:
+    """Serif inlines opt out; italic sans keeps public opening yokes."""
     assert _prefer_public_yoke(DesignContext.slab_serif()) is False
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
-    assert _prefer_public_yoke(italic) is False
+    assert _prefer_public_yoke(italic) is True
 
 
 def test_c_aperture_param_on_yoke() -> None:

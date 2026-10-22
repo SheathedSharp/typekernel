@@ -941,8 +941,10 @@ def shoulder_yoke(
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
     from typekernel.parts.italic_strokes import (
+        emit_italic_branch_shoulder,
         emit_italic_entry_kick,
         emit_italic_exit_outstroke,
+        italic_branch_radius,
     )
 
     t = ctx.stem if stem_width is None else stem_width
@@ -952,25 +954,26 @@ def shoulder_yoke(
     if w <= 0:
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
-    by = _resolve_branch_y(branch_y, stem_top=top)
+    by = _resolve_branch_y(branch_y, stem_top=top, shoulder_top=shoulder_top)
     upright_spring = top if shoulder_top is None else shoulder_top
     spring = by if by is not None else upright_spring
     # Crown overshoots the upright shoulder band (x-height), not the ascender.
-    crown_ref = upright_spring
-    crown = (crown_ref + ctx.overshoot) if crown_y is None else crown_y
-    if by is not None:
-        drop = top - by
-        crown = crown - drop * 0.14
-    if crown <= spring:
+    upright_crown = (upright_spring + ctx.overshoot) if crown_y is None else crown_y
+    drop = (top - by) if by is not None else 0.0
+    crown = upright_crown - drop * 0.14
+    # Upright only: keep crown above spring. Italic ``h`` keeps crown below the
+    # ascender-branch spring (matches control ``_n_branching_outline``).
+    if by is None and crown <= spring:
         crown = spring + max(ctx.overshoot, t * 0.08)
-    join = (spring * 0.52) if join_y is None else join_y
+    # Join/leg from upright shoulder band, then clamp for branch (NMetrics retune).
+    join = (
+        (upright_spring * (0.50 + 0.04 * ctx.roundness)) if join_y is None else join_y
+    )
     if by is not None:
         join = min(join, by - t * 0.32)
     if inner_crown is None:
-        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-        if by is not None:
-            drop = top - by
-            inner_crown = inner_crown - drop * 0.16
+        upright_inner = upright_crown - t * (0.92 + 0.08 * ctx.contrast)
+        inner_crown = upright_inner - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -979,9 +982,8 @@ def shoulder_yoke(
     r0 = l1 + w
     r1 = r0 + t
     mid = 0.5 * (l1 + r0)
-    # Match n_metrics: drop by stem, not advance width.
     if leg_top is None:
-        leg_top = spring - t * 0.02
+        leg_top = upright_spring - t * 0.02
         if by is not None:
             leg_top = leg_top - (top - by) * 0.2
     o0 = (
@@ -1016,10 +1018,17 @@ def shoulder_yoke(
         b.lineTo(l0, top)
     b.lineTo(l1, top)
     if by is not None:
-        b.lineTo(l1, by)
-    elif shoulder_top is not None and abs(top - spring) > 0.5:
-        b.lineTo(l1, spring)
-    b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
+        emit_italic_branch_shoulder(
+            b,
+            branch_x=l1,
+            branch_y=by,
+            shoulder0=o0,
+            radius=italic_branch_radius(top, by),
+        )
+    else:
+        if shoulder_top is not None and abs(top - spring) > 0.5:
+            b.lineTo(l1, spring)
+        b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
     b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
     if by is not None and written_feet:
         emit_italic_exit_outstroke(b, r0, r1, stem=t)
@@ -1035,17 +1044,6 @@ def shoulder_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
-    if by is not None:
-        outline = soften_stem_branch(
-            outline,
-            stem_x=l1,
-            branch_y=by,
-            stem=t,
-            stem_top=top,
-        )
-        c0 = outline.contours[0]
-        if signed_area(c0) < 0:
-            outline = Outline((reverse_contour(c0),))
     return outline
 
 
@@ -1131,16 +1129,21 @@ def h_yoke(
 
 
 def _resolve_branch_y(
-
-
     branch_y: float | bool | None,
     *,
     stem_top: float,
+    shoulder_top: float | None = None,
 ) -> float | None:
-    """``True`` → auto mid-stem branch; ``float`` → absolute; ``None``/``False`` → upright."""
+    """``True`` → auto mid-stem branch; ``float`` → absolute; ``None``/``False`` → upright.
+
+    When ``shoulder_top`` is set and ``stem_top`` is an ascender (``h``), ``True``
+    matches control ``_italic_branch_y``.
+    """
     if branch_y is None or branch_y is False:
         return None
     if branch_y is True:
+        if shoulder_top is not None and stem_top > shoulder_top + 1.0:
+            return shoulder_top + (stem_top - shoulder_top) * 0.38
         return stem_top * 0.58
     by = float(branch_y)
     if by <= 0 or by >= stem_top:
@@ -1177,8 +1180,10 @@ def double_shoulder_yoke(
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
     from typekernel.parts.italic_strokes import (
+        emit_italic_branch_shoulder,
         emit_italic_entry_kick,
         emit_italic_exit_outstroke,
+        italic_branch_radius,
     )
 
     if counter_scale <= 0:
@@ -1194,22 +1199,24 @@ def double_shoulder_yoke(
     by = _resolve_branch_y(branch_y, stem_top=top)
     # Shoulder spring height (branch or upright crown spring).
     spring = by if by is not None else top
-    crown = (top + ctx.overshoot) if crown_y is None else crown_y
-    if by is not None:
-        drop = top - by
-        crown = crown - drop * 0.14
-    if crown <= spring:
+    upright_crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    drop = (top - by) if by is not None else 0.0
+    crown = upright_crown - drop * 0.14
+    if by is None and crown <= spring:
         crown = spring + max(ctx.overshoot, t * 0.08)
-    join = (spring * 0.52) if join_y is None else join_y
+    join = (top * (0.50 + 0.04 * ctx.roundness)) if join_y is None else join_y
     if by is not None:
         join = min(join, by - t * 0.32)
     if inner_crown is None:
-        inner_crown = crown - t * (0.55 + 0.08 * ctx.contrast)
-        if by is not None:
-            drop = top - by
-            inner_crown = inner_crown - drop * 0.16
-    # Lift inner crown toward spring so middle crotch shelf can meet at stem_top.
-    inner_crown = min(max(inner_crown, spring), crown - t * 0.06)
+        # double_shoulder upright uses a shallower inner than n (0.55 vs 0.92).
+        upright_inner = upright_crown - t * (0.55 + 0.08 * ctx.contrast)
+        inner_crown = upright_inner - drop * 0.16
+    # Lift inner crown toward spring so middle crotch shelf can meet at stem_top
+    # (upright only — italic branch spring is mid-stem).
+    if by is None:
+        inner_crown = min(max(inner_crown, spring), crown - t * 0.06)
+    else:
+        inner_crown = min(inner_crown, crown - t * 0.06)
     join = min(join, inner_crown - t * 0.15)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -1226,7 +1233,7 @@ def double_shoulder_yoke(
         mid = 0.5 * (l1 + r0)
         lt = leg_top
         if lt is None:
-            lt = spring - t * 0.02
+            lt = top - t * 0.02
             if by is not None:
                 lt = lt - (top - by) * 0.2
         o0 = (
@@ -1275,8 +1282,15 @@ def double_shoulder_yoke(
         b.lineTo(l0, top)
     b.lineTo(l1, top)
     if by is not None:
-        b.lineTo(l1, by)
-    _curve(b, o0a)
+        emit_italic_branch_shoulder(
+            b,
+            branch_x=l1,
+            branch_y=by,
+            shoulder0=o0a,
+            radius=italic_branch_radius(top, by),
+        )
+    else:
+        _curve(b, o0a)
     # Middle crotch shelf at full stem_top (m_from_n recipe), not at branch_y.
     split1 = _split_y(o1a, top)
     split2 = _split_y(o0b, top)
@@ -1319,17 +1333,6 @@ def double_shoulder_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
-    if by is not None:
-        outline = soften_stem_branch(
-            outline,
-            stem_x=l1,
-            branch_y=by,
-            stem=t,
-            stem_top=top,
-        )
-        c0 = outline.contours[0]
-        if signed_area(c0) < 0:
-            outline = Outline((reverse_contour(c0),))
     return outline
 
 
@@ -1563,7 +1566,12 @@ def r_yoke(
 
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
-    from typekernel.parts.italic_strokes import emit_italic_entry_kick
+    from typekernel.parts.italic_strokes import (
+        emit_italic_branch_shoulder,
+        emit_italic_entry_kick,
+        italic_arm_terminal_cubic,
+        italic_branch_radius,
+    )
 
     if not 0.0 < arm < 1.0:
         raise ValueError(f"arm must be in (0, 1), got {arm!r}")
@@ -1576,21 +1584,18 @@ def r_yoke(
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top)
     spring = by if by is not None else top
-    crown = (top + ctx.overshoot) if crown_y is None else crown_y
-    if by is not None:
-        drop = top - by
-        crown = crown - drop * 0.14
-    if crown <= spring:
+    upright_crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    drop = (top - by) if by is not None else 0.0
+    crown = upright_crown - drop * 0.14
+    if by is None and crown <= spring:
         crown = spring + max(ctx.overshoot, t * 0.08)
-    join = (spring * 0.52) if join_y is None else join_y
+    join = (top * (0.50 + 0.04 * ctx.roundness)) if join_y is None else join_y
     if by is not None:
         join = min(join, by - t * 0.32)
 
     if inner_crown is None:
-        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-        if by is not None:
-            drop = top - by
-            inner_crown = inner_crown - drop * 0.16
+        upright_inner = upright_crown - t * (0.92 + 0.08 * ctx.contrast)
+        inner_crown = upright_inner - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -1601,7 +1606,7 @@ def r_yoke(
     mid = 0.5 * (l1 + r0)
 
     if leg_top is None:
-        leg_top = spring - t * 0.02
+        leg_top = top - t * 0.02
         if by is not None:
             leg_top = leg_top - (top - by) * 0.2
     o0 = (
@@ -1660,11 +1665,24 @@ def r_yoke(
         b.lineTo(l0, top)
     b.lineTo(l1, top)
     if by is not None:
-        b.lineTo(l1, by)
-    _curve(b, o0)
+        emit_italic_branch_shoulder(
+            b,
+            branch_x=l1,
+            branch_y=by,
+            shoulder0=o0,
+            radius=italic_branch_radius(top, by),
+        )
+    else:
+        _curve(b, o0)
     _curve(b, outer_arm)
-    # Flat vertical tip at truncate x.
-    b.lineTo(inner_arm[0][0], inner_arm[0][1])
+    if by is not None:
+        _curve(
+            b,
+            italic_arm_terminal_cubic(outer_arm[3], inner_arm[0], stem=t),
+        )
+    else:
+        # Flat vertical tip at truncate x.
+        b.lineTo(inner_arm[0][0], inner_arm[0][1])
     _curve(b, inner_arm)
     _curve(b, i1)
     b.lineTo(l1, y_bottom)
@@ -1673,17 +1691,6 @@ def r_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
-    if by is not None:
-        outline = soften_stem_branch(
-            outline,
-            stem_x=l1,
-            branch_y=by,
-            stem=t,
-            stem_top=top,
-        )
-        c0 = outline.contours[0]
-        if signed_area(c0) < 0:
-            outline = Outline((reverse_contour(c0),))
     return outline
 
 

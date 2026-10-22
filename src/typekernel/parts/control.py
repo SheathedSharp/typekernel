@@ -739,19 +739,20 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
 
 
 def _prefer_public_yoke(ctx: DesignContext) -> bool:
-    """Use continuous public yokes on the Usage A default upright path.
+    """Use continuous public yokes on the Usage A default path (upright + italic).
 
     Opt out when:
-    - inlined slab/bracket serifs need private foot/cap segment recipes;
-    - ``vf_compat_stem_segments`` needs private stem knots;
-    - italic/oblique branching needs the private VF wght×ital segment-count
-      recipe (public yokes still expose ``branch_y`` for agent composition).
+    - inlined slab/bracket serifs need private foot/cap / opening-slab recipes;
+    - ``vf_compat_stem_segments`` needs private stem knots.
+
+    Italic sans uses yoke ``branch_y`` / opening tip shear so the continuous
+    public path stays the default. Serif italic still opts out with serifs.
     """
     if _stem_serif_inlined(ctx):
         return False
     if _vf_compat_stem(ctx):
         return False
-    return not _italic_topology(ctx)
+    return True
 
 
 def _stem_serif_inlined(ctx: DesignContext) -> bool:
@@ -838,14 +839,11 @@ def _italic_branch_y(m: NMetrics, stem_top: float) -> float:
 
 
 def _italic_branch_radius(stem: float, stem_top: float, branch_y: float) -> float:
-    """Fillet size for stem→shoulder branch (cursive italic crotch).
+    """Fillet size for stem→shoulder branch (cursive italic crotch)."""
+    del stem
+    from typekernel.parts.italic_strokes import italic_branch_radius
 
-    Sized from the branch drop (not stem) so wght masters keep a stable
-    segment recipe before construct-slant extrema.
-    """
-    del stem  # API keeps stem for call-site symmetry with other italic helpers.
-    drop = max(0.0, stem_top - branch_y)
-    return max(2.0, drop * 0.42)
+    return italic_branch_radius(stem_top, branch_y)
 
 
 def _italic_kick_dims(stem: float) -> tuple[float, float]:
@@ -917,14 +915,10 @@ def _italic_arm_terminal_cubic(
     *,
     stem: float,
 ) -> Cubic:
-    """Soft written cut between truncated shoulder arms (``r`` terminal)."""
-    lean = max(2.5, stem * 0.22)
-    return (
-        outer_end,
-        (outer_end[0] + lean, outer_end[1] - stem * 0.10),
-        (inner_start[0] + lean, inner_start[1] + stem * 0.10),
-        inner_start,
-    )
+    """Delegate to :func:`~typekernel.parts.italic_strokes.italic_arm_terminal_cubic`."""
+    from typekernel.parts.italic_strokes import italic_arm_terminal_cubic
+
+    return italic_arm_terminal_cubic(outer_end, inner_start, stem=stem)
 
 
 def _italic_single_stem_outline(
@@ -983,48 +977,16 @@ def _emit_italic_branch_shoulder(
     shoulder0: Cubic,
     radius: float,
 ) -> None:
-    """Vertical stem into first shoulder cubic via a kappa fillet (R4-friendly).
+    """Delegate to :func:`~typekernel.parts.italic_strokes.emit_italic_branch_shoulder`."""
+    from typekernel.parts.italic_strokes import emit_italic_branch_shoulder
 
-    For **left-stem** branching (``n``/``h``/``m``/``r``) only. Do **not** drive
-    mirrored ``u`` through this path: the fillet exit and ``splitCubicAtT``
-    junction are not collinear on a mirrored shoulder, so the bridge ``lineTo``
-    folds; ``outline_oblique_compat_splits`` then drops a segment when counter
-    grows under weight relief (VF ``check_masters`` / ``_font(..., stem=120)``).
-    Use :func:`_soften_italic_branch_crotch` for ``u`` instead.
-
-    Current point must lie on ``x=branch_x`` with ``y > branch_y``.
-    """
-    from fontTools.misc.bezierTools import splitCubicAtT
-
-    from typekernel.geo.path_helpers import rounded_corner_cubics
-    from typekernel.geo.point import Point
-
-    if radius <= 0.0:
-        b.lineTo(branch_x, branch_y)
-        _curve(b, shoulder0)
-        return
-    p0, p1, p2, p3 = shoulder0
-    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
-    if math.hypot(dx, dy) < 1e-9:
-        dx, dy = p3[0] - p0[0], p3[1] - p0[1]
-    length = math.hypot(dx, dy) or 1.0
-    out_tgt = (
-        p0[0] + dx / length * max(radius * 2.5, 1.0),
-        p0[1] + dy / length * max(radius * 2.5, 1.0),
+    emit_italic_branch_shoulder(
+        b,
+        branch_x=branch_x,
+        branch_y=branch_y,
+        shoulder0=shoulder0,
+        radius=radius,
     )
-    start, c1, c2, end, _corner = rounded_corner_cubics(
-        Point(branch_x, branch_y + max(radius * 2.0, 1.0)),
-        Point(branch_x, branch_y),
-        Point(out_tgt[0], out_tgt[1]),
-        radius,
-    )
-    b.lineTo(start.x, start.y)
-    b.curveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
-    _left, right = splitCubicAtT(p0, p1, p2, p3, 0.18)
-    r0, r1, r2, r3 = (tuple(pt) for pt in right)
-    # Always keep this line so segment counts do not depend on float gaps.
-    b.lineTo(r0[0], r0[1])
-    b.curveTo(r1[0], r1[1], r2[0], r2[1], r3[0], r3[1])
 
 
 def _n_branching_outline(
@@ -1162,17 +1124,19 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     if _prefer_public_yoke(ctx):
         from typekernel.parts.primitives import n_yoke
 
+        italic = _italic_topology(ctx)
         outline = n_yoke(
             ctx,
             0.0,
             counter=m.counter,
             stem_width=m.stem,
             stem_top=m.x_height,
-            join_y=m.join_y,
+            join_y=None if italic else m.join_y,
             crown_y=m.crown_y,
-            leg_top=m.leg_top,
-            inner_crown=m.inner_crown,
+            leg_top=None if italic else m.leg_top,
+            inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
+            branch_y=italic,
         )
     elif _italic_topology(ctx):
         # Opt-out: serif shelf / VF knots on private branching path.
@@ -1212,6 +1176,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
     if _prefer_public_yoke(ctx):
         from typekernel.parts.primitives import h_yoke
 
+        italic = _italic_topology(ctx)
         outline = h_yoke(
             ctx,
             0.0,
@@ -1219,11 +1184,12 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             stem_width=m.stem,
             stem_top=m.ascender,
             shoulder_top=m.x_height,
-            join_y=m.join_y,
+            join_y=None if italic else m.join_y,
             crown_y=m.crown_y,
-            leg_top=m.leg_top,
-            inner_crown=m.inner_crown,
+            leg_top=None if italic else m.leg_top,
+            inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
+            branch_y=italic,
         )
     elif _italic_topology(ctx):
         outline = _n_branching_outline(
@@ -1269,6 +1235,7 @@ def r_from_n(
         from typekernel.geo.outline import bounds as _bounds
         from typekernel.parts.primitives import r_yoke
 
+        italic = _italic_topology(c)
         outline = r_yoke(
             c,
             0.0,
@@ -1276,11 +1243,12 @@ def r_from_n(
             counter=m.counter,
             stem_width=m.stem,
             stem_top=m.x_height,
-            join_y=m.join_y,
+            join_y=None if italic else m.join_y,
             crown_y=m.crown_y,
-            leg_top=m.leg_top,
-            inner_crown=m.inner_crown,
+            leg_top=None if italic else m.leg_top,
+            inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
+            branch_y=italic,
         )
         x_t = _bounds(outline)[2]
     elif _italic_topology(c):
@@ -1806,6 +1774,7 @@ def m_from_n(
     if _prefer_public_yoke(c):
         from typekernel.parts.primitives import double_shoulder_yoke
 
+        italic = branch_y is not None
         outline = double_shoulder_yoke(
             c,
             0.0,
@@ -1813,11 +1782,12 @@ def m_from_n(
             counter_scale=scale,
             stem_width=m.stem,
             stem_top=xh,
-            join_y=mm.join_y,
-            crown_y=mm.crown_y,
-            leg_top=mm.leg_top,
-            inner_crown=mm.inner_crown,
+            join_y=None if italic else mm.join_y,
+            crown_y=m.crown_y if italic else mm.crown_y,
+            leg_top=None if italic else mm.leg_top,
+            inner_crown=None if italic else mm.inner_crown,
             kappa=mm.kappa,
+            branch_y=True if italic else None,
         )
         # Anchor x from the same shoulder layout the private path uses.
         s1 = _shoulder(mm)
@@ -1951,7 +1921,10 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         ),
     )
     cx = um.width / 2.0
-    if _prefer_public_yoke(c):
+    # Italic/VF ``u`` stays on private branching: mirrored ``u_yoke`` + emit
+    # fillet drops segments vs ``_u_branching_outline`` / soften (wght×ital
+    # knot recipes). Upright sans still prefers continuous ``u_yoke``.
+    if _prefer_public_yoke(c) and not _italic_topology(c):
         from typekernel.parts.primitives import u_yoke
 
         outline = u_yoke(
@@ -1967,7 +1940,7 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             kappa=um.kappa,
         )
     elif _italic_topology(c):
-        # Opt-out: serif / VF private branching u.
+        # Opt-out: italic + VF upright (oblique pre-split) branching u.
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
@@ -2614,8 +2587,9 @@ def _single_storey_a_from_o(
         a_join = join * 0.88
         top_exit = c.style.serif not in ("slab", "bracketed")
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
-    if _prefer_public_yoke(c):
+    if _prefer_public_yoke(c) and not top_exit:
         # Public continuous single-storey ``a`` (bowl_stem to x-height).
+        # Italic written top_exit stays on the private outline path.
         outline = _bowl_stem_outline(
             o, stem, stem_bottom=0.0, stem_top=o.x_height, join=a_join
         )
@@ -3030,12 +3004,16 @@ def c_from_o(
     o = _o_record(o_glyph)
     if _prefer_public_yoke(c):
         outline = _c_opening_outline(c, o, aperture=aperture)
+        (q0, _q1, _q2, q3), _inner = _ring(o, c)
+        ap = c.aperture if aperture is None else aperture
+        x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
+        top = _cut(q0, x_t, horizontal=False)[1]
+        bot = _cut(q3, x_t, horizontal=False)[0]
+        if _italic_topology(c):
+            outline = _apply_italic_opening_tip_shear(
+                c, outline, (bot[3], top[0]), stem=o.thickness_v
+            )
         if real_flare:
-            (q0, _q1, _q2, q3), _inner = _ring(o, c)
-            ap = c.aperture if aperture is None else aperture
-            x_t = _terminal_x(o, ap, opening_closure(c, 0.55))
-            top = _cut(q0, x_t, horizontal=False)[1]
-            bot = _cut(q3, x_t, horizontal=False)[0]
             for tip in (bot[3], top[0]):
                 outline = apply_terminal_shear(
                     c, outline, at=tip, along="y", inward="-", real_flare=True
@@ -3112,23 +3090,31 @@ def e_from_o(
     o = _o_record(o_glyph)
     if _prefer_public_yoke(c):
         outline = _e_opening_outline(c, o, aperture=aperture, bar_raise=bar_raise)
-        if real_flare:
-            # Tip at lower terminal (recompute cut for coordinates).
-            (_q0, _q1, _q2, q3), (_i0, _i1, _i2, i3) = _ring(o, c)
-            cy = o.x_height / 2.0
-            room = 0.75 * (o.ry - o.thickness_h)
-            bar_t = min(o.thickness_h * _horizontal_slant_scale(c), 1.2 * room)
-            raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
-            raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
-            bar_bot = cy + raise_ - bar_t / 2.0
-            x_t = _terminal_x(
-                o, c.aperture if aperture is None else aperture, opening_closure(c, 0.45)
+        (_q0, _q1, _q2, q3), (_i0, _i1, _i2, i3) = _ring(o, c)
+        cy = o.x_height / 2.0
+        room = 0.75 * (o.ry - o.thickness_h)
+        bar_t = min(o.thickness_h * _horizontal_slant_scale(c), 1.2 * room)
+        raise_ = max(-0.45, min(0.45, bar_raise)) * bar_t
+        raise_ = max(-(room - bar_t / 2.0), min(room - bar_t / 2.0, raise_))
+        bar_bot = cy + raise_ - bar_t / 2.0
+        x_t = _terminal_x(
+            o, c.aperture if aperture is None else aperture, opening_closure(c, 0.45)
+        )
+        below, _right = _cut(q3, bar_bot, horizontal=True)
+        lower = _cut(below, x_t, horizontal=False)[0]
+        if _italic_topology(c):
+            outline = _apply_italic_opening_tip_shear(
+                c, outline, (lower[3],), stem=o.thickness_v
             )
-            below, _right = _cut(q3, bar_bot, horizontal=True)
-            lower = _cut(below, x_t, horizontal=False)[0]
+        if real_flare:
             outline = apply_terminal_shear(
                 c, outline, at=lower[3], along="y", inward="-", real_flare=True
             )
+        shear = _e_oblique_shear(c)
+        if shear is not None:
+            from typekernel.geo.extrema import outline_e_oblique_splits
+
+            outline = outline_e_oblique_splits(outline, shear)
         anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
         return _pack(c, o, anchors, outline)
     # Opt-out: serif slabs / italic tip / oblique e splits.
@@ -3441,6 +3427,10 @@ def s_from_o(
         outline, tips = _s_opening_outline(
             c, o, aperture=aperture, width=width, top_scale=top_scale, spine=spine
         )
+        if _italic_topology(c):
+            outline = _apply_italic_opening_tip_shear(
+                c, outline, tips, stem=o.thickness_v
+            )
         if real_flare:
             for tip in tips:
                 outline = apply_terminal_shear(
