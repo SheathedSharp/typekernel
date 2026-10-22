@@ -69,6 +69,48 @@ def _along(from_p: Pt, to_p: Pt, dist: float) -> Pt:
     return (from_p[0] + dx * t, from_p[1] + dy * t)
 
 
+
+def _crotch_seal_flat(stem: float) -> float:
+    """Target chord width for a truncated crotch (clears even-odd hairline gate)."""
+    return max(5.5, stem * 0.10)
+
+
+def _truncate_crotch(points: list[Pt], idx: int, flat: float) -> list[Pt]:
+    """Replace ``points[idx]`` with a two-point flat of chord width ``flat`` (net +1).
+
+    Insets along both edges from the tip so masters keep a fixed topology and
+    stay interpolatable. Used to seal even-odd slits at sharp diagonal crotches.
+    """
+    n = len(points)
+    if not 0 <= idx < n:
+        raise IndexError(f"crotch index {idx} out of range for {n} points")
+    if flat <= 0:
+        raise ValueError(f"flat must be positive, got {flat!r}")
+    a = points[(idx - 1) % n]
+    c = points[idx]
+    b = points[(idx + 1) % n]
+    va = (a[0] - c[0], a[1] - c[1])
+    vb = (b[0] - c[0], b[1] - c[1])
+    la = math.hypot(*va) or 1.0
+    lb = math.hypot(*vb) or 1.0
+    ua = (va[0] / la, va[1] / la)
+    ub = (vb[0] / lb, vb[1] / lb)
+    dot = max(-1.0, min(1.0, ua[0] * ub[0] + ua[1] * ub[1]))
+    sin_half = math.sqrt(max(0.0, 0.5 * (1.0 - dot))) or 1e-6
+    t = min(flat / (2.0 * sin_half), 0.45 * la, 0.45 * lb)
+    p = (c[0] + ua[0] * t, c[1] + ua[1] * t)
+    q = (c[0] + ub[0] * t, c[1] + ub[1] * t)
+    return points[:idx] + [p, q] + points[idx + 1 :]
+
+
+def _seal_crotches(points: list[Pt], indices: tuple[int, ...], flat: float) -> list[Pt]:
+    """Truncate several crotches; ``indices`` high-to-low so earlier slots stay stable."""
+    out = points
+    for idx in sorted(indices, reverse=True):
+        out = _truncate_crotch(out, idx, flat)
+    return out
+
+
 def _soft_corner_polygon(points: list[Pt], soft: frozenset[int], radius: float) -> Outline:
     """Closed polygon with listed corners as cubics, then R4 extrema rebalance.
 
@@ -142,11 +184,20 @@ def v_points(
     apex: float = 0.35,
     *,
     top_overshoot: float = 0.0,
+    seal_crotches: bool = True,
 ) -> list[Pt]:
-    """Two compensated diagonals meeting at a flat apex on the baseline."""
+    """Two compensated diagonals meeting at a flat apex on the baseline.
+
+    When ``seal_crotches`` (default), the inner crotch tip is truncated to a
+    flat of width :func:`_crotch_seal_flat` so even-odd scans show no hairline
+    (7→8 points; VF-safe across masters).
+    """
     a0, hw, cy, _ = _v_geometry(stem, height, width, contrast, apex)
     w, h = width, height + top_overshoot
-    return [(0.0, h), (a0, 0.0), (w - a0, 0.0), (w, h), (w - hw, h), (w / 2.0, cy), (hw, h)]
+    pts = [(0.0, h), (a0, 0.0), (w - a0, 0.0), (w, h), (w - hw, h), (w / 2.0, cy), (hw, h)]
+    if seal_crotches:
+        pts = _truncate_crotch(pts, 5, _crotch_seal_flat(stem))
+    return pts
 
 
 def w_points(
@@ -184,7 +235,7 @@ def w_points(
         if weight <= 0.4:
             raise ValueError("w strokes do not fit this width; widen it or thin the stem")
         weight = max(0.4, weight * 0.92)
-    return [
+    pts = [
         (0.0, xh),
         (a1l, 0.0),
         (a1r, 0.0),
@@ -199,6 +250,8 @@ def w_points(
         (up_x, up_y),
         (hw, xh),
     ]
+    # Low crotch (3) + two upper notches (8, 11); truncate high→low.
+    return _seal_crotches(pts, (3, 8, 11), _crotch_seal_flat(stem))
 
 
 def x_points(
@@ -214,7 +267,7 @@ def x_points(
     run = w - hw
     bottom_y = xh * (w - 2.0 * hw) / (2.0 * run)
     top_y = xh * w / (2.0 * run)
-    return [
+    pts = [
         (0.0, xh),
         (run / 2.0, xh / 2.0),
         (0.0, 0.0),
@@ -228,6 +281,8 @@ def x_points(
         (w / 2.0, top_y),
         (hw, xh),
     ]
+    # Top and bottom waist crotches of the cross (4, 10).
+    return _seal_crotches(pts, (4, 10), _crotch_seal_flat(stem))
 
 
 def z_points(stem: float, bar: float, height: float, width: float, contrast: float) -> list[Pt]:
@@ -295,19 +350,26 @@ def k_points(
     crotch = _intersect(*arm_lo, *leg_up)
     if not (0.0 < y_ll < y_au < xh and crotch[0] > t):
         raise ValueError("k strokes do not fit this width; widen it or thin the stem")
-    return [
+    # Horizontal shelves at stem↔leg / stem↔arm joins (clears taper hairlines
+    # that edge-inset chamfers leave on a vertical stem) + truncated arm/leg crotch.
+    shelf = _crotch_seal_flat(stem)
+    pts = [
         (0.0, 0.0),
         (t, 0.0),
         (t, y_ll),
+        (t + shelf, y_ll),
         (w - hw_l, 0.0),
         (w, 0.0),
         crotch,
         (w, xh),
         (w - hw_a, xh),
+        (t + shelf, y_au),
         (t, y_au),
         (t, stem_top),
         (0.0, stem_top),
     ]
+    # Crotch tip is index 6 before truncate → flat at 6,7 (13→14 points).
+    return _truncate_crotch(pts, 6, shelf)
 
 
 def v_from_n(
@@ -360,7 +422,7 @@ def v_from_n(
         pts[1] = (pts[1][0] + bias * 0.25, pts[1][1])
         pts[2] = (pts[2][0] + bias * 0.55, pts[2][1])
         pts[5] = (pts[5][0] + bias * 0.45, pts[5][1])
-        outline = _soft_corner_polygon(pts, frozenset({5}), m.stem * 0.38)
+        outline = _soft_corner_polygon(pts, frozenset({5, 6}), m.stem * 0.38)
     else:
         outline = _polygon(pts)
     if real_flare:
@@ -452,11 +514,14 @@ def y_from_n(
         ]
     tip_y = desc + m.stem * (0.02 if c.terminal_style == "ball" else 0.08)
     tip_x = tail_r + (hw * 0.32 if c.terminal_style == "ball" else 0.0)
+    # Truncate the v-crotch tip (straight idx 6; curved idx 8).
+    crotch_i = 8 if c.style.y_tail == "curved" else 6
+    pts = _truncate_crotch(pts, crotch_i, _crotch_seal_flat(m.stem))
     if _italic_diags(c):
-        # Round the v-crotch (index 6 in straight y; 8 with curved tail midpoints).
-        soft_i = 8 if c.style.y_tail == "curved" else 6
-        # Also round the join into the descender (index 1).
-        poly = _soft_corner_polygon(pts, frozenset({1, soft_i}), m.stem * 0.32)
+        # Flat occupies crotch_i, crotch_i+1; also round descender join (index 1).
+        poly = _soft_corner_polygon(
+            pts, frozenset({1, crotch_i, crotch_i + 1}), m.stem * 0.32
+        )
     else:
         poly = _polygon(pts)
     if c.terminal_style == "ball" and m.stem <= 45.0:
@@ -535,9 +600,10 @@ def w_from_n(
     )
     anchors = {"top": (ww / 2.0, m.x_height), "bottom": (ww / 2.0, 0.0)}
     if _italic_diags(c):
-        # Round the two inner valleys (low crotch + two upper notches).
-        # w_points layout: indices 3=low crotch, 8 and 11=upper inner notches.
-        outline = _soft_corner_polygon(pts, frozenset({3, 8, 11}), m.stem * 0.28)
+        # Sealed flats: low crotch 3–4, upper notches 8–9 and 11–12.
+        outline = _soft_corner_polygon(
+            pts, frozenset({3, 4, 8, 9, 11, 12}), m.stem * 0.28
+        )
     else:
         outline = _polygon(pts)
     if real_flare:
@@ -585,7 +651,7 @@ def x_from_n(
         pts[7] = (pts[7][0], pts[7][1] + dy)
         pts[4] = (pts[4][0], pts[4][1] + dy * 0.5)
         pts[10] = (pts[10][0], pts[10][1] + dy * 0.5)
-        outline = _soft_corner_polygon(pts, frozenset({1, 4, 7, 10}), m.stem * 0.22)
+        outline = _soft_corner_polygon(pts, frozenset({1, 4, 5, 8, 10, 11}), m.stem * 0.22)
     else:
         outline = _polygon(pts)
     if real_flare:
@@ -716,8 +782,10 @@ def k_from_n(
     }
     tip = (w - m.stem * 0.15, m.x_height * 0.08)
     if _italic_diags(c):
-        # Round arm/leg crotch (index 5) and stem junctions (2, 8).
-        base_poly = _soft_corner_polygon(pts, frozenset({2, 5, 8}), m.stem * 0.34)
+        # Shelves at 2–3 / 10–11; crotch flat at 6–7.
+        base_poly = _soft_corner_polygon(
+            pts, frozenset({2, 3, 6, 7, 10, 11}), m.stem * 0.34
+        )
     else:
         base_poly = _polygon(pts)
     if c.terminal_style == "angled":

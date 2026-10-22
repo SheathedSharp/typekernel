@@ -1,4 +1,4 @@
-"""v w y x z k: compensated diagonals from the n record, fixed point counts."""
+"""v w y x z k: compensated diagonals from the n record, fixed sealed-crotch point counts."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from typekernel.parts import (
 )
 
 DERIVE = {"v": v_from_n, "w": w_from_n, "y": y_from_n, "x": x_from_n, "z": z_from_n, "k": k_from_n}
-POINTS = {"v": 7, "w": 13, "y": 8, "x": 12, "z": 10, "k": 11}
+POINTS = {"v": 8, "w": 16, "y": 9, "x": 14, "z": 10, "k": 14}
 
 
 @pytest.fixture
