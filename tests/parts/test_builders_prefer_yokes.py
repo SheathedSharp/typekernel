@@ -47,13 +47,14 @@ def _bad(glyph, ctx, name: str) -> list[str]:
 
 
 def test_prefer_public_yoke_sans_and_serif_including_italic() -> None:
-    """Sans + slab/bracket prefer yokes (upright and italic); vf_compat_stem opts out."""
+    """Sans + slab/bracket prefer yokes (upright, italic, vf_compat_stem)."""
     assert _prefer_public_yoke(DesignContext.humanist_sans()) is True
     assert _prefer_public_yoke(DesignContext.slab_serif()) is True
     assert _prefer_public_yoke(DesignContext.bracketed_serif()) is True
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
     assert _prefer_public_yoke(italic) is True
     assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is True
+    assert _prefer_public_yoke(DesignContext.humanist_sans().tuned(vf_compat_stem_segments=True)) is True
 
 
 
@@ -413,3 +414,53 @@ def test_italic_serif_n_h_m_r_u_match_public_yokes() -> None:
                 )
             ).build()
         )
+
+
+
+def test_vf_compat_stem_n_h_m_r_u_match_public_yokes() -> None:
+    """``vf_compat_stem_segments`` prefers yokes; builders match yoke knot recipe."""
+    from typekernel.qa.originality import topology_signature
+
+    ctx = DesignContext.humanist_sans().tuned(vf_compat_stem_segments=True)
+    assert _prefer_public_yoke(ctx) is True
+    m = n_metrics(ctx)
+    assert topology_signature(build_n(ctx)) == topology_signature(
+        GlyphAssembler(ctx).add(
+            n_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                stem_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=m.inner_crown,
+                kappa=m.kappa,
+                vf_compat_stem=True,
+            )
+        ).build()
+    )
+    assert topology_signature(build_h(ctx)) == topology_signature(
+        GlyphAssembler(ctx).add(
+            h_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                stem_top=m.ascender,
+                shoulder_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=m.inner_crown,
+                kappa=m.kappa,
+                vf_compat_stem=True,
+            )
+        ).build()
+    )
+    # Extra colinear knot on ``n`` vs plain upright.
+    plain = DesignContext.humanist_sans()
+    n_vf = len(build_n(ctx).solids[0].contours[0].segments)
+    n_plain = len(build_n(plain).solids[0].contours[0].segments)
+    assert n_vf == n_plain + 1

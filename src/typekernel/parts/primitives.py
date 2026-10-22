@@ -929,6 +929,7 @@ def shoulder_yoke(
     written_feet: bool = True,
     inline_serifs: bool = False,
     soft_branch: bool = True,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Continuous left-stem + shoulder + right-leg as **one** closed contour.
 
@@ -941,7 +942,10 @@ def shoulder_yoke(
     adds entry kick + exit outstroke and softens the crotch.
 
     ``inline_serifs`` draws slab/bracket foot and cap serifs into the contour
-    (upright only — branching + inline serifs stay on the private path).
+    (branching italic uses feet in place of written kicks). ``vf_compat_stem``
+    adds a colinear on-curve knot on upright x-height stems so segment counts
+    match branching italics (TK-404); ascender ``h`` already has the spring
+    descent and does not need the duplicate.
     """
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
@@ -1076,8 +1080,12 @@ def shoulder_yoke(
             b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
         b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
     else:
-        if (not serif) and shoulder_top is not None and abs(top - spring) > 0.5:
+        is_ascender = shoulder_top is not None and abs(top - spring) > 0.5
+        if (not serif) and is_ascender:
             b.lineTo(l1, spring)
+        elif vf_compat_stem and not is_ascender:
+            # Extra colinear knot (matches control ``_n_family_outline`` vf_compat).
+            b.lineTo(l1, top)
         b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
         if right_leg_top_cap:
             from fontTools.misc.bezierTools import splitCubicAtT
@@ -1154,11 +1162,13 @@ def n_yoke(
     written_feet: bool = True,
     inline_serifs: bool = False,
     soft_branch: bool = True,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Public Usage A ``n`` body — alias of :func:`shoulder_yoke`.
 
     ``branch_y=True`` (or a float) yields the written italic branching recipe.
     ``inline_serifs`` draws slab/bracket feet (and upright caps) into the contour.
+    ``vf_compat_stem`` forwards the TK-404 upright stem knot.
     """
     return shoulder_yoke(
         ctx,
@@ -1177,6 +1187,7 @@ def n_yoke(
         written_feet=written_feet,
         inline_serifs=inline_serifs,
         soft_branch=soft_branch,
+        vf_compat_stem=vf_compat_stem,
     )
 
 
@@ -1197,12 +1208,15 @@ def h_yoke(
     branch_y: float | bool | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Public Usage A ``h`` body — :func:`shoulder_yoke` with ascender stem.
 
     Default ``stem_top`` is ``ctx.ascender``; shoulder springs at
     ``shoulder_top`` (default ``ctx.x_height``), matching ``build_h``.
     ``inline_serifs`` draws upright slab/bracket feet and caps into the contour.
+    ``vf_compat_stem`` is accepted for API parity; ascender spring descent
+    already supplies the TK-404 segment.
     """
     top = ctx.ascender if stem_top is None else stem_top
     sh = ctx.x_height if shoulder_top is None else shoulder_top
@@ -1222,6 +1236,7 @@ def h_yoke(
         branch_y=branch_y,
         written_feet=written_feet,
         inline_serifs=inline_serifs,
+        vf_compat_stem=vf_compat_stem,
     )
 
 
@@ -1265,6 +1280,7 @@ def double_shoulder_yoke(
     branch_y: float | bool | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Continuous ``m`` body: two shoulders sharing a middle stem (one contour).
 
@@ -1403,6 +1419,8 @@ def double_shoulder_yoke(
             radius=italic_branch_radius(top, by),
         )
     else:
+        if vf_compat_stem:
+            b.lineTo(l1, top)
         _curve(b, o0a)
     # Middle crotch shelf at full stem_top (m_from_n recipe), not at branch_y.
     split1 = _split_y(o1a, top)
@@ -1476,6 +1494,7 @@ def u_yoke(
     foot_bulge: float | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Continuous ``u`` body: bowl on the left, upright stem on the right.
 
@@ -1612,6 +1631,7 @@ def u_yoke(
             inline_serifs=True,
             written_feet=False,
             soft_branch=False if by is not None else True,
+            vf_compat_stem=vf_compat_stem if by is None else False,
         )
         outline = mirror_x(ny, at_x=cx)
         c0 = outline.contours[0]
@@ -1651,6 +1671,8 @@ def u_yoke(
     b.lineTo(ri, top)
     if by is not None:
         b.lineTo(ri, by)
+    elif vf_compat_stem:
+        b.lineTo(ri, top)
     mo0, mo1 = mc(o0), mc(o1)
     b.curveTo(mo0[1][0], mo0[1][1], mo0[2][0], mo0[2][1], mo0[3][0], mo0[3][1])
     b.curveTo(mo1[1][0], mo1[1][1], mo1[2][0], mo1[2][1], mo1[3][0], mo1[3][1])
@@ -1749,6 +1771,7 @@ def r_yoke(
     branch_y: float | bool | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    vf_compat_stem: bool = False,
 ) -> Outline:
     """Continuous ``r`` body: left stem + truncated shoulder (one contour).
 
@@ -1883,6 +1906,8 @@ def r_yoke(
             radius=italic_branch_radius(top, by),
         )
     else:
+        if vf_compat_stem:
+            b.lineTo(l1, top)
         _curve(b, o0)
     _curve(b, outer_arm)
     if by is not None:

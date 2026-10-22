@@ -741,17 +741,13 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
 def _prefer_public_yoke(ctx: DesignContext) -> bool:
     """Use continuous public yokes on the Usage A default path.
 
-    Opt out when ``vf_compat_stem_segments`` needs private stem knots
-    (yokes lack the extra stem on-curve knots those masters require).
-
-    Sans + slab/bracket (upright and italic) prefer yokes: italic×serif uses
-    ``branch_y`` with ``inline_serifs`` (feet replace written kicks). Pre-existing
-    R3 self-intersect on some italic slab/bracket stems (e.g. slab ``n``,
-    bracketed ``h``) is shared with the private path — topology match is the
-    VF gate; full widen does not wait on that lint.
+    Always true for stem bodies: ``vf_compat_stem_segments`` is honored on
+    public yokes via ``vf_compat_stem=`` (TK-404 colinear stem knot). Sans +
+    slab/bracket (upright and italic) prefer yokes; italic×serif uses
+    ``branch_y`` with ``inline_serifs`` (feet replace written kicks).
+    Pre-existing R3 on some italic slab/bracket stems is shared with the
+    private path — topology match is the VF gate.
     """
-    if _vf_compat_stem(ctx):
-        return False
     return True
 
 
@@ -1138,9 +1134,10 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             kappa=m.kappa,
             branch_y=italic,
             inline_serifs=_stem_serif_inlined(ctx),
+            vf_compat_stem=_vf_compat_stem(ctx),
         )
     elif _italic_topology(ctx):
-        # Opt-out: serif shelf / VF knots on private branching path.
+        # Opt-out: private branching path (prefer is always True for stems).
         outline = _n_branching_outline(
             m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=shelf_n
         )
@@ -1192,6 +1189,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             kappa=m.kappa,
             branch_y=italic,
             inline_serifs=_stem_serif_inlined(ctx),
+            vf_compat_stem=_vf_compat_stem(ctx),
         )
     elif _italic_topology(ctx):
         outline = _n_branching_outline(
@@ -1252,6 +1250,7 @@ def r_from_n(
             kappa=m.kappa,
             branch_y=italic,
             inline_serifs=_stem_serif_inlined(c),
+            vf_compat_stem=_vf_compat_stem(c),
         )
         x_t = _bounds(outline)[2]
     elif _italic_topology(c):
@@ -1792,6 +1791,7 @@ def m_from_n(
             kappa=mm.kappa,
             branch_y=True if italic else None,
             inline_serifs=_stem_serif_inlined(c),
+            vf_compat_stem=_vf_compat_stem(c),
         )
         # Anchor x from the same shoulder layout the private path uses.
         s1 = _shoulder(mm)
@@ -1943,9 +1943,10 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             kappa=um.kappa,
             branch_y=italic,
             inline_serifs=_stem_serif_inlined(c),
+            vf_compat_stem=_vf_compat_stem(c),
         )
     elif _italic_topology(c):
-        # Opt-out: vf_compat private branching u.
+        # Opt-out: private branching u.
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))

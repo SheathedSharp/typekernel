@@ -74,11 +74,12 @@ def test_builders_prefer_opening_yokes_upright_sans() -> None:
 
 
 def test_opening_yoke_serif_prefers_public_including_italic() -> None:
-    """Slab prefers public openings upright and italic; vf_compat_stem still opts out."""
+    """Slab prefers public openings upright, italic, and vf_compat_stem."""
     assert _prefer_public_yoke(DesignContext.slab_serif()) is True
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
     assert _prefer_public_yoke(italic) is True
     assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is True
+    assert _prefer_public_yoke(DesignContext.humanist_sans().tuned(vf_compat_stem_segments=True)) is True
 
 
 def test_c_aperture_param_on_yoke() -> None:
