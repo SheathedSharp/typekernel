@@ -3060,19 +3060,41 @@ def _double_storey_a_outline(
     xh: float,
     bowl_join: float,
 ) -> Outline:
-    """Single CCW outer for two-storey ``a`` (no boolean union; TK-305 VF)."""
+    """Single CCW outer for two-storey ``a`` (no boolean union; TK-305 VF).
+
+    Walk: stem foot → up the right face → closed arch (right outer + left outer
+    landing at ``join_y``) → along the bar to the stem → down to the bowl shelf
+    → around the bowl → home.
+
+    The upper eye is a **separate** CW hole (see composed), not carved into this
+    outer — a continuous bay left the eye open on the left and FreeType filled
+    a hook-blob. Stock ``n`` outers spring from ``xh``; the left outer is rebuilt
+    to close onto the bar. ``join_y`` sits above the bowl.
+    """
     n_exp = o.exponent
     shelf_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, bowl_join)
     exit_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, 0.0)
+    k = mm.kappa
+    # Land the left outer at l0 (outer face) so the arch tip keeps stem width;
+    # the upper-eye hole ends at l1, forming the terminal thickness.
+    l0, l1, mid = s.l0, s.l1, (s.l1 + s.r0) / 2.0
+    crown, join = mm.crown_y, mm.join_y
+    outer_left: Cubic = (
+        (l0, join),
+        (l0, join + k * (crown - join)),
+        (mid - k * (mid - l0), crown),
+        (mid, crown),
+    )
 
     b = PathBuilder()
     b.moveTo(sx1, 0.0)
-    b.lineTo(sx1, xh)
     b.lineTo(sx1, mm.leg_top)
-    _curve(b, s.outer[1])
-    _curve(b, s.outer[0])
-    b.lineTo(sx0, bowl_join)
-    # Keep a horizontal shelf segment at every weight (heavy bowls meet the stem early).
+    _curve(b, _rev(s.outer[1]))
+    _curve(b, _rev(outer_left))  # → (l0, join_y)
+    # Bar across to the stem (includes left terminal), then into the bowl shelf.
+    b.lineTo(sx0, join)
+    if abs(bowl_join - join) > 1e-6:
+        b.lineTo(sx0, bowl_join)
     shelf_landing = shelf_x if shelf_x < sx0 - 1e-6 else sx0 - max(mm.stem * 0.04, 2.0)
     b.lineTo(shelf_landing, bowl_join)
     _append_bowl_outer_ccw(b, bowl_outer, shelf_y=bowl_join)
@@ -3080,6 +3102,21 @@ def _double_storey_a_outline(
         b.lineTo(sx1, 0.0)
     b.closePath()
     return _ccw(b.build())
+
+
+def _double_storey_a_upper_eye(mm: NMetrics, s: _Shoulder) -> Outline:
+    """CW counter under the closed arch (join bar + inner shoulder)."""
+    b = PathBuilder()
+    b.moveTo(s.r0, mm.join_y)
+    _curve(b, s.inner[0])
+    _curve(b, s.inner[1])
+    b.lineTo(s.r0, mm.join_y)
+    b.closePath()
+    eye = b.build()
+    ct = eye.contours[0]
+    if signed_area(ct) > 0:
+        eye = Outline((reverse_contour(ct),))
+    return eye
 
 
 def _merge_solid_contours(outline: Outline) -> Outline:
@@ -3108,55 +3145,53 @@ def _double_storey_a_composed(
     o: OMetrics,
     m: NMetrics,
 ) -> ComposedGlyph:
-    """Assemble sealed two-storey ``a`` (bowl + arch + stem + eyes)."""
+    """Assemble sealed two-storey ``a`` (bowl + closed arch; two CW eyes)."""
     stem = m.stem
     xh = o.x_height
     width = 2.0 * o.rx
     sx0, sx1 = width - stem, width
 
-    bowl_ry = xh * 0.36
-    bowl_rx = bowl_ry * (o.rx / o.ry) * 0.9
-    bowl_cx = bowl_rx + stem * 0.38
+    # Bowl occupies the lower ~60% of x-height; upper eye sits fully above it.
+    bowl_ry = xh * 0.30
+    bowl_rx = bowl_ry * (o.rx / o.ry) * 0.92
+    bowl_cx = bowl_rx + stem * 0.42
     bowl_cy = bowl_ry
+    bowl_top = bowl_cy + bowl_ry
+    # Cap bowl walls so heavy stems leave a readable lower counter.
+    bowl_tv = min(stem * 0.96, bowl_ry * 0.55, bowl_rx * 0.55)
+    bowl_th = min(stem * ctx.contrast * 0.96, bowl_rx * 0.55, bowl_ry * 0.55)
     lower_outer, lower_hole = bowl(
         ctx,
         bowl_cx,
         bowl_cy,
         rx=bowl_rx,
         ry=bowl_ry,
-        thickness_v=stem * 0.96,
-        thickness_h=stem * ctx.contrast * 0.96,
+        thickness_v=bowl_tv,
+        thickness_h=bowl_th,
         shape="superellipse",
         n=o.exponent,
     )
-    x0 = sx0 - m.counter - stem
-    join_y = bowl_cy + bowl_ry * 0.38
+    # Keep bar and bowl shelf nearly coplanar so the left terminal sits on the
+    # bowl (a large join/bowl_join gap left a white notch under the hood).
+    # shelf_y must sit strictly inside the bowl (not on the top extremum).
+    join_y = bowl_top
+    bowl_join = bowl_top - max(stem * 0.04, 3.0)
+    eye_span = max(xh - join_y, stem * 2.0)
     mm = m.tuned(
         join_y=join_y,
-        crown_y=xh + ctx.overshoot * 0.28,
+        crown_y=xh + max(ctx.overshoot, stem * 0.08),
         leg_top=xh - stem * 0.06,
-        inner_crown=xh * 0.74,
+        inner_crown=join_y + eye_span * 0.55,
     )
+    # x0 from tuned counter so shoulder r0/r1 land on the stem faces.
+    x0 = sx0 - mm.counter - stem
     s = _shoulder(mm, x0)
-    bowl_join = bowl_cy + bowl_ry * 0.68
 
-    bi = PathBuilder()
-    bi.moveTo(sx0, bowl_join)
-    bi.lineTo(sx0, mm.join_y)
-    bi.lineTo(s.r0, mm.join_y)
-    _curve(bi, s.inner[0])
-    _curve(bi, s.inner[1])
-    bi.lineTo(sx0, mm.join_y)
-    bi.lineTo(sx0, bowl_join)
-    bi.closePath()
-    upper_ct = bi.build().contours[0]
-    upper_eye = Outline(
-        (reverse_contour(upper_ct) if signed_area(upper_ct) > 0 else upper_ct,)
-    )
     lower_ct = lower_hole.contours[0]
     lower_hole = Outline(
         (reverse_contour(lower_ct) if signed_area(lower_ct) > 0 else lower_ct,)
     )
+    upper_eye = _double_storey_a_upper_eye(mm, s)
 
     return _vf_ready_composed(
         GlyphAssembler(ctx)
@@ -3178,8 +3213,8 @@ def _double_storey_a_composed(
                 bowl_join=bowl_join,
             )
         )
-        .add_hole(lower_hole)
         .add_hole(upper_eye)
+        .add_hole(lower_hole)
         .anchor("top", width * 0.46, xh)
         .anchor("bottom", bowl_cx, 0.0)
         .anchor("ogonek", sx0 + stem / 2.0, 0.0)
@@ -3574,21 +3609,25 @@ def e_from_o(
     anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
     return _pack(c, o, anchors, outline)
 
-
 def _double_storey_g_composed(
     ctx: DesignContext,
     o: OMetrics,
     m: NMetrics,
 ) -> ComposedGlyph:
-    """Assemble sealed two-storey ``g`` (bowls + link + counters)."""
+    """Assemble sealed two-storey ``g`` (overlapping solids + CW counters).
+
+    Stem and bowls stay as separate overlapping CCW solids (nonzero fill = visual
+    union) so segment counts stay weight-stable for VF. Boolean ``union_solids``
+    + ``blend_joins`` previously changed topology by weight and dropped the
+    upper bowl at light when the stem missed the bowls.
+    """
     stem, desc, xh = m.stem, ctx.descender, o.x_height
-    width = 2.0 * o.rx
-    sx0 = width - stem
-    tv, th = stem * 0.96, stem * ctx.contrast * 0.96
+    bowl_tv = min(stem * 0.96, xh * 0.14)
+    bowl_th = min(stem * ctx.contrast * 0.96, xh * 0.14)
 
     upper_ry = xh * 0.24
     upper_rx = upper_ry * (o.rx / o.ry) * 0.92
-    upper_cx = upper_rx + stem * 0.4
+    upper_cx = upper_rx + stem * 0.20
     upper_cy = xh - upper_ry * 0.72
     upper_outer, upper_hole = bowl(
         ctx,
@@ -3596,8 +3635,8 @@ def _double_storey_g_composed(
         upper_cy,
         rx=upper_rx,
         ry=upper_ry,
-        thickness_v=tv,
-        thickness_h=th,
+        thickness_v=bowl_tv,
+        thickness_h=bowl_th,
         shape="superellipse",
         n=o.exponent,
     )
@@ -3612,21 +3651,21 @@ def _double_storey_g_composed(
         lower_cy,
         rx=lower_rx,
         ry=lower_ry,
-        thickness_v=tv,
-        thickness_h=th,
+        thickness_v=bowl_tv,
+        thickness_h=bowl_th,
         shape="superellipse",
         n=o.exponent,
     )
 
-    stem_bottom = lower_cy + lower_ry * 0.35
-    stem_o = contrast_stem_caps(ctx, sx0, stem_bottom, xh, width=stem * 1.02)
-    counters = Outline(
-        tuple(
-            reverse_contour(contour)
-            for hole in (upper_hole, lower_hole)
-            for contour in hole.contours
-        )
-    )
+    bowl_right = max(upper_cx + upper_rx, lower_cx + lower_rx)
+    # Deep overlap so the stem seals both bowls at every weight.
+    sx0 = bowl_right - stem * 0.90
+    stem_bottom = lower_cy - lower_ry * 0.20
+    stem_o = contrast_stem_caps(ctx, sx0, stem_bottom, xh, width=stem)
+
+    def _cw(h: Outline) -> Outline:
+        ct = h.contours[0]
+        return Outline((reverse_contour(ct) if signed_area(ct) > 0 else ct,))
 
     return _vf_ready_composed(
         GlyphAssembler(ctx)
@@ -3634,9 +3673,8 @@ def _double_storey_g_composed(
         .add(stem_o)
         .add(upper_outer)
         .add(lower_outer)
-        .add_hole(counters)
-        .union_solids()
-        .blend_joins(_double_storey_blend_radius(ctx))
+        .add_hole(_cw(upper_hole))
+        .add_hole(_cw(lower_hole))
         .anchor("top", upper_cx, xh)
         .anchor("bottom", lower_cx, desc)
         .build()
@@ -3658,7 +3696,9 @@ def g_double_yoke(
     o = o_metrics_rec if o_metrics_rec is not None else o_metrics(ctx)
     m = n_metrics_rec if n_metrics_rec is not None else n_metrics(ctx)
     glyph = _double_storey_g_composed(ctx, o, m)
-    contours: list = list(glyph.solids[0].contours)
+    contours: list = []
+    for solid in glyph.solids:
+        contours.extend(solid.contours)
     for hole in glyph.holes:
         for contour in hole.contours:
             contours.append(

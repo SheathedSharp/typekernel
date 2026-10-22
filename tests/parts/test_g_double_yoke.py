@@ -54,7 +54,7 @@ def test_g_double_yoke_matches_builder(ctx: DesignContext) -> None:
     )
     y_pos = [c for c in yoke.contours if signed_area(c) > 0]
     y_neg = [c for c in yoke.contours if signed_area(c) < 0]
-    b_pos = list(built.solids[0].contours)
+    b_pos = [c for s in built.solids for c in s.contours]
     b_neg = []
     for hole in built.holes:
         for c in hole.contours:
