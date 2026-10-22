@@ -1007,6 +1007,22 @@ def shoulder_yoke(
     return b.build()
 
 
+def _resolve_branch_y(
+    branch_y: float | bool | None,
+    *,
+    stem_top: float,
+) -> float | None:
+    """``True`` → auto mid-stem branch; ``float`` → absolute; ``None``/``False`` → upright."""
+    if branch_y is None or branch_y is False:
+        return None
+    if branch_y is True:
+        return stem_top * 0.58
+    by = float(branch_y)
+    if by <= 0 or by >= stem_top:
+        raise ValueError(f"branch_y must be in (0, stem_top), got {by!r}")
+    return by
+
+
 def double_shoulder_yoke(
     ctx: DesignContext,
     x_left: float,
@@ -1019,24 +1035,24 @@ def double_shoulder_yoke(
     crown_y: float | None = None,
     kappa: float | None = None,
     counter_scale: float = 0.92,
+    branch_y: float | bool | None = None,
+    written_feet: bool = True,
 ) -> Outline:
     """Continuous ``m`` body: two shoulders sharing a middle stem (one contour).
 
-    No boolean union — the left arch is cut onto the middle stem top and the
-    right arch continues, matching the stock ``m_from_n`` topology without
-    serifs or italic branching. Agents add written kicks via
-    :mod:`typekernel.parts.italic_strokes` and branch softening via
-    :func:`soften_stem_branch`.
-
-    Parameters (design units):
-        x_left: Outer left of the left stem.
-        counter: Base inner-face gap (default ``≈ 0.42 * x_height``); each
-            arch uses ``counter * counter_scale``.
-        stem_width: Stem thickness (default ``ctx.stem``).
-        counter_scale: Narrowing vs a single ``n`` counter (default ``0.92``).
-        join_y / crown_y / kappa: Same visual roles as :func:`shoulder_yoke`.
+    No boolean union. ``branch_y`` enables italic left-stem branching
+    (``True`` → ``≈ 0.58 * stem_top``; float → absolute). Middle crotch shelf
+    stays at ``stem_top``; shoulders spring from ``branch_y``. ``written_feet``
+    adds entry kick + exit outstroke and softens the branch crotch.
     """
+    from fontTools.misc.bezierTools import splitCubic
+
+    from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
+    from typekernel.parts.italic_strokes import (
+        emit_italic_entry_kick,
+        emit_italic_exit_outstroke,
+    )
 
     if counter_scale <= 0:
         raise ValueError(f"counter_scale must be positive, got {counter_scale!r}")
@@ -1048,18 +1064,30 @@ def double_shoulder_yoke(
     if w <= 0:
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
+    by = _resolve_branch_y(branch_y, stem_top=top)
+    # Shoulder spring height (branch or upright crown spring).
+    spring = by if by is not None else top
     crown = (top + ctx.overshoot) if crown_y is None else crown_y
-    if crown <= top:
-        crown = top + max(ctx.overshoot, t * 0.08)
-    # Shallower inner crown so the double-arch crotch stays open (m recipe).
-    join = (top * 0.52) if join_y is None else join_y
+    if by is not None:
+        drop = top - by
+        crown = crown - drop * 0.14
+    if crown <= spring:
+        crown = spring + max(ctx.overshoot, t * 0.08)
+    join = (spring * 0.52) if join_y is None else join_y
     inner_crown = crown - t * (0.55 + 0.08 * ctx.contrast)
-    inner_crown = min(max(inner_crown, top), crown - t * 0.06)
+    if by is not None:
+        drop = top - by
+        inner_crown = inner_crown - drop * 0.16
+        join = min(join, by - t * 0.32)
+    # Lift inner crown toward spring so middle crotch shelf can meet at stem_top.
+    inner_crown = min(max(inner_crown, spring), crown - t * 0.06)
     join = min(join, inner_crown - t * 0.15)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
 
-    Cubic = tuple[tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]]
+    Cubic = tuple[
+        tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]
+    ]
 
     def _shoulder_at(
         x0: float,
@@ -1067,8 +1095,9 @@ def double_shoulder_yoke(
         l0, l1 = x0, x0 + t
         r0, r1 = x0 + t + w, x0 + t + w + t
         mid = 0.5 * (l1 + r0)
-        leg_top = top - (r1 - l0) * 0.02
-        spring = top
+        leg_top = spring - (r1 - l0) * 0.02
+        if by is not None:
+            leg_top = leg_top - (top - by) * 0.2
         o0 = (
             (l1, spring),
             (l1, spring + k * (crown - spring)),
@@ -1096,14 +1125,10 @@ def double_shoulder_yoke(
         return l0, l1, r0, r1, o0, o1, i0, i1
 
     l0, l1, r0_mid, r1_mid, o0a, o1a, i0a, i1a = _shoulder_at(x_left)
-    # Second shoulder shares middle stem: its left outer = mid stem left face = r0_mid
     _l0b, l1b, r0, r1, o0b, o1b, i0b, i1b = _shoulder_at(r0_mid)
 
     def _curve(b: PathBuilder, c: Cubic) -> None:
         b.curveTo(c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1])
-
-    # Split outer/inner cubics at stem_top for the middle crotch shelf (m recipe).
-    from fontTools.misc.bezierTools import splitCubic
 
     def _split_y(c: Cubic, y: float) -> tuple[Cubic, Cubic] | None:
         pieces = splitCubic(*c, y, True)
@@ -1112,10 +1137,16 @@ def double_shoulder_yoke(
         return (tuple(pieces[0]), tuple(pieces[1]))
 
     b = PathBuilder()
-    b.moveTo(l0, y_bottom)
-    b.lineTo(l0, top)
+    if by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
+    else:
+        b.moveTo(l0, y_bottom)
+        b.lineTo(l0, top)
     b.lineTo(l1, top)
+    if by is not None:
+        b.lineTo(l1, by)
     _curve(b, o0a)
+    # Middle crotch shelf at full stem_top (m_from_n recipe), not at branch_y.
     split1 = _split_y(o1a, top)
     split2 = _split_y(o0b, top)
     if split1 is not None and split2 is not None:
@@ -1125,8 +1156,11 @@ def double_shoulder_yoke(
         _curve(b, o1a)
         _curve(b, o0b)
     _curve(b, o1b)
-    b.lineTo(r1, y_bottom)
-    b.lineTo(r0, y_bottom)
+    if by is not None and written_feet:
+        emit_italic_exit_outstroke(b, r0, r1, stem=t)
+    else:
+        b.lineTo(r1, y_bottom)
+        b.lineTo(r0, y_bottom)
     b.lineTo(r0, join)
     isplit2 = _split_y(i0b, top)
     isplit1 = _split_y(i1a, top)
@@ -1135,7 +1169,6 @@ def double_shoulder_yoke(
     else:
         _curve(b, i0b)
     if isplit1 is not None and isplit2 is not None:
-        # Middle stem crotch shelf at stem_top between the two counters.
         b.lineTo(r1_mid, top)
         b.lineTo(l1b, top)
         _curve(b, isplit1[1])
@@ -1151,12 +1184,183 @@ def double_shoulder_yoke(
         _curve(b, i1a)
     b.lineTo(l1, y_bottom)
     b.closePath()
-    return b.build()
+    outline = b.build()
+    c0 = outline.contours[0]
+    if signed_area(c0) < 0:
+        outline = Outline((reverse_contour(c0),))
+    if by is not None:
+        outline = soften_stem_branch(
+            outline,
+            stem_x=l1,
+            branch_y=by,
+            stem=t,
+            stem_top=top,
+        )
+        c0 = outline.contours[0]
+        if signed_area(c0) < 0:
+            outline = Outline((reverse_contour(c0),))
+    return outline
 
 
+def u_yoke(
+
+    ctx: DesignContext,
+    x_left: float,
+    *,
+    counter: float | None = None,
+    stem_width: float | None = None,
+    y_bottom: float = 0.0,
+    stem_top: float | None = None,
+    join_y: float | None = None,
+    crown_y: float | None = None,
+    kappa: float | None = None,
+    branch_y: float | bool | None = None,
+    foot_bulge: float | None = None,
+) -> Outline:
+    """Continuous ``u`` body: bowl on the left, upright stem on the right.
+
+    One contour, no boolean. Geometry mirrors :func:`shoulder_yoke` across the
+    advance (``n`` flipped). ``branch_y`` (``True`` / float) springs the bowl
+    from the **right** stem mid-height (italic ``u``) and softens the crotch.
+    ``foot_bulge`` adds a baseline toe on the left outer (default from
+    ``ctx.roundness`` — zero when roundness ≥ 0.35).
+    """
+    from typekernel.geo.path_helpers import KAPPA
+
+    t = ctx.stem if stem_width is None else stem_width
+    if t <= 0:
+        raise ValueError(f"stem_width must be positive, got {t!r}")
+    w = (ctx.x_height * 0.42) if counter is None else counter
+    if w <= 0:
+        raise ValueError(f"counter must be positive, got {w!r}")
+    top = ctx.x_height if stem_top is None else stem_top
+    by = _resolve_branch_y(branch_y, stem_top=top)
+    spring = by if by is not None else top
+    crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    if crown <= spring:
+        crown = spring + max(ctx.overshoot, t * 0.08)
+    if by is not None:
+        drop = top - by
+        crown = crown - drop * 0.14
+    join = (spring * 0.52) if join_y is None else join_y
+    if by is not None:
+        join = min(join, by - t * 0.32)
+    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+    if by is not None:
+        drop = top - by
+        inner_crown = inner_crown - drop * 0.16
+    join = min(join, crown - t * 0.55)
+    join = max(join, y_bottom + t * 0.35)
+    k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
+    # n-coords then mirror: left stem at 0, right at w+2t
+    width = 2.0 * t + w
+    cx = x_left + width / 2.0
+    # Build in local n-space then mirror points into u-space via PathBuilder
+    l0, l1 = 0.0, t
+    r0, r1 = t + w, width
+    mid = 0.5 * (l1 + r0)
+    leg_top = spring - (r1 - l0) * 0.02
+    if by is not None:
+        leg_top = leg_top - (top - by) * 0.2
+    o0 = (
+        (l1, spring),
+        (l1, spring + k * (crown - spring)),
+        (mid - k * (mid - l1), crown),
+        (mid, crown),
+    )
+    o1 = (
+        (mid, crown),
+        (mid + k * (r1 - mid), crown),
+        (r1, leg_top + k * (crown - leg_top)),
+        (r1, leg_top),
+    )
+    i0 = (
+        (r0, join),
+        (r0, join + k * (inner_crown - join)),
+        (mid + k * (r0 - mid), inner_crown),
+        (mid, inner_crown),
+    )
+    i1 = (
+        (mid, inner_crown),
+        (mid - k * (mid - l1), inner_crown),
+        (l1, join + k * (inner_crown - join)),
+        (l1, join),
+    )
+
+    def mx(x: float) -> float:
+        return 2.0 * cx - x
+
+    def mp(p: tuple[float, float]) -> tuple[float, float]:
+        return (mx(p[0]), p[1])
+
+    def mc(
+        c: tuple[
+            tuple[float, float],
+            tuple[float, float],
+            tuple[float, float],
+            tuple[float, float],
+        ],
+    ) -> tuple[
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+    ]:
+        return (mp(c[0]), mp(c[1]), mp(c[2]), mp(c[3]))
+
+    # After mirror: right outer = mx(l0), left outer = mx(r1)
+    ro, ri = mx(l0), mx(l1)
+    lo, li = mx(r1), mx(r0)
+    bulge = foot_bulge
+    if bulge is None:
+        bulge = 0.0 if ctx.roundness >= 0.35 else max(t * 0.08, 4.0)
+    shelf = t * 0.20
+
+    b = PathBuilder()
+    b.moveTo(ro, y_bottom)
+    b.lineTo(ro, top)
+    b.lineTo(ri, top)
+    if by is not None:
+        b.lineTo(ri, by)
+    mo0, mo1 = mc(o0), mc(o1)
+    b.curveTo(mo0[1][0], mo0[1][1], mo0[2][0], mo0[2][1], mo0[3][0], mo0[3][1])
+    b.curveTo(mo1[1][0], mo1[1][1], mo1[2][0], mo1[2][1], mo1[3][0], mo1[3][1])
+    b.lineTo(lo, y_bottom)
+    if bulge <= 0.0:
+        b.lineTo(li, y_bottom)
+    else:
+        x_shelf = li - shelf
+        b.curveTo(lo, y_bottom - bulge, x_shelf - bulge * 0.5, y_bottom, x_shelf, y_bottom)
+        b.lineTo(li, y_bottom)
+    b.lineTo(li, join)
+    mi0, mi1 = mc(i0), mc(i1)
+    b.curveTo(mi0[1][0], mi0[1][1], mi0[2][0], mi0[2][1], mi0[3][0], mi0[3][1])
+    b.curveTo(mi1[1][0], mi1[1][1], mi1[2][0], mi1[2][1], mi1[3][0], mi1[3][1])
+    b.lineTo(ri, y_bottom)
+    b.closePath()
+    outline = b.build()
+    from typekernel.geo.contour import reverse_contour, signed_area
+
+    c0 = outline.contours[0]
+    if signed_area(c0) < 0:
+        outline = Outline((reverse_contour(c0),))
+    if by is not None:
+        # After mirror, branch is on the right stem inner face.
+        outline = soften_stem_branch(
+            outline,
+            stem_x=ri,
+            branch_y=by,
+            stem=t,
+            stem_top=top,
+        )
+        c0 = outline.contours[0]
+        if signed_area(c0) < 0:
+            outline = Outline((reverse_contour(c0),))
+    return outline
 
 
 def soften_stem_branch(
+
     outline: Outline,
     *,
     stem_x: float,

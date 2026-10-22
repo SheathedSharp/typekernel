@@ -1204,6 +1204,7 @@ def r_from_n(
     ctx: DesignContext | None = None,
     *,
     arm: float = 0.5,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``r``: the ``n`` stem and shoulder, cut off at a vertical terminal.
 
@@ -1218,7 +1219,7 @@ def r_from_n(
         outline, x_t = _r_branching_outline(m, scaled, c)
     else:
         outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c), ctx=c)
-    outline = apply_terminal_shear(c, outline)
+    outline = apply_terminal_shear(c, outline, real_flare=real_flare)
     anchors = {
         "top": (x_t / 2.0, m.x_height),
         "bottom": (m.stem / 2.0, 0.0),
@@ -1545,6 +1546,7 @@ def f_from_n(
     ctx: DesignContext | None = None,
     *,
     arm: float = 0.75,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``f``: the ``r`` arm capping an ascender stem, crossbar at x-height."""
     c = ctx or n_glyph.context
@@ -1562,7 +1564,7 @@ def f_from_n(
         inline_crossbar=inline,
         slab_foot=_hook_slab_stem_foot(c, m.stem),
     )
-    outline = apply_terminal_shear(c, outline)
+    outline = apply_terminal_shear(c, outline, real_flare=real_flare)
     half = m.stem / 2.0
     anchors: dict[str, Pt] = {"bottom": (half, 0.0)}
     if c.style.serif not in ("slab", "bracketed"):
@@ -1580,6 +1582,7 @@ def t_from_n(
     *,
     arm: float = 0.6,
     rise: float = 0.3,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``t``: the ``f`` construction flipped, hook on the baseline.
 
@@ -1623,7 +1626,7 @@ def t_from_n(
         band = max(6.0, c.stem * 0.38)
         outline = shear_end(flipped, tip, -16.0, band=band, along="y", inward="-")
     else:
-        outline = apply_terminal_shear(c, flipped, at=tip)
+        outline = apply_terminal_shear(c, flipped, at=tip, real_flare=real_flare)
     half = m.stem / 2.0
     anchors: dict[str, Pt] = {"bottom": (half, 0.0)}
     if c.style.serif not in ("slab", "bracketed"):
@@ -1640,6 +1643,7 @@ def j_from_n(
     ctx: DesignContext | None = None,
     *,
     arm: float = 0.75,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``j``: the ``r`` turned 180° into a descender hook, plus the ``i`` tittle."""
     c = ctx or n_glyph.context
@@ -1656,7 +1660,7 @@ def j_from_n(
     turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
     body = translate(turned, 0.0, c.descender)
     tip = (m.stem * 1.05, c.descender + m.stem * 0.28)
-    body = apply_terminal_shear(c, body, at=tip)
+    body = apply_terminal_shear(c, body, at=tip, real_flare=real_flare)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
     half = m.stem / 2.0

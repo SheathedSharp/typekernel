@@ -142,8 +142,26 @@ def apply_terminal_shear(
     inward: Literal["auto", "+", "-"] = "-",
     band: float | None = None,
     ball_radius: float | None = None,
+    real_flare: bool = False,
+    flare_amount: float = 0.35,
 ) -> Outline:
-    """Shear, flat-cut, ball, or flare one open terminal on ``outline``."""
+    """Shear, flat-cut, ball, or (stock) shear-as-flared tip on ``outline``.
+
+    ``real_flare=True`` is the Usage A opt-in: routes to
+    :func:`apply_flare_terminal` (true tip widening). Stock
+    ``terminal_style="flared"`` without this flag keeps the shear recipe so
+    weight-ladder R8 stays stable. Letter builders expose the same flag.
+    """
+    if real_flare:
+        return apply_flare_terminal(
+            ctx,
+            outline,
+            at=at,
+            amount=flare_amount,
+            along=along,
+            inward=inward,
+            band=band,
+        )
     if ctx.terminal_style == "vertical":
         return outline
     if at is None:

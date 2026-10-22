@@ -170,6 +170,7 @@ from typekernel.parts.primitives import (
     terminal_sheared,
     tittle,
     u_bowl,
+    u_yoke,
     vertical_stem,
     wedge,
 )
@@ -353,6 +354,7 @@ __all__ = [
     "try_union",
     "u_bowl",
     "u_from_n",
+    "u_yoke",
     "v_from_n",
     "vertical_stem",
     "w_from_n",

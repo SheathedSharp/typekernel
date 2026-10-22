@@ -365,6 +365,7 @@ def y_from_n(
     *,
     width: float | None = None,
     apex: float = 0.35,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``y``: the ``v`` with its right stroke carried straight to the descender."""
     c = ctx or n_glyph.context
@@ -458,8 +459,7 @@ def y_from_n(
             else:
                 ball_r = m.stem * 0.24
         outline = apply_terminal_shear(
-            c, poly, at=(tip_x, tip_y), ball_radius=ball_r
-        )
+            c, poly, at=(tip_x, tip_y), ball_radius=ball_r, real_flare=real_flare)
     return _pack(c, m, {"top": (w / 2.0, xh)}, outline)
 
 
@@ -594,6 +594,7 @@ def k_from_n(
     *,
     width: float | None = None,
     vertex: float = 0.42,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``k``: the ascending ``n`` stem with arm and leg meeting at the stem.
 
@@ -685,8 +686,7 @@ def k_from_n(
             at=(w - m.stem * 0.20, m.x_height * 0.09),
             along="x",
             inward="+",
-            band=m.stem * 0.26,
-        )
+            band=m.stem * 0.26, real_flare=real_flare)
     elif c.terminal_style == "flared":
         if m.stem <= 45.0:
             outline = base_poly
@@ -697,12 +697,18 @@ def k_from_n(
                 at=(w - m.stem * 0.20, m.x_height * 0.09),
                 along="x",
                 inward="+",
-                band=m.stem * 0.30,
-            )
+                band=m.stem * 0.30, real_flare=real_flare)
     elif c.terminal_style == "ball":
         outline = apply_terminal_shear(
-            c, base_poly, at=tip, ball_radius=m.stem * 0.28
-        )
+            c, base_poly, at=tip, ball_radius=m.stem * 0.28, real_flare=real_flare)
     else:
-        outline = apply_terminal_shear(c, base_poly, at=tip)
+        # Arm tip is low on the letter; flare across +x (same axis as stock flared k).
+        outline = apply_terminal_shear(
+            c,
+            base_poly,
+            at=tip,
+            along="x",
+            inward="+",
+            real_flare=real_flare,
+        )
     return _pack(c, m, anchors, outline)

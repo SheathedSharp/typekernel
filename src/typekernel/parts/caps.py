@@ -870,6 +870,7 @@ def F_from_H(
     ctx: DesignContext | None = None,
     *,
     width: float = 0.82,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``F``: the ``E`` without its foot; the middle arm sits a little lower."""
     c = ctx or H.context
@@ -897,7 +898,9 @@ def F_from_H(
         outline = (
             _polygon(pts)
             if c.style.serif == "slab"
-            else _cap_f_t_outline(c, pts, w_top, h.cap_height, h.bar)
+            else _cap_f_t_outline(
+                c, pts, w_top, h.cap_height, h.bar, real_flare=real_flare
+            )
         )
     return _pack(c, h, anchors, outline)
 
@@ -908,9 +911,15 @@ def _cap_f_t_outline(
     w_top: float,
     cap: float,
     bt: float,
+    *,
+    real_flare: bool = False,
 ) -> Outline:
     tip = (w_top, cap - bt * 0.5)
     poly = _polygon(pts)
+    if real_flare:
+        return apply_terminal_shear(
+            c, poly, at=tip, along="x", inward="-", real_flare=True
+        )
     if c.terminal_style == "vertical":
         return poly
     if c.terminal_style == "horizontal":
@@ -3041,6 +3050,7 @@ def T_from_H(
     ctx: DesignContext | None = None,
     *,
     width: float = 0.92,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``T``: an ``H`` stem centred under a top bar ``width`` × the ``H`` width."""
     c = ctx or H.context
@@ -3072,6 +3082,8 @@ def T_from_H(
         outline = (
             _polygon(pts)
             if c.style.serif == "slab"
-            else _cap_f_t_outline(c, pts, w, h.cap_height, h.bar)
+            else _cap_f_t_outline(
+                c, pts, w, h.cap_height, h.bar, real_flare=real_flare
+            )
         )
     return _pack(c, h, anchors, outline)
