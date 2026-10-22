@@ -71,43 +71,58 @@ __all__ = [
     "A_from_H",
     "A_yoke",
     "B_from_H",
+    "B_yoke",
+    "build_H",
+    "build_O",
     "C_from_O",
     "C_yoke",
+    "cap_o_metrics",
     "D_from_H",
+    "D_yoke",
     "E_from_H",
     "E_yoke",
     "F_from_H",
     "F_yoke",
     "G_from_O",
-    "HMetrics",
+    "G_yoke",
+    "h_cap_metrics",
     "H_yoke",
+    "HMetrics",
     "I_from_H",
     "I_yoke",
     "J_from_H",
+    "J_yoke",
     "K_from_H",
+    "K_yoke",
     "L_from_H",
     "L_yoke",
     "M_from_H",
+    "M_yoke",
     "N_from_H",
+    "N_yoke",
     "O_yoke",
     "P_from_H",
+    "P_yoke",
     "Q_from_O",
+    "Q_yoke",
     "R_from_H",
+    "R_yoke",
     "S_from_O",
+    "S_yoke",
     "T_from_H",
     "T_yoke",
     "U_from_H",
+    "U_yoke",
     "V_from_H",
     "V_yoke",
     "W_from_H",
+    "W_yoke",
     "X_from_H",
     "X_yoke",
     "Y_from_H",
+    "Y_yoke",
     "Z_from_H",
-    "build_H",
-    "build_O",
-    "cap_o_metrics",
-    "h_cap_metrics",
+    "Z_yoke",
 ]
 
 Pt = tuple[float, float]
@@ -1037,6 +1052,23 @@ def C_yoke(
     return _c_opening_outline(ctx, o, aperture=aperture)
 
 
+def S_yoke(
+    ctx: DesignContext,
+    *,
+    width: float = 0.86,
+    aperture: float | None = None,
+    metrics: OMetrics | None = None,
+) -> Outline:
+    """Continuous cap ``S`` body — Usage A (spine on the cap ``O``)."""
+    from typekernel.parts.control import _s_opening_outline
+
+    o = metrics or cap_o_metrics(ctx)
+    outline, _tips = _s_opening_outline(
+        ctx, o, aperture=aperture, width=width
+    )
+    return outline
+
+
 def S_from_O(
     O: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -1047,25 +1079,19 @@ def S_from_O(
     return s_from_o(O, ctx, width=width)
 
 
-def G_from_O(
-    O: ComposedGlyph,
-    H: ComposedGlyph | None = None,
-    ctx: DesignContext | None = None,
+def G_yoke(
+    ctx: DesignContext,
     *,
+    metrics: OMetrics | None = None,
+    h_metrics: HMetrics | None = None,
     bar_reach: float = 0.1,
-) -> ComposedGlyph:
-    """``G``: the ``C`` whose lower arm rises into an inward crossbar.
-
-    The right wall continues up to just under the centre, then turns into a
-    horizontal bar (the ``H`` bar thickness) reaching ``bar_reach`` × the
-    radius past the centre. One contour.
-    """
-    c = ctx or O.context
-    o = _o_rec(O)
-    h = _h_record(H) if H is not None else h_cap_metrics(c)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
+) -> Outline:
+    """Continuous cap ``G`` body — Usage A (``C`` + inward crossbar)."""
+    o = metrics or cap_o_metrics(ctx)
+    h = h_metrics or h_cap_metrics(ctx)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, ctx)
     cx, cy = o.rx, o.x_height / 2.0
-    x_t = _terminal_x(o, c.aperture, opening_closure(c, 0.55))
+    x_t = _terminal_x(o, ctx.aperture, opening_closure(ctx, 0.55))
     top = _cut(q0, x_t, horizontal=False)[1]
     itop = _cut(i0, x_t, horizontal=False)[1]
     bar_top = cy - 0.02 * o.x_height
@@ -1077,15 +1103,15 @@ def G_from_O(
     chamfer = min(h.stem * 0.32, bar_h * 0.48, 0.07 * o.x_height)
 
     b = PathBuilder()
-    inlined = _cap_serif_inlined(c)
-    if c.style.serif == "bracketed":
-        slab_l, slab_th = _opening_slab_metrics(c, o)
+    inlined = _cap_serif_inlined(ctx)
+    if ctx.style.serif == "bracketed":
+        slab_l, slab_th = _opening_slab_metrics(ctx, o)
         from typekernel.parts.serifs import serif_metrics
 
-        _, _, bracket_r = serif_metrics(c)
+        _, _, bracket_r = serif_metrics(ctx)
         _opening_top_bracketed_move(b, top[0], slab_l, slab_th, bracket_r)
     elif inlined:
-        slab_l, slab_th = _opening_slab_metrics(c, o)
+        slab_l, slab_th = _opening_slab_metrics(ctx, o)
         _opening_top_slab_move(b, top[0], slab_l, slab_th)
     else:
         b.moveTo(*top[0])
@@ -1109,15 +1135,35 @@ def G_from_O(
         _curve(b, cubic)
     b.closePath()
     outline = _ccw(b.build())
-    if _cap_italic_sans(c):
-        # Top aperture + crossbar tip: same band-shear language as lowercase ``c``/``e``.
+    if _cap_italic_sans(ctx):
         tips = (
             top[0],
             (x_bar, (bar_top + bar_bot) * 0.5),
         )
         outline = _apply_italic_opening_tip_shear(
-            c, outline, tips, stem=o.thickness_v
+            ctx, outline, tips, stem=o.thickness_v
         )
+    return outline
+
+
+def G_from_O(
+    O: ComposedGlyph,
+    H: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    bar_reach: float = 0.1,
+) -> ComposedGlyph:
+    """``G``: the ``C`` whose lower arm rises into an inward crossbar.
+
+    The right wall continues up to just under the centre, then turns into a
+    horizontal bar (the ``H`` bar thickness) reaching ``bar_reach`` × the
+    radius past the centre. One contour.
+    """
+    c = ctx or O.context
+    o = _o_rec(O)
+    h = _h_record(H) if H is not None else h_cap_metrics(c)
+    inlined = _cap_serif_inlined(c)
+    outline = G_yoke(c, metrics=o, h_metrics=h, bar_reach=bar_reach)
     return _pack(
         c,
         o,
@@ -1126,39 +1172,36 @@ def G_from_O(
     )
 
 
-def Q_from_O(
-    O: ComposedGlyph,
-    H: ComposedGlyph | None = None,
-    ctx: DesignContext | None = None,
+def Q_yoke(
+    ctx: DesignContext,
     *,
+    metrics: OMetrics | None = None,
+    h_metrics: HMetrics | None = None,
     tail_reach: float = 1.0,
     tail_drop: float = 0.1,
-) -> ComposedGlyph:
-    """``Q``: the ``O`` with a compensated diagonal tail from its lower right.
-
-    The tail's two edges are intersected with the bowl's lower-right outer
-    quarter and spliced in, so the outer contour grows the tail and the
-    counter stays the ``O``'s — no overlap, no boolean, fixed topology.
-
-    ``tail_reach`` × ``O`` radius sets how far the tail tip sits to the right of
-    centre; ``tail_drop`` × x-height sets depth below the baseline overshoot.
-    """
-    c = ctx or O.context
-    o = _o_rec(O)
-    h = _h_record(H) if H is not None else h_cap_metrics(c)
-    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, c)
+) -> Outline:
+    """Continuous cap ``Q`` body — Usage A (``O`` + spliced diagonal tail)."""
+    o = metrics or cap_o_metrics(ctx)
+    h = h_metrics or h_cap_metrics(ctx)
+    (q0, q1, q2, q3), (i0, i1, i2, i3) = _ring(o, ctx)
     cx, cy = o.rx, o.x_height / 2.0
-    # tail axis: from inside the wall (centreline, -45°) out past the bottom right
     k = math.cos(math.radians(45.0))
-    start = (cx + (o.rx - o.thickness_v / 2.0) * k, cy - (o.ry - o.thickness_h / 2.0) * k)
+    start_pt = (
+        cx + (o.rx - o.thickness_v / 2.0) * k,
+        cy - (o.ry - o.thickness_h / 2.0) * k,
+    )
     end = (cx + tail_reach * o.rx, -o.overshoot - tail_drop * o.x_height)
-    hw = _hwidth(h.stem * 0.95, c.contrast, end[0] - start[0], start[1] - end[1])
+    hw = _hwidth(h.stem * 0.95, ctx.contrast, end[0] - start_pt[0], start_pt[1] - end[1])
     hits: list[float] = []
     for side in (-0.5, 0.5):
-        a = (start[0] + side * hw, start[1])
+        a = (start_pt[0] + side * hw, start_pt[1])
         z = (end[0] + side * hw, end[1])
         far = (a[0] - (z[0] - a[0]), a[1] - (z[1] - a[1]))
-        found = [i.t1 for i in curveLineIntersections(list(q3), [far, z]) if 0.0 < i.t1 < 1.0]
+        found = [
+            i.t1
+            for i in curveLineIntersections(list(q3), [far, z])
+            if 0.0 < i.t1 < 1.0
+        ]
         if len(found) != 1:
             raise ValueError("Q tail does not meet the bowl once per edge; adjust the O")
         hits.append(found[0])
@@ -1169,20 +1212,20 @@ def Q_from_O(
     b.moveTo(*q0[0])
     for cubic in (q0, q1, q2, before):
         _curve(b, cubic)
-    inlined = _cap_serif_inlined(c)
+    inlined = _cap_serif_inlined(ctx)
     tail_l = end[0] - hw / 2.0
     tail_r = end[0] + hw / 2.0
     tail_y = end[1]
-    if c.style.serif == "bracketed" or inlined:
+    if ctx.style.serif == "bracketed" or inlined:
         from typekernel.parts.serifs import serif_metrics
 
-        length, thick, bracket_r = serif_metrics(c)
+        length, thick, bracket_r = serif_metrics(ctx)
         cap = o.x_height
         foot_l = min(length * 0.35, hw * 0.55, h.stem * 0.28)
         foot_th = min(thick * 0.55, cap * 0.04, h.stem * 0.1)
         b.lineTo(tail_l, tail_y)
         b.lineTo(tail_l - foot_l, tail_y)
-        if c.style.serif == "bracketed":
+        if ctx.style.serif == "bracketed":
             _finish_foot_pad_below(
                 b,
                 tail_l - foot_l,
@@ -1208,12 +1251,95 @@ def Q_from_O(
         _curve(b, cubic)
     b.closePath()
     outer, counter = b.build().contours
+    return Outline((outer, reverse_contour(counter)))
+
+
+def Q_from_O(
+    O: ComposedGlyph,
+    H: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    tail_reach: float = 1.0,
+    tail_drop: float = 0.1,
+) -> ComposedGlyph:
+    """``Q``: the ``O`` with a compensated diagonal tail from its lower right.
+
+    The tail's two edges are intersected with the bowl's lower-right outer
+    quarter and spliced in, so the outer contour grows the tail and the
+    counter stays the ``O``'s — no overlap, no boolean, fixed topology.
+
+    ``tail_reach`` × ``O`` radius sets how far the tail tip sits to the right of
+    centre; ``tail_drop`` × x-height sets depth below the baseline overshoot.
+    """
+    c = ctx or O.context
+    o = _o_rec(O)
+    h = _h_record(H) if H is not None else h_cap_metrics(c)
+    inlined = _cap_serif_inlined(c)
+    outline = Q_yoke(
+        c, metrics=o, h_metrics=h, tail_reach=tail_reach, tail_drop=tail_drop
+    )
     return _pack(
         c,
         o,
         _cap_anchors(2.0 * o.rx, h, stem_serif_anchors=not inlined),
-        Outline((outer, reverse_contour(counter))),
+        outline,
     )
+
+
+def D_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    width: float = 1.05,
+    straight: float = 0.4,
+) -> Outline:
+    """Continuous cap ``D`` body — Usage A (stem + half bowl, outer + counter)."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, min_bowl_stems(st) * st + 0.3 * st)
+    x0 = _straight_run(straight, w, st)
+    cy = cap / 2.0
+    _, _, _, q3 = _quarters(x0, cy, w - x0, cy, e)
+    q0 = _quarters(x0, cy, w - x0, cy, e)[0]
+    _, _, _, i3 = _quarters(x0, cy, w - x0 - st, cy - bt, e)
+    i0 = _quarters(x0, cy, w - x0 - st, cy - bt, e)[0]
+
+    inlined = _cap_serif_inlined(ctx)
+    b = PathBuilder()
+    foot_l = 0.0
+    if ctx.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, ctx, stem_x=x0)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, ctx)
+        foot_l = l
+        b.moveTo(-l, -th)
+        b.lineTo(st + l, -th)
+        b.lineTo(st + l, 0.0)
+        b.lineTo(x0, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(x0, 0.0)
+    _curve(b, q3)
+    _curve(b, q0)
+    if ctx.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-foot_l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
+    b.closePath()
+    b.moveTo(st, bt)
+    b.lineTo(st, cap - bt)
+    b.lineTo(x0, cap - bt)
+    _curve(b, _rev(i0))
+    _curve(b, _rev(i3))
+    b.closePath()
+    outer, counter = b.build().contours
+    return _ccw(Outline((outer, counter)))
 
 
 def D_from_H(
@@ -1232,54 +1358,18 @@ def D_from_H(
     """
     c = ctx or H.context
     h = _h_record(H)
-    e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
-    t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, min_bowl_stems(t) * t + 0.3 * t)
-    x0 = _straight_run(straight, w, t)
-    cy = cap / 2.0
-    _, _, _, q3 = _quarters(x0, cy, w - x0, cy, e)
-    q0 = _quarters(x0, cy, w - x0, cy, e)[0]
-    _, _, _, i3 = _quarters(x0, cy, w - x0 - t, cy - bt, e)
-    i0 = _quarters(x0, cy, w - x0 - t, cy - bt, e)[0]
-
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    st = h.stem
+    w = max(width * h.width, min_bowl_stems(st) * st + 0.3 * st)
     inlined = _cap_serif_inlined(c)
-    b = PathBuilder()
-    foot_l = 0.0
-    if c.style.serif == "bracketed":
-        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=x0)
-    elif inlined:
-        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
-        foot_l = l
-        b.moveTo(-l, -th)
-        b.lineTo(t + l, -th)
-        b.lineTo(t + l, 0.0)
-        b.lineTo(x0, 0.0)
-    else:
-        b.moveTo(0.0, 0.0)
-        b.lineTo(x0, 0.0)
-    _curve(b, q3)
-    _curve(b, q0)
-    if c.style.serif == "bracketed":
-        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
-    elif inlined:
-        b.lineTo(0.0, cap)
-        b.lineTo(0.0, 0.0)
-        b.lineTo(-foot_l, 0.0)
-    else:
-        b.lineTo(0.0, cap)
-    b.closePath()
-    b.moveTo(t, bt)
-    b.lineTo(t, cap - bt)
-    b.lineTo(x0, cap - bt)
-    _curve(b, _rev(i0))
-    _curve(b, _rev(i3))
-    b.closePath()
-    outer, counter = b.build().contours
+    outline = D_yoke(
+        c, metrics=h, o_metrics_rec=o_rec, width=width, straight=straight
+    )
     return _pack(
         c,
         h,
         _cap_anchors(w, h, stem_serif_anchors=not inlined),
-        _ccw(Outline((outer, counter))),
+        outline,
     )
 
 
@@ -1360,6 +1450,54 @@ def _bowl_cap_bracketed_close_left(b: PathBuilder, *, cap: float, l: float) -> N
     b.lineTo(-l, 0.0)
 
 
+def P_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    width: float = 0.9,
+    straight: float = 0.45,
+    bowl: float = 0.47,
+) -> Outline:
+    """Continuous cap ``P`` body — Usage A."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, min_bowl_stems(st) * st)
+    x0, y_b = _straight_run(straight, w, st), bowl * cap - bt / 2.0
+    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, st, bt, e)
+    inlined = _cap_serif_inlined(ctx)
+    b = PathBuilder()
+    foot_l = 0.0
+    if ctx.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, ctx, stem_x=st)
+    elif inlined:
+        l, th, _ = _bowl_cap_stem_foot_dims(h, ctx)
+        foot_l = l
+        b.moveTo(-l, -th)
+        b.lineTo(st + l, -th)
+        b.lineTo(st + l, 0.0)
+        b.lineTo(st, 0.0)
+    else:
+        b.moveTo(0.0, 0.0)
+        b.lineTo(st, 0.0)
+    for pt in ((st, y_b), (x0, y_b)):
+        b.lineTo(*pt)
+    _curve(b, q3)
+    _curve(b, q0)
+    if ctx.style.serif == "bracketed":
+        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
+    elif inlined:
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, 0.0)
+        b.lineTo(-foot_l, 0.0)
+    else:
+        b.lineTo(0.0, cap)
+    b.closePath()
+    _counter(b, st, x0, i3, i0)
+    return _with_counters(b)
+
+
 def P_from_H(
     H: ComposedGlyph,
     O: ComposedGlyph | None = None,
@@ -1371,30 +1509,80 @@ def P_from_H(
 ) -> ComposedGlyph:
     """``P``: the ``H`` stem with a half bowl from ``bowl`` × cap height up."""
     c, h, e = _bowl_cap_setup(H, O, ctx)
-    t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, min_bowl_stems(t) * t)
-    x0, y_b = _straight_run(straight, w, t), bowl * cap - bt / 2.0
-    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, w, t, bt, e)
+    st = h.stem
+    w = max(width * h.width, min_bowl_stems(st) * st)
     inlined = _cap_serif_inlined(c)
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    outline = P_yoke(
+        c,
+        metrics=h,
+        o_metrics_rec=o_rec,
+        width=width,
+        straight=straight,
+        bowl=bowl,
+    )
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
+        outline,
+    )
+
+
+def R_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    width: float = 0.94,
+    straight: float = 0.45,
+    bowl: float = 0.47,
+    leg_at: float = 0.3,
+) -> Outline:
+    """Continuous cap ``R`` body — Usage A (``P`` + compensated leg)."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, min_bowl_stems(st) * st)
+    bowl_w = 0.96 * w
+    x0, y_b = _straight_run(straight, bowl_w, st), bowl * cap - bt / 2.0
+    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, bowl_w, st, bt, e)
+    foot_r = (w, 0.0)
+    lo, hi, t_c = 0.0, 1.0, leg_at
+    for _ in range(40):
+        pc = cubicPointAtT(*q3, t_c)
+        hw = _hwidth(h.stem * 0.95, ctx.contrast, w - pc[0], pc[1])
+        x_l = (w - hw) + (pc[0] - w) * (y_b / pc[1])
+        if x_l > x0:
+            hi, t_c = t_c, (lo + t_c) / 2.0
+        elif x_l < st:
+            lo, t_c = t_c, (t_c + hi) / 2.0
+        else:
+            break
+    else:
+        raise ValueError("R leg does not fit between stem and bowl; adjust width")
+    _, after = splitCubicAtT(*q3, t_c)
+
+    inlined = _cap_serif_inlined(ctx)
     b = PathBuilder()
     foot_l = 0.0
-    if c.style.serif == "bracketed":
-        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=t)
+    if ctx.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, ctx, stem_x=st)
     elif inlined:
-        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        l, th, _ = _bowl_cap_stem_foot_dims(h, ctx)
         foot_l = l
         b.moveTo(-l, -th)
-        b.lineTo(t + l, -th)
-        b.lineTo(t + l, 0.0)
-        b.lineTo(t, 0.0)
+        b.lineTo(st + l, -th)
+        b.lineTo(st + l, 0.0)
+        b.lineTo(st, 0.0)
     else:
         b.moveTo(0.0, 0.0)
-        b.lineTo(t, 0.0)
-    for p in ((t, y_b), (x0, y_b)):
-        b.lineTo(*p)
-    _curve(b, q3)
+        b.lineTo(st, 0.0)
+    for pt in ((st, y_b), (x_l, y_b), (w - hw, 0.0), foot_r, after[0]):
+        b.lineTo(*pt)
+    _curve(b, after)
     _curve(b, q0)
-    if c.style.serif == "bracketed":
+    if ctx.style.serif == "bracketed":
         _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
     elif inlined:
         b.lineTo(0.0, cap)
@@ -1403,13 +1591,13 @@ def P_from_H(
     else:
         b.lineTo(0.0, cap)
     b.closePath()
-    _counter(b, t, x0, i3, i0)
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
-        _with_counters(b),
-    )
+    _counter(b, st, x0, i3, i0)
+    outline = _with_counters(b)
+    if _cap_italic_sans(ctx):
+        outline = _apply_italic_opening_tip_shear(
+            ctx, outline, (foot_r,), stem=h.stem
+        )
+    return outline
 
 
 def R_from_H(
@@ -1429,47 +1617,81 @@ def R_from_H(
     compensated stroke to the left, lands on the bowl's flat foot.
     """
     c, h, e = _bowl_cap_setup(H, O, ctx)
-    t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, min_bowl_stems(t) * t)
-    bowl_w = 0.96 * w
-    x0, y_b = _straight_run(straight, bowl_w, t), bowl * cap - bt / 2.0
-    q3, q0, i3, i0 = _half_bowl(x0, y_b, cap, bowl_w, t, bt, e)
-    foot_r = (w, 0.0)
-    lo, hi, t_c = 0.0, 1.0, leg_at
-    for _ in range(40):
-        pc = cubicPointAtT(*q3, t_c)
-        hw = _hwidth(h.stem * 0.95, c.contrast, w - pc[0], pc[1])
-        x_l = (w - hw) + (pc[0] - w) * (y_b / pc[1])
-        if x_l > x0:
-            hi, t_c = t_c, (lo + t_c) / 2.0
-        elif x_l < t:
-            lo, t_c = t_c, (t_c + hi) / 2.0
-        else:
-            break
-    else:
-        raise ValueError("R leg does not fit between stem and bowl; adjust width")
-    _, after = splitCubicAtT(*q3, t_c)
-
+    st = h.stem
+    w = max(width * h.width, min_bowl_stems(st) * st)
     inlined = _cap_serif_inlined(c)
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    outline = R_yoke(
+        c,
+        metrics=h,
+        o_metrics_rec=o_rec,
+        width=width,
+        straight=straight,
+        bowl=bowl,
+        leg_at=leg_at,
+    )
+    return _pack(
+        c,
+        h,
+        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
+        outline,
+    )
+
+
+def B_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    width: float = 0.92,
+    top_scale: float = 0.9,
+    straight: float = 0.45,
+    waist: float = 0.53,
+) -> Outline:
+    """Continuous cap ``B`` body — Usage A (two stacked half bowls)."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap, bt = h.stem, h.cap_height, h.bar
+    w = max(width * h.width, min_bowl_stems(st) * st / top_scale)
+    wu = top_scale * w
+    m1 = waist * cap + bt / 2.0
+    m0 = m1 - bt
+    xl, xu = _straight_run(straight, w, st), _straight_run(straight, wu, st)
+    lq3, lq0, li3, li0 = _half_bowl(xl, 0.0, m1, w, st, bt, e)
+    uq3, uq0, ui3, ui0 = _half_bowl(xu, m0, cap, wu, st, bt, e)
+    inside: list[Any] = []
+    for hit in curveCurveIntersections(list(lq0), list(uq3)):
+        if (
+            0.0 < hit.t1 < 1.0
+            and 0.0 < hit.t2 < 1.0
+            and all(abs(hit.t1 - k.t1) > 1e-3 for k in inside)
+        ):
+            inside.append(hit)
+    if len(inside) != 1:
+        raise ValueError("B bowls do not cross once; adjust top_scale or waist")
+    low_part, _ = splitCubicAtT(*lq0, inside[0].t1)
+    _, up_part = splitCubicAtT(*uq3, inside[0].t2)
+
+    inlined = _cap_serif_inlined(ctx)
     b = PathBuilder()
     foot_l = 0.0
-    if c.style.serif == "bracketed":
-        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=t)
+    if ctx.style.serif == "bracketed":
+        foot_l = _bowl_cap_bracketed_foot_start(b, h, ctx, stem_x=xl)
     elif inlined:
-        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
+        l, th, _ = _bowl_cap_stem_foot_dims(h, ctx)
         foot_l = l
         b.moveTo(-l, -th)
-        b.lineTo(t + l, -th)
-        b.lineTo(t + l, 0.0)
-        b.lineTo(t, 0.0)
+        b.lineTo(st + l, -th)
+        b.lineTo(st + l, 0.0)
+        b.lineTo(xl, 0.0)
     else:
         b.moveTo(0.0, 0.0)
-        b.lineTo(t, 0.0)
-    for p in ((t, y_b), (x_l, y_b), (w - hw, 0.0), foot_r, after[0]):
-        b.lineTo(*p)
-    _curve(b, after)
-    _curve(b, q0)
-    if c.style.serif == "bracketed":
+        b.lineTo(xl, 0.0)
+    _curve(b, lq3)
+    _curve(b, low_part)
+    _curve(b, (low_part[3], up_part[1], up_part[2], up_part[3]))
+    _curve(b, uq0)
+    if ctx.style.serif == "bracketed":
         _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
     elif inlined:
         b.lineTo(0.0, cap)
@@ -1478,19 +1700,9 @@ def R_from_H(
     else:
         b.lineTo(0.0, cap)
     b.closePath()
-    _counter(b, t, x0, i3, i0)
-    outline = _with_counters(b)
-    if _cap_italic_sans(c):
-        # Leg foot tip: same band-shear language as open-arm caps.
-        outline = _apply_italic_opening_tip_shear(
-            c, outline, (foot_r,), stem=h.stem
-        )
-    return _pack(
-        c,
-        h,
-        _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
-        outline,
-    )
+    _counter(b, st, xl, li3, li0)
+    _counter(b, st, xu, ui3, ui0)
+    return _with_counters(b)
 
 
 def B_from_H(
@@ -1509,63 +1721,24 @@ def B_from_H(
     notch between them is the intersection of their curves.
     """
     c, h, e = _bowl_cap_setup(H, O, ctx)
-    t, cap, bt = h.stem, h.cap_height, h.bar
-    w = max(width * h.width, min_bowl_stems(t) * t / top_scale)
-    wu = top_scale * w
-    m1 = waist * cap + bt / 2.0
-    m0 = m1 - bt
-    xl, xu = _straight_run(straight, w, t), _straight_run(straight, wu, t)
-    lq3, lq0, li3, li0 = _half_bowl(xl, 0.0, m1, w, t, bt, e)
-    uq3, uq0, ui3, ui0 = _half_bowl(xu, m0, cap, wu, t, bt, e)
-    inside: list[Any] = []
-    for hit in curveCurveIntersections(list(lq0), list(uq3)):
-        # fontTools may report one crossing twice; merge near-identical hits
-        if (
-            0.0 < hit.t1 < 1.0
-            and 0.0 < hit.t2 < 1.0
-            and all(abs(hit.t1 - k.t1) > 1e-3 for k in inside)
-        ):
-            inside.append(hit)
-    if len(inside) != 1:
-        raise ValueError("B bowls do not cross once; adjust top_scale or waist")
-    low_part, _ = splitCubicAtT(*lq0, inside[0].t1)
-    _, up_part = splitCubicAtT(*uq3, inside[0].t2)
-
+    st = h.stem
+    w = max(width * h.width, min_bowl_stems(st) * st / top_scale)
     inlined = _cap_serif_inlined(c)
-    b = PathBuilder()
-    foot_l = 0.0
-    if c.style.serif == "bracketed":
-        foot_l = _bowl_cap_bracketed_foot_start(b, h, c, stem_x=xl)
-    elif inlined:
-        l, th, _ = _bowl_cap_stem_foot_dims(h, c)
-        foot_l = l
-        b.moveTo(-l, -th)
-        b.lineTo(t + l, -th)
-        b.lineTo(t + l, 0.0)
-        b.lineTo(xl, 0.0)
-    else:
-        b.moveTo(0.0, 0.0)
-        b.lineTo(xl, 0.0)
-    _curve(b, lq3)
-    _curve(b, low_part)
-    _curve(b, (low_part[3], up_part[1], up_part[2], up_part[3]))
-    _curve(b, uq0)
-    if c.style.serif == "bracketed":
-        _bowl_cap_bracketed_close_left(b, cap=cap, l=foot_l)
-    elif inlined:
-        b.lineTo(0.0, cap)
-        b.lineTo(0.0, 0.0)
-        b.lineTo(-foot_l, 0.0)
-    else:
-        b.lineTo(0.0, cap)
-    b.closePath()
-    _counter(b, t, xl, li3, li0)
-    _counter(b, t, xu, ui3, ui0)
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    outline = B_yoke(
+        c,
+        metrics=h,
+        o_metrics_rec=o_rec,
+        width=width,
+        top_scale=top_scale,
+        straight=straight,
+        waist=waist,
+    )
     return _pack(
         c,
         h,
         _cap_anchors(w, h, stem_serif_anchors=not inlined, stem_serif_mode="left"),
-        _with_counters(b),
+        outline,
     )
 
 
@@ -1613,6 +1786,96 @@ def _write_u_bracketed_outer(
     b.closePath()
 
 
+def U_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    width: float = 0.96,
+    spring: float = 0.38,
+) -> Outline:
+    """Continuous cap ``U`` body — Usage A (two stems + bottom bowl)."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap = h.stem, h.cap_height
+    w = max(width * h.width, min_bowl_stems(st) * st)
+    y_s = spring * cap
+    q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
+    inlined = _cap_serif_inlined(ctx)
+
+    b = PathBuilder()
+    if ctx.style.serif == "bracketed":
+        _write_u_bracketed_outer(
+            b, h, ctx, w=w, cap=cap, y_s=y_s, q2=q2, q3=q3, i2=i2, i3=i3
+        )
+    elif inlined:
+        from typekernel.parts.serifs import serif_metrics
+
+        length, thick, _ = serif_metrics(ctx)
+        l = min(length, st * 0.48)
+        th = min(thick, cap * 0.1, st * 0.18)
+        b.moveTo(-l, cap + th)
+        b.lineTo(st + l, cap + th)
+        b.lineTo(st + l, cap)
+        b.lineTo(0.0, cap)
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
+        b.lineTo(w, cap)
+        b.lineTo(w + l, cap)
+        b.lineTo(w + l, cap + th)
+        b.lineTo(w - st - l, cap + th)
+        b.lineTo(w - st - l, cap)
+        b.lineTo(w - st, cap)
+        b.lineTo(w - st, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(st, cap)
+        b.lineTo(st + l, cap)
+        b.lineTo(st + l, cap + th)
+        b.lineTo(-l, cap + th)
+        b.closePath()
+    elif _cap_italic_sans(ctx):
+        fr = min(ctx.join_radius * 0.35, st * 0.14)
+        fr = max(fr, 1.0)
+        b.moveTo(fr, cap)
+        b.curveTo(fr - fr * KAPPA, cap, 0.0, cap - fr + fr * KAPPA, 0.0, cap - fr)
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
+        b.lineTo(w, cap - fr)
+        b.curveTo(w, cap - fr + fr * KAPPA, w - fr + fr * KAPPA, cap, w - fr, cap)
+        b.lineTo(w - st + fr, cap)
+        b.curveTo(
+            w - st + fr - fr * KAPPA,
+            cap,
+            w - st,
+            cap - fr + fr * KAPPA,
+            w - st,
+            cap - fr,
+        )
+        b.lineTo(w - st, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(st, cap - fr)
+        b.curveTo(st, cap - fr + fr * KAPPA, st - fr + fr * KAPPA, cap, st - fr, cap)
+        b.lineTo(fr, cap)
+        b.closePath()
+    else:
+        b.moveTo(0.0, cap)
+        b.lineTo(0.0, y_s)
+        _curve(b, q2)
+        _curve(b, q3)
+        b.lineTo(w, cap)
+        b.lineTo(w - st, cap)
+        b.lineTo(w - st, y_s)
+        _curve(b, _rev(i3))
+        _curve(b, _rev(i2))
+        b.lineTo(st, cap)
+        b.closePath()
+    return _ccw(b.build())
+
+
 def U_from_H(
     H: ComposedGlyph,
     O: ComposedGlyph | None = None,
@@ -1628,85 +1891,11 @@ def U_from_H(
     """
     c = ctx or H.context
     h = _h_record(H)
-    e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
-    t, cap = h.stem, h.cap_height
-    w = max(width * h.width, min_bowl_stems(t) * t)
-    y_s = spring * cap
-    q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    st, cap = h.stem, h.cap_height
+    w = max(width * h.width, min_bowl_stems(st) * st)
     inlined = _cap_serif_inlined(c)
-
-    b = PathBuilder()
-    if c.style.serif == "bracketed":
-        _write_u_bracketed_outer(
-            b, h, c, w=w, cap=cap, y_s=y_s, q2=q2, q3=q3, i2=i2, i3=i3
-        )
-    elif inlined:
-        from typekernel.parts.serifs import serif_metrics
-
-        length, thick, _ = serif_metrics(c)
-        l = min(length, t * 0.48)
-        th = min(thick, cap * 0.1, t * 0.18)
-        b.moveTo(-l, cap + th)
-        b.lineTo(t + l, cap + th)
-        b.lineTo(t + l, cap)
-        b.lineTo(0.0, cap)
-        b.lineTo(0.0, y_s)
-        _curve(b, q2)
-        _curve(b, q3)
-        b.lineTo(w, cap)
-        b.lineTo(w + l, cap)
-        b.lineTo(w + l, cap + th)
-        b.lineTo(w - t - l, cap + th)
-        b.lineTo(w - t - l, cap)
-        b.lineTo(w - t, cap)
-        b.lineTo(w - t, y_s)
-        _curve(b, _rev(i3))
-        _curve(b, _rev(i2))
-        b.lineTo(t, cap)
-        b.lineTo(t + l, cap)
-        b.lineTo(t + l, cap + th)
-        b.lineTo(-l, cap + th)
-        b.closePath()
-    elif _cap_italic_sans(c):
-        # Soft stem-top corners (written terminals); bowl path unchanged.
-        fr = min(c.join_radius * 0.35, t * 0.14)
-        fr = max(fr, 1.0)
-        b.moveTo(fr, cap)
-        b.curveTo(fr - fr * KAPPA, cap, 0.0, cap - fr + fr * KAPPA, 0.0, cap - fr)
-        b.lineTo(0.0, y_s)
-        _curve(b, q2)
-        _curve(b, q3)
-        b.lineTo(w, cap - fr)
-        b.curveTo(w, cap - fr + fr * KAPPA, w - fr + fr * KAPPA, cap, w - fr, cap)
-        b.lineTo(w - t + fr, cap)
-        b.curveTo(
-            w - t + fr - fr * KAPPA,
-            cap,
-            w - t,
-            cap - fr + fr * KAPPA,
-            w - t,
-            cap - fr,
-        )
-        b.lineTo(w - t, y_s)
-        _curve(b, _rev(i3))
-        _curve(b, _rev(i2))
-        b.lineTo(t, cap - fr)
-        b.curveTo(t, cap - fr + fr * KAPPA, t - fr + fr * KAPPA, cap, t - fr, cap)
-        b.lineTo(fr, cap)
-        b.closePath()
-    else:
-        b.moveTo(0.0, cap)
-        b.lineTo(0.0, y_s)
-        _curve(b, q2)
-        _curve(b, q3)
-        b.lineTo(w, cap)
-        b.lineTo(w - t, cap)
-        b.lineTo(w - t, y_s)
-        _curve(b, _rev(i3))
-        _curve(b, _rev(i2))
-        b.lineTo(t, cap)
-        b.closePath()
-    half = t / 2.0
+    half = st / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, cap),
         "bottom": (w / 2.0, 0.0),
@@ -1720,60 +1909,65 @@ def U_from_H(
                 "stem_R_t": (w - half, cap),
             }
         )
-    return _pack(c, h, anchors, _ccw(b.build()))
+    outline = U_yoke(
+        c, metrics=h, o_metrics_rec=o_rec, width=width, spring=spring
+    )
+    return _pack(c, h, anchors, outline)
 
 
-def J_from_H(
-    H: ComposedGlyph,
-    O: ComposedGlyph | None = None,
-    ctx: DesignContext | None = None,
+def J_yoke(
+    ctx: DesignContext,
     *,
+    metrics: HMetrics | None = None,
+    o_metrics_rec: OMetrics | None = None,
     width: float = 0.72,
     spring: float = 0.38,
     hook: float = 0.55,
-) -> ComposedGlyph:
-    """``J``: the right half of ``U`` with its bowl ending in a vertical terminal.
-
-    ``hook`` places the terminal between the bowl centre (``0``) and its
-    left side (``1``).
-    """
-    c = ctx or H.context
-    h = _h_record(H)
-    e = _o_rec(O).exponent if O is not None else cap_o_metrics(c).exponent
-    t, cap = h.stem, h.cap_height
-    w = max(width * h.width, min_bowl_stems(t) * t)
+) -> Outline:
+    """Continuous cap ``J`` body — Usage A (right stem + hook bowl)."""
+    h = metrics or h_cap_metrics(ctx)
+    e = (o_metrics_rec or cap_o_metrics(ctx)).exponent
+    st, cap = h.stem, h.cap_height
+    w = max(width * h.width, min_bowl_stems(st) * st)
     y_s = spring * cap
     q2, q3, i2, i3 = _u_parts(h, w, e, y_s)
     cx = w / 2.0
-    hook = hook * (opening_closure(c, 0.55) / 0.55)
-    x_t = cx - hook * (w / 2.0 - t)
+    hook_v = hook * (opening_closure(ctx, 0.55) / 0.55)
+    x_t = cx - hook_v * (w / 2.0 - st)
     outer = _cut(q2, x_t, horizontal=False)[1]
     inner = _cut(i2, x_t, horizontal=False)[1]
 
-    inlined = _cap_serif_inlined(c)
-    l, th, bracket_r = _h_cap_foot_dims(h, c) if inlined else (0.0, 0.0, 0.0)
+    inlined = _cap_serif_inlined(ctx)
+    l, th, bracket_r = _h_cap_foot_dims(h, ctx) if inlined else (0.0, 0.0, 0.0)
     b = PathBuilder()
-    if c.style.serif == "bracketed":
+    if ctx.style.serif == "bracketed":
         b.moveTo(w + l, cap)
-        _append_upward_cap_foot_pad(b, w - t - l, w + l, cap, th, bracket_r, bracketed=True)
-        b.lineTo(w - t, cap)
+        _append_upward_cap_foot_pad(
+            b, w - st - l, w + l, cap, th, bracket_r, bracketed=True
+        )
+        b.lineTo(w - st, cap)
     elif inlined:
         b.moveTo(w + l, cap + th)
-        b.lineTo(w - t - l, cap + th)
-        b.lineTo(w - t - l, cap)
-        b.lineTo(w - t, cap)
+        b.lineTo(w - st - l, cap + th)
+        b.lineTo(w - st - l, cap)
+        b.lineTo(w - st, cap)
     else:
-        # Tiny top fillets so sans ``J`` stem corners are G1 by default.
-        fr = min(c.join_radius * 0.35, t * 0.14)
+        fr = min(ctx.join_radius * 0.35, st * 0.14)
         fr = max(fr, 1.0)
         b.moveTo(w, cap - fr)
         b.curveTo(w, cap - fr + fr * KAPPA, w - fr + fr * KAPPA, cap, w - fr, cap)
-        b.lineTo(w - t + fr, cap)
-        b.curveTo(w - t + fr - fr * KAPPA, cap, w - t, cap - fr + fr * KAPPA, w - t, cap - fr)
-    b.lineTo(w - t, y_s)
+        b.lineTo(w - st + fr, cap)
+        b.curveTo(
+            w - st + fr - fr * KAPPA,
+            cap,
+            w - st,
+            cap - fr + fr * KAPPA,
+            w - st,
+            cap - fr,
+        )
+    b.lineTo(w - st, y_s)
     _curve(b, _rev(i3))
     _curve(b, _rev(inner))
-    # G1 bridge between inner/outer hook terminals (class-rep bulge was ~60–70°).
     p0, p1, _, _ = inner
     q0, q1, _, _ = outer
     ji, jo = p0, q0
@@ -1797,18 +1991,50 @@ def J_from_H(
     _curve(b, q3)
     if inlined:
         b.lineTo(w + l, cap)
-        if c.style.serif == "slab":
+        if ctx.style.serif == "slab":
             b.lineTo(w + l, cap + th)
-            b.lineTo(w - t - l, cap + th)
+            b.lineTo(w - st - l, cap + th)
     b.closePath()
     outline = _ccw(b.build())
-    if _cap_italic_sans(c):
+    if _cap_italic_sans(ctx):
         tip = ((ji[0] + jo[0]) * 0.5, (ji[1] + jo[1]) * 0.5)
-        outline = _apply_italic_opening_tip_shear(c, outline, (tip,), stem=t)
-    half = w - t / 2.0
+        outline = _apply_italic_opening_tip_shear(ctx, outline, (tip,), stem=st)
+    return outline
+
+
+def J_from_H(
+    H: ComposedGlyph,
+    O: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.72,
+    spring: float = 0.38,
+    hook: float = 0.55,
+) -> ComposedGlyph:
+    """``J``: the right half of ``U`` with its bowl ending in a vertical terminal.
+
+    ``hook`` places the terminal between the bowl centre (``0``) and its
+    left side (``1``).
+    """
+    c = ctx or H.context
+    h = _h_record(H)
+    o_rec = _o_rec(O) if O is not None else cap_o_metrics(c)
+    st, cap = h.stem, h.cap_height
+    w = max(width * h.width, min_bowl_stems(st) * st)
+    cx = w / 2.0
+    inlined = _cap_serif_inlined(c)
+    half = w - st / 2.0
     anchors: dict[str, Pt] = {"top": (half, cap), "bottom": (cx, 0.0)}
     if _cap_stem_serif_anchors_enabled(c, baked=inlined):
         anchors["stem_R_t"] = (half, cap)
+    outline = J_yoke(
+        c,
+        metrics=h,
+        o_metrics_rec=o_rec,
+        width=width,
+        spring=spring,
+        hook=hook,
+    )
     return _pack(c, h, anchors, outline)
 
 
@@ -2114,6 +2340,38 @@ def _w_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) ->
     return _ccw(b.build())
 
 
+def W_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    width: float = 1.4,
+) -> Outline:
+    """Continuous cap ``W`` body — Usage A (crotch flats sealed via ``w_points``)."""
+    h = metrics or h_cap_metrics(ctx)
+    w_frac = width
+    s = ctx.stem
+    if s <= 72.0:
+        if ctx.contrast < 0.85:
+            w_frac += 0.02
+        elif 0.86 <= ctx.contrast <= 0.94 and ctx.aperture < 0.68:
+            w_frac -= 0.02
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.02
+    if ctx.style.serif == "bracketed" and s <= 78.0:
+        w_frac += 0.085
+    w = w_frac * h.width
+    bump = ctx.sharp_overshoot
+    base = w_points(h.stem, h.cap_height, w, ctx.contrast, top_overshoot=bump)
+    baked = _cap_serif_inlined(ctx)
+    if baked and ctx.style.serif == "bracketed":
+        return _w_cap_bracketed_outline(h, ctx, base)
+    if baked:
+        return _polygon(_w_cap_slab_points(h, ctx, base))
+    if _cap_italic_sans(ctx):
+        return _soft_corner_polygon(base, frozenset({3, 8, 11}), h.stem * 0.28)
+    return _polygon(base)
+
+
 def W_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.4
 ) -> ComposedGlyph:
@@ -2131,23 +2389,13 @@ def W_from_H(
     if c.style.serif == "bracketed" and s <= 78.0:
         w_frac += 0.085
     w = w_frac * h.width
-    bump = c.sharp_overshoot
-    base = w_points(h.stem, h.cap_height, w, c.contrast, top_overshoot=bump)
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
         w,
         h,
         stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
-    if baked and c.style.serif == "bracketed":
-        outline = _w_cap_bracketed_outline(h, c, base)
-        return _pack(c, h, anchors, outline)
-    if baked:
-        return _pack(c, h, anchors, _polygon(_w_cap_slab_points(h, c, base)))
-    if _cap_italic_sans(c):
-        outline = _soft_corner_polygon(base, frozenset({3, 8, 11}), h.stem * 0.28)
-        return _pack(c, h, anchors, outline)
-    return _pack(c, h, anchors, _polygon(base))
+    return _pack(c, h, anchors, W_yoke(c, metrics=h, width=width))
 
 
 def _x_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
@@ -2338,28 +2586,39 @@ def _z_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) ->
     return _ccw(b.build())
 
 
+def Z_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    width: float = 0.88,
+) -> Outline:
+    """Continuous cap ``Z`` body — Usage A."""
+    h = metrics or h_cap_metrics(ctx)
+    w = width * h.width
+    base = z_points(h.stem, h.bar, h.cap_height, w, ctx.contrast)
+    baked = _cap_serif_inlined(ctx)
+    if baked and ctx.style.serif == "bracketed":
+        return _z_cap_bracketed_outline(h, ctx, base)
+    if baked:
+        return _polygon(_z_cap_slab_points(h, ctx, base))
+    if _cap_italic_sans(ctx):
+        return _soft_corner_polygon(base, frozenset({3, 8}), h.stem * 0.30)
+    return _polygon(base)
+
+
 def Z_from_H(
     H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 0.88
 ) -> ComposedGlyph:
     """``Z``: ``H``-bar-thick top and foot joined by one compensated diagonal."""
     h, c = _h_record(H), ctx or H.context
     w = width * h.width
-    base = z_points(h.stem, h.bar, h.cap_height, w, c.contrast)
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
         w,
         h,
         stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
-    if baked and c.style.serif == "bracketed":
-        outline = _z_cap_bracketed_outline(h, c, base)
-        return _pack(c, h, anchors, outline)
-    if baked:
-        return _pack(c, h, anchors, _polygon(_z_cap_slab_points(h, c, base)))
-    if _cap_italic_sans(c):
-        outline = _soft_corner_polygon(base, frozenset({3, 8}), h.stem * 0.30)
-        return _pack(c, h, anchors, outline)
-    return _pack(c, h, anchors, _polygon(base))
+    return _pack(c, h, anchors, Z_yoke(c, metrics=h, width=width))
 
 
 def _k_cap_foot_dims(h: HMetrics, ctx: DesignContext) -> tuple[float, float, float]:
@@ -2414,16 +2673,16 @@ def _k_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) ->
     return _ccw(b.build())
 
 
-def K_from_H(
-    H: ComposedGlyph,
-    ctx: DesignContext | None = None,
+def K_yoke(
+    ctx: DesignContext,
     *,
+    metrics: HMetrics | None = None,
     width: float = 0.92,
     vertex: float = 0.42,
-) -> ComposedGlyph:
-    """``K``: the ``H`` stem with arm and leg meeting at the stem; the arm reaches cap height."""
-    h, c = _h_record(H), ctx or H.context
-    s = c.stem
+) -> Outline:
+    """Continuous cap ``K`` body — Usage A (arm/leg crotch sealed via ``k_points``)."""
+    h = metrics or h_cap_metrics(ctx)
+    s = ctx.stem
     w_frac = width
     vertex_eff = vertex
     if s <= 72.0:
@@ -2437,12 +2696,12 @@ def K_from_H(
         w_frac += 0.024
     if 168.0 <= s <= 192.0:
         w_frac += 0.042
-    if c.style.serif in ("slab", "bracketed"):
+    if ctx.style.serif in ("slab", "bracketed"):
         if s <= 40.0:
             w_frac += 0.08
         if 100.0 <= s <= 118.0:
             w_frac += 0.04
-            if c.style.serif == "bracketed":
+            if ctx.style.serif == "bracketed":
                 w_frac += 0.04
         if 138.0 <= s <= 162.0:
             w_frac += 0.06
@@ -2452,28 +2711,62 @@ def K_from_H(
             vertex_eff = max(vertex_eff, 0.44)
     w = w_frac * h.width
     cap = h.cap_height
-    if _cap_italic_sans(c):
-        # Branch join higher — same language as lowercase italic ``k``.
+    if _cap_italic_sans(ctx):
         vertex_eff = min(0.58, max(vertex_eff, 0.50))
-    base = k_points(h.stem, cap, cap, w, c.contrast, vertex=vertex_eff)
+    base = k_points(h.stem, cap, cap, w, ctx.contrast, vertex=vertex_eff)
+    baked = _cap_serif_inlined(ctx)
+    if baked and ctx.style.serif == "bracketed":
+        return _k_cap_bracketed_outline(h, ctx, base)
+    if baked:
+        return _polygon(_k_cap_slab_points(h, ctx, base))
+    if _cap_italic_sans(ctx):
+        outline = _soft_corner_polygon(base, frozenset({2, 5, 8}), h.stem * 0.34)
+        return _apply_italic_opening_tip_shear(
+            ctx, outline, ((w - h.stem * 0.15, cap * 0.92),), stem=h.stem
+        )
+    return _polygon(base)
+
+
+def K_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.92,
+    vertex: float = 0.42,
+) -> ComposedGlyph:
+    """``K``: the ``H`` stem with arm and leg meeting at the stem; the arm reaches cap height."""
+    h, c = _h_record(H), ctx or H.context
+    s = c.stem
+    w_frac = width
+    if s <= 72.0:
+        w_frac += 0.07
+    elif s < 80.0:
+        w_frac += 0.07 * max(0.0, (80.0 - s) / 50.0)
+    if 100.0 <= s <= 118.0:
+        w_frac += 0.038
+    if 142.0 <= s <= 158.0:
+        w_frac += 0.024
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.042
+    if c.style.serif in ("slab", "bracketed"):
+        if s <= 40.0:
+            w_frac += 0.08
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.04
+            if c.style.serif == "bracketed":
+                w_frac += 0.04
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.06
+        if 168.0 <= s <= 192.0:
+            w_frac += 0.03
+    w = w_frac * h.width
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
         w,
         h,
         stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
-    if baked and c.style.serif == "bracketed":
-        outline = _k_cap_bracketed_outline(h, c, base)
-        return _pack(c, h, anchors, outline)
-    if baked:
-        return _pack(c, h, anchors, _polygon(_k_cap_slab_points(h, c, base)))
-    if _cap_italic_sans(c):
-        outline = _soft_corner_polygon(base, frozenset({2, 5, 8}), h.stem * 0.34)
-        outline = _apply_italic_opening_tip_shear(
-            c, outline, ((w - h.stem * 0.15, cap * 0.92),), stem=h.stem
-        )
-        return _pack(c, h, anchors, outline)
-    return _pack(c, h, anchors, _polygon(base))
+    return _pack(c, h, anchors, K_yoke(c, metrics=h, width=width, vertex=vertex))
 
 
 def _a_cap_foot_dims(h: HMetrics, ctx: DesignContext, hw: float) -> tuple[float, float, float]:
@@ -2719,30 +3012,27 @@ def _y_cap_bracketed_outline(h: HMetrics, ctx: DesignContext, base: list[Pt]) ->
     return _ccw(b.build())
 
 
-def Y_from_H(
-    H: ComposedGlyph,
-    ctx: DesignContext | None = None,
+def Y_yoke(
+    ctx: DesignContext,
     *,
+    metrics: HMetrics | None = None,
     width: float = 0.98,
     junction: float = 0.42,
-) -> ComposedGlyph:
-    """``Y``: two compensated arms meeting on the ``H`` stem at ``junction`` × cap."""
-    c = ctx or H.context
-    h = _h_record(H)
+) -> Outline:
+    """Continuous cap ``Y`` body — Usage A."""
+    h = metrics or h_cap_metrics(ctx)
     junction_eff = junction
-    if 142.0 <= c.stem <= 158.0:
+    if 142.0 <= ctx.stem <= 158.0:
         junction_eff = max(junction_eff, 0.45)
-    w, cap, t = width * h.width, h.cap_height, h.stem
+    w, cap, st = width * h.width, h.cap_height, h.stem
     yj = junction_eff * cap
-    # Only past the R8-sensitive mid-black band (150 pinches); unlock at 180+.
-    if c.style.serif == "slab" and t >= 175.0:
-        extreme = max(0.0, min(1.0, (t - 175.0) / 45.0))
+    if ctx.style.serif == "slab" and st >= 175.0:
+        extreme = max(0.0, min(1.0, (st - 175.0) / 45.0))
         diag_w = 1.0 - 0.12 * extreme
     else:
         diag_w = 1.0
-    hw = _hwidth(t, c.contrast, w / 2.0 - t / 2.0, cap - yj, weight=diag_w)
-    s0, s1 = (w - t) / 2.0, (w + t) / 2.0
-    # left arm outer edge: (0, cap) → (w/2 - hw/2, yj); inner edge shifted by hw
+    hw = _hwidth(st, ctx.contrast, w / 2.0 - st / 2.0, cap - yj, weight=diag_w)
+    s0, s1 = (w - st) / 2.0, (w + st) / 2.0
     run = w / 2.0 - hw / 2.0
     y_side = cap - s0 * (cap - yj) / run
     y_crotch = cap - (w / 2.0 - hw) * (cap - yj) / run
@@ -2759,28 +3049,42 @@ def Y_from_H(
         (w / 2.0, y_crotch),
         (hw, cap),
     ]
+    baked = _cap_serif_inlined(ctx)
+    if baked and ctx.style.serif == "bracketed":
+        return _y_cap_bracketed_outline(h, ctx, base)
+    if baked:
+        return _polygon(_y_cap_slab_points(h, ctx, base))
+    # Sans: seal crotch tip (index 7).
+    sealed = _truncate_crotch(base, 7, _crotch_seal_flat(st))
+    if _cap_italic_sans(ctx):
+        outline = _soft_corner_polygon(sealed, frozenset({1, 4, 7, 8}), h.stem * 0.32)
+        return _apply_italic_opening_tip_shear(
+            ctx,
+            outline,
+            ((hw * 0.5, cap), (w - hw * 0.5, cap)),
+            stem=h.stem,
+        )
+    return _polygon(sealed)
+
+
+def Y_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 0.98,
+    junction: float = 0.42,
+) -> ComposedGlyph:
+    """``Y``: two compensated arms meeting on the ``H`` stem at ``junction`` × cap."""
+    c = ctx or H.context
+    h = _h_record(H)
+    w = width * h.width
     baked = _cap_serif_inlined(c)
     anchors = _cap_anchors(
         w,
         h,
         stem_serif_anchors=_cap_stem_serif_anchors_enabled(c, baked=baked, diagonal=True),
     )
-    if baked and c.style.serif == "bracketed":
-        outline = _y_cap_bracketed_outline(h, c, base)
-        return _pack(c, h, anchors, outline)
-    if baked:
-        return _pack(c, h, anchors, _polygon(_y_cap_slab_points(h, c, base)))
-    if _cap_italic_sans(c):
-        # Soft arm↔stem joins + crotch; tip shear on outer arm ends.
-        outline = _soft_corner_polygon(base, frozenset({1, 4, 7}), h.stem * 0.32)
-        outline = _apply_italic_opening_tip_shear(
-            c,
-            outline,
-            ((hw * 0.5, cap), (w - hw * 0.5, cap)),
-            stem=h.stem,
-        )
-        return _pack(c, h, anchors, outline)
-    return _pack(c, h, anchors, _polygon(base))
+    return _pack(c, h, anchors, Y_yoke(c, metrics=h, width=width, junction=junction))
 
 
 def _m_cap_foot_dims(
@@ -2893,6 +3197,65 @@ def _m_cap_outline_points(
     ]
 
 
+def M_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    width: float = 1.18,
+    apex: float = 0.35,
+) -> Outline:
+    """Continuous cap ``M`` body — Usage A."""
+    h = metrics or h_cap_metrics(ctx)
+    s = ctx.stem
+    w_frac = width
+    vertex_apex = apex
+    if s <= 72.0:
+        vertex_apex = 0.38
+        if ctx.contrast >= 1.0:
+            w_frac += 0.02
+    if 100.0 <= s <= 118.0:
+        if ctx.contrast >= 1.0:
+            vertex_apex = 0.38
+            w_frac += 0.012
+        else:
+            vertex_apex = 0.40
+    if 168.0 <= s <= 192.0:
+        vertex_apex = max(vertex_apex, 0.38)
+    if s >= 198.0:
+        w_frac += 0.02
+    if ctx.style.serif in ("slab", "bracketed"):
+        if s <= 78.0:
+            w_frac += 0.06
+            if ctx.style.serif == "bracketed" and s <= 72.0:
+                w_frac += 0.05
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.05
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.04
+        if 168.0 <= s <= 192.0:
+            w_frac += 0.07 if ctx.style.serif == "bracketed" else 0.05
+            vertex_apex = max(vertex_apex, 0.38)
+    w, cap, st = w_frac * h.width, h.cap_height, h.stem
+    f = vertex_apex * st
+    bx = w / 2.0 - f / 2.0
+    hw = _hwidth(st, ctx.contrast, bx - st, cap)
+    for _ in range(8):
+        hw = _hwidth(st, ctx.contrast, bx - st + hw, cap)
+    slope = cap / (st - bx - hw)
+    y_low = slope * (st - bx)
+    y_v = slope * (f / 2.0 - hw)
+    if not (0.0 < y_low < cap and 0.0 < y_v < cap and hw > f / 2.0):
+        raise ValueError("M strokes do not fit this width; widen it or thin the stem")
+    if ctx.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_m_bracketed_outer(b, h, ctx, w=w, y_low=y_low, y_v=y_v, bx=bx)
+        return _ccw(b.build())
+    if _cap_italic_sans(ctx):
+        return _m_italic_sans_outline(h, ctx, w=w, y_low=y_low, y_v=y_v, bx=bx)
+    pts = _m_cap_outline_points(h, ctx, w=w, y_low=y_low, y_v=y_v, bx=bx)
+    return _polygon(pts)
+
+
 def M_from_H(
     H: ComposedGlyph,
     ctx: DesignContext | None = None,
@@ -2932,19 +3295,9 @@ def M_from_H(
         if 168.0 <= s <= 192.0:
             w_frac += 0.07 if c.style.serif == "bracketed" else 0.05
             vertex_apex = max(vertex_apex, 0.38)
-    w, cap, t = w_frac * h.width, h.cap_height, h.stem
-    f = vertex_apex * t
-    bx = w / 2.0 - f / 2.0  # left end of the flat vertex on the baseline
-    hw = _hwidth(t, c.contrast, bx - t, cap)
-    for _ in range(8):
-        hw = _hwidth(t, c.contrast, bx - t + hw, cap)
-    slope = cap / (t - bx - hw)  # negative: rising to the left
-    y_low = slope * (t - bx)
-    y_v = slope * (f / 2.0 - hw)
-    if not (0.0 < y_low < cap and 0.0 < y_v < cap and hw > f / 2.0):
-        raise ValueError("M strokes do not fit this width; widen it or thin the stem")
+    w, cap, st = w_frac * h.width, h.cap_height, h.stem
     inlined = c.style.serif in ("slab", "bracketed")
-    half = t / 2.0
+    half = st / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, cap),
         "bottom": (w / 2.0, 0.0),
@@ -2958,21 +3311,7 @@ def M_from_H(
                 "stem_R_t": (w - half, cap),
             }
         )
-    if c.style.serif == "bracketed":
-        b = PathBuilder()
-        _write_m_bracketed_outer(
-            b, h, c, w=w, y_low=y_low, y_v=y_v, bx=bx
-        )
-        return _pack(c, h, anchors, _ccw(b.build()))
-    if _cap_italic_sans(c):
-        return _pack(
-            c,
-            h,
-            anchors,
-            _m_italic_sans_outline(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx),
-        )
-    pts = _m_cap_outline_points(h, c, w=w, y_low=y_low, y_v=y_v, bx=bx)
-    return _pack(c, h, anchors, _polygon(pts))
+    return _pack(c, h, anchors, M_yoke(c, metrics=h, width=width, apex=apex))
 
 
 def _n_cap_foot_dims(h: HMetrics, ctx: DesignContext, *, w: float) -> tuple[float, float, float]:
@@ -3072,17 +3411,21 @@ def _n_cap_outline_points(
     ]
 
 
-def N_from_H(
-    H: ComposedGlyph, ctx: DesignContext | None = None, *, width: float = 1.0
-) -> ComposedGlyph:
-    """``N``: two ``H`` stems joined by a diagonal from top left to bottom right."""
-    c = ctx or H.context
-    h = _h_record(H)
+def N_yoke(
+    ctx: DesignContext,
+    *,
+    metrics: HMetrics | None = None,
+    width: float = 1.0,
+) -> Outline:
+    """Continuous cap ``N`` body — Usage A."""
+    h = metrics or h_cap_metrics(ctx)
+    c = ctx
     s = c.stem
     w_frac = width
-    if 100.0 <= s <= 118.0 and 0.95 <= c.contrast < 1.0:
+    # Mirror N_from_H width adjustments (keep in sync).
+    if s <= 72.0:
         w_frac += 0.02
-    if 142.0 <= s <= 158.0:
+    if 100.0 <= s <= 118.0:
         w_frac += 0.022
     if 168.0 <= s <= 192.0:
         w_frac += 0.035
@@ -3101,17 +3444,60 @@ def N_from_H(
             w_frac += 0.02
         if c.style.serif == "bracketed" and 175.0 <= s < 198.0:
             w_frac += 0.02
-    w, cap, t = w_frac * h.width, h.cap_height, h.stem
-    hw = _hwidth(t, c.contrast, w - 2.0 * t, cap)
+    w, cap, st = w_frac * h.width, h.cap_height, h.stem
+    hw = _hwidth(st, c.contrast, w - 2.0 * st, cap)
     for _ in range(8):
-        hw = _hwidth(t, c.contrast, w - 2.0 * t + hw, cap)
-    slope = cap / (2.0 * t - hw - w)  # negative
-    y_left = slope * (2.0 * t - w)
+        hw = _hwidth(st, c.contrast, w - 2.0 * st + hw, cap)
+    slope = cap / (2.0 * st - hw - w)
+    y_left = slope * (2.0 * st - w)
     y_right = -slope * hw
     if not (0.0 < y_right < cap and 0.0 < y_left < cap):
         raise ValueError("N diagonal does not fit this width; widen it or thin the stem")
+    if c.style.serif == "bracketed":
+        b = PathBuilder()
+        _write_n_bracketed_outer(b, h, c, w=w, y_left=y_left, y_right=y_right)
+        return _ccw(b.build())
+    if _cap_italic_sans(c):
+        return _n_italic_sans_outline(h, c, w=w, y_left=y_left, y_right=y_right)
+    pts = _n_cap_outline_points(h, c, w=w, y_left=y_left, y_right=y_right)
+    return _polygon(pts)
+
+
+def N_from_H(
+    H: ComposedGlyph,
+    ctx: DesignContext | None = None,
+    *,
+    width: float = 1.0,
+) -> ComposedGlyph:
+    """``N``: two ``H`` stems joined by one compensated diagonal."""
+    c = ctx or H.context
+    h = _h_record(H)
+    s = c.stem
+    w_frac = width
+    if s <= 72.0:
+        w_frac += 0.02
+    if 100.0 <= s <= 118.0:
+        w_frac += 0.022
+    if 168.0 <= s <= 192.0:
+        w_frac += 0.035
+    if c.style.serif in ("slab", "bracketed"):
+        if s <= 78.0:
+            w_frac += 0.06
+            if c.style.serif == "bracketed" and s <= 72.0:
+                w_frac += 0.05
+        if 100.0 <= s <= 118.0:
+            w_frac += 0.05
+        if 138.0 <= s <= 162.0:
+            w_frac += 0.04
+        if 168.0 <= s <= 192.0:
+            w_frac += 0.07 if c.style.serif == "bracketed" else 0.05
+        if s >= 198.0:
+            w_frac += 0.02
+        if c.style.serif == "bracketed" and 175.0 <= s < 198.0:
+            w_frac += 0.02
+    w, cap, st = w_frac * h.width, h.cap_height, h.stem
     inlined = c.style.serif in ("slab", "bracketed")
-    half = t / 2.0
+    half = st / 2.0
     anchors: dict[str, Pt] = {
         "top": (w / 2.0, cap),
         "bottom": (w / 2.0, 0.0),
@@ -3125,21 +3511,7 @@ def N_from_H(
                 "stem_R_t": (w - half, cap),
             }
         )
-    if c.style.serif == "bracketed":
-        b = PathBuilder()
-        _write_n_bracketed_outer(
-            b, h, c, w=w, y_left=y_left, y_right=y_right
-        )
-        return _pack(c, h, anchors, _ccw(b.build()))
-    if _cap_italic_sans(c):
-        return _pack(
-            c,
-            h,
-            anchors,
-            _n_italic_sans_outline(h, c, w=w, y_left=y_left, y_right=y_right),
-        )
-    pts = _n_cap_outline_points(h, c, w=w, y_left=y_left, y_right=y_right)
-    return _pack(c, h, anchors, _polygon(pts))
+    return _pack(c, h, anchors, N_yoke(c, metrics=h, width=width))
 
 
 def _t_outline_points(h: HMetrics, ctx: DesignContext, *, width: float) -> list[Pt]:

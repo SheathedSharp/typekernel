@@ -22,8 +22,10 @@ from typekernel.optics.space import space_font
 from typekernel.parts import (
     A_from_H,
     a_from_o,
-    A_yoke,
     a_yoke,
+    A_yoke,
+    B_from_H,
+    B_yoke,
     build_H,
     build_n,
     build_O,
@@ -31,17 +33,21 @@ from typekernel.parts import (
     C_from_O,
     C_yoke,
     c_yoke,
+    D_from_H,
+    D_yoke,
     DesignContext,
     double_shoulder_yoke,
     E_from_H,
     e_from_o,
-    e_yoke,
     E_yoke,
+    e_yoke,
     F_from_H,
     f_from_n,
     F_yoke,
     f_yoke,
+    G_from_O,
     g_from_o,
+    G_yoke,
     g_yoke,
     GlyphAssembler,
     h_from_n,
@@ -49,43 +55,67 @@ from typekernel.parts import (
     h_yoke,
     I_from_H,
     i_from_n,
-    i_yoke,
     I_yoke,
+    i_yoke,
+    J_from_H,
     j_from_n,
     j_yoke,
+    J_yoke,
+    K_from_H,
     k_from_n,
     k_yoke,
+    K_yoke,
     L_from_H,
     l_from_n,
     L_yoke,
     l_yoke,
+    M_from_H,
     m_from_n,
+    M_yoke,
+    N_from_H,
+    N_yoke,
     n_yoke,
     O_yoke,
     o_yoke,
+    P_from_H,
+    P_yoke,
+    Q_from_O,
+    Q_yoke,
+    R_from_H,
     r_from_n,
+    R_yoke,
     r_yoke,
+    S_from_O,
     s_from_o,
+    S_yoke,
     s_yoke,
     T_from_H,
     t_from_n,
-    t_yoke,
     T_yoke,
+    t_yoke,
     tittle,
+    U_from_H,
     u_from_n,
     u_yoke,
+    U_yoke,
     V_from_H,
     v_from_n,
     V_yoke,
     v_yoke,
+    W_from_H,
     w_from_n,
+    W_yoke,
     w_yoke,
     X_from_H,
     x_from_n,
-    x_yoke,
     X_yoke,
+    x_yoke,
+    Y_from_H,
     y_from_n,
+    Y_yoke,
     y_yoke,
+    Z_from_H,
+    Z_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
 
@@ -340,23 +370,38 @@ def main() -> None:
     )
     print("diags:", p5)
 
-    # Capitals first-wave (HILTEFOCVXA): builders vs raw yokes
+    # Capitals full A–Z: builders vs raw public yokes
     from typekernel.parts import h_cap_metrics, cap_o_metrics
 
     def recipe_caps_builders(c):
         H, O = build_H(c), build_O(c)
         return {
-            "H": H,
-            "I": I_from_H(H, c),
-            "L": L_from_H(H, c),
-            "T": T_from_H(H, c),
+            "A": A_from_H(H, c),
+            "B": B_from_H(H, O, c),
+            "C": C_from_O(O, c),
+            "D": D_from_H(H, O, c),
             "E": E_from_H(H, c),
             "F": F_from_H(H, c),
+            "G": G_from_O(O, H, c),
+            "H": H,
+            "I": I_from_H(H, c),
+            "J": J_from_H(H, O, c),
+            "K": K_from_H(H, c),
+            "L": L_from_H(H, c),
+            "M": M_from_H(H, c),
+            "N": N_from_H(H, c),
             "O": O,
-            "C": C_from_O(O, c),
+            "P": P_from_H(H, O, c),
+            "Q": Q_from_O(O, H, c),
+            "R": R_from_H(H, O, c),
+            "S": S_from_O(O, c),
+            "T": T_from_H(H, c),
+            "U": U_from_H(H, O, c),
             "V": V_from_H(H, c),
+            "W": W_from_H(H, c),
             "X": X_from_H(H, c),
-            "A": A_from_H(H, c),
+            "Y": Y_from_H(H, c),
+            "Z": Z_from_H(H, c),
         }
 
     def recipe_caps_yokes(c):
@@ -367,41 +412,54 @@ def main() -> None:
             return GlyphAssembler(c).with_design(design).add(outline).build()
 
         return {
-            "H": pack(H_yoke(c, metrics=hm), hm),
-            "I": pack(I_yoke(c, metrics=hm), hm),
-            "L": pack(L_yoke(c, metrics=hm), hm),
-            "T": pack(T_yoke(c, metrics=hm), hm),
+            "A": pack(A_yoke(c, metrics=hm), hm),
+            "B": pack(B_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "C": pack(C_yoke(c, metrics=om), om),
+            "D": pack(D_yoke(c, metrics=hm, o_metrics_rec=om), hm),
             "E": pack(E_yoke(c, metrics=hm), hm),
             "F": pack(F_yoke(c, metrics=hm), hm),
+            "G": pack(G_yoke(c, metrics=om, h_metrics=hm), om),
+            "H": pack(H_yoke(c, metrics=hm), hm),
+            "I": pack(I_yoke(c, metrics=hm), hm),
+            "J": pack(J_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "K": pack(K_yoke(c, metrics=hm), hm),
+            "L": pack(L_yoke(c, metrics=hm), hm),
+            "M": pack(M_yoke(c, metrics=hm), hm),
+            "N": pack(N_yoke(c, metrics=hm), hm),
             "O": pack(O_yoke(c, metrics=om), om),
-            "C": pack(C_yoke(c, metrics=om), om),
+            "P": pack(P_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "Q": pack(Q_yoke(c, metrics=om, h_metrics=hm), om),
+            "R": pack(R_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "S": pack(S_yoke(c, metrics=om), om),
+            "T": pack(T_yoke(c, metrics=hm), hm),
+            "U": pack(U_yoke(c, metrics=hm, o_metrics_rec=om), hm),
             "V": pack(V_yoke(c, metrics=hm), hm),
+            "W": pack(W_yoke(c, metrics=hm), hm),
             "X": pack(X_yoke(c, metrics=hm), hm),
-            "A": pack(A_yoke(c, metrics=hm), hm),
+            "Y": pack(Y_yoke(c, metrics=hm), hm),
+            "Z": pack(Z_yoke(c, metrics=hm), hm),
         }
 
     rc1 = recipe_caps_builders(ctx)
-    rc2 = recipe_caps_yokes(ctx)
-    otf_c1 = _compile("after6_caps_builders", ctx, rc1)
-    # Wider / more open caps recipe for visual contrast
+    otf_c1 = _compile("after7_caps_builders", ctx, rc1)
     ctx_wide = ctx.tuned(aperture=0.72)
     rc2w = recipe_caps_yokes(ctx_wide)
-    otf_c2 = _compile("after6_caps_yokes", ctx_wide, rc2w)
-    CAP_TEXT = "HILTEF OCVXA"
+    otf_c2 = _compile("after7_caps_yokes", ctx_wide, rc2w)
+    CAP_TEXT = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     p_caps = proof_labeled_waterfall(
         [("1 builders", otf_c1), ("2 yokes wide", otf_c2)],
         CAP_TEXT,
-        OUT / "proof_caps_after6.png",
-        sizes=(48, 72, 96),
-        width=1400,
+        OUT / "proof_caps_after7.png",
+        sizes=(36, 56, 72),
+        width=1600,
     )
     print("caps:", p_caps)
     p_caps_cmp = proof_labeled_waterfall(
         [("builders", otf_c1), ("yokes", otf_c2)],
-        "HAVE FOX TAX",
-        OUT / "proof_caps_compare_after6.png",
-        sizes=(64, 96),
-        width=1200,
+        "THE QUICK BROWN FOX JUMPS OVER A LAZY DOG",
+        OUT / "proof_caps_compare_after7.png",
+        sizes=(40, 64),
+        width=1600,
     )
     print("caps compare:", p_caps_cmp)
 
