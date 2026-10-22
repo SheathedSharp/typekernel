@@ -23,6 +23,7 @@ from typekernel.parts.control import (
     Cubic,
     NMetrics,
     OMetrics,
+    n_metrics,
     _ccw,
     _curve,
     _cut,
@@ -51,6 +52,7 @@ __all__ = [
     "bracket_right_from_n_o",
     "colon_from_n_o",
     "comma_from_n_o",
+    "comma_yoke",
     "degree_from_n_o",
     "dollar_from_n_o",
     "emdash_from_n_o",
@@ -60,20 +62,29 @@ __all__ = [
     "greater_from_n_o",
     "hash_from_n_o",
     "hyphen_from_n_o",
+    "hyphen_yoke",
     "less_from_n_o",
     "minus_from_n_o",
+    "minus_yoke",
     "paren_left_from_n_o",
     "paren_right_from_n_o",
     "percent_from_n_o",
     "period_from_n_o",
+    "period_yoke",
     "plus_from_n_o",
     "question_from_n_o",
     "quote_ascii_from_n_o",
+    "quote_ascii_yoke",
     "quote_dbl_ascii_from_n_o",
+    "quote_dbl_ascii_yoke",
     "quote_double_left_from_n_o",
+    "quote_double_left_yoke",
     "quote_double_right_from_n_o",
+    "quote_double_right_yoke",
     "quote_single_left_from_n_o",
+    "quote_single_left_yoke",
     "quote_single_right_from_n_o",
+    "quote_single_right_yoke",
     "semicolon_from_n_o",
     "slash_from_n_o",
     "underscore_from_n_o",
@@ -210,15 +221,113 @@ def _hbar(
     return horizontal_bar(ctx, x0, x1, y_center - t / 2.0, thickness=t)
 
 
+
+def period_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous period / full stop body — Usage A."""
+    m = n_metrics_rec or n_metrics(ctx)
+    size = _dot_size(m, ctx)
+    y = _dot_bottom_y(m)
+    cx = m.width / 2.0
+    return tittle(ctx, cx, y, size=size)
+
+
+def comma_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> tuple[Outline, Outline]:
+    """Continuous comma body (dot + tail) — Usage A."""
+    m = n_metrics_rec or n_metrics(ctx)
+    size = _dot_size(m, ctx)
+    y = _dot_bottom_y(m)
+    cx = m.width / 2.0
+    return tittle(ctx, cx, y, size=size), _comma_tail(ctx, m, cx, y, size)
+
+
+def hyphen_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous hyphen / minus bar — Usage A."""
+    m = n_metrics_rec or n_metrics(ctx)
+    w = m.counter * 0.55
+    cx = m.width / 2.0
+    return _hbar(ctx, cx - w / 2.0, cx + w / 2.0, _bar_y(m))
+
+
+def minus_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous minus sign — Usage A (same bar as hyphen)."""
+    return hyphen_yoke(ctx, n_metrics_rec=n_metrics_rec)
+
+
+def quote_single_left_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous left single quote body — Usage A."""
+    m = n_metrics_rec or n_metrics(ctx)
+    size = _dot_size(m, ctx) * 0.88
+    y = m.x_height + m.stem * 0.35
+    cx = m.width / 2.0
+    return _comma_tail(ctx, m, cx, y, size)
+
+
+def quote_single_right_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous right single / ASCII quote body — Usage A."""
+    left = quote_single_left_yoke(ctx, n_metrics_rec=n_metrics_rec)
+    box = union_bounds([left])
+    cx = (box[0] + box[2]) / 2.0
+    return _ccw(mirror_x(left, at_x=cx))
+
+
+def quote_ascii_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> Outline:
+    """Continuous ASCII apostrophe body — Usage A."""
+    return quote_single_right_yoke(ctx, n_metrics_rec=n_metrics_rec)
+
+
+def quote_double_left_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> tuple[Outline, Outline]:
+    """Continuous left double quote body — Usage A."""
+    m = n_metrics_rec or n_metrics(ctx)
+    size = _dot_size(m, ctx) * 0.88
+    y = m.x_height + m.stem * 0.35
+    gap = size * 1.05
+    cx = m.width / 2.0
+    return (
+        _comma_tail(ctx, m, cx - gap / 2.0, y, size),
+        _comma_tail(ctx, m, cx + gap / 2.0, y, size),
+    )
+
+
+def quote_double_right_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> tuple[Outline, Outline]:
+    """Continuous right double / ASCII double-quote body — Usage A."""
+    left = quote_double_left_yoke(ctx, n_metrics_rec=n_metrics_rec)
+    box = union_bounds(list(left))
+    cx = (box[0] + box[2]) / 2.0
+    return tuple(_ccw(mirror_x(part, at_x=cx)) for part in left)
+
+
+def quote_dbl_ascii_yoke(
+    ctx: DesignContext, *, n_metrics_rec: NMetrics | None = None
+) -> tuple[Outline, Outline]:
+    """Continuous ASCII double-quote body — Usage A."""
+    return quote_double_right_yoke(ctx, n_metrics_rec=n_metrics_rec)
+
+
 def period_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     size = _dot_size(m, c)
-    y = _dot_bottom_y(m)
-    cx = m.width / 2.0
-    return _with_advance(_pack(c, m, {}, tittle(c, cx, y, size=size)), size * 1.65)
+    return _with_advance(_pack(c, m, {}, period_yoke(c, n_metrics_rec=m)), size * 1.65)
 
 
 def comma_from_n_o(
@@ -226,12 +335,9 @@ def comma_from_n_o(
 ) -> ComposedGlyph:
     c = _ctx(n, o, ctx)
     m = _n_record(n)
-    size = _dot_size(m, c)
-    y = _dot_bottom_y(m)
-    cx = m.width / 2.0
-    dot = tittle(c, cx, y, size=size)
-    tail = _comma_tail(c, m, cx, y, size)
-    return _with_advance(_pack(c, m, {}, dot, tail), m.stem * 1.35)
+    return _with_advance(
+        _pack(c, m, {}, *comma_yoke(c, n_metrics_rec=m)), m.stem * 1.35
+    )
 
 
 def colon_from_n_o(
@@ -317,9 +423,9 @@ def hyphen_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     w = m.counter * 0.55
-    cx = m.width / 2.0
-    bar = _hbar(c, cx - w / 2.0, cx + w / 2.0, _bar_y(m))
-    return _with_advance(_pack(c, m, {}, bar), w + m.stem * 0.5)
+    return _with_advance(
+        _pack(c, m, {}, hyphen_yoke(c, n_metrics_rec=m)), w + m.stem * 0.5
+    )
 
 
 def endash_from_n_o(
@@ -347,7 +453,12 @@ def emdash_from_n_o(
 def minus_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    return hyphen_from_n_o(n, o, ctx)
+    c = _ctx(n, o, ctx)
+    m = _n_record(n)
+    w = m.counter * 0.55
+    return _with_advance(
+        _pack(c, m, {}, minus_yoke(c, n_metrics_rec=m)), w + m.stem * 0.5
+    )
 
 
 def _scaled_paren(
@@ -503,21 +614,31 @@ def quote_single_left_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     size = _dot_size(m, c) * 0.88
-    y = m.x_height + m.stem * 0.35
-    cx = m.width / 2.0
-    return _with_advance(_pack(c, m, {}, _comma_tail(c, m, cx, y, size)), size * 1.25)
+    return _with_advance(
+        _pack(c, m, {}, quote_single_left_yoke(c, n_metrics_rec=m)), size * 1.25
+    )
 
 
 def quote_single_right_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    return _mirror_packed_solids(quote_single_left_from_n_o(n, o, ctx))
+    c = _ctx(n, o, ctx)
+    m = _n_record(n)
+    size = _dot_size(m, c) * 0.88
+    return _with_advance(
+        _pack(c, m, {}, quote_single_right_yoke(c, n_metrics_rec=m)), size * 1.25
+    )
 
 
 def quote_ascii_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    return quote_single_right_from_n_o(n, o, ctx)
+    c = _ctx(n, o, ctx)
+    m = _n_record(n)
+    size = _dot_size(m, c) * 0.88
+    return _with_advance(
+        _pack(c, m, {}, quote_ascii_yoke(c, n_metrics_rec=m)), size * 1.25
+    )
 
 
 def quote_double_left_from_n_o(
@@ -526,26 +647,37 @@ def quote_double_left_from_n_o(
     c = _ctx(n, o, ctx)
     m = _n_record(n)
     size = _dot_size(m, c) * 0.88
-    y = m.x_height + m.stem * 0.35
     gap = size * 1.05
-    cx = m.width / 2.0
-    parts = [
-        _comma_tail(c, m, cx - gap / 2.0, y, size),
-        _comma_tail(c, m, cx + gap / 2.0, y, size),
-    ]
-    return _with_advance(_pack(c, m, {}, *parts), gap + size * 1.1)
+    return _with_advance(
+        _pack(c, m, {}, *quote_double_left_yoke(c, n_metrics_rec=m)),
+        gap + size * 1.1,
+    )
 
 
 def quote_double_right_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    return _mirror_packed_solids(quote_double_left_from_n_o(n, o, ctx))
+    c = _ctx(n, o, ctx)
+    m = _n_record(n)
+    size = _dot_size(m, c) * 0.88
+    gap = size * 1.05
+    return _with_advance(
+        _pack(c, m, {}, *quote_double_right_yoke(c, n_metrics_rec=m)),
+        gap + size * 1.1,
+    )
 
 
 def quote_dbl_ascii_from_n_o(
     n: ComposedGlyph, o: ComposedGlyph, ctx: DesignContext | None = None
 ) -> ComposedGlyph:
-    return quote_double_right_from_n_o(n, o, ctx)
+    c = _ctx(n, o, ctx)
+    m = _n_record(n)
+    size = _dot_size(m, c) * 0.88
+    gap = size * 1.05
+    return _with_advance(
+        _pack(c, m, {}, *quote_dbl_ascii_yoke(c, n_metrics_rec=m)),
+        gap + size * 1.1,
+    )
 
 
 def plus_from_n_o(

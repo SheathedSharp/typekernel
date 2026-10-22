@@ -136,6 +136,17 @@ from typekernel.parts import (
     two_yoke,
     zero_from_O,
     zero_yoke,
+    period_yoke,
+    comma_yoke,
+    hyphen_yoke,
+    quote_ascii_yoke,
+    quote_dbl_ascii_yoke,
+    period_from_n_o,
+    comma_from_n_o,
+    hyphen_from_n_o,
+    quote_ascii_from_n_o,
+    quote_dbl_ascii_from_n_o,
+    g_double_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
 

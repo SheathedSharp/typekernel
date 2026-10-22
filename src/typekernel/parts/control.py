@@ -68,6 +68,7 @@ __all__ = [
     "f_from_n",
     "f_yoke",
     "g_from_o",
+    "g_double_yoke",
     "g_yoke",
     "h_from_n",
     "i_from_n",
@@ -3542,25 +3543,23 @@ def e_from_o(
     return _pack(c, o, anchors, outline)
 
 
-def _double_storey_g_from_o(
-    o_glyph: ComposedGlyph,
-    n_glyph: ComposedGlyph | None,
-    c: DesignContext,
+def _double_storey_g_composed(
+    ctx: DesignContext,
+    o: OMetrics,
+    m: NMetrics,
 ) -> ComposedGlyph:
-    """Two-storey ``g``: upper bowl, descender loop, right link (TK-305)."""
-    o = _o_record(o_glyph)
-    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
-    stem, desc, xh = m.stem, c.descender, o.x_height
+    """Assemble sealed two-storey ``g`` (bowls + link + counters)."""
+    stem, desc, xh = m.stem, ctx.descender, o.x_height
     width = 2.0 * o.rx
     sx0 = width - stem
-    tv, th = stem * 0.96, stem * c.contrast * 0.96
+    tv, th = stem * 0.96, stem * ctx.contrast * 0.96
 
     upper_ry = xh * 0.24
     upper_rx = upper_ry * (o.rx / o.ry) * 0.92
     upper_cx = upper_rx + stem * 0.4
     upper_cy = xh - upper_ry * 0.72
     upper_outer, upper_hole = bowl(
-        c,
+        ctx,
         upper_cx,
         upper_cy,
         rx=upper_rx,
@@ -3576,7 +3575,7 @@ def _double_storey_g_from_o(
     lower_cx = upper_cx
     lower_cy = desc + lower_ry * 1.08
     lower_outer, lower_hole = bowl(
-        c,
+        ctx,
         lower_cx,
         lower_cy,
         rx=lower_rx,
@@ -3588,7 +3587,7 @@ def _double_storey_g_from_o(
     )
 
     stem_bottom = lower_cy + lower_ry * 0.35
-    stem_o = contrast_stem_caps(c, sx0, stem_bottom, xh, width=stem * 1.02)
+    stem_o = contrast_stem_caps(ctx, sx0, stem_bottom, xh, width=stem * 1.02)
     counters = Outline(
         tuple(
             reverse_contour(contour)
@@ -3597,20 +3596,54 @@ def _double_storey_g_from_o(
         )
     )
 
-    glyph = (
-        GlyphAssembler(c)
+    return _vf_ready_composed(
+        GlyphAssembler(ctx)
         .with_design(o)
         .add(stem_o)
         .add(upper_outer)
         .add(lower_outer)
         .add_hole(counters)
         .union_solids()
-        .blend_joins(_double_storey_blend_radius(c))
+        .blend_joins(_double_storey_blend_radius(ctx))
         .anchor("top", upper_cx, xh)
         .anchor("bottom", lower_cx, desc)
         .build()
     )
-    return _vf_ready_composed(glyph)
+
+
+def g_double_yoke(
+    ctx: DesignContext,
+    *,
+    o_metrics_rec: OMetrics | None = None,
+    n_metrics_rec: NMetrics | None = None,
+) -> Outline:
+    """Continuous double-storey ``g`` body — Usage A (opt-in).
+
+    Matches :func:`g_from_o` when ``style.g_form`` is ``"double"``. The product
+    default remains single-storey :func:`g_yoke`. Returns sealed outer solid(s)
+    plus CW counters in one outline.
+    """
+    o = o_metrics_rec if o_metrics_rec is not None else o_metrics(ctx)
+    m = n_metrics_rec if n_metrics_rec is not None else n_metrics(ctx)
+    glyph = _double_storey_g_composed(ctx, o, m)
+    contours: list = list(glyph.solids[0].contours)
+    for hole in glyph.holes:
+        for contour in hole.contours:
+            contours.append(
+                reverse_contour(contour) if signed_area(contour) > 0 else contour
+            )
+    return Outline(tuple(contours))
+
+
+def _double_storey_g_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None,
+    c: DesignContext,
+) -> ComposedGlyph:
+    """Two-storey ``g``: upper bowl, descender loop, right link (TK-305)."""
+    o = _o_record(o_glyph)
+    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    return _double_storey_g_composed(c, o, m)
 
 
 def _g_hook_join_y(stem: float, join_y: float, inner_crown: float) -> float:
@@ -3644,7 +3677,7 @@ def g_yoke(
     """Continuous single-storey ``g`` body (bowl + descender hook) — Usage A.
 
     Matches :func:`g_from_o` when ``style.g_form`` is ``"single"`` (the
-    product default). Double-storey stays on the builder path only.
+    product default). Double-storey uses :func:`g_double_yoke`.
     """
     from typekernel.parts.weight_relief import stem_weight_fraction
 
@@ -3739,7 +3772,7 @@ def g_from_o(
     """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``).
 
     ``real_flare`` applies on the single-storey hook path only. Single-storey
-    uses the continuous :func:`g_yoke` outline.
+    uses :func:`g_yoke`; double-storey uses :func:`g_double_yoke`.
     """
     c = ctx or o_glyph.context
     if c.style.g_form == "double":
