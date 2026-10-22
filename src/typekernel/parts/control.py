@@ -48,7 +48,9 @@ __all__ = [
     "NMetrics",
     "OMetrics",
     "a_from_o",
+    "a_yoke",
     "b_from_o",
+    "bowl_stem_yoke",
     "build_control_letter",
     "build_control_word",
     "build_h",
@@ -64,19 +66,24 @@ __all__ = [
     "dotless_j_from_n",
     "e_from_o",
     "f_from_n",
+    "f_yoke",
     "g_from_o",
     "h_from_n",
     "i_from_n",
+    "i_yoke",
     "j_from_n",
     "l_from_n",
+    "l_yoke",
     "m_from_n",
     "n_metrics",
     "o_metrics",
+    "o_yoke",
     "p_from_o",
     "q_from_o",
     "r_from_n",
     "s_from_o",
     "t_from_n",
+    "t_yoke",
     "u_from_n",
 ]
 
@@ -2133,29 +2140,41 @@ def _bowl_stem_outline(
     join: float,
     foot: Callable[[PathBuilder, float], None] | None = None,
     top_exit: bool = False,
+    soft_join: bool = True,
 ) -> Outline:
     """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
 
-    The outer is the ``o`` bowl with its right side cut where it meets the
-    stem's left face. The counter keeps the ``o`` counter's left half; its
-    right half is stretched to the stem face so the counter has a straight
-    inner stem, with the bowl ``join`` × its thickness where it meets it.
+    The outer is the ``o`` bowl cut slightly **into** the stem face (overlap)
+    so the stem–bowl spring has no even-odd hairline; the counter still meets
+    the true stem face. ``soft_join`` blends non-terminal corners on the outer
+    (and counter) after build.
 
     ``foot(builder, stem_left_x)`` replaces the stem's left face below the
     bowl; it must end on ``(stem_left_x, stem_bottom)`` (``g`` draws its hook).
     """
+    from typekernel.geo.joins import blend_corners, default_selector
+
     cx, cy = o.rx, o.x_height / 2.0
     s_r = cx + o.rx
     s_l = s_r - stem
     if s_l <= cx:
         raise ValueError("stem is wider than half the bowl; widen the o or thin the stem")
 
+    # Overlap outer bowl into the stem so the join spring is solid (not a notch).
+    overlap = max(5.0, stem * 0.06)
+    cut_x = s_l - overlap
+    if cut_x <= cx:
+        cut_x = s_l
+        overlap = 0.0
+
     q0, q1, q2, q3 = _quarters(cx, cy, o.rx, o.ry, o.exponent)
-    top_cut = _split(q0, s_l, horizontal=False)
-    bot_cut = _split(q3, s_l, horizontal=False)
-    if top_cut is None or bot_cut is None:  # pragma: no cover - s_l inside bowl
+    top_cut = _split(q0, cut_x, horizontal=False)
+    bot_cut = _split(q3, cut_x, horizontal=False)
+    if top_cut is None or bot_cut is None:  # pragma: no cover - cut inside bowl
         raise ValueError("stem face does not cross the bowl")
-    y_t, y_b = top_cut[1][0][1], bot_cut[0][3][1]
+    top_join = top_cut[1]
+    bot_join = bot_cut[0]
+    y_t, y_b = top_join[0][1], bot_join[3][1]
     # Very bold stems meet the bowl beyond the stem ends; extend the stem.
     stem_top, stem_bottom = max(stem_top, y_t), min(stem_bottom, y_b)
 
@@ -2188,20 +2207,16 @@ def _bowl_stem_outline(
         )
     else:
         b.lineTo(s_r, stem_top)
-    top_join = top_cut[1]
-    p0 = top_join[0]
-    if abs(p0[0] - s_l) > 1e-9:
-        top_join = ((s_l, p0[1]), top_join[1], top_join[2], top_join[3])
     b.lineTo(s_l, stem_top)
-    b.lineTo(*top_join[0])
+    b.lineTo(s_l, y_t)
+    if overlap > 0.0:
+        b.lineTo(top_join[0][0], top_join[0][1])
     _curve(b, top_join)
     _curve(b, q1)
     _curve(b, q2)
-    bot_join = bot_cut[0]
-    p_end = bot_join[3]
-    if abs(p_end[0] - s_l) > 1e-9:
-        bot_join = (bot_join[0], bot_join[1], bot_join[2], (s_l, p_end[1]))
     _curve(b, bot_join)
+    if overlap > 0.0:
+        b.lineTo(s_l, y_b)
     if foot is None:
         b.lineTo(s_l, stem_bottom)
     else:
@@ -2215,7 +2230,15 @@ def _bowl_stem_outline(
     _curve(b, i_bot[0])
     b.closePath()
     outer, counter = b.build().contours
-    return Outline((outer, reverse_contour(counter)))
+    outline = Outline((outer, reverse_contour(counter)))
+    if soft_join:
+        outline = blend_corners(
+            outline,
+            max(stem * 0.22, o.thickness * 0.28),
+            select=default_selector,
+            tension=1.0,
+        )
+    return outline
 
 
 def bowl_stem_yoke(
@@ -2313,6 +2336,167 @@ def a_yoke(
         stem_top=o.x_height,
         top_exit=top_exit,
     )
+
+
+
+def i_yoke(
+    ctx: DesignContext,
+    x_left: float = 0.0,
+    *,
+    stem_width: float | None = None,
+    stem_top: float | None = None,
+    y_bottom: float = 0.0,
+) -> Outline:
+    """Continuous upright ``i`` stem body (no tittle) — Usage A.
+
+    Agents add :func:`~typekernel.parts.primitives.tittle` separately. Matches
+    the sans ``i_from_n`` stem recipe (``contrast_stem_caps``).
+    """
+    t = ctx.stem if stem_width is None else stem_width
+    if t <= 0:
+        raise ValueError(f"stem_width must be positive, got {t!r}")
+    top = ctx.x_height if stem_top is None else stem_top
+    return contrast_stem_caps(ctx, x_left, y_bottom, top, width=t)
+
+
+def l_yoke(
+    ctx: DesignContext,
+    x_left: float = 0.0,
+    *,
+    stem_width: float | None = None,
+    stem_top: float | None = None,
+    y_bottom: float = 0.0,
+) -> Outline:
+    """Continuous upright ``l`` stem body — Usage A.
+
+    Default ``stem_top`` is ``ctx.ascender``. Matches sans ``l_from_n``.
+    """
+    t = ctx.stem if stem_width is None else stem_width
+    if t <= 0:
+        raise ValueError(f"stem_width must be positive, got {t!r}")
+    top = ctx.ascender if stem_top is None else stem_top
+    return contrast_stem_caps(ctx, x_left, y_bottom, top, width=t)
+
+
+def o_yoke(
+    ctx: DesignContext,
+    *,
+    rx: float | None = None,
+    ry: float | None = None,
+    thickness_v: float | None = None,
+    thickness_h: float | None = None,
+) -> Outline:
+    """Continuous ``o`` body as outer + counter — Usage A.
+
+    Same recipe as :func:`build_o` without packing into a glyph.
+    """
+    from typekernel.geo.contour import reverse_contour
+
+    m = o_metrics(ctx)
+    if any(v is not None for v in (rx, ry, thickness_v, thickness_h)):
+        m = m.tuned(
+            rx=m.rx if rx is None else rx,
+            ry=m.ry if ry is None else ry,
+            thickness_v=m.thickness_v if thickness_v is None else thickness_v,
+            thickness_h=m.thickness_h if thickness_h is None else thickness_h,
+        )
+    cx, cy = m.rx, m.x_height / 2.0
+    outer, hole = bowl(
+        ctx,
+        cx,
+        cy,
+        rx=m.rx,
+        ry=m.ry,
+        thickness_v=m.thickness_v,
+        thickness_h=m.thickness_h,
+        shape="superellipse",
+        n=m.exponent,
+    )
+    return Outline((outer.contours[0], reverse_contour(hole.contours[0])))
+
+
+def f_yoke(
+    ctx: DesignContext,
+    *,
+    arm: float = 0.75,
+    stem_width: float | None = None,
+    real_flare: bool = False,
+) -> Outline:
+    """Continuous ``f`` body (hook stem + crossbar, one contour) — Usage A.
+
+    Same continuous path as :func:`f_from_n` without packing / anchors.
+    """
+    m = n_metrics(ctx)
+    if stem_width is not None:
+        if stem_width <= 0:
+            raise ValueError(f"stem_width must be positive, got {stem_width!r}")
+        m = m.tuned(stem=stem_width)
+    hook = _hook_record(m, m.ascender, ctx)
+    bar = _crossbar(ctx, m, hook, m.x_height)
+    inline = _f_use_inline_crossbar(ctx)
+    outline, _ = _hook_with_crossbar_outline(
+        hook,
+        m,
+        ctx,
+        arm,
+        bar,
+        blend=not inline,
+        inline_crossbar=inline,
+        slab_foot=_hook_slab_stem_foot(ctx, m.stem),
+    )
+    return apply_terminal_shear(ctx, outline, real_flare=real_flare)
+
+
+def t_yoke(
+    ctx: DesignContext,
+    *,
+    arm: float = 0.6,
+    rise: float = 0.3,
+    stem_width: float | None = None,
+    real_flare: bool = False,
+) -> Outline:
+    """Continuous ``t`` body (hook + crossbar, one contour) — Usage A.
+
+    Same continuous path as :func:`t_from_n` without packing / anchors.
+    """
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
+    m = n_metrics(ctx)
+    if stem_width is not None:
+        if stem_width <= 0:
+            raise ValueError(f"stem_width must be positive, got {stem_width!r}")
+        m = m.tuned(stem=stem_width)
+    top = m.x_height + rise * (m.ascender - m.x_height)
+    t_w = stem_weight_fraction(m.stem)
+    hook_depth = 0.45
+    if 0.24 <= ctx.roundness < 0.32 and t_w > 0.75:
+        hook_depth = 0.45 - 0.1 * min(1.0, (t_w - 0.75) / 0.25)
+    hook = _hook_record(m, top, ctx, depth=hook_depth)
+    bar = _t_crossbar_in_hook_space(ctx, m, hook, top)
+    belly_scale = 0.06 + 0.94 * min(1.0, max(0.0, (t_w - 0.68) / 0.32))
+    belly = _hook_belly_fillet(m.stem) * belly_scale
+    outline, _x_t = _hook_with_crossbar_outline(
+        hook,
+        m,
+        ctx,
+        arm,
+        bar,
+        blend=False,
+        hook_belly=belly,
+        slab_foot=_hook_slab_stem_foot(ctx, m.stem),
+    )
+    flipped = _ccw(mirror_y(outline, at_y=top / 2.0))
+    try:
+        _, min_y, max_x, _ = bounds(flipped)
+    except ValueError:
+        min_y, max_x = 0.0, m.stem
+    tip = (max_x, min_y + m.stem * 0.12)
+    if ctx.style.t_cut == "slanted":
+        from typekernel.parts.terminals import shear_end
+
+        band = max(6.0, ctx.stem * 0.38)
+        return shear_end(flipped, tip, -16.0, band=band, along="y", inward="-")
+    return apply_terminal_shear(ctx, flipped, at=tip, real_flare=real_flare)
 
 
 def _c_opening_outline(
