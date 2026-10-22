@@ -46,10 +46,11 @@ def _bad(glyph, ctx, name: str) -> list[str]:
     ]
 
 
-def test_prefer_public_yoke_sans_including_italic() -> None:
-    """Sans upright + italic prefer yokes; inlined serifs still opt out."""
+def test_prefer_public_yoke_sans_and_upright_serif() -> None:
+    """Sans + upright slab/bracket prefer yokes; italic serif and vf_compat_stem opt out."""
     assert _prefer_public_yoke(DesignContext.humanist_sans()) is True
-    assert _prefer_public_yoke(DesignContext.slab_serif()) is False
+    assert _prefer_public_yoke(DesignContext.slab_serif()) is True
+    assert _prefer_public_yoke(DesignContext.bracketed_serif()) is True
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
     assert _prefer_public_yoke(italic) is True
     assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is False
@@ -196,3 +197,46 @@ def test_bdpq_builders_match_bowl_stem_yoke() -> None:
         packed = GlyphAssembler(ctx).add(yoke).build()
         assert _pts(built.solids[0]) == _pts(packed.solids[0])
         assert _bad(built, ctx, "bowl") == []
+
+
+def test_slab_n_h_match_public_yokes() -> None:
+    """Upright slab/bracket ``n``/``h`` prefer continuous yokes with inline_serifs."""
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        ctx = factory()
+        assert _prefer_public_yoke(ctx) is True
+        m = n_metrics(ctx)
+        n = build_n(ctx)
+        h = build_h(ctx)
+        ny = GlyphAssembler(ctx).add(
+            n_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                stem_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=m.inner_crown,
+                kappa=m.kappa,
+                inline_serifs=True,
+            )
+        ).build()
+        hy = GlyphAssembler(ctx).add(
+            h_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=m.inner_crown,
+                kappa=m.kappa,
+                inline_serifs=True,
+            )
+        ).build()
+        assert _pts(n.solids[0]) == _pts(ny.solids[0])
+        assert _pts(h.solids[0]) == _pts(hy.solids[0])
+        assert _bad(n, ctx, "n") == []
+        assert _bad(h, ctx, "h") == []
