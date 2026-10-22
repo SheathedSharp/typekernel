@@ -2123,6 +2123,52 @@ def _bowl_stem_outline(
     return Outline((outer, reverse_contour(counter)))
 
 
+def bowl_stem_yoke(
+    ctx: DesignContext,
+    *,
+    stem_left: bool = False,
+    descends: bool = False,
+    join: float = 0.85,
+    stem_width: float | None = None,
+    rx: float | None = None,
+    ry: float | None = None,
+) -> Outline:
+    """Continuous bowl + stem as two contours (outer + counter) — Usage A ``b/d/p/q``.
+
+    One continuous outer (bowl cut into the stem face) and one counter stretched
+    to the stem — no boolean kit-of-parts seam. ``stem_left=True`` mirrors for
+    ``b``/``p``; ``descends=True`` drops the stem to ``ctx.descender`` for
+    ``p``/``q``. Geometry matches the letter-builder path used by ``d_from_o``.
+    """
+    from typekernel.geo.contour import reverse_contour
+    from typekernel.parts.transforms import mirror_x
+
+    o = o_metrics(ctx)
+    if rx is not None or ry is not None:
+        o = o.tuned(
+            rx=o.rx if rx is None else rx,
+            ry=o.ry if ry is None else ry,
+        )
+    stem = ctx.stem if stem_width is None else stem_width
+    if stem <= 0:
+        raise ValueError(f"stem_width must be positive, got {stem!r}")
+    if descends:
+        bottom, top = ctx.descender, o.x_height
+    else:
+        bottom, top = 0.0, ctx.ascender
+    bowl_join = join * 0.88 if _italic_topology(ctx) else join
+    outline = _bowl_stem_outline(
+        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join
+    )
+    if stem_left:
+        cx = o.rx
+        outline = Outline(
+            tuple(reverse_contour(k) for k in mirror_x(outline, at_x=cx).contours)
+        )
+    return outline
+
+
+
 def _bowl_glyph(
     o_glyph: ComposedGlyph,
     n_glyph: ComposedGlyph | None,
@@ -2856,8 +2902,12 @@ def g_from_o(
     *,
     arm: float = 0.75,
     join: float = 0.85,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
-    """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``)."""
+    """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``).
+
+    ``real_flare`` applies on the single-storey hook path only.
+    """
     c = ctx or o_glyph.context
     if c.style.g_form == "double":
         return _double_storey_g_from_o(o_glyph, n_glyph, c)
@@ -2916,10 +2966,22 @@ def g_from_o(
         _curve(b, turned(outer_arm))
         _curve(b, turned(s.outer[0]))
 
-    outline = apply_terminal_shear(
-        c,
-        _bowl_stem_outline(o, stem, stem_bottom=desc, stem_top=o.x_height, join=join, foot=foot),
+    outline = _bowl_stem_outline(
+        o, stem, stem_bottom=desc, stem_top=o.x_height, join=join, foot=foot
     )
+    if real_flare:
+        from typekernel.geo.outline import bounds as _bounds
+
+        min_x, min_y, _max_x, _max_y = _bounds(outline)
+        # Single-storey hook tip lives on the descending ear (lower-left), not
+        # the default max-x stem crown used by stock shear.
+        # Hook ear opens near the descender floor; flare along y into the stroke.
+        tip = (min_x + stem * 0.35, min_y + stem * 0.08)
+        outline = apply_terminal_shear(
+            c, outline, at=tip, along="y", inward="-", real_flare=True
+        )
+    else:
+        outline = apply_terminal_shear(c, outline)
     return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
 
 

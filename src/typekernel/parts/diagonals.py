@@ -548,6 +548,7 @@ def x_from_n(
     ctx: DesignContext | None = None,
     *,
     width: float | None = None,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``x``: two compensated diagonals crossing at mid x-height."""
     c = ctx or n_glyph.context
@@ -581,6 +582,17 @@ def x_from_n(
         outline = _soft_corner_polygon(pts, frozenset({1, 4, 7, 10}), m.stem * 0.22)
     else:
         outline = _polygon(pts)
+    if real_flare:
+        min_x, min_y, max_x, max_y = bounds(outline)
+        for tip in (
+            (min_x + m.stem * 0.05, max_y),
+            (max_x - m.stem * 0.05, max_y),
+            (min_x + m.stem * 0.05, min_y),
+            (max_x - m.stem * 0.05, min_y),
+        ):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="auto", real_flare=True
+            )
     return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, outline)
 
 
@@ -589,6 +601,7 @@ def z_from_n(
     ctx: DesignContext | None = None,
     *,
     width: float | None = None,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``z``: top and bottom bars (thin strokes) joined by one compensated diagonal."""
     c = ctx or n_glyph.context
@@ -600,6 +613,13 @@ def z_from_n(
         outline = _soft_corner_polygon(pts, frozenset({3, 8}), m.stem * 0.30)
     else:
         outline = _polygon(pts)
+    if real_flare:
+        min_x, min_y, max_x, max_y = bounds(outline)
+        # Top-right and bottom-left bar ends (open stroke tips on z).
+        for tip in ((max_x - m.stem * 0.08, max_y), (min_x + m.stem * 0.08, min_y)):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="auto", real_flare=True
+            )
     return _pack(c, m, {"top": (w / 2.0, m.x_height), "bottom": (w / 2.0, 0.0)}, outline)
 
 

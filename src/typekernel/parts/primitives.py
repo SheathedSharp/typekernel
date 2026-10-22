@@ -1496,6 +1496,153 @@ def soften_stem_branch(
     return outline_with_axis_extrema_on_curve(blended)
 
 
+def r_yoke(
+    ctx: DesignContext,
+    x_left: float = 0.0,
+    *,
+    arm: float = 0.55,
+    counter: float | None = None,
+    stem_width: float | None = None,
+    y_bottom: float = 0.0,
+    stem_top: float | None = None,
+    join_y: float | None = None,
+    crown_y: float | None = None,
+    kappa: float | None = None,
+    branch_y: float | bool | None = None,
+    written_feet: bool = True,
+) -> Outline:
+    """Continuous ``r`` body: left stem + truncated shoulder (one contour).
+
+    ``arm`` in ``(0, 1)`` cuts the shoulder short of a full ``n`` right leg —
+    Usage A open-arm ``r`` without boolean kit-of-parts. ``branch_y`` matches
+    :func:`shoulder_yoke` (italic branch + crotch soften + optional written
+    entry). The arm tip is a flat vertical cut at the truncate x.
+    """
+    from fontTools.misc.bezierTools import splitCubic
+
+    from typekernel.geo.contour import reverse_contour, signed_area
+    from typekernel.geo.path_helpers import KAPPA
+    from typekernel.parts.italic_strokes import emit_italic_entry_kick
+
+    if not 0.0 < arm < 1.0:
+        raise ValueError(f"arm must be in (0, 1), got {arm!r}")
+    t = ctx.stem if stem_width is None else stem_width
+    if t <= 0:
+        raise ValueError(f"stem_width must be positive, got {t!r}")
+    w = (ctx.x_height * 0.42) if counter is None else counter
+    if w <= 0:
+        raise ValueError(f"counter must be positive, got {w!r}")
+    top = ctx.x_height if stem_top is None else stem_top
+    by = _resolve_branch_y(branch_y, stem_top=top)
+    spring = by if by is not None else top
+    crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    if by is not None:
+        drop = top - by
+        crown = crown - drop * 0.14
+    if crown <= spring:
+        crown = spring + max(ctx.overshoot, t * 0.08)
+    join = (spring * 0.52) if join_y is None else join_y
+    if by is not None:
+        join = min(join, by - t * 0.32)
+    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+    if by is not None:
+        drop = top - by
+        inner_crown = inner_crown - drop * 0.16
+    join = min(join, crown - t * 0.55)
+    join = max(join, y_bottom + t * 0.35)
+    k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
+    l0 = x_left
+    l1 = x_left + t
+    r0 = l1 + w
+    r1 = r0 + t
+    mid = 0.5 * (l1 + r0)
+    leg_top = spring - (r1 - l0) * 0.02
+    if by is not None:
+        leg_top = leg_top - (top - by) * 0.2
+    o0 = (
+        (l1, spring),
+        (l1, spring + k * (crown - spring)),
+        (mid - k * (mid - l1), crown),
+        (mid, crown),
+    )
+    o1 = (
+        (mid, crown),
+        (mid + k * (r1 - mid), crown),
+        (r1, leg_top + k * (crown - leg_top)),
+        (r1, leg_top),
+    )
+    i0 = (
+        (r0, join),
+        (r0, join + k * (inner_crown - join)),
+        (mid + k * (r0 - mid), inner_crown),
+        (mid, inner_crown),
+    )
+    i1 = (
+        (mid, inner_crown),
+        (mid - k * (mid - l1), inner_crown),
+        (l1, join + k * (inner_crown - join)),
+        (l1, join),
+    )
+    x_t = mid + arm * (r0 - mid)
+    Cubic = tuple[
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+    ]
+
+    def _split_x(c: Cubic, x: float) -> tuple[Cubic, Cubic] | None:
+        pieces = splitCubic(*c, x, False)
+        if len(pieces) != 2:
+            return None
+        return (tuple(pieces[0]), tuple(pieces[1]))
+
+    outer_cut = _split_x(o1, x_t)
+    inner_cut = _split_x(i0, x_t)
+    if outer_cut is None or inner_cut is None:
+        raise ValueError("shoulder does not cross the r arm truncate")
+    outer_arm = outer_cut[0]
+    inner_arm = inner_cut[1]
+
+    def _curve(b: PathBuilder, c: Cubic) -> None:
+        b.curveTo(c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1])
+
+    b = PathBuilder()
+    if by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
+    else:
+        b.moveTo(l0, y_bottom)
+        b.lineTo(l0, top)
+    b.lineTo(l1, top)
+    if by is not None:
+        b.lineTo(l1, by)
+    _curve(b, o0)
+    _curve(b, outer_arm)
+    # Flat vertical tip at truncate x.
+    b.lineTo(inner_arm[0][0], inner_arm[0][1])
+    _curve(b, inner_arm)
+    _curve(b, i1)
+    b.lineTo(l1, y_bottom)
+    b.closePath()
+    outline = b.build()
+    c0 = outline.contours[0]
+    if signed_area(c0) < 0:
+        outline = Outline((reverse_contour(c0),))
+    if by is not None:
+        outline = soften_stem_branch(
+            outline,
+            stem_x=l1,
+            branch_y=by,
+            stem=t,
+            stem_top=top,
+        )
+        c0 = outline.contours[0]
+        if signed_area(c0) < 0:
+            outline = Outline((reverse_contour(c0),))
+    return outline
+
+
+
 def smooth_hook(
     ctx: DesignContext,
     x_right: float,
