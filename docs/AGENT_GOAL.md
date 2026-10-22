@@ -21,6 +21,14 @@ Agent **必须**用代码表达 brief、比例与字形决策（`DesignContext`�
 | 侧距与字偶是设计的一部分 | `space_font` 或手写 advance / kern（**agent 自选**） |
 | 用句子 proof | `qa.proof` / waterfall；人审 JSON 由人签 |
 
+## 默认连续路径（yokes）
+
+小写躯干优先用公开 **continuous yokes**（`n_yoke` / `h_yoke` / `double_shoulder_yoke` /
+`u_yoke` / `r_yoke` / `bowl_stem_yoke` / `a_yoke` / `c_yoke` / `e_yoke` / `s_yoke`），
+或已经 prefer 这些 yoke 的 letter builders。有 yoke 时不要用
+`vertical_stem` + `shoulder` + boolean 拼同一字母。详见 skill
+[parts-catalog.md](../.agents/skills/typekernel-font-design/parts-catalog.md)。
+
 ## 杀掉的用法（Usage B）
 
 以下 **不是** 产品快乐路径，文档与 skill 不再教它们当设计方法：
@@ -52,8 +60,8 @@ Agent **必须**用代码表达 brief、比例与字形决策（`DesignContext`�
 pip install -e ".[compile,specimen,boolean]"
 ```
 
-- Skill：[`.agents/skills/typekernel-font-design/SKILL.md`](../.agents/skills/typekernel-font-design/SKILL.md)（含同一 brief 的 ≥2 种配方）
-- 零件表：`parts-catalog.md`；配方：`recipes.md`
+- Skill：[`.agents/skills/typekernel-font-design/SKILL.md`](../.agents/skills/typekernel-font-design/SKILL.md)（Usage A；yokes 默认连续路径；同一 brief ≥2 种配方）
+- 零件表：`parts-catalog.md`（含 yoke / italic_strokes / soft_union）；配方：`recipes.md`；反模式：`anti-patterns.md`
 - 示例方向：`examples/first_font/`、`examples/zayju_letter/`（优先学零件拼装，而不是 FormSources 工厂）
 
 ## 工程债 / 程序验收（维护者）

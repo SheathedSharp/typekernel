@@ -6,6 +6,8 @@ Keep these pointers so library maintainers can run program exits and human revie
 ## Program exit
 
 ```bash
+# Yoke prefer locks (Usage A continuous path)
+pytest -q tests/parts/test_builders_prefer_yokes.py tests/parts/test_opening_yokes.py
 PYTHONPATH=src python examples/run_program_exit.py
 # --gate all: §8 doc hooks + agent trial smoke + pending gate test_evidence
 pytest -q tests/docs/test_development_plan_section8.py
