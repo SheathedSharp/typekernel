@@ -20,50 +20,72 @@ from typekernel.compile import build_font
 from typekernel.font import Font
 from typekernel.optics.space import space_font
 from typekernel.parts import (
-    DesignContext,
-    GlyphAssembler,
+    A_from_H,
     a_from_o,
+    A_yoke,
     a_yoke,
+    build_H,
     build_n,
+    build_O,
     build_o,
+    C_from_O,
+    C_yoke,
     c_yoke,
+    DesignContext,
     double_shoulder_yoke,
+    E_from_H,
     e_from_o,
     e_yoke,
+    E_yoke,
+    F_from_H,
     f_from_n,
+    F_yoke,
     f_yoke,
     g_from_o,
     g_yoke,
+    GlyphAssembler,
     h_from_n,
+    H_yoke,
     h_yoke,
+    I_from_H,
     i_from_n,
     i_yoke,
+    I_yoke,
     j_from_n,
     j_yoke,
+    k_from_n,
+    k_yoke,
+    L_from_H,
     l_from_n,
+    L_yoke,
     l_yoke,
     m_from_n,
     n_yoke,
+    O_yoke,
     o_yoke,
     r_from_n,
     r_yoke,
     s_from_o,
     s_yoke,
+    T_from_H,
     t_from_n,
     t_yoke,
-    u_from_n,
+    T_yoke,
     tittle,
+    u_from_n,
     u_yoke,
+    V_from_H,
     v_from_n,
+    V_yoke,
     v_yoke,
     w_from_n,
     w_yoke,
+    X_from_H,
     x_from_n,
     x_yoke,
+    X_yoke,
     y_from_n,
     y_yoke,
-    k_from_n,
-    k_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
 
@@ -317,6 +339,71 @@ def main() -> None:
         width=1200,
     )
     print("diags:", p5)
+
+    # Capitals first-wave (HILTEFOCVXA): builders vs raw yokes
+    from typekernel.parts import h_cap_metrics, cap_o_metrics
+
+    def recipe_caps_builders(c):
+        H, O = build_H(c), build_O(c)
+        return {
+            "H": H,
+            "I": I_from_H(H, c),
+            "L": L_from_H(H, c),
+            "T": T_from_H(H, c),
+            "E": E_from_H(H, c),
+            "F": F_from_H(H, c),
+            "O": O,
+            "C": C_from_O(O, c),
+            "V": V_from_H(H, c),
+            "X": X_from_H(H, c),
+            "A": A_from_H(H, c),
+        }
+
+    def recipe_caps_yokes(c):
+        hm = h_cap_metrics(c)
+        om = cap_o_metrics(c)
+
+        def pack(outline, design):
+            return GlyphAssembler(c).with_design(design).add(outline).build()
+
+        return {
+            "H": pack(H_yoke(c, metrics=hm), hm),
+            "I": pack(I_yoke(c, metrics=hm), hm),
+            "L": pack(L_yoke(c, metrics=hm), hm),
+            "T": pack(T_yoke(c, metrics=hm), hm),
+            "E": pack(E_yoke(c, metrics=hm), hm),
+            "F": pack(F_yoke(c, metrics=hm), hm),
+            "O": pack(O_yoke(c, metrics=om), om),
+            "C": pack(C_yoke(c, metrics=om), om),
+            "V": pack(V_yoke(c, metrics=hm), hm),
+            "X": pack(X_yoke(c, metrics=hm), hm),
+            "A": pack(A_yoke(c, metrics=hm), hm),
+        }
+
+    rc1 = recipe_caps_builders(ctx)
+    rc2 = recipe_caps_yokes(ctx)
+    otf_c1 = _compile("after6_caps_builders", ctx, rc1)
+    # Wider / more open caps recipe for visual contrast
+    ctx_wide = ctx.tuned(aperture=0.72)
+    rc2w = recipe_caps_yokes(ctx_wide)
+    otf_c2 = _compile("after6_caps_yokes", ctx_wide, rc2w)
+    CAP_TEXT = "HILTEF OCVXA"
+    p_caps = proof_labeled_waterfall(
+        [("1 builders", otf_c1), ("2 yokes wide", otf_c2)],
+        CAP_TEXT,
+        OUT / "proof_caps_after6.png",
+        sizes=(48, 72, 96),
+        width=1400,
+    )
+    print("caps:", p_caps)
+    p_caps_cmp = proof_labeled_waterfall(
+        [("builders", otf_c1), ("yokes", otf_c2)],
+        "HAVE FOX TAX",
+        OUT / "proof_caps_compare_after6.png",
+        sizes=(64, 96),
+        width=1200,
+    )
+    print("caps compare:", p_caps_cmp)
 
     note = OUT / "COMPARE.md"
     note.write_text(

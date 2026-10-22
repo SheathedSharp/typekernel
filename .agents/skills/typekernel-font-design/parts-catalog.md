@@ -229,6 +229,7 @@ slab/bracket `inline_serifs`, `vf_compat_stem`).
 | `a_from_o` … `s_from_o` | o (+n for a) | `aperture=`, `real_flare=` | `s_from_o(o, ctx, aperture=0.6)` |
 | `k_from_n` … `z_from_n` | n | diagonals | `v_from_n(n, ctx)` |
 | `build_H` `build_O` + `A_from_H`… | caps | | `H = build_H(ctx)` |
+| `H_yoke` `I_yoke` `L_yoke` `T_yoke` `E_yoke` `F_yoke` `O_yoke` `C_yoke` `V_yoke` `X_yoke` `A_yoke` | cap first-wave Usage A | stem/bar, bowl, diagonal | `H_yoke(ctx)` |
 
 `real_flare=True` on some open builders: true tip widening via shear helper —
 opt-in; stock `terminal_style="flared"` alone is still the shear recipe.
