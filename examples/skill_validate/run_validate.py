@@ -32,10 +32,14 @@ from typekernel.parts import (
     e_yoke,
     f_from_n,
     f_yoke,
+    g_from_o,
+    g_yoke,
     h_from_n,
     h_yoke,
     i_from_n,
     i_yoke,
+    j_from_n,
+    j_yoke,
     l_from_n,
     l_yoke,
     m_from_n,
@@ -55,7 +59,7 @@ from typekernel.qa.proof import proof_labeled_waterfall
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "artifacts" / "skill-validate"
-PROOF_TEXT = "nhumar soft tiles"  # letters both recipes draw
+PROOF_TEXT = "nhumar soft tiles jg"  # letters both recipes draw
 
 
 
@@ -84,15 +88,18 @@ def _assert_stem_springs_sealed(ctx: DesignContext, drawn: dict, label: str) -> 
         "m": (ctx.x_height, 5.0),
         "r": (ctx.x_height, 5.0),
         "a": (ctx.x_height * 0.06, 8.0),  # bowl–stem lower spring band
+        "g": (ctx.x_height * 0.06, 8.0),  # single-storey bowl–stem springs
+        "j": (ctx.x_height, 5.0),  # hook crown (turned r)
     }
     failures = []
     for ch, (spring, band) in checks.items():
         if ch not in drawn:
             continue
         ol = drawn[ch].solids[0]
-        # a also check upper bowl join
         bad = _spring_hairlines(ol, spring, band=band)
-        if ch == "a":
+        if ch in ("a", "g"):
+            # Upper bowl–stem join sits ~stem below x-height, not only at crown.
+            bad += _spring_hairlines(ol, ctx.x_height - ctx.stem * 0.45, band=band)
             bad += _spring_hairlines(ol, ctx.x_height - band, band=band)
         if bad:
             failures.append(f"{ch}@{label}:{bad[:4]}")
@@ -123,6 +130,8 @@ def recipe1_builders(ctx: DesignContext) -> dict:
         "a": a_from_o(o, n, ctx),
         "e": e_from_o(o, ctx),
         "s": s_from_o(o, ctx, aperture=0.62),
+        "j": j_from_n(n, ctx),
+        "g": g_from_o(o, n, ctx),
     }
 
 
@@ -170,6 +179,14 @@ def recipe2_raw_yokes(ctx: DesignContext) -> dict:
     drawn["l"] = pack(l_yoke(ctx, stem_width=stem))
     drawn["f"] = pack(f_yoke(ctx, arm=0.88, stem_width=stem))
     drawn["t"] = pack(t_yoke(ctx, arm=0.62, stem_width=stem))
+    j_body = j_yoke(ctx, arm=0.78, stem_width=stem)
+    drawn["j"] = (
+        GlyphAssembler(ctx)
+        .add(j_body)
+        .add(tittle(ctx, stem / 2.0, ctx.x_height + stem * 0.55, size=stem * 0.95))
+        .build()
+    )
+    drawn["g"] = pack(g_yoke(ctx, arm=0.78, join=0.82, stem_width=stem))
     return drawn
 
 
@@ -236,6 +253,14 @@ def main() -> None:
     print("proof1:", p1)
     print("proof2:", p2)
     print("stems:", p3)
+    p4 = proof_labeled_waterfall(
+        [("1 builders", otf1), ("2 raw wide", otf2)],
+        "jg",
+        OUT / "proof_jg.png",
+        sizes=(96,),
+        width=900,
+    )
+    print("jg:", p4)
 
     note = OUT / "COMPARE.md"
     note.write_text(
