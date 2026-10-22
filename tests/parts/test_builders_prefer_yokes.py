@@ -56,11 +56,8 @@ def test_prefer_public_yoke_sans_including_italic() -> None:
 
 
 
-def test_italic_u_opts_out_of_public_yoke() -> None:
-    """Mirrored italic ``u_yoke`` breaks VF wght×ital segment recipes vs soften.
-
-    ``n``/``h``/``r``/``m`` italic stay on continuous yokes; ``u`` stays private.
-    """
+def test_italic_u_matches_public_yoke() -> None:
+    """Italic sans ``u`` prefers continuous ``u_yoke`` (sharp branch + soften)."""
     from typekernel.parts.italic import italic_design
     from typekernel.parts import FormSources
 
@@ -79,7 +76,7 @@ def test_italic_u_opts_out_of_public_yoke() -> None:
             branch_y=True,
         )
     ).build()
-    assert _pts(build_u(ctx).solids[0]) != _pts(uy.solids[0])
+    assert _pts(build_u(ctx).solids[0]) == _pts(uy.solids[0])
 
 def test_build_n_h_match_public_yokes() -> None:
     ctx = DesignContext.humanist_sans()

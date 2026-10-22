@@ -85,3 +85,20 @@ def test_c_aperture_param_on_yoke() -> None:
     closed = c_yoke(ctx, aperture=0.1)
     opened = c_yoke(ctx, aperture=0.9)
     assert _pts(closed) != _pts(opened)
+
+
+def test_italic_a_uses_top_exit_on_public_yoke() -> None:
+    """Italic sans ``a`` stays on prefer-yoke path with written stem-crown exit."""
+    from typekernel.parts.italic import italic_design, vf_italic_pair
+    from typekernel.parts import FormSources
+    from typekernel.qa.originality import topology_signature
+
+    ital = italic_design(FormSources.from_context(DesignContext.humanist_sans()))
+    ctx = ital.context
+    assert _prefer_public_yoke(ctx) is True
+    g = a_from_o(build_o(ctx), build_n(ctx), ctx)
+    # Written top_exit introduces a cubic at the stem crown (not a pure line stack).
+    codes = topology_signature(g).contour_codes[0]
+    assert "C" in codes
+    up, it = vf_italic_pair(FormSources.from_context(DesignContext.humanist_sans()))
+    assert topology_signature(up.derive_one("a")) == topology_signature(it.derive_one("a"))

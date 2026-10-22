@@ -1337,7 +1337,6 @@ def double_shoulder_yoke(
 
 
 def u_yoke(
-
     ctx: DesignContext,
     x_left: float,
     *,
@@ -1352,16 +1351,23 @@ def u_yoke(
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     foot_bulge: float | None = None,
+    written_feet: bool = True,
 ) -> Outline:
     """Continuous ``u`` body: bowl on the left, upright stem on the right.
 
     One contour, no boolean. Geometry mirrors :func:`shoulder_yoke` across the
     advance (``n`` flipped). ``branch_y`` (``True`` / float) springs the bowl
-    from the **right** stem mid-height (italic ``u``) and softens the crotch.
-    ``foot_bulge`` adds a baseline toe on the left outer (default from
-    ``ctx.roundness`` — zero when roundness ≥ 0.35).
+    from the **right** stem mid-height (italic ``u``). Unlike left-stem
+    ``n``/``h`` emit fillets, the mirrored crotch uses sharp branch +
+    :func:`soften_stem_branch` so VF wght×ital segment counts stay stable.
+    When branching, ``written_feet`` adds the mirrored entry kick (right stem)
+    and exit outstroke (left bowl) **if** ``foot_bulge`` is zero — matching
+    control ``_u_branching_outline``. Low roundness keeps the baseline toe
+    instead so VF upright/italic segment kinds stay aligned.
     """
+    from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
+    from typekernel.parts.italic_strokes import italic_kick_dims
 
     t = ctx.stem if stem_width is None else stem_width
     if t <= 0:
@@ -1371,37 +1377,35 @@ def u_yoke(
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top)
-    spring = by if by is not None else top
-    crown = (top + ctx.overshoot) if crown_y is None else crown_y
-    if crown <= spring:
+    # Upright shoulder band is stem_top (x-height); branch retune matches n_yoke.
+    upright_spring = top
+    spring = by if by is not None else upright_spring
+    upright_crown = (upright_spring + ctx.overshoot) if crown_y is None else crown_y
+    drop = (top - by) if by is not None else 0.0
+    crown = upright_crown - drop * 0.14
+    if by is None and crown <= spring:
         crown = spring + max(ctx.overshoot, t * 0.08)
-    if by is not None:
-        drop = top - by
-        crown = crown - drop * 0.14
-    join = (spring * 0.52) if join_y is None else join_y
+    join = (
+        (upright_spring * (0.50 + 0.04 * ctx.roundness)) if join_y is None else join_y
+    )
     if by is not None:
         join = min(join, by - t * 0.32)
-
     if inner_crown is None:
-        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-        if by is not None:
-            drop = top - by
-            inner_crown = inner_crown - drop * 0.16
+        upright_inner = upright_crown - t * (0.92 + 0.08 * ctx.contrast)
+        inner_crown = upright_inner - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
-    # n-coords then mirror: left stem at 0, right at w+2t
     width = 2.0 * t + w
     cx = x_left + width / 2.0
-    # Build in local n-space then mirror points into u-space via PathBuilder
     l0, l1 = 0.0, t
     r0, r1 = t + w, width
     mid = 0.5 * (l1 + r0)
 
     if leg_top is None:
-        leg_top = spring - t * 0.02
+        leg_top = upright_spring - t * 0.02
         if by is not None:
-            leg_top = leg_top - (top - by) * 0.2
+            leg_top = leg_top - drop * 0.2
     o0 = (
         (l1, spring),
         (l1, spring + k * (crown - spring)),
@@ -1448,27 +1452,47 @@ def u_yoke(
     ]:
         return (mp(c[0]), mp(c[1]), mp(c[2]), mp(c[3]))
 
-    # After mirror: right outer = mx(l0), left outer = mx(r1)
     ro, ri = mx(l0), mx(l1)
     lo, li = mx(r1), mx(r0)
     bulge = foot_bulge
     if bulge is None:
+        # Match control ``_u_foot_bulge``: zero when roundness ≥ 0.35.
         bulge = 0.0 if ctx.roundness >= 0.35 else max(t * 0.08, 4.0)
+    # Private italic ``u`` uses written kicks only when bulge is zero; low
+    # roundness keeps the baseline toe and skips kicks so VF upright/italic
+    # segment kinds stay aligned.
+    use_feet = by is not None and written_feet and bulge <= 0.0
     shelf = t * 0.20
 
     b = PathBuilder()
-    b.moveTo(ro, y_bottom)
-    b.lineTo(ro, top)
+    if use_feet:
+        # Mirrored entry kick: n's left-stem kick → u right-stem outer.
+        dx, dy = italic_kick_dims(t)
+        rise = max(2.0, top - y_bottom)
+        dy = min(dy, max(2.0, rise * 0.22))
+        b.moveTo(ro - dx, y_bottom)
+        b.curveTo(ro - dx * 0.35, y_bottom, ro, y_bottom + dy * 0.45, ro, y_bottom + dy)
+        b.lineTo(ro, top)
+    else:
+        b.moveTo(ro, y_bottom)
+        b.lineTo(ro, top)
     b.lineTo(ri, top)
     if by is not None:
         b.lineTo(ri, by)
     mo0, mo1 = mc(o0), mc(o1)
     b.curveTo(mo0[1][0], mo0[1][1], mo0[2][0], mo0[2][1], mo0[3][0], mo0[3][1])
     b.curveTo(mo1[1][0], mo1[1][1], mo1[2][0], mo1[2][1], mo1[3][0], mo1[3][1])
-    b.lineTo(lo, y_bottom)
-    if bulge <= 0.0:
+    if use_feet:
+        # Mirrored exit outstroke: n's right-leg exit → u left bowl.
+        dx, dy = italic_kick_dims(t)
+        b.lineTo(lo, dy)
+        b.curveTo(lo, dy * 0.45, lo + dx * 0.35, y_bottom, lo + dx, y_bottom)
+        b.lineTo(li, y_bottom)
+    elif bulge <= 0.0:
+        b.lineTo(lo, y_bottom)
         b.lineTo(li, y_bottom)
     else:
+        b.lineTo(lo, y_bottom)
         x_shelf = li - shelf
         b.curveTo(lo, y_bottom - bulge, x_shelf - bulge * 0.5, y_bottom, x_shelf, y_bottom)
         b.lineTo(li, y_bottom)
@@ -1479,13 +1503,10 @@ def u_yoke(
     b.lineTo(ri, y_bottom)
     b.closePath()
     outline = b.build()
-    from typekernel.geo.contour import reverse_contour, signed_area
-
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
     if by is not None:
-        # After mirror, branch is on the right stem inner face.
         outline = soften_stem_branch(
             outline,
             stem_x=ri,
@@ -1497,6 +1518,7 @@ def u_yoke(
         if signed_area(c0) < 0:
             outline = Outline((reverse_contour(c0),))
     return outline
+
 
 
 def soften_stem_branch(

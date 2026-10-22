@@ -1921,26 +1921,25 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         ),
     )
     cx = um.width / 2.0
-    # Italic/VF ``u`` stays on private branching: mirrored ``u_yoke`` + emit
-    # fillet drops segments vs ``_u_branching_outline`` / soften (wght×ital
-    # knot recipes). Upright sans still prefers continuous ``u_yoke``.
-    if _prefer_public_yoke(c) and not _italic_topology(c):
+    if _prefer_public_yoke(c):
         from typekernel.parts.primitives import u_yoke
 
+        italic = _italic_topology(c)
         outline = u_yoke(
             c,
             0.0,
             counter=um.counter,
             stem_width=um.stem,
             stem_top=xh,
-            join_y=um.join_y,
+            join_y=None if italic else um.join_y,
             crown_y=um.crown_y,
-            leg_top=um.leg_top,
-            inner_crown=um.inner_crown,
+            leg_top=None if italic else um.leg_top,
+            inner_crown=None if italic else um.inner_crown,
             kappa=um.kappa,
+            branch_y=italic,
         )
     elif _italic_topology(c):
-        # Opt-out: italic + VF upright (oblique pre-split) branching u.
+        # Opt-out: serif / VF-compat private branching u.
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
@@ -2222,6 +2221,7 @@ def bowl_stem_yoke(
     rx: float | None = None,
     ry: float | None = None,
     stem_top: float | None = None,
+    top_exit: bool = False,
 ) -> Outline:
     """Continuous bowl + stem as two contours (outer + counter) — Usage A ``b/d/p/q``/``a``.
 
@@ -2229,7 +2229,8 @@ def bowl_stem_yoke(
     to the stem — no boolean kit-of-parts seam. ``stem_left=True`` mirrors for
     ``b``/``p``; ``descends=True`` drops the stem to ``ctx.descender`` for
     ``p``/``q``. ``stem_top`` overrides the upright stem crown (default
-    ``ctx.ascender``; single-storey ``a`` passes x-height).
+    ``ctx.ascender``; single-storey ``a`` passes x-height). ``top_exit`` adds
+    the written italic stem-crown exit (single-storey ``a``).
     """
     from typekernel.geo.contour import reverse_contour
     from typekernel.parts.transforms import mirror_x
@@ -2250,7 +2251,7 @@ def bowl_stem_yoke(
         top = ctx.ascender if stem_top is None else stem_top
     bowl_join = join * 0.88 if _italic_topology(ctx) else join
     outline = _bowl_stem_outline(
-        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join
+        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, top_exit=top_exit
     )
     if stem_left:
         cx = o.rx
@@ -2268,11 +2269,13 @@ def a_yoke(
     stem_width: float | None = None,
     rx: float | None = None,
     ry: float | None = None,
+    top_exit: bool = False,
 ) -> Outline:
     """Continuous single-storey ``a`` body — bowl + stem to x-height (two contours).
 
-    Usage A parallel to :func:`bowl_stem_yoke`. Double-storey ``a`` stays on the
-    private letter-builder path.
+    Usage A parallel to :func:`bowl_stem_yoke`. ``top_exit`` enables the written
+    italic stem-crown exit. Double-storey ``a`` stays on the private letter-builder
+    path.
     """
     o = o_metrics(ctx)
     if rx is not None or ry is not None:
@@ -2284,6 +2287,7 @@ def a_yoke(
         rx=o.rx,
         ry=o.ry,
         stem_top=o.x_height,
+        top_exit=top_exit,
     )
 
 
@@ -2587,14 +2591,19 @@ def _single_storey_a_from_o(
         a_join = join * 0.88
         top_exit = c.style.serif not in ("slab", "bracketed")
     stem = _n_record(n_glyph).stem if n_glyph is not None else o.thickness
-    if _prefer_public_yoke(c) and not top_exit:
-        # Public continuous single-storey ``a`` (bowl_stem to x-height).
-        # Italic written top_exit stays on the private outline path.
+    if _prefer_public_yoke(c):
+        # Public continuous single-storey ``a`` (bowl_stem / a_yoke), including
+        # italic written ``top_exit`` on the stem crown.
         outline = _bowl_stem_outline(
-            o, stem, stem_bottom=0.0, stem_top=o.x_height, join=a_join
+            o,
+            stem,
+            stem_bottom=0.0,
+            stem_top=o.x_height,
+            join=a_join,
+            top_exit=top_exit,
         )
     else:
-        # Opt-out: italic top_exit / serif path.
+        # Opt-out: serif / vf_compat_stem private path.
         outline = _bowl_stem_outline(
             o,
             stem,
