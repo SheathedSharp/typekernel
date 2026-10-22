@@ -54,12 +54,22 @@ from typekernel.parts import (
     u_from_n,
     tittle,
     u_yoke,
+    v_from_n,
+    v_yoke,
+    w_from_n,
+    w_yoke,
+    x_from_n,
+    x_yoke,
+    y_from_n,
+    y_yoke,
+    k_from_n,
+    k_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "artifacts" / "skill-validate"
-PROOF_TEXT = "nhumar soft tiles jg"  # letters both recipes draw
+PROOF_TEXT = "nhumar soft tiles jg vwxyk"  # letters both recipes draw
 
 
 
@@ -107,6 +117,32 @@ def _assert_stem_springs_sealed(ctx: DesignContext, drawn: dict, label: str) -> 
         raise SystemExit(f"stem/bowl spring hairlines still open: {', '.join(failures)}")
 
 
+
+
+def _assert_diagonal_crotches_sealed(ctx: DesignContext, drawn: dict, label: str) -> None:
+    """Fail if v/w/x/y/k still show sub-4 even-odd crotch slits."""
+    from typekernel.optics.space import ink_intervals_at_y
+
+    failures = []
+    for ch in ("v", "w", "x", "y", "k"):
+        if ch not in drawn:
+            continue
+        ol = drawn[ch].solids[0]
+        bad = []
+        y = -20.0
+        while y <= 900.0:
+            iv = ink_intervals_at_y([ol], y)
+            for i in range(len(iv) - 1):
+                gap = iv[i + 1][0] - iv[i][1]
+                if 0.0 < gap < 4.0:
+                    bad.append(y)
+                    break
+            y += 0.5
+        if bad:
+            failures.append(f"{ch}@{label}:{bad[:4]}")
+    if failures:
+        raise SystemExit(f"diagonal crotch hairlines still open: {', '.join(failures)}")
+
 def _ctx() -> DesignContext:
     return DesignContext.geometric_sans().tuned(
         stem=88.0, x_height=548.0, sidebearing_ratio=0.09
@@ -132,6 +168,11 @@ def recipe1_builders(ctx: DesignContext) -> dict:
         "s": s_from_o(o, ctx, aperture=0.62),
         "j": j_from_n(n, ctx),
         "g": g_from_o(o, n, ctx),
+        "v": v_from_n(n, ctx),
+        "w": w_from_n(n, ctx),
+        "x": x_from_n(n, ctx),
+        "y": y_from_n(n, ctx),
+        "k": k_from_n(n, ctx),
     }
 
 
@@ -187,6 +228,11 @@ def recipe2_raw_yokes(ctx: DesignContext) -> dict:
         .build()
     )
     drawn["g"] = pack(g_yoke(ctx, arm=0.78, join=0.82, stem_width=stem))
+    drawn["v"] = pack(v_yoke(ctx))
+    drawn["w"] = pack(w_yoke(ctx))
+    drawn["x"] = pack(x_yoke(ctx))
+    drawn["y"] = pack(y_yoke(ctx))
+    drawn["k"] = pack(k_yoke(ctx))
     return drawn
 
 
@@ -208,6 +254,8 @@ def main() -> None:
     r2 = recipe2_raw_yokes(ctx)
     _assert_stem_springs_sealed(ctx, r1, "recipe1")
     _assert_stem_springs_sealed(ctx, r2, "recipe2")
+    _assert_diagonal_crotches_sealed(ctx, r1, "recipe1")
+    _assert_diagonal_crotches_sealed(ctx, r2, "recipe2")
 
     # Contour-code fingerprint (topology) to show recipes differ structurally
     def topo(g):
@@ -261,6 +309,14 @@ def main() -> None:
         width=900,
     )
     print("jg:", p4)
+    p5 = proof_labeled_waterfall(
+        [("1 builders", otf1), ("2 raw wide", otf2)],
+        "vwxyk",
+        OUT / "proof_diags.png",
+        sizes=(72, 96),
+        width=1200,
+    )
+    print("diags:", p5)
 
     note = OUT / "COMPARE.md"
     note.write_text(
