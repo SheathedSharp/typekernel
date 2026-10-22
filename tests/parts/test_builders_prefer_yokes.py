@@ -240,3 +240,76 @@ def test_slab_n_h_match_public_yokes() -> None:
         assert _pts(h.solids[0]) == _pts(hy.solids[0])
         assert _bad(n, ctx, "n") == []
         assert _bad(h, ctx, "h") == []
+
+
+def test_slab_m_r_u_match_public_yokes() -> None:
+    """Upright slab/bracket ``m``/``r``/``u`` prefer continuous yokes with inline_serifs."""
+    from typekernel.parts.weight_relief import m_counter_scale
+
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        ctx = factory()
+        assert _prefer_public_yoke(ctx) is True
+        m = n_metrics(ctx)
+        scale = m_counter_scale(ctx.stem)
+        mm_ic = min(
+            max(min(m.crown_y - m.stem * 0.55, m.inner_crown + 0.32 * m.stem), m.x_height),
+            m.crown_y - m.stem * 0.06,
+        )
+        built_m = build_m(ctx)
+        yoke_m = GlyphAssembler(ctx).add(
+            double_shoulder_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                counter_scale=scale,
+                stem_width=m.stem,
+                stem_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=mm_ic,
+                kappa=m.kappa,
+                inline_serifs=True,
+            )
+        ).build()
+        assert _pts(built_m.solids[0]) == _pts(yoke_m.solids[0])
+        assert _bad(built_m, ctx, "m") == []
+
+        built_r = build_r(ctx)
+        yoke_r = GlyphAssembler(ctx).add(
+            r_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                stem_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=m.inner_crown,
+                kappa=m.kappa,
+                inline_serifs=True,
+            )
+        ).build()
+        assert _pts(built_r.solids[0]) == _pts(yoke_r.solids[0])
+        assert _bad(built_r, ctx, "r") == []
+
+        um_ic = min(max(m.inner_crown, m.x_height), m.crown_y - m.stem * 0.06)
+        built_u = build_u(ctx)
+        yoke_u = GlyphAssembler(ctx).add(
+            u_yoke(
+                ctx,
+                0.0,
+                counter=m.counter,
+                stem_width=m.stem,
+                stem_top=m.x_height,
+                join_y=m.join_y,
+                crown_y=m.crown_y,
+                leg_top=m.leg_top,
+                inner_crown=um_ic,
+                kappa=m.kappa,
+                inline_serifs=True,
+            )
+        ).build()
+        assert _pts(built_u.solids[0]) == _pts(yoke_u.solids[0])
+        assert _bad(built_u, ctx, "u") == []

@@ -1233,7 +1233,7 @@ def r_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     scaled = arm * r_arm_scale(c)
-    if _prefer_public_yoke(c) and not _stem_serif_inlined(c):
+    if _prefer_public_yoke(c):
         from typekernel.geo.outline import bounds as _bounds
         from typekernel.parts.primitives import r_yoke
 
@@ -1251,6 +1251,7 @@ def r_from_n(
             inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
             branch_y=italic,
+            inline_serifs=_stem_serif_inlined(c) and not italic,
         )
         x_t = _bounds(outline)[2]
     elif _italic_topology(c):
@@ -1773,7 +1774,7 @@ def m_from_n(
             join_y=min(mm.join_y, branch_y - mm.stem * 0.32),
             inner_crown=mm.inner_crown - drop * 0.16,
         )
-    if _prefer_public_yoke(c) and not _stem_serif_inlined(c):
+    if _prefer_public_yoke(c):
         from typekernel.parts.primitives import double_shoulder_yoke
 
         italic = branch_y is not None
@@ -1790,6 +1791,7 @@ def m_from_n(
             inner_crown=None if italic else mm.inner_crown,
             kappa=mm.kappa,
             branch_y=True if italic else None,
+            inline_serifs=_stem_serif_inlined(c) and not italic,
         )
         # Anchor x from the same shoulder layout the private path uses.
         s1 = _shoulder(mm)
@@ -1799,11 +1801,12 @@ def m_from_n(
         yoke_anchors: dict[str, Pt] = {
             "top": (cx, xh),
             "bottom": (cx, 0.0),
-            "stem_L_b": (s1.l0 + half, 0.0),
-            "stem_L_t": (s1.l0 + half, xh),
-            "stem_M_b": ((s1.r0 + s2.l1) / 2.0, 0.0),
-            "stem_R_b": (s2.r1 - half, 0.0),
         }
+        if not _stem_serif_inlined(c):
+            yoke_anchors["stem_L_b"] = (s1.l0 + half, 0.0)
+            yoke_anchors["stem_L_t"] = (s1.l0 + half, xh)
+            yoke_anchors["stem_M_b"] = ((s1.r0 + s2.l1) / 2.0, 0.0)
+            yoke_anchors["stem_R_b"] = (s2.r1 - half, 0.0)
         return _pack(c, m, yoke_anchors, outline)
     # Opt-out: inlined serifs / VF stem knots keep the private double-arch path.
     s1 = _shoulder(mm)
@@ -1923,7 +1926,7 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         ),
     )
     cx = um.width / 2.0
-    if _prefer_public_yoke(c) and not _stem_serif_inlined(c):
+    if _prefer_public_yoke(c):
         from typekernel.parts.primitives import u_yoke
 
         italic = _italic_topology(c)
@@ -1939,6 +1942,7 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             inner_crown=None if italic else um.inner_crown,
             kappa=um.kappa,
             branch_y=italic,
+            inline_serifs=_stem_serif_inlined(c) and not italic,
         )
     elif _italic_topology(c):
         # Opt-out: serif / VF-compat private branching u.
@@ -2224,6 +2228,7 @@ def bowl_stem_yoke(
     ry: float | None = None,
     stem_top: float | None = None,
     top_exit: bool = False,
+    inline_serifs: bool = False,
 ) -> Outline:
     """Continuous bowl + stem as two contours (outer + counter) — Usage A ``b/d/p/q``/``a``.
 
@@ -2233,6 +2238,7 @@ def bowl_stem_yoke(
     ``p``/``q``. ``stem_top`` overrides the upright stem crown (default
     ``ctx.ascender``; single-storey ``a`` passes x-height). ``top_exit`` adds
     the written italic stem-crown exit (single-storey ``a``).
+    ``inline_serifs`` draws a stem foot (bracketed recipe) on the baseline.
     """
     from typekernel.geo.contour import reverse_contour
     from typekernel.parts.transforms import mirror_x
@@ -2252,8 +2258,23 @@ def bowl_stem_yoke(
         bottom = 0.0
         top = ctx.ascender if stem_top is None else stem_top
     bowl_join = join * 0.88 if _italic_topology(ctx) else join
+    foot = None
+    if inline_serifs and ctx.style.serif in ("slab", "bracketed"):
+        from typekernel.parts.serifs import inline_stem_foot_serif_path
+
+        y_foot = bottom
+
+        def foot(b: PathBuilder, x_stem: float) -> None:
+            inline_stem_foot_serif_path(b, x_stem, y_foot, ctx, stem)
+
     outline = _bowl_stem_outline(
-        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, top_exit=top_exit
+        o,
+        stem,
+        stem_bottom=bottom,
+        stem_top=top,
+        join=bowl_join,
+        top_exit=top_exit,
+        foot=foot,
     )
     if stem_left:
         cx = o.rx
@@ -2455,13 +2476,33 @@ def _s_opening_outline(
     l_bot = _cut(l2, x_tl, horizontal=False)[1]
     li_bot = _cut(li2, x_tl, horizontal=False)[1]
     b = PathBuilder()
-    b.moveTo(*u_top[0])
+    slab_l, slab_th = 0.0, 0.0
+    bracket_r = 0.0
+    if c.style.serif in ("slab", "bracketed"):
+        slab_l, slab_th = _opening_slab_metrics(c, o)
+    if c.style.serif == "bracketed":
+        from typekernel.parts.serifs import serif_metrics
+
+        _, _, bracket_r = serif_metrics(c)
+        _opening_top_bracketed_move(b, u_top[0], slab_l, slab_th, bracket_r)
+    elif c.style.serif == "slab":
+        _opening_top_slab_move(b, u_top[0], slab_l, slab_th)
+    else:
+        b.moveTo(*u_top[0])
     for cubic in (u_top, u1, u2, _rev(li0), _rev(li3), _rev(li_bot)):
         _curve(b, cubic)
-    _g1_tip_bridge(b, _rev(li_bot), l_bot, outward_lean=0.0)
+    if c.style.serif == "bracketed":
+        b.lineTo(*l_bot[0])
+        _opening_bottom_bracketed_detour(b, l_bot[0], slab_l, slab_th, bracket_r)
+    elif c.style.serif == "slab":
+        b.lineTo(*l_bot[0])
+        _opening_bottom_slab_detour(b, l_bot[0], slab_l, slab_th)
+    else:
+        _g1_tip_bridge(b, _rev(li_bot), l_bot, outward_lean=0.0)
     for cubic in (l_bot, l3, l0, _rev(ui2), _rev(ui1), _rev(ui_top)):
         _curve(b, cubic)
-    _g1_tip_bridge(b, _rev(ui_top), u_top, outward_lean=0.0)
+    if c.style.serif not in ("slab", "bracketed"):
+        _g1_tip_bridge(b, _rev(ui_top), u_top, outward_lean=0.0)
     b.closePath()
     return _ccw(b.build()), (u_top[0], l_bot[0])
 
@@ -2513,8 +2554,9 @@ def _bowl_glyph(
             inline_stem_foot_serif_path(b, x_stem, y_foot, c, stem)
 
     bowl_join = join * 0.88 if _italic_topology(c) else join
-    if foot is None and _prefer_public_yoke(c) and not _stem_serif_inlined(c):
-        # Public continuous bowl+stem (slab feet / bracket callback stay private).
+    if _prefer_public_yoke(c):
+        # Public continuous bowl+stem; bracketed feet via inline_serifs only
+        # (slab bowl letters historically had no stem foot).
         outline = bowl_stem_yoke(
             c,
             stem_left=stem_left,
@@ -2523,23 +2565,30 @@ def _bowl_glyph(
             stem_width=stem,
             rx=o.rx,
             ry=o.ry,
+            stem_top=None if descends else top,
+            inline_serifs=c.style.serif == "bracketed",
         )
-        # bowl_stem_yoke uses o_metrics thickness; retune when glyph record differs.
         o_ctx = o_metrics(c)
         if (
             abs(o.thickness_v - o_ctx.thickness_v) > 1e-6
             or abs(o.thickness_h - o_ctx.thickness_h) > 1e-6
             or abs(o.exponent - o_ctx.exponent) > 1e-6
         ):
+            foot_retune = foot if c.style.serif == "bracketed" else None
             outline = _bowl_stem_outline(
-                o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=None
+                o,
+                stem,
+                stem_bottom=bottom,
+                stem_top=top,
+                join=bowl_join,
+                foot=foot_retune,
             )
             if stem_left:
                 outline = Outline(
                     tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours)
                 )
     else:
-        # Opt-out: bracketed foot callback or serif/VF private path.
+        # Opt-out: vf_compat / italic×serif private path.
         outline = _bowl_stem_outline(
             o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=foot
         )
@@ -3124,7 +3173,7 @@ def e_from_o(
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
-    if _prefer_public_yoke(c) and not _stem_serif_inlined(c):
+    if _prefer_public_yoke(c):
         outline = _e_opening_outline(c, o, aperture=aperture, bar_raise=bar_raise)
         (_q0, _q1, _q2, q3), (_i0, _i1, _i2, i3) = _ring(o, c)
         cy = o.x_height / 2.0
@@ -3459,7 +3508,7 @@ def s_from_o(
     """
     c = ctx or o_glyph.context
     o = _o_record(o_glyph)
-    if _prefer_public_yoke(c) and not _stem_serif_inlined(c):
+    if _prefer_public_yoke(c):
         outline, tips = _s_opening_outline(
             c, o, aperture=aperture, width=width, top_scale=top_scale, spine=spine
         )
