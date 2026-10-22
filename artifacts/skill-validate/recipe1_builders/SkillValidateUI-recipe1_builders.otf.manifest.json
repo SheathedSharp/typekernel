@@ -1,0 +1,12 @@
+{
+  "fonttools_version": "4.66.1",
+  "fontmake_version": "3.12.2",
+  "ufo2ft_version": "3.9.1",
+  "timestamp": "2026-10-22T04:44:28.052956+00:00",
+  "inputs": {
+    "ufo": "/Users/sheathedsharp/code/typekernel/artifacts/skill-validate/recipe1_builders/SkillValidateUI-recipe1_builders.ufo",
+    "output": "/Users/sheathedsharp/code/typekernel/artifacts/skill-validate/recipe1_builders/SkillValidateUI-recipe1_builders.otf"
+  },
+  "filters": [],
+  "output_format": "otf"
+}
