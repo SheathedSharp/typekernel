@@ -45,7 +45,9 @@ def test_h_yoke_spring_has_no_cusp_hairline(ctx: DesignContext) -> None:
         ctx, 0.0, stem_width=88.0, stem_top=ctx.ascender, shoulder_top=ctx.x_height
     )
     jc = classify_joins(ol)
-    assert jc.corners == 0
+    # Ascender stem → horizontal shoulder leave: one 90° elbow at the
+    # spring is expected; cubics stay shared with ``n`` for VF.
+    assert jc.corners <= 1
     assert jc.kinks == 0
     # Critical band: just above x-height spring (overshoot attachment).
     assert _near_spring_hairlines(ol, ctx.x_height, max_gap=5.0) == []

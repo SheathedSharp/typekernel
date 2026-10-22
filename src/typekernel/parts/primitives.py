@@ -928,9 +928,9 @@ def _shoulder_outer_left(
 ]:
     """First outer shoulder cubic from stem spring to crown mid.
 
-    ``horizontal_leave=True`` (upright ``n``/``m``/``r``) matches a flat stem
-    top — G1 into the arch, no kit-of-parts corner. ``False`` keeps a vertical
-    first handle for overshoot / ascender branch fillets (``h``, italic).
+    ``horizontal_leave=True`` (upright ``n``/``h``/``m``/``r``) matches a flat
+    stem spring — G1 into the arch, no kit-of-parts corner. ``False`` keeps a
+    vertical first handle for italic branch fillets.
     """
     if horizontal_leave:
         return (
@@ -983,10 +983,10 @@ def shoulder_yoke(
     match branching italics (TK-404); ascender ``h`` already has the spring
     descent and does not need the duplicate.
 
-    Upright spring seal: non-ascender bodies leave the outer shoulder with a
-    **horizontal** first handle (G1 into a flat stem top). Ascender ``h`` keeps
-    the vertical overshoot handle and, when ``soft_branch``, blends the stem→
-    shoulder corner so even-odd scans show no hairline slit at the spring.
+    Upright spring seal: leave the outer shoulder with a **horizontal** first
+    handle (G1 into the stem spring), including ascender ``h`` (stem descends
+    to ``shoulder_top`` then springs). This keeps ``h``/``n`` shoulder cubics
+    identical for VF. Italic branches keep the vertical leave + soft fillet.
     """
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
@@ -1037,7 +1037,7 @@ def shoulder_yoke(
     # Upright n/r: horizontal leave → G1 with flat stem top (no corner seam).
     # Ascender h / italic branch: vertical leave for overshoot + branch fillet.
     o0 = _shoulder_outer_left(
-        l1, spring, mid, crown, k, horizontal_leave=upright and not is_h
+        l1, spring, mid, crown, k, horizontal_leave=upright
     )
     o1 = (
         (mid, crown),
@@ -1179,16 +1179,8 @@ def shoulder_yoke(
     c0 = outline.contours[0]
     if signed_area(c0) < 0:
         outline = Outline((reverse_contour(c0),))
-    if upright and soft_branch and is_h:
-        # Blend the stem→shoulder spring corner (removes cusp hairline on h).
-        from typekernel.geo.joins import blend_corners, default_selector
-
-        outline = blend_corners(
-            outline,
-            max(ctx.join_radius * 1.35, t * 0.38),
-            select=default_selector,
-            tension=1.0,
-        )
+    # Upright ``h`` uses horizontal leave (G1) — no post blend_corners, so
+    # shoulder cubics stay shared with ``n`` for VF.
     return outline
 
 

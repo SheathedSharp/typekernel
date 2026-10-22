@@ -62,6 +62,21 @@ def test_h_shares_n_shoulder_curves(ctx: DesignContext) -> None:
     assert bounds(h.solids[0])[3] == pytest.approx(m.ascender)
 
 
+
+
+def test_h_yoke_shares_n_yoke_shoulder_cubics(ctx: DesignContext) -> None:
+    """Upright h/n public yokes share shoulder cubics (VF kit-of-parts)."""
+    from typekernel.parts.primitives import h_yoke, n_yoke
+
+    stem = 88.0
+    n_ol = n_yoke(ctx, 0.0, stem_width=stem, stem_top=ctx.x_height)
+    h_ol = h_yoke(
+        ctx, 0.0, stem_width=stem, stem_top=ctx.ascender, shoulder_top=ctx.x_height
+    )
+    n_cubics = [s.points for s in n_ol.contours[0].segments if s.kind == "cubic"]
+    h_cubics = [s.points for s in h_ol.contours[0].segments if s.kind == "cubic"]
+    assert n_cubics == h_cubics
+
 def test_related_forms_fall_back_to_context(ctx: DesignContext) -> None:
     from typekernel.parts import vertical_stem
     from typekernel.parts.compose import GlyphAssembler

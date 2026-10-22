@@ -120,7 +120,9 @@ def test_j_and_g_yokes_continuous_and_sealed() -> None:
     gy = g_yoke(ctx)
     assert len(gy.contours) == 2
     jc = classify_joins(gy)
-    assert jc.corners == 0
+    # Hook tip may keep a single 180° corner; post-shear blend
+    # was removed so segment counts stay VF-fixed across stems.
+    assert jc.corners <= 1
     assert jc.kinks == 0
     assert _hairlines(gy, max_gap=3.0) == []
     g = g_from_o(build_o(ctx), build_n(ctx), ctx)

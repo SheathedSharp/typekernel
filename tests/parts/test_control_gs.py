@@ -70,6 +70,33 @@ def test_g_hook_outer_segment_count_fixed_across_stems() -> None:
         assert len(g.solids[0].contours[0].segments) == ref_n
 
 
+
+
+def test_g_yoke_segment_count_fixed_across_stems() -> None:
+    """Public g_yoke keeps fixed outer topology (no post-shear blend drift)."""
+    from typekernel.parts.control import g_yoke
+
+    ctx = DesignContext.humanist_sans()
+    counts = []
+    for stem in (30.0, 86.0, 140.0, 220.0):
+        ol = g_yoke(ctx.tuned(stem=stem))
+        counts.append(len(ol.contours[0].segments))
+    assert len(set(counts)) == 1, counts
+
+
+def test_bracketed_b_yoke_segment_count_fixed_across_stems() -> None:
+    """Bracketed serif ``b`` masters: springs soft_join keeps VF-stable count."""
+    from typekernel.axes.interpolatable import check_interpolatable
+
+    ctx = DesignContext.bracketed_serif()
+    outlines = []
+    for stem in (70.0, 100.0, 140.0, 180.0):
+        g = FormSources.from_context(ctx.tuned(stem=stem)).derive_one("b")
+        outlines.append(g.solids[0])
+    counts = [tuple(len(c.segments) for c in o.contours) for o in outlines]
+    assert len(set(counts)) == 1, counts
+    assert check_interpolatable(outlines) == []
+
 def test_g_interpolates_across_weight_ladder() -> None:
     ctx = DesignContext.humanist_sans()
     charset = "g"

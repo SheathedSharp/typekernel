@@ -2121,6 +2121,64 @@ def _scale_x(c: Cubic, about: float, f: float) -> Cubic:
     )
 
 
+def _blend_bowl_stem_springs(
+    outline: Outline,
+    radius: float,
+    *,
+    spring_indices: tuple[int, ...] = (3, 7),
+    tension: float = 1.0,
+) -> Outline:
+    """Blend fixed outer bowl–stem spring joins (+ default counter blends).
+
+    Raw ``_bowl_stem_outline`` (with or without a stem foot) places the upper
+    and lower stem–bowl springs at outer indices 3 and 7. Force-blending only
+    those keeps segment counts stable across weight when serif feet would
+    otherwise introduce extra blendable corners at heavy stems.
+    """
+    from typekernel.geo.contour import Contour
+    from typekernel.geo.joins import (
+        _bridge,
+        _chord,
+        _split,
+        _t_at_distance,
+        default_selector,
+        join_angles,
+    )
+
+    new_contours: list[Contour] = []
+    for ci, contour in enumerate(outline.contours):
+        segs = list(contour.segments)
+        n = len(segs)
+        angles = join_angles(contour)
+        if ci == 0:
+            chosen = [(i in spring_indices) for i in range(n)]
+        else:
+            chosen = [
+                default_selector(angles[i], segs[i], segs[(i + 1) % n])
+                for i in range(n)
+            ]
+        d = [0.0] * n
+        for i in range(n):
+            if chosen[i]:
+                a, b = segs[i], segs[(i + 1) % n]
+                d[i] = min(radius, _chord(a) * 0.45, _chord(b) * 0.45)
+        trimmed: list = []
+        for i, seg in enumerate(segs):
+            s = seg
+            if d[(i - 1) % n] > 0:
+                s = _split(s, _t_at_distance(s, d[(i - 1) % n], from_end=False))[1]
+            if d[i] > 0:
+                s = _split(s, _t_at_distance(s, d[i], from_end=True))[0]
+            trimmed.append(s)
+        out: list = []
+        for i in range(n):
+            out.append(trimmed[i])
+            if d[i] > 0:
+                out.append(_bridge(trimmed[i], trimmed[(i + 1) % n], tension))
+        new_contours.append(Contour(tuple(out), closed=True))
+    return Outline(tuple(new_contours))
+
+
 def _bowl_stem_outline(
     o: OMetrics,
     stem: float,
@@ -2130,14 +2188,15 @@ def _bowl_stem_outline(
     join: float,
     foot: Callable[[PathBuilder, float], None] | None = None,
     top_exit: bool = False,
-    soft_join: bool = True,
+    soft_join: bool | Literal["springs"] = True,
 ) -> Outline:
     """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
 
     The outer is the ``o`` bowl cut **into** the stem face
     (``overlap = max(8, 0.09·stem)``) so the stem–bowl spring has no even-odd
     hairline; the counter still meets the true stem face. ``soft_join`` blends
-    non-terminal corners on the outer (and counter) after build.
+    corners after build: ``True`` uses the default selector; ``"springs"``
+    force-blends the two bowl–stem spring joins only (VF-stable with serif feet).
 
     ``foot(builder, stem_left_x)`` replaces the stem's left face below the
     bowl; it must end on ``(stem_left_x, stem_bottom)`` (``g`` draws its hook).
@@ -2222,12 +2281,20 @@ def _bowl_stem_outline(
     outer, counter = b.build().contours
     outline = Outline((outer, reverse_contour(counter)))
     if soft_join:
-        outline = blend_corners(
-            outline,
-            max(stem * 0.22, o.thickness * 0.28),
-            select=default_selector,
-            tension=1.0,
-        )
+        radius = max(stem * 0.22, o.thickness * 0.28)
+        if soft_join == "springs":
+            # VF-stable: always blend the two bowl–stem spring joins on the
+            # outer (indices 3 and 7 in the fixed raw recipe) plus default
+            # counter blends. Skips serif-foot artifacts that appear only at
+            # heavy weights and would add a variable extra cubic.
+            outline = _blend_bowl_stem_springs(outline, radius)
+        else:
+            outline = blend_corners(
+                outline,
+                radius,
+                select=default_selector,
+                tension=1.0,
+            )
     return outline
 
 
@@ -2289,6 +2356,7 @@ def bowl_stem_yoke(
         join=bowl_join,
         top_exit=top_exit,
         foot=foot,
+        soft_join="springs" if foot is not None else True,
     )
     if stem_left:
         cx = o.rx
@@ -3578,7 +3646,6 @@ def g_yoke(
     Matches :func:`g_from_o` when ``style.g_form`` is ``"single"`` (the
     product default). Double-storey stays on the builder path only.
     """
-    from typekernel.geo.joins import blend_corners, default_selector
     from typekernel.parts.weight_relief import stem_weight_fraction
 
     o = o_metrics_rec if o_metrics_rec is not None else o_metrics(ctx)
@@ -3654,9 +3721,10 @@ def g_yoke(
         )
     else:
         outline = apply_terminal_shear(ctx, outline)
-    # Hook belly can leave a 180° tip cusp after shear; blend residual corners.
-    radius = max(ctx.join_radius * 1.2, stem * 0.28)
-    return blend_corners(outline, radius, select=default_selector, tension=1.0)
+    # No post-shear blend_corners — that added a variable extra cubic across
+    # weights (21 vs 22) and broke VF. Belly fillet + soft_join keep a fixed
+    # segment recipe (TK-205); residual tip corners do not open hairlines.
+    return outline
 
 
 def g_from_o(
