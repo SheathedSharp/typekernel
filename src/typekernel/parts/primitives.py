@@ -919,8 +919,11 @@ def shoulder_yoke(
     stem_width: float | None = None,
     y_bottom: float = 0.0,
     stem_top: float | None = None,
+    shoulder_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     written_feet: bool = True,
@@ -928,10 +931,12 @@ def shoulder_yoke(
     """Continuous left-stem + shoulder + right-leg as **one** closed contour.
 
     Usage A ``n``-family body (see also :func:`h_yoke` / :func:`n_yoke`).
+    ``shoulder_top`` (e.g. ``ctx.x_height`` on ``h``) is the upright shoulder
+    spring when the left stem continues to a taller ``stem_top`` (ascender).
     ``branch_y`` matches :func:`double_shoulder_yoke`: ``True`` auto-picks
     ``≈ 0.58 * stem_top``; a float is absolute; ``None`` keeps the upright
-    spring at ``stem_top``. When branching, ``written_feet`` adds entry kick
-    + exit outstroke and softens the crotch.
+    spring at ``shoulder_top`` or ``stem_top``. When branching, ``written_feet``
+    adds entry kick + exit outstroke and softens the crotch.
     """
     from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
@@ -948,8 +953,11 @@ def shoulder_yoke(
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top)
-    spring = by if by is not None else top
-    crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    upright_spring = top if shoulder_top is None else shoulder_top
+    spring = by if by is not None else upright_spring
+    # Crown overshoots the upright shoulder band (x-height), not the ascender.
+    crown_ref = upright_spring
+    crown = (crown_ref + ctx.overshoot) if crown_y is None else crown_y
     if by is not None:
         drop = top - by
         crown = crown - drop * 0.14
@@ -958,10 +966,11 @@ def shoulder_yoke(
     join = (spring * 0.52) if join_y is None else join_y
     if by is not None:
         join = min(join, by - t * 0.32)
-    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-    if by is not None:
-        drop = top - by
-        inner_crown = inner_crown - drop * 0.16
+    if inner_crown is None:
+        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+        if by is not None:
+            drop = top - by
+            inner_crown = inner_crown - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -970,9 +979,11 @@ def shoulder_yoke(
     r0 = l1 + w
     r1 = r0 + t
     mid = 0.5 * (l1 + r0)
-    leg_top = spring - (r1 - l0) * 0.02
-    if by is not None:
-        leg_top = leg_top - (top - by) * 0.2
+    # Match n_metrics: drop by stem, not advance width.
+    if leg_top is None:
+        leg_top = spring - t * 0.02
+        if by is not None:
+            leg_top = leg_top - (top - by) * 0.2
     o0 = (
         (l1, spring),
         (l1, spring + k * (crown - spring)),
@@ -1006,6 +1017,8 @@ def shoulder_yoke(
     b.lineTo(l1, top)
     if by is not None:
         b.lineTo(l1, by)
+    elif shoulder_top is not None and abs(top - spring) > 0.5:
+        b.lineTo(l1, spring)
     b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
     b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
     if by is not None and written_feet:
@@ -1044,8 +1057,11 @@ def n_yoke(
     stem_width: float | None = None,
     y_bottom: float = 0.0,
     stem_top: float | None = None,
+    shoulder_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     written_feet: bool = True,
@@ -1061,8 +1077,11 @@ def n_yoke(
         stem_width=stem_width,
         y_bottom=y_bottom,
         stem_top=stem_top,
+        shoulder_top=shoulder_top,
         join_y=join_y,
         crown_y=crown_y,
+        leg_top=leg_top,
+        inner_crown=inner_crown,
         kappa=kappa,
         branch_y=branch_y,
         written_feet=written_feet,
@@ -1077,17 +1096,22 @@ def h_yoke(
     stem_width: float | None = None,
     y_bottom: float = 0.0,
     stem_top: float | None = None,
+    shoulder_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     written_feet: bool = True,
 ) -> Outline:
     """Public Usage A ``h`` body — :func:`shoulder_yoke` with ascender stem.
 
-    Default ``stem_top`` is ``ctx.ascender``. ``branch_y`` matches ``n``/``m``.
+    Default ``stem_top`` is ``ctx.ascender``; shoulder springs at
+    ``shoulder_top`` (default ``ctx.x_height``), matching ``build_h``.
     """
     top = ctx.ascender if stem_top is None else stem_top
+    sh = ctx.x_height if shoulder_top is None else shoulder_top
     return shoulder_yoke(
         ctx,
         x_left,
@@ -1095,8 +1119,11 @@ def h_yoke(
         stem_width=stem_width,
         y_bottom=y_bottom,
         stem_top=top,
+        shoulder_top=sh,
         join_y=join_y,
         crown_y=crown_y,
+        leg_top=leg_top,
+        inner_crown=inner_crown,
         kappa=kappa,
         branch_y=branch_y,
         written_feet=written_feet,
@@ -1131,6 +1158,8 @@ def double_shoulder_yoke(
     stem_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     counter_scale: float = 0.92,
     branch_y: float | bool | None = None,
@@ -1172,11 +1201,13 @@ def double_shoulder_yoke(
     if crown <= spring:
         crown = spring + max(ctx.overshoot, t * 0.08)
     join = (spring * 0.52) if join_y is None else join_y
-    inner_crown = crown - t * (0.55 + 0.08 * ctx.contrast)
     if by is not None:
-        drop = top - by
-        inner_crown = inner_crown - drop * 0.16
         join = min(join, by - t * 0.32)
+    if inner_crown is None:
+        inner_crown = crown - t * (0.55 + 0.08 * ctx.contrast)
+        if by is not None:
+            drop = top - by
+            inner_crown = inner_crown - drop * 0.16
     # Lift inner crown toward spring so middle crotch shelf can meet at stem_top.
     inner_crown = min(max(inner_crown, spring), crown - t * 0.06)
     join = min(join, inner_crown - t * 0.15)
@@ -1193,9 +1224,11 @@ def double_shoulder_yoke(
         l0, l1 = x0, x0 + t
         r0, r1 = x0 + t + w, x0 + t + w + t
         mid = 0.5 * (l1 + r0)
-        leg_top = spring - (r1 - l0) * 0.02
-        if by is not None:
-            leg_top = leg_top - (top - by) * 0.2
+        lt = leg_top
+        if lt is None:
+            lt = spring - t * 0.02
+            if by is not None:
+                lt = lt - (top - by) * 0.2
         o0 = (
             (l1, spring),
             (l1, spring + k * (crown - spring)),
@@ -1205,8 +1238,8 @@ def double_shoulder_yoke(
         o1 = (
             (mid, crown),
             (mid + k * (r1 - mid), crown),
-            (r1, leg_top + k * (crown - leg_top)),
-            (r1, leg_top),
+            (r1, lt + k * (crown - lt)),
+            (r1, lt),
         )
         i0 = (
             (r0, join),
@@ -1311,6 +1344,8 @@ def u_yoke(
     stem_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     foot_bulge: float | None = None,
@@ -1343,10 +1378,12 @@ def u_yoke(
     join = (spring * 0.52) if join_y is None else join_y
     if by is not None:
         join = min(join, by - t * 0.32)
-    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-    if by is not None:
-        drop = top - by
-        inner_crown = inner_crown - drop * 0.16
+
+    if inner_crown is None:
+        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+        if by is not None:
+            drop = top - by
+            inner_crown = inner_crown - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -1357,9 +1394,11 @@ def u_yoke(
     l0, l1 = 0.0, t
     r0, r1 = t + w, width
     mid = 0.5 * (l1 + r0)
-    leg_top = spring - (r1 - l0) * 0.02
-    if by is not None:
-        leg_top = leg_top - (top - by) * 0.2
+
+    if leg_top is None:
+        leg_top = spring - t * 0.02
+        if by is not None:
+            leg_top = leg_top - (top - by) * 0.2
     o0 = (
         (l1, spring),
         (l1, spring + k * (crown - spring)),
@@ -1507,6 +1546,8 @@ def r_yoke(
     stem_top: float | None = None,
     join_y: float | None = None,
     crown_y: float | None = None,
+    leg_top: float | None = None,
+    inner_crown: float | None = None,
     kappa: float | None = None,
     branch_y: float | bool | None = None,
     written_feet: bool = True,
@@ -1544,10 +1585,12 @@ def r_yoke(
     join = (spring * 0.52) if join_y is None else join_y
     if by is not None:
         join = min(join, by - t * 0.32)
-    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-    if by is not None:
-        drop = top - by
-        inner_crown = inner_crown - drop * 0.16
+
+    if inner_crown is None:
+        inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+        if by is not None:
+            drop = top - by
+            inner_crown = inner_crown - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -1556,9 +1599,11 @@ def r_yoke(
     r0 = l1 + w
     r1 = r0 + t
     mid = 0.5 * (l1 + r0)
-    leg_top = spring - (r1 - l0) * 0.02
-    if by is not None:
-        leg_top = leg_top - (top - by) * 0.2
+
+    if leg_top is None:
+        leg_top = spring - t * 0.02
+        if by is not None:
+            leg_top = leg_top - (top - by) * 0.2
     o0 = (
         (l1, spring),
         (l1, spring + k * (crown - spring)),

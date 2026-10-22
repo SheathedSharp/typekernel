@@ -737,6 +737,23 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
     return bool(ctx.vf_compat_stem_segments)
 
 
+
+def _prefer_public_yoke(ctx: DesignContext) -> bool:
+    """Use continuous public yokes on the Usage A default upright path.
+
+    Opt out when:
+    - inlined slab/bracket serifs need private foot/cap segment recipes;
+    - ``vf_compat_stem_segments`` needs private stem knots;
+    - italic/oblique branching needs the private VF wght×ital segment-count
+      recipe (public yokes still expose ``branch_y`` for agent composition).
+    """
+    if _stem_serif_inlined(ctx):
+        return False
+    if _vf_compat_stem(ctx):
+        return False
+    return not _italic_topology(ctx)
+
+
 def _stem_serif_inlined(ctx: DesignContext) -> bool:
     """Slab/bracketed feet drawn in the stem outline (not anchor boolean)."""
     return ctx.style.serif in ("slab", "bracketed")
@@ -1142,11 +1159,28 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
         ),
     }
     shelf_n = ctx.style.serif in ("slab", "bracketed")
-    if _italic_topology(ctx):
+    if _prefer_public_yoke(ctx):
+        from typekernel.parts.primitives import n_yoke
+
+        outline = n_yoke(
+            ctx,
+            0.0,
+            counter=m.counter,
+            stem_width=m.stem,
+            stem_top=m.x_height,
+            join_y=m.join_y,
+            crown_y=m.crown_y,
+            leg_top=m.leg_top,
+            inner_crown=m.inner_crown,
+            kappa=m.kappa,
+        )
+    elif _italic_topology(ctx):
+        # Opt-out: serif shelf / VF knots on private branching path.
         outline = _n_branching_outline(
             m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=shelf_n
         )
     else:
+        # Opt-out: inlined serifs or vf_compat stem knots.
         outline = _n_family_outline(
             m,
             left_top=m.x_height,
@@ -1175,7 +1209,23 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
         ),
     }
     shelf_h = ctx.style.serif in ("slab", "bracketed")
-    if _italic_topology(ctx):
+    if _prefer_public_yoke(ctx):
+        from typekernel.parts.primitives import h_yoke
+
+        outline = h_yoke(
+            ctx,
+            0.0,
+            counter=m.counter,
+            stem_width=m.stem,
+            stem_top=m.ascender,
+            shoulder_top=m.x_height,
+            join_y=m.join_y,
+            crown_y=m.crown_y,
+            leg_top=m.leg_top,
+            inner_crown=m.inner_crown,
+            kappa=m.kappa,
+        )
+    elif _italic_topology(ctx):
         outline = _n_branching_outline(
             m, stem_top=m.ascender, ctx=ctx, shelf_left_foot=shelf_h
         )
@@ -1215,7 +1265,26 @@ def r_from_n(
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
     scaled = arm * r_arm_scale(c)
-    if _italic_topology(c):
+    if _prefer_public_yoke(c):
+        from typekernel.geo.outline import bounds as _bounds
+        from typekernel.parts.primitives import r_yoke
+
+        outline = r_yoke(
+            c,
+            0.0,
+            arm=scaled,
+            counter=m.counter,
+            stem_width=m.stem,
+            stem_top=m.x_height,
+            join_y=m.join_y,
+            crown_y=m.crown_y,
+            leg_top=m.leg_top,
+            inner_crown=m.inner_crown,
+            kappa=m.kappa,
+        )
+        x_t = _bounds(outline)[2]
+    elif _italic_topology(c):
+        # Opt-out: serif / VF private branching r.
         outline, x_t = _r_branching_outline(m, scaled, c)
     else:
         outline, x_t = _r_outline(m, scaled, vf_compat=_vf_compat_stem(c), ctx=c)
@@ -1734,6 +1803,37 @@ def m_from_n(
             join_y=min(mm.join_y, branch_y - mm.stem * 0.32),
             inner_crown=mm.inner_crown - drop * 0.16,
         )
+    if _prefer_public_yoke(c):
+        from typekernel.parts.primitives import double_shoulder_yoke
+
+        outline = double_shoulder_yoke(
+            c,
+            0.0,
+            counter=m.counter,
+            counter_scale=scale,
+            stem_width=m.stem,
+            stem_top=xh,
+            join_y=mm.join_y,
+            crown_y=mm.crown_y,
+            leg_top=mm.leg_top,
+            inner_crown=mm.inner_crown,
+            kappa=mm.kappa,
+        )
+        # Anchor x from the same shoulder layout the private path uses.
+        s1 = _shoulder(mm)
+        s2 = _shoulder(mm, s1.r0)
+        cx = s2.r1 / 2.0
+        half = mm.stem / 2.0
+        yoke_anchors: dict[str, Pt] = {
+            "top": (cx, xh),
+            "bottom": (cx, 0.0),
+            "stem_L_b": (s1.l0 + half, 0.0),
+            "stem_L_t": (s1.l0 + half, xh),
+            "stem_M_b": ((s1.r0 + s2.l1) / 2.0, 0.0),
+            "stem_R_b": (s2.r1 - half, 0.0),
+        }
+        return _pack(c, m, yoke_anchors, outline)
+    # Opt-out: inlined serifs / VF stem knots keep the private double-arch path.
     s1 = _shoulder(mm)
     s2 = _shoulder(mm, s1.r0)
 
@@ -1851,7 +1951,23 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
         ),
     )
     cx = um.width / 2.0
-    if _italic_topology(c):
+    if _prefer_public_yoke(c):
+        from typekernel.parts.primitives import u_yoke
+
+        outline = u_yoke(
+            c,
+            0.0,
+            counter=um.counter,
+            stem_width=um.stem,
+            stem_top=xh,
+            join_y=um.join_y,
+            crown_y=um.crown_y,
+            leg_top=um.leg_top,
+            inner_crown=um.inner_crown,
+            kappa=um.kappa,
+        )
+    elif _italic_topology(c):
+        # Opt-out: serif / VF private branching u.
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
@@ -2195,15 +2311,44 @@ def _bowl_glyph(
             inline_stem_foot_serif_path(b, x_stem, y_foot, c, stem)
 
     bowl_join = join * 0.88 if _italic_topology(c) else join
-    outline = _bowl_stem_outline(
-        o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=foot
-    )
+    if foot is None and _prefer_public_yoke(c):
+        # Public continuous bowl+stem (no serif foot callback).
+        outline = bowl_stem_yoke(
+            c,
+            stem_left=stem_left,
+            descends=descends,
+            join=join,
+            stem_width=stem,
+            rx=o.rx,
+            ry=o.ry,
+        )
+        # bowl_stem_yoke uses o_metrics thickness; retune when glyph record differs.
+        o_ctx = o_metrics(c)
+        if (
+            abs(o.thickness_v - o_ctx.thickness_v) > 1e-6
+            or abs(o.thickness_h - o_ctx.thickness_h) > 1e-6
+            or abs(o.exponent - o_ctx.exponent) > 1e-6
+        ):
+            outline = _bowl_stem_outline(
+                o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=None
+            )
+            if stem_left:
+                outline = Outline(
+                    tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours)
+                )
+    else:
+        # Opt-out: bracketed foot callback or serif/VF private path.
+        outline = _bowl_stem_outline(
+            o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=foot
+        )
+        if stem_left:
+            outline = Outline(
+                tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours)
+            )
     cx = o.rx
     anchors: dict[str, Pt] = {"top": (cx, o.x_height)}
     if not descends:
         anchors["bottom"] = (cx, 0.0)
-    if stem_left:
-        outline = Outline(tuple(reverse_contour(k) for k in mirror_x(outline, at_x=cx).contours))
     return _pack(c, o, anchors, outline)
 
 

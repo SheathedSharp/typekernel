@@ -56,7 +56,18 @@ def test_h_yoke_uses_ascender_and_branches() -> None:
     h0 = h_yoke(ctx, 40.0)
     h1 = h_yoke(ctx, 40.0, branch_y=True)
     assert bounds(h0)[3] >= ctx.ascender - 1.0  # stem reaches ascender
-    assert bounds(h0) != bounds(h1)
+    # Branch adds written entry; AABB may match but on-curve points differ.
+    assert tuple(
+        (round(p.x, 2), round(p.y, 2))
+        for c in h0.contours
+        for s in c.segments
+        for p in s.points
+    ) != tuple(
+        (round(p.x, 2), round(p.y, 2))
+        for c in h1.contours
+        for s in c.segments
+        for p in s.points
+    )
     assert _bad(GlyphAssembler(ctx).add(h1).build(), ctx, "h_branch") == []
 
 
