@@ -31,18 +31,24 @@ from typekernel.parts import (
     e_from_o,
     e_yoke,
     f_from_n,
+    f_yoke,
     h_from_n,
     h_yoke,
     i_from_n,
+    i_yoke,
     l_from_n,
+    l_yoke,
     m_from_n,
     n_yoke,
+    o_yoke,
     r_from_n,
     r_yoke,
     s_from_o,
     s_yoke,
     t_from_n,
+    t_yoke,
     u_from_n,
+    tittle,
     u_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
@@ -50,6 +56,48 @@ from typekernel.qa.proof import proof_labeled_waterfall
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "artifacts" / "skill-validate"
 PROOF_TEXT = "nhumar soft tiles"  # letters both recipes draw
+
+
+
+def _spring_hairlines(outline, spring: float, *, band: float = 5.0, max_gap: float = 5.0) -> list[float]:
+    """Y samples in (spring, spring+band] with a sub-max_gap even-odd slit."""
+    from typekernel.optics.space import ink_intervals_at_y
+
+    bad: list[float] = []
+    y = spring + 0.25
+    while y <= spring + band:
+        iv = ink_intervals_at_y([outline], y)
+        for i in range(len(iv) - 1):
+            gap = iv[i + 1][0] - iv[i][1]
+            if 0.0 < gap < max_gap:
+                bad.append(y)
+                break
+        y += 0.5
+    return bad
+
+
+def _assert_stem_springs_sealed(ctx: DesignContext, drawn: dict, label: str) -> None:
+    """Fail the skill validate if n/h/m/r/a still show spring hairlines."""
+    checks = {
+        "n": (ctx.x_height, 5.0),
+        "h": (ctx.x_height, 5.0),
+        "m": (ctx.x_height, 5.0),
+        "r": (ctx.x_height, 5.0),
+        "a": (ctx.x_height * 0.06, 8.0),  # bowl–stem lower spring band
+    }
+    failures = []
+    for ch, (spring, band) in checks.items():
+        if ch not in drawn:
+            continue
+        ol = drawn[ch].solids[0]
+        # a also check upper bowl join
+        bad = _spring_hairlines(ol, spring, band=band)
+        if ch == "a":
+            bad += _spring_hairlines(ol, ctx.x_height - band, band=band)
+        if bad:
+            failures.append(f"{ch}@{label}:{bad[:4]}")
+    if failures:
+        raise SystemExit(f"stem/bowl spring hairlines still open: {', '.join(failures)}")
 
 
 def _ctx() -> DesignContext:
@@ -109,16 +157,19 @@ def recipe2_raw_yokes(ctx: DesignContext) -> dict:
         "a": pack(a_yoke(ctx, join=0.82)),
         "c": pack(c_yoke(ctx, aperture=0.72)),
     }
-    # Minimal companions for proof word spacing (reuse n stem recipe for i/l)
-    # i/l have no public yoke — use builders so the word still spaces; note in compare.
-    n_ref = build_n(ctx.tuned())  # same ctx; builders for letters without yokes
-    # Actually use builders only for i/l/f/t/o which recipe2 doesn't redefine via yoke
-    o = build_o(ctx)
-    drawn["o"] = o
-    drawn["i"] = i_from_n(n_ref, ctx)
-    drawn["l"] = l_from_n(n_ref, ctx)
-    drawn["f"] = f_from_n(n_ref, ctx, arm=0.88)
-    drawn["t"] = t_from_n(n_ref, ctx, arm=0.62)
+    # Continuous public yokes for the rest of the proof word (no builder fallback).
+    drawn["o"] = pack(o_yoke(ctx))
+    # i stem yoke + tittle (same recipe as i_from_n, public parts only).
+    i_stem = i_yoke(ctx, stem_width=stem)
+    drawn["i"] = (
+        GlyphAssembler(ctx)
+        .add(i_stem)
+        .add(tittle(ctx, stem / 2.0, ctx.x_height + stem * 0.55, size=stem * 0.95))
+        .build()
+    )
+    drawn["l"] = pack(l_yoke(ctx, stem_width=stem))
+    drawn["f"] = pack(f_yoke(ctx, arm=0.88, stem_width=stem))
+    drawn["t"] = pack(t_yoke(ctx, arm=0.62, stem_width=stem))
     return drawn
 
 
@@ -138,6 +189,8 @@ def main() -> None:
 
     r1 = recipe1_builders(ctx)
     r2 = recipe2_raw_yokes(ctx)
+    _assert_stem_springs_sealed(ctx, r1, "recipe1")
+    _assert_stem_springs_sealed(ctx, r2, "recipe2")
 
     # Contour-code fingerprint (topology) to show recipes differ structurally
     def topo(g):
@@ -206,11 +259,11 @@ Proofs: `proof_compare.png`, `proof_recipe1.png`, `proof_recipe2.png`, `proof_st
 
 - **Look different? YES.** Recipe 2 reads wider on stem letters (`n` ink ≈+11%, `r` ≈+23%).
 - **Stitch / kit-of-parts / missing-yoke on covered bodies? NO.** Lint clean; `n`/`h`/`m`/`u`/`r` are single continuous yoke contours. Small waterfall aliasing is not a seam.
-- Recipe 2 still uses builders for `i`/`l`/`f`/`t`/`o` (no dedicated yoke in this script) — honest debt, not a fail on the yoke bar.
+- Recipe 2 uses public yokes for `i`/`l`/`f`/`t`/`o` as well (stem / hook / bowl bodies).
 
 ## Verdict
 
-**PASS** — two Usage A skill recipes compile + proof; yokes usable; recipes look different by part params; italic-vf-construct untouched.
+**PASS** — two Usage A skill recipes compile + proof; yokes usable; recipes look different by part params; stem/bowl spring hairline gate clean on n/h/m/r/a; italic-vf-construct untouched.
 """
         ,
         encoding="utf-8",
