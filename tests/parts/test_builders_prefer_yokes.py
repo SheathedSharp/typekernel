@@ -46,14 +46,14 @@ def _bad(glyph, ctx, name: str) -> list[str]:
     ]
 
 
-def test_prefer_public_yoke_sans_and_upright_serif() -> None:
-    """Sans + upright slab/bracket prefer yokes; italic serif and vf_compat_stem opt out."""
+def test_prefer_public_yoke_sans_and_serif_including_italic() -> None:
+    """Sans + slab/bracket prefer yokes (upright and italic); vf_compat_stem opts out."""
     assert _prefer_public_yoke(DesignContext.humanist_sans()) is True
     assert _prefer_public_yoke(DesignContext.slab_serif()) is True
     assert _prefer_public_yoke(DesignContext.bracketed_serif()) is True
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
     assert _prefer_public_yoke(italic) is True
-    assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is False
+    assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is True
 
 
 
@@ -322,3 +322,94 @@ def test_slab_m_r_u_match_public_yokes() -> None:
         ).build()
         assert _pts(built_u.solids[0]) == _pts(yoke_u.solids[0])
         assert _bad(built_u, ctx, "u") == []
+
+
+def test_italic_serif_n_h_m_r_u_match_public_yokes() -> None:
+    """Italic slab/bracket stem letters prefer continuous yokes (branch + serif feet)."""
+    from typekernel.parts.italic import italic_design
+    from typekernel.parts import FormSources
+    from typekernel.qa.originality import topology_signature
+
+    for factory in (DesignContext.slab_serif, DesignContext.bracketed_serif):
+        ctx = italic_design(FormSources.from_context(factory())).context
+        assert _prefer_public_yoke(ctx) is True
+        m = n_metrics(ctx)
+        for name, built, yoke_fn, kwargs in (
+            (
+                "n",
+                build_n(ctx),
+                n_yoke,
+                dict(
+                    counter=m.counter,
+                    stem_width=m.stem,
+                    stem_top=m.x_height,
+                    crown_y=m.crown_y,
+                    kappa=m.kappa,
+                    branch_y=True,
+                    inline_serifs=True,
+                ),
+            ),
+            (
+                "h",
+                build_h(ctx),
+                h_yoke,
+                dict(
+                    counter=m.counter,
+                    stem_width=m.stem,
+                    crown_y=m.crown_y,
+                    kappa=m.kappa,
+                    branch_y=True,
+                    inline_serifs=True,
+                ),
+            ),
+        ):
+            y = GlyphAssembler(ctx).add(yoke_fn(ctx, 0.0, **kwargs)).build()
+            assert topology_signature(built) == topology_signature(y)
+            # R3 on italic slab ``n`` / bracketed ``h`` is pre-existing on the
+            # private branching+serif path; topology lock is the VF gate.
+        assert topology_signature(build_m(ctx)) == topology_signature(
+            GlyphAssembler(ctx).add(
+                double_shoulder_yoke(
+                    ctx,
+                    0.0,
+                    counter=m.counter,
+                    counter_scale=m_counter_scale(ctx.stem),
+                    stem_width=m.stem,
+                    stem_top=m.x_height,
+                    crown_y=m.crown_y,
+                    kappa=m.kappa,
+                    branch_y=True,
+                    inline_serifs=True,
+                )
+            ).build()
+        )
+        assert topology_signature(build_r(ctx)) == topology_signature(
+            GlyphAssembler(ctx).add(
+                r_yoke(
+                    ctx,
+                    0.0,
+                    counter=m.counter,
+                    stem_width=m.stem,
+                    stem_top=m.x_height,
+                    crown_y=m.crown_y,
+                    kappa=m.kappa,
+                    branch_y=True,
+                    inline_serifs=True,
+                )
+            ).build()
+        )
+        assert topology_signature(build_u(ctx)) == topology_signature(
+            GlyphAssembler(ctx).add(
+                u_yoke(
+                    ctx,
+                    0.0,
+                    counter=m.counter,
+                    stem_width=m.stem,
+                    stem_top=m.x_height,
+                    crown_y=m.crown_y,
+                    kappa=m.kappa,
+                    branch_y=True,
+                    inline_serifs=True,
+                )
+            ).build()
+        )

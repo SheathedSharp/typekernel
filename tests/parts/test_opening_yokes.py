@@ -73,12 +73,12 @@ def test_builders_prefer_opening_yokes_upright_sans() -> None:
     assert _pts(a_from_o(o, n, ctx)) == _pts(GlyphAssembler(ctx).add(sheared).build())
 
 
-def test_opening_yoke_upright_serif_prefers_public() -> None:
-    """Upright slab prefers public openings; italic serif still opts out."""
+def test_opening_yoke_serif_prefers_public_including_italic() -> None:
+    """Slab prefers public openings upright and italic; vf_compat_stem still opts out."""
     assert _prefer_public_yoke(DesignContext.slab_serif()) is True
     italic = DesignContext.humanist_sans().tuned(italic_slant_deg=12.0)
     assert _prefer_public_yoke(italic) is True
-    assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is False
+    assert _prefer_public_yoke(DesignContext.slab_serif().tuned(italic_slant_deg=12.0)) is True
 
 
 def test_c_aperture_param_on_yoke() -> None:

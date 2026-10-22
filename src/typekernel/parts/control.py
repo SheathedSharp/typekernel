@@ -741,16 +741,16 @@ def _vf_compat_stem(ctx: DesignContext) -> bool:
 def _prefer_public_yoke(ctx: DesignContext) -> bool:
     """Use continuous public yokes on the Usage A default path.
 
-    Opt out when:
-    - ``vf_compat_stem_segments`` needs private stem knots;
-    - italic + inlined slab/bracket (branching × serif foot/cap not on yokes yet).
+    Opt out when ``vf_compat_stem_segments`` needs private stem knots
+    (yokes lack the extra stem on-curve knots those masters require).
 
-    Upright slab/bracket prefer yokes with ``inline_serifs`` / opening slabs.
-    Italic sans uses yoke ``branch_y`` / opening tip shear.
+    Sans + slab/bracket (upright and italic) prefer yokes: italic×serif uses
+    ``branch_y`` with ``inline_serifs`` (feet replace written kicks). Pre-existing
+    R3 self-intersect on some italic slab/bracket stems (e.g. slab ``n``,
+    bracketed ``h``) is shared with the private path — topology match is the
+    VF gate; full widen does not wait on that lint.
     """
     if _vf_compat_stem(ctx):
-        return False
-    if _stem_serif_inlined(ctx) and _italic_topology(ctx):
         return False
     return True
 
@@ -1137,7 +1137,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
             branch_y=italic,
-            inline_serifs=_stem_serif_inlined(ctx) and not italic,
+            inline_serifs=_stem_serif_inlined(ctx),
         )
     elif _italic_topology(ctx):
         # Opt-out: serif shelf / VF knots on private branching path.
@@ -1145,7 +1145,7 @@ def build_n(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             m, stem_top=m.x_height, ctx=ctx, shelf_left_foot=shelf_n
         )
     else:
-        # Opt-out: inlined serifs or vf_compat stem knots.
+        # Opt-out: vf_compat stem knots (serif shelf uses yoke inline_serifs).
         outline = _n_family_outline(
             m,
             left_top=m.x_height,
@@ -1191,7 +1191,7 @@ def build_h(ctx: DesignContext, metrics: NMetrics | None = None) -> ComposedGlyp
             inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
             branch_y=italic,
-            inline_serifs=_stem_serif_inlined(ctx) and not italic,
+            inline_serifs=_stem_serif_inlined(ctx),
         )
     elif _italic_topology(ctx):
         outline = _n_branching_outline(
@@ -1251,7 +1251,7 @@ def r_from_n(
             inner_crown=None if italic else m.inner_crown,
             kappa=m.kappa,
             branch_y=italic,
-            inline_serifs=_stem_serif_inlined(c) and not italic,
+            inline_serifs=_stem_serif_inlined(c),
         )
         x_t = _bounds(outline)[2]
     elif _italic_topology(c):
@@ -1791,7 +1791,7 @@ def m_from_n(
             inner_crown=None if italic else mm.inner_crown,
             kappa=mm.kappa,
             branch_y=True if italic else None,
-            inline_serifs=_stem_serif_inlined(c) and not italic,
+            inline_serifs=_stem_serif_inlined(c),
         )
         # Anchor x from the same shoulder layout the private path uses.
         s1 = _shoulder(mm)
@@ -1942,10 +1942,10 @@ def u_from_n(n_glyph: ComposedGlyph, ctx: DesignContext | None = None) -> Compos
             inner_crown=None if italic else um.inner_crown,
             kappa=um.kappa,
             branch_y=italic,
-            inline_serifs=_stem_serif_inlined(c) and not italic,
+            inline_serifs=_stem_serif_inlined(c),
         )
     elif _italic_topology(c):
-        # Opt-out: serif / VF-compat private branching u.
+        # Opt-out: vf_compat private branching u.
         outline = _u_branching_outline(um, c, stem_top=xh)
     else:
         outline = _u_family_outline(um, c, vf_compat=_vf_compat_stem(c))
@@ -2588,7 +2588,7 @@ def _bowl_glyph(
                     tuple(reverse_contour(k) for k in mirror_x(outline, at_x=o.rx).contours)
                 )
     else:
-        # Opt-out: vf_compat / italic×serif private path.
+        # Opt-out: vf_compat_stem private path.
         outline = _bowl_stem_outline(
             o, stem, stem_bottom=bottom, stem_top=top, join=bowl_join, foot=foot
         )
@@ -2679,7 +2679,7 @@ def _single_storey_a_from_o(
             top_exit=top_exit,
         )
     else:
-        # Opt-out: serif / vf_compat_stem private path.
+        # Opt-out: vf_compat_stem private path.
         outline = _bowl_stem_outline(
             o,
             stem,

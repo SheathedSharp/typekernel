@@ -928,6 +928,7 @@ def shoulder_yoke(
     branch_y: float | bool | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    soft_branch: bool = True,
 ) -> Outline:
     """Continuous left-stem + shoulder + right-leg as **one** closed contour.
 
@@ -959,8 +960,6 @@ def shoulder_yoke(
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top, shoulder_top=shoulder_top)
-    if inline_serifs and by is not None:
-        raise ValueError("inline_serifs is unsupported with branch_y (italic serif)")
     upright_spring = top if shoulder_top is None else shoulder_top
     spring = by if by is not None else upright_spring
     upright_crown = (upright_spring + ctx.overshoot) if crown_y is None else crown_y
@@ -1013,22 +1012,19 @@ def shoulder_yoke(
         (l1, join),
     )
     serif = inline_serifs and ctx.style.serif in ("slab", "bracketed")
+    # Upright-only caps (branching private path skips these).
     is_h = shoulder_top is not None and abs(top - upright_spring) > 0.5
-    slab_n_cap = serif and ctx.style.serif == "slab" and not is_h
-    bracket_n_shoulder = (
-        serif and ctx.style.serif == "bracketed" and not is_h
-    )
-    right_leg_top_cap = serif and (
+    upright = by is None
+    slab_n_cap = serif and upright and ctx.style.serif == "slab" and not is_h
+    bracket_n_shoulder = serif and upright and ctx.style.serif == "bracketed" and not is_h
+    right_leg_top_cap = serif and upright and (
         ctx.style.serif == "slab"
         or (ctx.style.serif == "bracketed" and is_h)
     )
-    bracket_h_rect = serif and ctx.style.serif == "bracketed" and is_h
+    bracket_h_rect = serif and upright and ctx.style.serif == "bracketed" and is_h
 
     b = PathBuilder()
-    if by is not None and written_feet:
-        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
-        b.lineTo(l1, top)
-    elif serif:
+    if serif:
         from typekernel.parts.serifs import (
             inline_shoulder_left_cap_slab_path,
             inline_stem_cap_serif_path,
@@ -1043,10 +1039,9 @@ def shoulder_yoke(
         if bracket_n_shoulder:
             inline_shoulder_left_cap_slab_path(b, l0, top, ctx, t)
         b.lineTo(l1, top)
-        if is_h:
+        if is_h and upright:
             scale = 1.0
             if bracket_h_rect:
-                # Match control ``_n_bracketed_h_ascender_cap_thickness_scale`` loosely.
                 scale = max(0.55, min(1.0, upright_spring / max(top, 1.0)))
             if bracket_h_rect:
                 inline_stem_cap_serif_path_slab_rect(
@@ -1057,18 +1052,28 @@ def shoulder_yoke(
             b.lineTo(l1, spring)
         elif slab_n_cap:
             inline_stem_cap_serif_path(b, l0, l1, top, ctx, t)
+        elif by is not None and is_h:
+            # Italic serif ``h``: ascender cap then down to branch spring.
+            inline_stem_cap_serif_path(b, l0, l1, top, ctx, t)
+    elif by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
+        b.lineTo(l1, top)
     else:
         b.moveTo(l0, y_bottom)
         b.lineTo(l0, top)
         b.lineTo(l1, top)
     if by is not None:
-        emit_italic_branch_shoulder(
-            b,
-            branch_x=l1,
-            branch_y=by,
-            shoulder0=o0,
-            radius=italic_branch_radius(top, by),
-        )
+        if soft_branch:
+            emit_italic_branch_shoulder(
+                b,
+                branch_x=l1,
+                branch_y=by,
+                shoulder0=o0,
+                radius=italic_branch_radius(top, by),
+            )
+        else:
+            b.lineTo(l1, by)
+            b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
         b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
     else:
         if (not serif) and shoulder_top is not None and abs(top - spring) > 0.5:
@@ -1077,13 +1082,11 @@ def shoulder_yoke(
         if right_leg_top_cap:
             from fontTools.misc.bezierTools import splitCubicAtT
 
-            # Split outer[1] at x-height (horizontal) via binary search on y.
-            p0, p1, p2, p3 = (tuple(p) for p in o1)
-            # Approximate t where y == upright_spring
+            p0, p1, p2, p3 = (tuple(pt) for pt in o1)
             lo_t, hi_t = 0.0, 1.0
             for _ in range(24):
                 mid_t = 0.5 * (lo_t + hi_t)
-                _l, right = splitCubicAtT(p0, p1, p2, p3, mid_t)
+                _left, right = splitCubicAtT(p0, p1, p2, p3, mid_t)
                 y_m = right[0][1]
                 if y_m > upright_spring:
                     lo_t = mid_t
@@ -1109,14 +1112,14 @@ def shoulder_yoke(
             b.lineTo(r1, rpts[3][1])
         else:
             b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
-    if by is not None and written_feet:
-        emit_italic_exit_outstroke(b, r0, r1, stem=t)
-    elif serif:
+    if serif:
         from typekernel.parts.serifs import inline_stem_foot_serif_path_right
 
         b.lineTo(r1, y_bottom)
         inline_stem_foot_serif_path_right(b, r1, y_bottom, ctx, t)
         b.lineTo(r0, y_bottom)
+    elif by is not None and written_feet:
+        emit_italic_exit_outstroke(b, r0, r1, stem=t)
     else:
         b.lineTo(r1, y_bottom)
         b.lineTo(r0, y_bottom)
@@ -1150,11 +1153,12 @@ def n_yoke(
     branch_y: float | bool | None = None,
     written_feet: bool = True,
     inline_serifs: bool = False,
+    soft_branch: bool = True,
 ) -> Outline:
     """Public Usage A ``n`` body — alias of :func:`shoulder_yoke`.
 
     ``branch_y=True`` (or a float) yields the written italic branching recipe.
-    ``inline_serifs`` draws upright slab/bracket feet and caps into the contour.
+    ``inline_serifs`` draws slab/bracket feet (and upright caps) into the contour.
     """
     return shoulder_yoke(
         ctx,
@@ -1172,6 +1176,7 @@ def n_yoke(
         branch_y=branch_y,
         written_feet=written_feet,
         inline_serifs=inline_serifs,
+        soft_branch=soft_branch,
     )
 
 
@@ -1291,8 +1296,6 @@ def double_shoulder_yoke(
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top)
-    if inline_serifs and by is not None:
-        raise ValueError("inline_serifs is unsupported with branch_y (italic serif)")
     serif = inline_serifs and ctx.style.serif in ("slab", "bracketed")
     # Shoulder spring height (branch or upright crown spring).
     spring = by if by is not None else top
@@ -1372,10 +1375,7 @@ def double_shoulder_yoke(
         return (tuple(pieces[0]), tuple(pieces[1]))
 
     b = PathBuilder()
-    if by is not None and written_feet:
-        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
-        b.lineTo(l1, top)
-    elif serif:
+    if serif:
         from typekernel.parts.serifs import (
             inline_shoulder_left_cap_slab_path,
             inline_stem_foot_serif_path,
@@ -1386,6 +1386,9 @@ def double_shoulder_yoke(
         inline_stem_foot_serif_path(b, l0, y_bottom, ctx, t)
         b.lineTo(l0, top)
         inline_shoulder_left_cap_slab_path(b, l0, top, ctx, t)
+        b.lineTo(l1, top)
+    elif by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
         b.lineTo(l1, top)
     else:
         b.moveTo(l0, y_bottom)
@@ -1411,14 +1414,14 @@ def double_shoulder_yoke(
         _curve(b, o1a)
         _curve(b, o0b)
     _curve(b, o1b)
-    if by is not None and written_feet:
-        emit_italic_exit_outstroke(b, r0, r1, stem=t)
-    elif serif:
+    if serif:
         from typekernel.parts.serifs import inline_stem_foot_serif_path_right
 
         b.lineTo(r1, y_bottom)
         inline_stem_foot_serif_path_right(b, r1, y_bottom, ctx, t)
         b.lineTo(r0, y_bottom)
+    elif by is not None and written_feet:
+        emit_italic_exit_outstroke(b, r0, r1, stem=t)
     else:
         b.lineTo(r1, y_bottom)
         b.lineTo(r0, y_bottom)
@@ -1577,21 +1580,22 @@ def u_yoke(
 
     ro, ri = mx(l0), mx(l1)
     lo, li = mx(r1), mx(r0)
-    if inline_serifs and by is not None:
-        raise ValueError("inline_serifs is unsupported with branch_y (italic serif)")
     bulge = foot_bulge
     if bulge is None:
         # Match control ``_u_foot_bulge``: zero when roundness ≥ 0.35.
         bulge = 0.0 if ctx.roundness >= 0.35 else max(t * 0.08, 4.0)
     # Upright serif with zero bulge: mirror n_yoke(+inline_serifs) like control
     # ``_u_family_outline``. Non-zero bulge keeps the baseline toe (slab).
-    if inline_serifs and by is None and bulge <= 0.0 and ctx.style.serif in (
-        "slab",
-        "bracketed",
+    if (
+        inline_serifs
+        and bulge <= 0.0
+        and ctx.style.serif in ("slab", "bracketed")
     ):
         from typekernel.geo.contour import reverse_contour, signed_area
         from typekernel.parts.transforms import mirror_x
 
+        # Upright: mirror n with feet/caps. Italic: mirror branching n with feet
+        # then crotch-soften (control ``_u_branching_outline`` soft_branch=False).
         ny = n_yoke(
             ctx,
             x_left,
@@ -1599,17 +1603,32 @@ def u_yoke(
             stem_width=t,
             y_bottom=y_bottom,
             stem_top=top,
-            join_y=join_y if join_y is not None else join,
+            join_y=None if by is not None else (join_y if join_y is not None else join),
             crown_y=crown_y if crown_y is not None else crown,
-            leg_top=leg_top,
-            inner_crown=inner_crown,
+            leg_top=None if by is not None else leg_top,
+            inner_crown=None if by is not None else inner_crown,
             kappa=k,
+            branch_y=True if by is not None else None,
             inline_serifs=True,
+            written_feet=False,
+            soft_branch=False if by is not None else True,
         )
         outline = mirror_x(ny, at_x=cx)
         c0 = outline.contours[0]
         if signed_area(c0) < 0:
             outline = Outline((reverse_contour(c0),))
+        if by is not None:
+            # Emit fillet on mirrored shoulder is unsafe; re-soften crotch.
+            # n_yoke already emitted — strip by rebuilding sharp? Control uses
+            # soft_branch=False. Prefer soften on current outline at right stem.
+            ri = cx + t / 2.0  # approx; use mx(l1)= 2*cx - t if x_left=0
+            ri = 2.0 * cx - (x_left + t)
+            outline = soften_stem_branch(
+                outline, stem_x=ri, branch_y=by, stem=t, stem_top=top
+            )
+            c0 = outline.contours[0]
+            if signed_area(c0) < 0:
+                outline = Outline((reverse_contour(c0),))
         return outline
     # Private italic ``u`` uses written kicks only when bulge is zero; low
     # roundness keeps the baseline toe and skips kicks so VF upright/italic
@@ -1760,8 +1779,6 @@ def r_yoke(
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
     by = _resolve_branch_y(branch_y, stem_top=top)
-    if inline_serifs and by is not None:
-        raise ValueError("inline_serifs is unsupported with branch_y (italic serif)")
     serif = inline_serifs and ctx.style.serif in ("slab", "bracketed")
     spring = by if by is not None else top
     upright_crown = (top + ctx.overshoot) if crown_y is None else crown_y
@@ -1838,10 +1855,7 @@ def r_yoke(
         b.curveTo(c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1])
 
     b = PathBuilder()
-    if by is not None and written_feet:
-        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
-        b.lineTo(l1, top)
-    elif serif:
+    if serif:
         from typekernel.parts.serifs import (
             inline_shoulder_left_cap_slab_path,
             inline_stem_foot_serif_path,
@@ -1850,7 +1864,11 @@ def r_yoke(
         b.moveTo(l0, y_bottom)
         inline_stem_foot_serif_path(b, l0, y_bottom, ctx, t)
         b.lineTo(l0, top)
-        inline_shoulder_left_cap_slab_path(b, l0, top, ctx, t)
+        if by is None:
+            inline_shoulder_left_cap_slab_path(b, l0, top, ctx, t)
+        b.lineTo(l1, top)
+    elif by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
         b.lineTo(l1, top)
     else:
         b.moveTo(l0, y_bottom)
