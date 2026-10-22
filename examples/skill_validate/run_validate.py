@@ -116,6 +116,26 @@ from typekernel.parts import (
     y_yoke,
     Z_from_H,
     Z_yoke,
+    eight_from_O,
+    eight_yoke,
+    five_from_O,
+    five_yoke,
+    four_from_H,
+    four_yoke,
+    nine_from_O,
+    nine_yoke,
+    one_from_H,
+    one_yoke,
+    seven_from_H,
+    seven_yoke,
+    six_from_O,
+    six_yoke,
+    three_from_O,
+    three_yoke,
+    two_from_O,
+    two_yoke,
+    zero_from_O,
+    zero_yoke,
 )
 from typekernel.qa.proof import proof_labeled_waterfall
 
@@ -462,6 +482,66 @@ def main() -> None:
         width=1600,
     )
     print("caps compare:", p_caps_cmp)
+
+
+    # Figures 0–9: builders vs raw public yokes
+    def recipe_figs_builders(c):
+        H, O = build_H(c), build_O(c)
+        return {
+            "0": zero_from_O(O, H, c),
+            "1": one_from_H(H, c),
+            "2": two_from_O(O, H, c),
+            "3": three_from_O(O, H, c),
+            "4": four_from_H(H, c),
+            "5": five_from_O(O, H, c),
+            "6": six_from_O(O, H, c),
+            "7": seven_from_H(H, c),
+            "8": eight_from_O(O, H, c),
+            "9": nine_from_O(O, H, c),
+        }
+
+    def recipe_figs_yokes(c):
+        hm = h_cap_metrics(c)
+        om = cap_o_metrics(c)
+
+        def pack(outline, design):
+            return GlyphAssembler(c).with_design(design).add(outline).build()
+
+        return {
+            "0": pack(zero_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "1": pack(one_yoke(c, metrics=hm), hm),
+            "2": pack(two_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "3": pack(three_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "4": pack(four_yoke(c, metrics=hm), hm),
+            "5": pack(five_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "6": pack(six_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "7": pack(seven_yoke(c, metrics=hm), hm),
+            "8": pack(eight_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+            "9": pack(nine_yoke(c, metrics=hm, o_metrics_rec=om), hm),
+        }
+
+    rf1 = recipe_figs_builders(ctx)
+    otf_f1 = _compile("after8_figs_builders", ctx, rf1)
+    ctx_fig_wide = ctx.tuned(aperture=0.72)
+    rf2 = recipe_figs_yokes(ctx_fig_wide)
+    otf_f2 = _compile("after8_figs_yokes", ctx_fig_wide, rf2)
+    FIG_TEXT = "0123456789"
+    p_figs = proof_labeled_waterfall(
+        [("1 builders", otf_f1), ("2 yokes wide", otf_f2)],
+        FIG_TEXT,
+        OUT / "proof_figs_after8.png",
+        sizes=(48, 72, 96),
+        width=1400,
+    )
+    print("figs:", p_figs)
+    p_figs_cmp = proof_labeled_waterfall(
+        [("builders", otf_f1), ("yokes", otf_f2)],
+        "0123456789  3.14159  $1,280",
+        OUT / "proof_figs_compare_after8.png",
+        sizes=(40, 64),
+        width=1400,
+    )
+    print("figs compare:", p_figs_cmp)
 
     note = OUT / "COMPARE.md"
     note.write_text(
