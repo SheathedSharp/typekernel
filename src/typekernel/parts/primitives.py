@@ -176,19 +176,40 @@ def arch(
     y_top: float,
     *,
     thickness: float | None = None,
+    meet_fillet: float | None = None,
 ) -> Outline:
     """n/h-style shoulder: outer and inner arches forming a closed trough top.
 
     The arch sits between two imaginary stems at ``x_left`` and ``x_right``
     (inner faces). ``y_top`` is the outer crown; ``y_bottom`` is where the arch
     meets the stem tops internally.
+
+    ``meet_fillet`` (default ``ctx.join_radius * 0.35``) rounds the four
+    stem-meet corners on the path itself so a later boolean with stems is less
+    likely to leave a hard T-junction. Pass ``0`` for the old square meets.
+    For a full n/h body with **no** boolean seam, prefer :func:`shoulder_yoke`.
     """
     t = ctx.stem if thickness is None else thickness
     mid = (x_left + x_right) / 2.0
+    span = x_right - x_left
+    fillet = ctx.join_radius * 0.35 if meet_fillet is None else meet_fillet
+    fillet = max(0.0, min(fillet, t * 0.45, span * 0.12))
     # Outer path: left top -> crown -> right top -> down inner -> inner crown -> back
     b = PathBuilder()
-    b.moveTo(x_left, y_bottom)
-    b.lineTo(x_left, y_top - (x_right - x_left) * 0.15)
+    if fillet <= 0:
+        b.moveTo(x_left, y_bottom)
+    else:
+        # Fillet SW outer meet: start on bottom, curve onto left outer rise.
+        b.moveTo(x_left + fillet, y_bottom)
+        b.curveTo(
+            x_left + fillet * 0.45,
+            y_bottom,
+            x_left,
+            y_bottom + fillet * 0.45,
+            x_left,
+            y_bottom + fillet,
+        )
+    b.lineTo(x_left, y_top - span * 0.15)
     # Outer crown (smooth)
     b.smoothCurveTo(
         mid,
@@ -201,17 +222,37 @@ def arch(
     )
     b.smoothCurveTo(
         x_right,
-        y_top - (x_right - x_left) * 0.15,
+        y_top - span * 0.15,
         tangent_out_x=0.0,
         tangent_out_y=-1.0,
         handle_ratio=0.42,
         tangent_in_x=1.0,
         tangent_in_y=0.0,
     )
-    b.lineTo(x_right, y_bottom)
-    b.lineTo(x_right - t, y_bottom)
+    if fillet <= 0:
+        b.lineTo(x_right, y_bottom)
+        b.lineTo(x_right - t, y_bottom)
+    else:
+        b.lineTo(x_right, y_bottom + fillet)
+        b.curveTo(
+            x_right,
+            y_bottom + fillet * 0.45,
+            x_right - fillet * 0.45,
+            y_bottom,
+            x_right - fillet,
+            y_bottom,
+        )
+        b.lineTo(x_right - t + fillet, y_bottom)
+        b.curveTo(
+            x_right - t + fillet * 0.45,
+            y_bottom,
+            x_right - t,
+            y_bottom + fillet * 0.45,
+            x_right - t,
+            y_bottom + fillet,
+        )
     inner_top = y_top - t
-    b.lineTo(x_right - t, inner_top - (x_right - x_left) * 0.12)
+    b.lineTo(x_right - t, inner_top - span * 0.12)
     b.smoothCurveTo(
         mid,
         inner_top,
@@ -223,14 +264,26 @@ def arch(
     )
     b.smoothCurveTo(
         x_left + t,
-        inner_top - (x_right - x_left) * 0.12,
+        inner_top - span * 0.12,
         tangent_out_x=0.0,
         tangent_out_y=-1.0,
         handle_ratio=0.42,
         tangent_in_x=-1.0,
         tangent_in_y=0.0,
     )
-    b.lineTo(x_left + t, y_bottom)
+    if fillet <= 0:
+        b.lineTo(x_left + t, y_bottom)
+    else:
+        b.lineTo(x_left + t, y_bottom + fillet)
+        b.curveTo(
+            x_left + t,
+            y_bottom + fillet * 0.45,
+            x_left + t - fillet * 0.45,
+            y_bottom,
+            x_left + t - fillet,
+            y_bottom,
+        )
+        b.lineTo(x_left + fillet, y_bottom)
     b.closePath()
     return b.build()
 
@@ -850,9 +903,146 @@ def shoulder(
     y_top: float,
     *,
     thickness: float | None = None,
+    meet_fillet: float | None = None,
 ) -> Outline:
     """Alias for :func:`arch` — n/h/m shoulder trough."""
-    return arch(ctx, x_left, x_right, y_bottom, y_top, thickness=thickness)
+    return arch(
+        ctx, x_left, x_right, y_bottom, y_top, thickness=thickness, meet_fillet=meet_fillet
+    )
+
+
+def shoulder_yoke(
+    ctx: DesignContext,
+    x_left: float,
+    *,
+    counter: float | None = None,
+    stem_width: float | None = None,
+    y_bottom: float = 0.0,
+    stem_top: float | None = None,
+    join_y: float | None = None,
+    crown_y: float | None = None,
+    kappa: float | None = None,
+) -> Outline:
+    """Continuous left-stem + shoulder + right-leg as **one** closed contour.
+
+    This is the Usage A body for ``n``/``h``/``m``-family letters when an agent
+    wants a clean yoke without boolean-unioning ``vertical_stem`` + ``arch``
+    (which leaves part-boundary corners even after ``soft_union``).
+
+    Parameters (design units):
+        x_left: Outer left of the left stem.
+        counter: Inner-face gap between stems (default ``≈ 0.42 * x_height``).
+        stem_width: Stem thickness (default ``ctx.stem``).
+        y_bottom: Baseline of both legs (default ``0``).
+        stem_top: Flat top of the left stem (default ``ctx.x_height``).
+        join_y: Inner crotch where the counter springs (default mid shoulder).
+        crown_y: Outer shoulder peak (default ``stem_top + overshoot``).
+        kappa: Shoulder handle ratio (default from ``ctx.roundness``).
+
+    Visual: larger ``counter`` widens the trough; higher ``join_y`` raises the
+    crotch; ``kappa`` toward ``0.55`` rounds the crown more.
+    """
+    from typekernel.geo.path_helpers import KAPPA
+
+    t = ctx.stem if stem_width is None else stem_width
+    if t <= 0:
+        raise ValueError(f"stem_width must be positive, got {t!r}")
+    w = (ctx.x_height * 0.42) if counter is None else counter
+    if w <= 0:
+        raise ValueError(f"counter must be positive, got {w!r}")
+    top = ctx.x_height if stem_top is None else stem_top
+    crown = (top + ctx.overshoot) if crown_y is None else crown_y
+    if crown <= top:
+        crown = top + max(ctx.overshoot, t * 0.08)
+    join = (top * 0.52) if join_y is None else join_y
+    join = min(join, crown - t * 0.55)
+    join = max(join, y_bottom + t * 0.35)
+    k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
+    l0 = x_left
+    l1 = x_left + t
+    r0 = l1 + w
+    r1 = r0 + t
+    mid = 0.5 * (l1 + r0)
+    leg_top = top - (r1 - l0) * 0.02
+    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+    # Outer cubics: left spring → crown → right leg top
+    spring = top
+    o0 = (
+        (l1, spring),
+        (l1, spring + k * (crown - spring)),
+        (mid - k * (mid - l1), crown),
+        (mid, crown),
+    )
+    o1 = (
+        (mid, crown),
+        (mid + k * (r1 - mid), crown),
+        (r1, leg_top + k * (crown - leg_top)),
+        (r1, leg_top),
+    )
+    i0 = (
+        (r0, join),
+        (r0, join + k * (inner_crown - join)),
+        (mid + k * (r0 - mid), inner_crown),
+        (mid, inner_crown),
+    )
+    i1 = (
+        (mid, inner_crown),
+        (mid - k * (mid - l1), inner_crown),
+        (l1, join + k * (inner_crown - join)),
+        (l1, join),
+    )
+    b = PathBuilder()
+    b.moveTo(l0, y_bottom)
+    b.lineTo(l0, top)
+    b.lineTo(l1, top)
+    b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
+    b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
+    b.lineTo(r1, y_bottom)
+    b.lineTo(r0, y_bottom)
+    b.lineTo(r0, join)
+    b.curveTo(i0[1][0], i0[1][1], i0[2][0], i0[2][1], i0[3][0], i0[3][1])
+    b.curveTo(i1[1][0], i1[1][1], i1[2][0], i1[2][1], i1[3][0], i1[3][1])
+    b.lineTo(l1, y_bottom)
+    b.closePath()
+    return b.build()
+
+
+def soften_stem_branch(
+    outline: Outline,
+    *,
+    stem_x: float,
+    branch_y: float,
+    stem: float,
+    stem_top: float,
+    tension: float = 0.95,
+) -> Outline:
+    """Blend the stem→shoulder crotch at ``(stem_x, branch_y)`` on one outline.
+
+    Use after drawing a sharp branch (line into shoulder cubic) — typical
+    italic ``n``/``h``/``m``/``r`` topology. Selects only the line→curve join
+    nearest the branch point so other corners stay put. Radius scales from
+    the branch drop (``stem_top - branch_y``), not stem weight, so wght
+    ladders keep a stable segment recipe.
+
+    Does **not** require boolean. Part-exit quality helper for written italic.
+    """
+    from typekernel.geo.extrema import outline_with_axis_extrema_on_curve
+    from typekernel.geo.joins import _is_line, _seg_end, blend_corners
+
+    drop = max(0.0, stem_top - branch_y)
+    radius = max(2.0, drop * 0.18)
+    tol = max(6.0, stem * 0.15)
+
+    def select(angle: float, a: object, b: object) -> bool:
+        if angle < 0.5:
+            return False
+        if not (_is_line(a) and not _is_line(b)):  # type: ignore[arg-type]
+            return False
+        pt = _seg_end(a)  # type: ignore[arg-type]
+        return abs(pt.y - branch_y) <= tol and abs(pt.x - stem_x) <= tol
+
+    blended = blend_corners(outline, radius, select=select, tension=tension)
+    return outline_with_axis_extrema_on_curve(blended)
 
 
 def smooth_hook(

@@ -15,7 +15,8 @@ Boolean / heal policy (library-wide)
    and/or :meth:`GlyphAssembler.heal_self_intersections` **explicitly**. Heal
    and boolean ops require ``typekernel[boolean]`` (skia-pathops) and **raise**
    if it is missing — never silently skip.
-3. **Post-hoc** — :func:`heal_composed_glyph` is opt-in for agent-drawn outlines
+3. **Part-exit weld** — :func:`soft_union` for agent boolean composition (union + corner blend + debris strip).
+4. **Post-hoc** — :func:`heal_composed_glyph` is opt-in for agent-drawn outlines
    after boolean work; same raise-on-missing contract when ``heal=True``.
 """
 
@@ -307,6 +308,46 @@ def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
                 segs.append(CubicSegment(*pts))
         contours.append(Contour(tuple(segs), closed=c.closed))
     return Outline(tuple(contours))
+
+
+def soft_union(
+    outlines: list[Outline],
+    *,
+    radius: float,
+    tension: float = 1.0,
+    ease: bool = True,
+    min_contour_area: float = 1.0,
+    heal: bool = False,
+) -> Outline:
+    """Boolean-union parts, then blend corners and strip debris (part-exit weld).
+
+    This is the Usage A join path when an agent *must* boolean-compose solids
+    (stem + bar, serif stub + stem, …). Prefer continuous one-contour parts
+    such as :func:`~typekernel.parts.primitives.shoulder_yoke` when a letter
+    body can be drawn without a boolean.
+
+    Steps: ``union_all`` → optional ``self_union`` → strip tiny contours →
+    :func:`~typekernel.geo.joins.blend_corners` → optional
+    :func:`~typekernel.geo.joins.ease_curvature`. Requires ``typekernel[boolean]``.
+
+    ``radius`` is the blend trim length (typically ``ctx.join_radius``).
+    ``min_contour_area`` drops expand/union speck contours (design-unit²).
+    """
+    from typekernel.geo.joins import blend_corners, default_selector, ease_curvature
+
+    if not outlines:
+        raise ValueError("soft_union requires at least one outline")
+    if radius <= 0:
+        raise ValueError(f"radius must be positive, got {radius!r}")
+    body = union_all(list(outlines))
+    if heal:
+        body = self_union(body)
+    if min_contour_area > 0:
+        body = strip_tiny_contours(body, min_area=float(min_contour_area))
+    body = blend_corners(body, radius, select=default_selector, tension=tension)
+    if ease:
+        body = ease_curvature(body, angle_tol=0.5, min_handle=1.0, both_ends=True)
+    return body
 
 
 def try_union(outlines: list[Outline]) -> Outline:

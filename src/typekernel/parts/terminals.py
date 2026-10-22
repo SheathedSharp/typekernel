@@ -1,4 +1,4 @@
-"""Terminal operators — shear, flat, ball, and hook ends.
+"""Terminal operators — shear, flat, flare, ball, and hook ends.
 
 General outline operators for stroke endings. Synthetic-fixture first; not
 glyph-specific beauty. Boolean steps need ``typekernel[boolean]`` (pathops).
@@ -80,6 +80,81 @@ def shear_end(
             if 0.0 <= dist <= band:
                 falloff = band - dist
                 return Point(p.x, p.y + falloff * k)
+            return p
+
+    return _map_points(outline, map_pt)
+
+
+def flare_end(
+    outline: Outline,
+    at: tuple[float, float],
+    *,
+    amount: float = 0.4,
+    band: float | None = None,
+    along: Literal["x", "y"] = "y",
+    inward: Literal["auto", "+", "-"] = "auto",
+) -> Outline:
+    """Widen the terminal band so the stroke flares toward ``at``.
+
+    Unlike :func:`shear_end` (which skews the tip), this expands points away
+    from the local cross-axis centreline inside ``band``, peaking at ``at``.
+    ``amount`` is tip half-width gain as a fraction of the outline's half-span
+    on the cross axis (``0`` = no-op; ``0.4`` ≈ 40% wider at the tip).
+
+    Designed for open stroke ends (``c``/``e``/``r``/``s`` tips, arm ends).
+    Not stroke-expand weight.
+    """
+    if amount == 0.0:
+        return outline
+    if amount < 0:
+        raise ValueError(f"amount must be >= 0, got {amount!r}")
+    ax, ay = at
+    try:
+        min_x, min_y, max_x, max_y = bounds(outline)
+    except ValueError:
+        return outline
+    if band is None:
+        band = max(8.0, 0.4 * max(max_x - min_x, max_y - min_y))
+    if band <= 0:
+        raise ValueError(f"band must be positive, got {band!r}")
+
+    if along == "y":
+        half = max((max_x - min_x) / 2.0, 1e-6)
+        cx = 0.5 * (min_x + max_x)
+        if inward == "auto":
+            inward_sign = 1.0 if (max_y - ay) >= (ay - min_y) else -1.0
+        else:
+            inward_sign = 1.0 if inward == "+" else -1.0
+
+        def map_pt(p: Point) -> Point:
+            dist = (p.y - ay) * inward_sign
+            if 0.0 <= dist <= band:
+                falloff = (band - dist) / band
+                # Push away from centreline; points on centreline stay put.
+                side = p.x - cx
+                gain = amount * half * falloff
+                if abs(side) < 1e-9:
+                    return p
+                return Point(p.x + (1.0 if side > 0 else -1.0) * gain, p.y)
+            return p
+
+    else:
+        half = max((max_y - min_y) / 2.0, 1e-6)
+        cy = 0.5 * (min_y + max_y)
+        if inward == "auto":
+            inward_sign = 1.0 if (max_x - ax) >= (ax - min_x) else -1.0
+        else:
+            inward_sign = 1.0 if inward == "+" else -1.0
+
+        def map_pt(p: Point) -> Point:
+            dist = (p.x - ax) * inward_sign
+            if 0.0 <= dist <= band:
+                falloff = (band - dist) / band
+                side = p.y - cy
+                gain = amount * half * falloff
+                if abs(side) < 1e-9:
+                    return p
+                return Point(p.x, p.y + (1.0 if side > 0 else -1.0) * gain)
             return p
 
     return _map_points(outline, map_pt)
@@ -205,6 +280,35 @@ def flat_terminal_piece(
     t = abs(y1 - y0) if abs(y1 - y0) > 1e-9 else ctx.stem
     s = shear * t
     return _poly([(x0 + s, y0), (x1 + s, y0), (x1 - s, y1), (x0 - s, y1)])
+
+
+def flared_terminal_piece(
+    ctx: DesignContext,
+    x0: float,
+    y0: float,
+    x1: float,
+    y1: float,
+    *,
+    flare: float = 0.4,
+) -> Outline:
+    """Standalone flared trapezoid terminal (wider at the outer end).
+
+    ``(x0, y0)``–``(x1, y0)`` is the stem-facing face; ``y1`` is the outer tip.
+    ``flare`` widens the tip face relative to ``|x1 - x0|``. Agents union this
+    onto a stem tip, or prefer :func:`flare_end` to reshape an existing outline.
+    """
+    w = abs(x1 - x0) if abs(x1 - x0) > 1e-9 else ctx.stem
+    tip_half = 0.5 * w * (1.0 + flare)
+    stem_half = 0.5 * w
+    cx = 0.5 * (x0 + x1)
+    return _poly(
+        [
+            (cx - stem_half, y0),
+            (cx + stem_half, y0),
+            (cx + tip_half, y1),
+            (cx - tip_half, y1),
+        ]
+    )
 
 
 def hook_terminal_piece(
