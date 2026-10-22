@@ -68,10 +68,12 @@ __all__ = [
     "f_from_n",
     "f_yoke",
     "g_from_o",
+    "g_yoke",
     "h_from_n",
     "i_from_n",
     "i_yoke",
     "j_from_n",
+    "j_yoke",
     "l_from_n",
     "l_yoke",
     "m_from_n",
@@ -1691,22 +1693,10 @@ def j_from_n(
     arm: float = 0.75,
     real_flare: bool = False,
 ) -> ComposedGlyph:
-    """Derive ``j``: the ``r`` turned 180° into a descender hook, plus the ``i`` tittle."""
+    """Derive ``j``: continuous descender hook (:func:`j_yoke`) plus the ``i`` tittle."""
     c = ctx or n_glyph.context
     m = _n_record(n_glyph)
-    height = m.x_height - c.descender
-    hook = _hook_record(m, height, c)
-    outline, _ = _r_outline(
-        hook,
-        arm,
-        hook_belly=_hook_belly_fillet(m.stem),
-        slab_foot=_hook_slab_stem_foot(c, m.stem),
-        ctx=c,
-    )
-    turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
-    body = translate(turned, 0.0, c.descender)
-    tip = (m.stem * 1.05, c.descender + m.stem * 0.28)
-    body = apply_terminal_shear(c, body, at=tip, real_flare=real_flare)
+    body = j_yoke(c, arm=arm, real_flare=real_flare, metrics=m)
     dot_y = m.x_height + m.stem * 0.55
     dot = tittle(c, m.stem / 2.0, dot_y, size=m.stem * 0.95)
     half = m.stem / 2.0
@@ -2144,10 +2134,10 @@ def _bowl_stem_outline(
 ) -> Outline:
     """``d``-type bowl (left) + stem (right) as two contours, outer CCW.
 
-    The outer is the ``o`` bowl cut slightly **into** the stem face (overlap)
-    so the stem–bowl spring has no even-odd hairline; the counter still meets
-    the true stem face. ``soft_join`` blends non-terminal corners on the outer
-    (and counter) after build.
+    The outer is the ``o`` bowl cut **into** the stem face
+    (``overlap = max(8, 0.09·stem)``) so the stem–bowl spring has no even-odd
+    hairline; the counter still meets the true stem face. ``soft_join`` blends
+    non-terminal corners on the outer (and counter) after build.
 
     ``foot(builder, stem_left_x)`` replaces the stem's left face below the
     bowl; it must end on ``(stem_left_x, stem_bottom)`` (``g`` draws its hook).
@@ -2161,7 +2151,7 @@ def _bowl_stem_outline(
         raise ValueError("stem is wider than half the bowl; widen the o or thin the stem")
 
     # Overlap outer bowl into the stem so the join spring is solid (not a notch).
-    overlap = max(5.0, stem * 0.06)
+    overlap = max(8.0, stem * 0.09)
     cut_x = s_l - overlap
     if cut_x <= cx:
         cut_x = s_l
@@ -2497,6 +2487,39 @@ def t_yoke(
         band = max(6.0, ctx.stem * 0.38)
         return shear_end(flipped, tip, -16.0, band=band, along="y", inward="-")
     return apply_terminal_shear(ctx, flipped, at=tip, real_flare=real_flare)
+
+
+def j_yoke(
+    ctx: DesignContext,
+    *,
+    arm: float = 0.75,
+    stem_width: float | None = None,
+    real_flare: bool = False,
+    metrics: NMetrics | None = None,
+) -> Outline:
+    """Continuous ``j`` body (descender hook, no tittle) — Usage A.
+
+    Same continuous path as :func:`j_from_n` without the tittle. Agents add
+    :func:`~typekernel.parts.primitives.tittle` separately (see ``i_yoke``).
+    """
+    m = metrics if metrics is not None else n_metrics(ctx)
+    if stem_width is not None:
+        if stem_width <= 0:
+            raise ValueError(f"stem_width must be positive, got {stem_width!r}")
+        m = m.tuned(stem=stem_width)
+    height = m.x_height - ctx.descender
+    hook = _hook_record(m, height, ctx)
+    outline, _ = _r_outline(
+        hook,
+        arm,
+        hook_belly=_hook_belly_fillet(m.stem),
+        slab_foot=_hook_slab_stem_foot(ctx, m.stem),
+        ctx=ctx,
+    )
+    turned = mirror_y(mirror_x(outline, at_x=m.stem / 2.0), at_y=height / 2.0)
+    body = translate(turned, 0.0, ctx.descender)
+    tip = (m.stem * 1.05, ctx.descender + m.stem * 0.28)
+    return apply_terminal_shear(ctx, body, at=tip, real_flare=real_flare)
 
 
 def _c_opening_outline(
@@ -3540,46 +3563,51 @@ def _g_hook_belly_fillet(stem: float) -> float:
     return _hook_belly_fillet(stem)
 
 
-def g_from_o(
-    o_glyph: ComposedGlyph,
-    n_glyph: ComposedGlyph | None = None,
-    ctx: DesignContext | None = None,
+def g_yoke(
+    ctx: DesignContext,
     *,
     arm: float = 0.75,
     join: float = 0.85,
     real_flare: bool = False,
-) -> ComposedGlyph:
-    """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``).
+    stem_width: float | None = None,
+    o_metrics_rec: OMetrics | None = None,
+    n_metrics_rec: NMetrics | None = None,
+) -> Outline:
+    """Continuous single-storey ``g`` body (bowl + descender hook) — Usage A.
 
-    ``real_flare`` applies on the single-storey hook path only.
+    Matches :func:`g_from_o` when ``style.g_form`` is ``"single"`` (the
+    product default). Double-storey stays on the builder path only.
     """
-    c = ctx or o_glyph.context
-    if c.style.g_form == "double":
-        return _double_storey_g_from_o(o_glyph, n_glyph, c)
-    o = _o_record(o_glyph)
-    nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    from typekernel.geo.joins import blend_corners, default_selector
     from typekernel.parts.weight_relief import stem_weight_fraction
 
-    stem, desc = nm.stem, c.descender
+    o = o_metrics_rec if o_metrics_rec is not None else o_metrics(ctx)
+    nm = n_metrics_rec if n_metrics_rec is not None else n_metrics(ctx)
+    if stem_width is not None:
+        if stem_width <= 0:
+            raise ValueError(f"stem_width must be positive, got {stem_width!r}")
+        nm = nm.tuned(stem=stem_width)
+
+    stem, desc = nm.stem, ctx.descender
     t_relief = stem_weight_fraction(stem)
     if t_relief > 0.55:
-        o_nom = o_metrics(c)
+        o_nom = o_metrics(ctx)
         blend = min(1.0, (t_relief - 0.55) / 0.38) * 0.48
         o = o.tuned(
             rx=o.rx + blend * (o_nom.rx - o.rx),
             ry=o.ry + blend * (o_nom.ry - o.ry),
         )
     height = o.x_height - desc
-    ease = min(1.0, max(0.0, (c.roundness - 0.30) / 0.18))
+    ease = min(1.0, max(0.0, (ctx.roundness - 0.30) / 0.18))
     hook_depth = 0.45 - 0.24 * t_relief * ease
-    hook = _hook_record(nm, height, c, depth=hook_depth)
+    hook = _hook_record(nm, height, ctx, depth=hook_depth)
     join_y = _g_hook_join_y(stem, hook.join_y, hook.inner_crown)
     if join_y != hook.join_y:
         hook = hook.tuned(join_y=join_y)
     # The hook's crotch must sit below where the bowl meets the stem; heavy
     # weights get a thinner hook rather than an outline that folds back.
     s_l = 2.0 * o.rx - stem
-    bowl_meets = _cut(_ring(o, c)[0][3], s_l, horizontal=False)[0][3][1]
+    bowl_meets = _cut(_ring(o, ctx)[0][3], s_l, horizontal=False)[0][3][1]
     join_needed = height + desc - (bowl_meets - 0.2 * stem)
     if hook.join_y < join_needed:
         inner_crown = max(hook.inner_crown, join_needed + 0.35 * stem)
@@ -3620,14 +3648,46 @@ def g_from_o(
         min_x, min_y, _max_x, _max_y = _bounds(outline)
         # Single-storey hook tip lives on the descending ear (lower-left), not
         # the default max-x stem crown used by stock shear.
-        # Hook ear opens near the descender floor; flare along y into the stroke.
         tip = (min_x + stem * 0.35, min_y + stem * 0.08)
         outline = apply_terminal_shear(
-            c, outline, at=tip, along="y", inward="-", real_flare=True
+            ctx, outline, at=tip, along="y", inward="-", real_flare=True
         )
     else:
-        outline = apply_terminal_shear(c, outline)
+        outline = apply_terminal_shear(ctx, outline)
+    # Hook belly can leave a 180° tip cusp after shear; blend residual corners.
+    radius = max(ctx.join_radius * 1.2, stem * 0.28)
+    return blend_corners(outline, radius, select=default_selector, tension=1.0)
+
+
+def g_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None = None,
+    ctx: DesignContext | None = None,
+    *,
+    arm: float = 0.75,
+    join: float = 0.85,
+    real_flare: bool = False,
+) -> ComposedGlyph:
+    """Derive ``g`` (single-storey hook or double-storey bowls per ``style.g_form``).
+
+    ``real_flare`` applies on the single-storey hook path only. Single-storey
+    uses the continuous :func:`g_yoke` outline.
+    """
+    c = ctx or o_glyph.context
+    if c.style.g_form == "double":
+        return _double_storey_g_from_o(o_glyph, n_glyph, c)
+    o = _o_record(o_glyph)
+    nm = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    outline = g_yoke(
+        c,
+        arm=arm,
+        join=join,
+        real_flare=real_flare,
+        o_metrics_rec=o,
+        n_metrics_rec=nm,
+    )
     return _pack(c, o, {"top": (o.rx, o.x_height)}, outline)
+
 
 
 

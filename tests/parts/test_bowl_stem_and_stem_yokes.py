@@ -99,3 +99,47 @@ def test_ilft_yokes_match_builder_topology() -> None:
         assert len(yoke.contours) == len(built.contours)
         assert len(yoke.contours[0].segments) == len(built.contours[0].segments)
 
+
+
+def test_j_and_g_yokes_continuous_and_sealed() -> None:
+    ctx = _ctx()
+    from typekernel.parts import g_from_o, g_yoke, j_from_n, j_yoke, tittle
+
+    j_body = j_yoke(ctx)
+    assert len(j_body.contours) == 1
+    assert classify_joins(j_body).kinks == 0
+    j = (
+        GlyphAssembler(ctx)
+        .add(j_body)
+        .add(tittle(ctx, ctx.stem / 2.0, ctx.x_height + ctx.stem * 0.55, size=ctx.stem * 0.95))
+        .build()
+    )
+    assert _bad(j, ctx, "j") == []
+    assert len(j_from_n(build_n(ctx), ctx).solids) == 2
+
+    gy = g_yoke(ctx)
+    assert len(gy.contours) == 2
+    jc = classify_joins(gy)
+    assert jc.corners == 0
+    assert jc.kinks == 0
+    assert _hairlines(gy, max_gap=3.0) == []
+    g = g_from_o(build_o(ctx), build_n(ctx), ctx)
+    assert _hairlines(g.solids[0], max_gap=3.0) == []
+    assert _bad(g, ctx, "g") == []
+
+
+def test_overlap_seals_fine_bowl_stem_spring() -> None:
+    """Fine y-grid near the upper join must not show a sub-5 even-odd slit."""
+    ctx = _ctx()
+    ol = a_yoke(ctx)
+    bad: list[tuple[float, float]] = []
+    y = ctx.x_height - ctx.stem * 0.5
+    while y <= ctx.x_height - 5.0:
+        iv = ink_intervals_at_y([ol], y)
+        for i in range(len(iv) - 1):
+            gap = iv[i + 1][0] - iv[i][1]
+            if 0.0 < gap < 5.0:
+                bad.append((y, gap))
+                break
+        y += 0.1
+    assert bad == []

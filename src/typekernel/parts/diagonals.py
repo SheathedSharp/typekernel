@@ -26,15 +26,21 @@ from typekernel.parts.terminal_openings import apply_terminal_shear
 __all__ = [
     "k_from_n",
     "k_points",
+    "k_yoke",
     "v_from_n",
     "v_points",
+    "v_yoke",
     "w_from_n",
     "w_points",
+    "w_yoke",
     "x_from_n",
     "x_points",
+    "x_yoke",
     "y_from_n",
+    "y_yoke",
     "z_from_n",
     "z_points",
+    "z_yoke",
 ]
 
 Pt = tuple[float, float]
@@ -747,3 +753,80 @@ def k_from_n(
             real_flare=real_flare,
         )
     return _pack(c, m, anchors, outline)
+
+def v_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    apex: float = 0.35,
+    real_flare: bool = False,
+) -> Outline:
+    """``v`` body polygon — Usage A export of :func:`v_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return v_from_n(build_n(ctx), ctx, width=width, apex=apex, real_flare=real_flare).solids[0]
+
+
+def y_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    apex: float = 0.35,
+    real_flare: bool = False,
+) -> Outline:
+    """``y`` body polygon — Usage A export of :func:`y_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return y_from_n(build_n(ctx), ctx, width=width, apex=apex, real_flare=real_flare).solids[0]
+
+
+def w_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    real_flare: bool = False,
+) -> Outline:
+    """``w`` body polygon — Usage A export of :func:`w_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return w_from_n(build_n(ctx), ctx, width=width, real_flare=real_flare).solids[0]
+
+
+def x_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    real_flare: bool = False,
+) -> Outline:
+    """``x`` body polygon — Usage A export of :func:`x_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return x_from_n(build_n(ctx), ctx, width=width, real_flare=real_flare).solids[0]
+
+
+def z_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    real_flare: bool = False,
+) -> Outline:
+    """``z`` body polygon — Usage A export of :func:`z_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return z_from_n(build_n(ctx), ctx, width=width, real_flare=real_flare).solids[0]
+
+
+def k_yoke(
+    ctx: DesignContext,
+    *,
+    width: float | None = None,
+    vertex: float = 0.42,
+    real_flare: bool = False,
+) -> Outline:
+    """``k`` body polygon — Usage A export of :func:`k_from_n`."""
+    from typekernel.parts.control import build_n
+
+    return k_from_n(
+        build_n(ctx), ctx, width=width, vertex=vertex, real_flare=real_flare
+    ).solids[0]
+
