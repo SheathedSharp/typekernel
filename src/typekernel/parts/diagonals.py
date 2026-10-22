@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 
-from typekernel.geo.outline import Outline
+from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.optics.stem import diagonal_compensation
 from typekernel.parts.compose import ComposedGlyph
@@ -310,6 +310,7 @@ def v_from_n(
     *,
     width: float | None = None,
     apex: float = 0.35,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``v``: two compensated diagonals meeting at a flat apex on the baseline.
 
@@ -356,6 +357,13 @@ def v_from_n(
         outline = _soft_corner_polygon(pts, frozenset({5}), m.stem * 0.38)
     else:
         outline = _polygon(pts)
+    if real_flare:
+        # Outer top corners of the two arms (inward = into the letter).
+        min_x, _min_y, max_x, max_y = bounds(outline)
+        for tip in ((min_x + m.stem * 0.05, max_y), (max_x - m.stem * 0.05, max_y)):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="-", real_flare=True
+            )
     return _pack(c, m, {"top": (w / 2.0, top), "bottom": (w / 2.0, 0.0)}, outline)
 
 
@@ -471,6 +479,7 @@ def w_from_n(
     apex: float = 0.35,
     peak: float = 0.35,
     weight: float = 0.9,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """``w``: four lighter diagonals; the middle peak reaches x-height.
 
@@ -525,6 +534,12 @@ def w_from_n(
         outline = _soft_corner_polygon(pts, frozenset({3, 8, 11}), m.stem * 0.28)
     else:
         outline = _polygon(pts)
+    if real_flare:
+        min_x, _min_y, max_x, max_y = bounds(outline)
+        for tip in ((min_x + m.stem * 0.05, max_y), (max_x - m.stem * 0.05, max_y)):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="-", real_flare=True
+            )
     return _pack(c, m, anchors, outline)
 
 

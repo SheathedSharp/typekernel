@@ -922,27 +922,23 @@ def shoulder_yoke(
     join_y: float | None = None,
     crown_y: float | None = None,
     kappa: float | None = None,
+    branch_y: float | bool | None = None,
+    written_feet: bool = True,
 ) -> Outline:
     """Continuous left-stem + shoulder + right-leg as **one** closed contour.
 
-    This is the Usage A body for ``n``/``h``/``m``-family letters when an agent
-    wants a clean yoke without boolean-unioning ``vertical_stem`` + ``arch``
-    (which leaves part-boundary corners even after ``soft_union``).
-
-    Parameters (design units):
-        x_left: Outer left of the left stem.
-        counter: Inner-face gap between stems (default ``≈ 0.42 * x_height``).
-        stem_width: Stem thickness (default ``ctx.stem``).
-        y_bottom: Baseline of both legs (default ``0``).
-        stem_top: Flat top of the left stem (default ``ctx.x_height``).
-        join_y: Inner crotch where the counter springs (default mid shoulder).
-        crown_y: Outer shoulder peak (default ``stem_top + overshoot``).
-        kappa: Shoulder handle ratio (default from ``ctx.roundness``).
-
-    Visual: larger ``counter`` widens the trough; higher ``join_y`` raises the
-    crotch; ``kappa`` toward ``0.55`` rounds the crown more.
+    Usage A ``n``-family body (see also :func:`h_yoke` / :func:`n_yoke`).
+    ``branch_y`` matches :func:`double_shoulder_yoke`: ``True`` auto-picks
+    ``≈ 0.58 * stem_top``; a float is absolute; ``None`` keeps the upright
+    spring at ``stem_top``. When branching, ``written_feet`` adds entry kick
+    + exit outstroke and softens the crotch.
     """
+    from typekernel.geo.contour import reverse_contour, signed_area
     from typekernel.geo.path_helpers import KAPPA
+    from typekernel.parts.italic_strokes import (
+        emit_italic_entry_kick,
+        emit_italic_exit_outstroke,
+    )
 
     t = ctx.stem if stem_width is None else stem_width
     if t <= 0:
@@ -951,10 +947,21 @@ def shoulder_yoke(
     if w <= 0:
         raise ValueError(f"counter must be positive, got {w!r}")
     top = ctx.x_height if stem_top is None else stem_top
+    by = _resolve_branch_y(branch_y, stem_top=top)
+    spring = by if by is not None else top
     crown = (top + ctx.overshoot) if crown_y is None else crown_y
-    if crown <= top:
-        crown = top + max(ctx.overshoot, t * 0.08)
-    join = (top * 0.52) if join_y is None else join_y
+    if by is not None:
+        drop = top - by
+        crown = crown - drop * 0.14
+    if crown <= spring:
+        crown = spring + max(ctx.overshoot, t * 0.08)
+    join = (spring * 0.52) if join_y is None else join_y
+    if by is not None:
+        join = min(join, by - t * 0.32)
+    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
+    if by is not None:
+        drop = top - by
+        inner_crown = inner_crown - drop * 0.16
     join = min(join, crown - t * 0.55)
     join = max(join, y_bottom + t * 0.35)
     k = (KAPPA * (0.92 + 0.28 * ctx.roundness)) if kappa is None else kappa
@@ -963,10 +970,9 @@ def shoulder_yoke(
     r0 = l1 + w
     r1 = r0 + t
     mid = 0.5 * (l1 + r0)
-    leg_top = top - (r1 - l0) * 0.02
-    inner_crown = crown - t * (0.92 + 0.08 * ctx.contrast)
-    # Outer cubics: left spring → crown → right leg top
-    spring = top
+    leg_top = spring - (r1 - l0) * 0.02
+    if by is not None:
+        leg_top = leg_top - (top - by) * 0.2
     o0 = (
         (l1, spring),
         (l1, spring + k * (crown - spring)),
@@ -992,22 +998,114 @@ def shoulder_yoke(
         (l1, join),
     )
     b = PathBuilder()
-    b.moveTo(l0, y_bottom)
-    b.lineTo(l0, top)
+    if by is not None and written_feet:
+        emit_italic_entry_kick(b, l0, stem=t, left_top=top, y0=y_bottom)
+    else:
+        b.moveTo(l0, y_bottom)
+        b.lineTo(l0, top)
     b.lineTo(l1, top)
+    if by is not None:
+        b.lineTo(l1, by)
     b.curveTo(o0[1][0], o0[1][1], o0[2][0], o0[2][1], o0[3][0], o0[3][1])
     b.curveTo(o1[1][0], o1[1][1], o1[2][0], o1[2][1], o1[3][0], o1[3][1])
-    b.lineTo(r1, y_bottom)
-    b.lineTo(r0, y_bottom)
+    if by is not None and written_feet:
+        emit_italic_exit_outstroke(b, r0, r1, stem=t)
+    else:
+        b.lineTo(r1, y_bottom)
+        b.lineTo(r0, y_bottom)
     b.lineTo(r0, join)
     b.curveTo(i0[1][0], i0[1][1], i0[2][0], i0[2][1], i0[3][0], i0[3][1])
     b.curveTo(i1[1][0], i1[1][1], i1[2][0], i1[2][1], i1[3][0], i1[3][1])
     b.lineTo(l1, y_bottom)
     b.closePath()
-    return b.build()
+    outline = b.build()
+    c0 = outline.contours[0]
+    if signed_area(c0) < 0:
+        outline = Outline((reverse_contour(c0),))
+    if by is not None:
+        outline = soften_stem_branch(
+            outline,
+            stem_x=l1,
+            branch_y=by,
+            stem=t,
+            stem_top=top,
+        )
+        c0 = outline.contours[0]
+        if signed_area(c0) < 0:
+            outline = Outline((reverse_contour(c0),))
+    return outline
+
+
+def n_yoke(
+    ctx: DesignContext,
+    x_left: float = 0.0,
+    *,
+    counter: float | None = None,
+    stem_width: float | None = None,
+    y_bottom: float = 0.0,
+    stem_top: float | None = None,
+    join_y: float | None = None,
+    crown_y: float | None = None,
+    kappa: float | None = None,
+    branch_y: float | bool | None = None,
+    written_feet: bool = True,
+) -> Outline:
+    """Public Usage A ``n`` body — alias of :func:`shoulder_yoke`.
+
+    ``branch_y=True`` (or a float) yields the written italic branching recipe.
+    """
+    return shoulder_yoke(
+        ctx,
+        x_left,
+        counter=counter,
+        stem_width=stem_width,
+        y_bottom=y_bottom,
+        stem_top=stem_top,
+        join_y=join_y,
+        crown_y=crown_y,
+        kappa=kappa,
+        branch_y=branch_y,
+        written_feet=written_feet,
+    )
+
+
+def h_yoke(
+    ctx: DesignContext,
+    x_left: float = 0.0,
+    *,
+    counter: float | None = None,
+    stem_width: float | None = None,
+    y_bottom: float = 0.0,
+    stem_top: float | None = None,
+    join_y: float | None = None,
+    crown_y: float | None = None,
+    kappa: float | None = None,
+    branch_y: float | bool | None = None,
+    written_feet: bool = True,
+) -> Outline:
+    """Public Usage A ``h`` body — :func:`shoulder_yoke` with ascender stem.
+
+    Default ``stem_top`` is ``ctx.ascender``. ``branch_y`` matches ``n``/``m``.
+    """
+    top = ctx.ascender if stem_top is None else stem_top
+    return shoulder_yoke(
+        ctx,
+        x_left,
+        counter=counter,
+        stem_width=stem_width,
+        y_bottom=y_bottom,
+        stem_top=top,
+        join_y=join_y,
+        crown_y=crown_y,
+        kappa=kappa,
+        branch_y=branch_y,
+        written_feet=written_feet,
+    )
 
 
 def _resolve_branch_y(
+
+
     branch_y: float | bool | None,
     *,
     stem_top: float,

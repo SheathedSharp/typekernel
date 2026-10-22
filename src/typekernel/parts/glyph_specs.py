@@ -369,15 +369,21 @@ def build_from_spec(
     if ch == "a" and isinstance(spec, ASpec):
         return a_from_o(o_glyph, n_glyph, ctx, join=spec.join)
     if ch == "e" and isinstance(spec, ESpec):
-        kw: dict[str, float] = {"bar_raise": spec.bar_raise}
-        if spec.aperture is not None:
-            kw["aperture"] = spec.aperture
-        return e_from_o(o_glyph, ctx, **kw)
+        return e_from_o(
+            o_glyph,
+            ctx,
+            bar_raise=spec.bar_raise,
+            aperture=spec.aperture,
+        )
     if ch == "s" and isinstance(spec, SSpec):
-        kw = {"width": spec.width, "top_scale": spec.top_scale, "spine": spec.spine}
-        if spec.aperture is not None:
-            kw["aperture"] = spec.aperture
-        return s_from_o(o_glyph, ctx, **kw)
+        return s_from_o(
+            o_glyph,
+            ctx,
+            width=spec.width,
+            top_scale=spec.top_scale,
+            spine=spec.spine,
+            aperture=spec.aperture,
+        )
     if ch == "A" and isinstance(spec, CapASpec):
         return A_from_H(
             n_glyph, ctx, width=spec.width, apex=spec.apex, bar=spec.bar

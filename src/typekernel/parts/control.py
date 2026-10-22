@@ -2215,6 +2215,7 @@ def _single_storey_a_from_o(
     c: DesignContext,
     *,
     join: float,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     o = _o_record(o_glyph)
     a_join = join
@@ -2233,10 +2234,11 @@ def _single_storey_a_from_o(
         top_exit=top_exit,
     )
     # Written top_exit already shapes the crown; keep style shear for non-vertical tips.
-    if not top_exit or c.terminal_style != "vertical":
-        outline = apply_terminal_shear(
-            c, outline, at=(2.0 * o.rx - stem * 0.35, o.x_height * 0.92)
-        )
+    tip = (2.0 * o.rx - stem * 0.35, o.x_height * 0.92)
+    if real_flare:
+        outline = apply_terminal_shear(c, outline, at=tip, real_flare=True)
+    elif not top_exit or c.terminal_style != "vertical":
+        outline = apply_terminal_shear(c, outline, at=tip)
     anchors = {
         "top": (o.rx, o.x_height),
         "bottom": (o.rx, 0.0),
@@ -2462,12 +2464,19 @@ def a_from_o(
     ctx: DesignContext | None = None,
     *,
     join: float = 0.85,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
-    """Derive ``a`` (single- or double-storey per ``ctx.style.a_form``)."""
+    """Derive ``a`` (single- or double-storey per ``ctx.style.a_form``).
+
+    ``real_flare`` is honored on the single-storey path only (double-storey
+    keeps its baked topology).
+    """
     c = ctx or o_glyph.context
     if c.style.a_form == "double":
         return _double_storey_a_from_o(o_glyph, n_glyph, c)
-    return _single_storey_a_from_o(o_glyph, n_glyph, c, join=join)
+    return _single_storey_a_from_o(
+        o_glyph, n_glyph, c, join=join, real_flare=real_flare
+    )
 
 
 def _rev(c: Cubic) -> Cubic:
@@ -2613,6 +2622,7 @@ def c_from_o(
     ctx: DesignContext | None = None,
     *,
     aperture: float | None = None,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``c``: the ``o`` ring opened on the right with vertical terminals.
 
@@ -2661,6 +2671,11 @@ def c_from_o(
             (bot[3], top[0]),
             stem=o.thickness_v,
         )
+    if real_flare:
+        for tip in (bot[3], top[0]):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="-", real_flare=True
+            )
     anchors = {"top": (o.rx, o.x_height), "bottom": (o.rx, 0.0)}
     return _pack(c, o, anchors, outline)
 
@@ -2671,6 +2686,7 @@ def e_from_o(
     *,
     aperture: float | None = None,
     bar_raise: float = 0.25,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``e``: the ``o`` ring with a crossbar and a lower aperture.
 
@@ -2730,6 +2746,10 @@ def e_from_o(
     if _italic_topology(c):
         outline = _apply_italic_opening_tip_shear(
             c, outline, (lower[3],), stem=o.thickness_v
+        )
+    if real_flare:
+        outline = apply_terminal_shear(
+            c, outline, at=lower[3], along="y", inward="-", real_flare=True
         )
     shear = _e_oblique_shear(c)
     if shear is not None:
@@ -2952,6 +2972,7 @@ def s_from_o(
     width: float = 0.82,
     top_scale: float = 0.90,
     spine: float = 0.50,
+    real_flare: bool = False,
 ) -> ComposedGlyph:
     """Derive ``s``: two stacked half-rings sharing the spine.
 
@@ -3032,8 +3053,14 @@ def s_from_o(
         lean = max(2.0, o.thickness_v * 0.14) if _italic_topology(c) else 0.0
         _g1_tip_bridge(b, _rev(ui_top), u_top, outward_lean=lean)
     b.closePath()
+    outline = _ccw(b.build())
+    if real_flare:
+        for tip in (u_top[0], l_bot[0]):
+            outline = apply_terminal_shear(
+                c, outline, at=tip, along="y", inward="-", real_flare=True
+            )
     anchors = {"top": (cx, xh), "bottom": (cx, 0.0)}
-    return _pack(c, o, anchors, _ccw(b.build()))
+    return _pack(c, o, anchors, outline)
 
 
 def _from_controls(
