@@ -48,6 +48,7 @@ __all__ = [
     "NMetrics",
     "OMetrics",
     "a_from_o",
+    "a_double_yoke",
     "a_yoke",
     "b_from_o",
     "bowl_stem_yoke",
@@ -2380,8 +2381,7 @@ def a_yoke(
     """Continuous single-storey ``a`` body — bowl + stem to x-height (two contours).
 
     Usage A parallel to :func:`bowl_stem_yoke`. ``top_exit`` enables the written
-    italic stem-crown exit. Double-storey ``a`` stays on the private letter-builder
-    path.
+    italic stem-crown exit. Double-storey ``a`` uses :func:`a_double_yoke`.
     """
     o = o_metrics(ctx)
     if rx is not None or ry is not None:
@@ -3103,14 +3103,12 @@ def _vf_ready_composed(glyph: ComposedGlyph) -> ComposedGlyph:
     return replace(glyph, solids=solids)
 
 
-def _double_storey_a_from_o(
-    o_glyph: ComposedGlyph,
-    n_glyph: ComposedGlyph | None,
-    c: DesignContext,
+def _double_storey_a_composed(
+    ctx: DesignContext,
+    o: OMetrics,
+    m: NMetrics,
 ) -> ComposedGlyph:
-    """Two-storey ``a``: lower bowl, upper arch, right stem (TK-305)."""
-    o = _o_record(o_glyph)
-    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    """Assemble sealed two-storey ``a`` (bowl + arch + stem + eyes)."""
     stem = m.stem
     xh = o.x_height
     width = 2.0 * o.rx
@@ -3121,13 +3119,13 @@ def _double_storey_a_from_o(
     bowl_cx = bowl_rx + stem * 0.38
     bowl_cy = bowl_ry
     lower_outer, lower_hole = bowl(
-        c,
+        ctx,
         bowl_cx,
         bowl_cy,
         rx=bowl_rx,
         ry=bowl_ry,
         thickness_v=stem * 0.96,
-        thickness_h=stem * c.contrast * 0.96,
+        thickness_h=stem * ctx.contrast * 0.96,
         shape="superellipse",
         n=o.exponent,
     )
@@ -3135,7 +3133,7 @@ def _double_storey_a_from_o(
     join_y = bowl_cy + bowl_ry * 0.38
     mm = m.tuned(
         join_y=join_y,
-        crown_y=xh + c.overshoot * 0.28,
+        crown_y=xh + ctx.overshoot * 0.28,
         leg_top=xh - stem * 0.06,
         inner_crown=xh * 0.74,
     )
@@ -3160,12 +3158,12 @@ def _double_storey_a_from_o(
         (reverse_contour(lower_ct) if signed_area(lower_ct) > 0 else lower_ct,)
     )
 
-    glyph = (
-        GlyphAssembler(c)
+    return _vf_ready_composed(
+        GlyphAssembler(ctx)
         .with_design(o)
         .add(
             _double_storey_a_outline(
-                c,
+                ctx,
                 o,
                 mm,
                 s,
@@ -3187,7 +3185,41 @@ def _double_storey_a_from_o(
         .anchor("ogonek", sx0 + stem / 2.0, 0.0)
         .build()
     )
-    return _vf_ready_composed(glyph)
+
+
+def a_double_yoke(
+    ctx: DesignContext,
+    *,
+    o_metrics_rec: OMetrics | None = None,
+    n_metrics_rec: NMetrics | None = None,
+) -> Outline:
+    """Continuous double-storey ``a`` body — Usage A (opt-in).
+
+    Matches :func:`a_from_o` when ``style.a_form`` is ``"double"``. The product
+    default remains single-storey :func:`a_yoke`. Returns sealed outer plus CW
+    counters in one outline.
+    """
+    o = o_metrics_rec if o_metrics_rec is not None else o_metrics(ctx)
+    m = n_metrics_rec if n_metrics_rec is not None else n_metrics(ctx)
+    glyph = _double_storey_a_composed(ctx, o, m)
+    contours: list = list(glyph.solids[0].contours)
+    for hole in glyph.holes:
+        for contour in hole.contours:
+            contours.append(
+                reverse_contour(contour) if signed_area(contour) > 0 else contour
+            )
+    return Outline(tuple(contours))
+
+
+def _double_storey_a_from_o(
+    o_glyph: ComposedGlyph,
+    n_glyph: ComposedGlyph | None,
+    c: DesignContext,
+) -> ComposedGlyph:
+    """Two-storey ``a``: lower bowl, upper arch, right stem (TK-305)."""
+    o = _o_record(o_glyph)
+    m = _n_record(n_glyph) if n_glyph is not None else n_metrics(c)
+    return _double_storey_a_composed(c, o, m)
 
 
 def a_from_o(
@@ -3200,8 +3232,8 @@ def a_from_o(
 ) -> ComposedGlyph:
     """Derive ``a`` (single- or double-storey per ``ctx.style.a_form``).
 
-    ``real_flare`` is honored on the single-storey path only (double-storey
-    keeps its baked topology).
+    ``real_flare`` is honored on the single-storey path only. Single-storey
+    uses :func:`a_yoke`; double-storey uses :func:`a_double_yoke`.
     """
     c = ctx or o_glyph.context
     if c.style.a_form == "double":
