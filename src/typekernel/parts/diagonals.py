@@ -270,7 +270,11 @@ def w_points(
         (hw, xh),
     ]
     # Low crotch (3) + two upper notches (8, 11); truncate high→low.
-    return _seal_crotches(pts, (3, 8, 11), _crotch_seal_flat(stem))
+    # Open crotches toward black (same +1-per-crotch topology).
+    from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+    flat = max(_crotch_seal_flat(stem), stem * (0.10 + 0.10 * _swf(stem)))
+    return _seal_crotches(pts, (3, 8, 11), flat)
 
 
 def x_points(
@@ -617,10 +621,12 @@ def w_from_n(
             scale += 0.02
         from typekernel.parts.weight_relief import stem_weight_fraction as _swf
 
-        scale -= 0.06 * _swf(s)  # rein in optical size vs x/y/k
+        # Widen toward black so four strokes do not pile into a black slab.
+        scale += 0.12 * _swf(s)
         ww = m.width * scale
     bump = c.sharp_overshoot
-    dw = _diag_stroke_weight(m.stem, base=weight, thin=0.24)
+    # Stronger black thinning than v/x — w has four diagonals.
+    dw = _diag_stroke_weight(m.stem, base=weight, thin=0.42)
     pts = w_points(
         m.stem,
         m.x_height,

@@ -3075,14 +3075,19 @@ def _double_storey_a_outline(
     shelf_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, bowl_join)
     exit_x = _superellipse_x_at_y(bowl_cx, bowl_cy, bowl_rx, bowl_ry, n_exp, 0.0)
     k = mm.kappa
-    # Land the left outer at l0 (outer face) so the arch tip keeps stem width;
-    # the upper-eye hole ends at l1, forming the terminal thickness.
+    # Soft terminal: inset land toward black so the tip is not a stem-wide slab;
+    # pull the near-bar handle sideways so arrival is less vertical (letter-like).
+    from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+    t_w = _swf(mm.stem)
     l0, l1, mid = s.l0, s.l1, (s.l1 + s.r0) / 2.0
     crown, join = mm.crown_y, mm.join_y
+    l_land = l0 + (l1 - l0) * (0.15 + 0.35 * t_w)  # thin tip toward black
+    rise = crown - join
     outer_left: Cubic = (
-        (l0, join),
-        (l0, join + k * (crown - join)),
-        (mid - k * (mid - l0), crown),
+        (l_land, join),
+        (l_land + k * (mid - l_land) * 0.35, join + k * rise * 0.25),
+        (mid - k * (mid - l_land), crown),
         (mid, crown),
     )
 
@@ -3090,7 +3095,7 @@ def _double_storey_a_outline(
     b.moveTo(sx1, 0.0)
     b.lineTo(sx1, mm.leg_top)
     _curve(b, _rev(s.outer[1]))
-    _curve(b, _rev(outer_left))  # → (l0, join_y)
+    _curve(b, _rev(outer_left))  # → (l_land, join_y)
     # Bar across to the stem (includes left terminal), then into the bowl shelf.
     b.lineTo(sx0, join)
     if abs(bowl_join - join) > 1e-6:
@@ -3156,8 +3161,9 @@ def _double_storey_a_composed(
     from typekernel.parts.weight_relief import stem_weight_fraction
 
     t_w = stem_weight_fraction(stem)
-    bowl_ry = xh * (0.30 + 0.04 * t_w)
-    bowl_rx = bowl_ry * (o.rx / o.ry) * (0.92 + 0.06 * t_w)
+    # Keep lower bowl modest so the upper eye gets vertical room at black.
+    bowl_ry = xh * (0.28 + 0.02 * t_w)
+    bowl_rx = bowl_ry * (o.rx / o.ry) * (0.92 + 0.08 * t_w)
     bowl_cx = bowl_rx + stem * 0.42
     bowl_cy = bowl_ry
     bowl_top = bowl_cy + bowl_ry
@@ -3181,13 +3187,20 @@ def _double_storey_a_composed(
     join_y = bowl_top
     bowl_join = bowl_top - max(stem * 0.04, 3.0)
     eye_span = max(xh - join_y, stem * 2.0)
-    # Widen shoulder counter + lower inner crown toward black → larger upper eye.
+    # Widen shoulder counter + raise inner crown toward black → larger upper eye.
+    # Cap uses a lighter floor toward black so the eye is not crushed by a
+    # stem-thick shoulder slab (still ≥ ~0.48·stem of arch).
+    crown_y = xh + max(ctx.overshoot, stem * 0.08)
+    inner_crown = min(
+        join_y + eye_span * (0.62 + 0.16 * t_w),
+        crown_y - stem * (0.62 - 0.14 * t_w),
+    )
     mm = m.tuned(
         join_y=join_y,
-        crown_y=xh + max(ctx.overshoot, stem * 0.08),
+        crown_y=crown_y,
         leg_top=xh - stem * 0.06,
-        inner_crown=join_y + eye_span * (0.55 - 0.08 * t_w),
-        counter=m.counter * (1.0 + 0.12 * t_w),
+        inner_crown=inner_crown,
+        counter=m.counter * (1.0 + 0.28 * t_w),
     )
     # x0 from tuned counter so shoulder r0/r1 land on the stem faces.
     x0 = sx0 - mm.counter - stem

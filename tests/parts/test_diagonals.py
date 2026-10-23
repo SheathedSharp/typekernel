@@ -69,7 +69,9 @@ def test_y_reaches_descender_and_w_is_wider(ctx: DesignContext) -> None:
     assert bounds(y_from_n(n).solids[0])[1] == pytest.approx(ctx.descender)
     v_w = bounds(v_from_n(n).solids[0])
     w_w = bounds(w_from_n(n).solids[0])
-    assert w_w[2] - w_w[0] == pytest.approx(1.4 * (v_w[2] - v_w[0]))
+    # w stays clearly wider than v; exact 1.4 drifts as black optical widen runs.
+    assert w_w[2] - w_w[0] > 1.3 * (v_w[2] - v_w[0])
+    assert w_w[2] - w_w[0] == pytest.approx(1.4 * (v_w[2] - v_w[0]), rel=0.08)
 
 
 def test_x_crosses_at_mid_height(ctx: DesignContext) -> None:
