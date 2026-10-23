@@ -44,6 +44,8 @@ def test_single_ccw_polygon_with_fixed_point_count(ctx: DesignContext, letter: s
 
 
 def test_v_stroke_is_compensated(ctx: DesignContext) -> None:
+    from typekernel.parts.diagonals import _diag_stroke_weight
+
     m = n_metrics(ctx)
     v = v_from_n(build_n(ctx))
     y = ctx.x_height * 0.75
@@ -53,7 +55,11 @@ def test_v_stroke_is_compensated(ctx: DesignContext) -> None:
     a0 = ((x1 - x0) - 0.35 * m.stem) / 2.0
     phi = math.degrees(math.atan2(a0, ctx.x_height))
     perp = hw * math.cos(math.radians(phi))
-    assert perp == pytest.approx(diagonal_compensation(phi, m.stem, contrast=ctx.contrast))
+    # v_from_n applies _diag_stroke_weight(thin=0.22); expect that stem, not raw.
+    dw = _diag_stroke_weight(m.stem, thin=0.22)
+    assert perp == pytest.approx(
+        diagonal_compensation(phi, m.stem * dw, contrast=ctx.contrast)
+    )
     assert perp < m.stem
 
 
