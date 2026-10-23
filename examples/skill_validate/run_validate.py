@@ -8,7 +8,8 @@ Recipe 1 — letter builders (prefer yokes under the hood).
 Recipe 2 — raw public yokes with distinct part params (wider counters,
   more open apertures, longer r arm) — still the same brief.
 
-Not full agent validation of every gate; proves yokes are usable end-to-end.
+Smoke only: compile + export + proof PNGs for vision review.
+Does NOT assert visual quality (no hairline / width-delta gates).
 Does not touch approvals/italic-vf-construct.json.
 """
 
@@ -156,75 +157,9 @@ PROOF_TEXT = "nhumar soft tiles jg vwxyk"  # letters both recipes draw
 
 
 
-def _spring_hairlines(outline, spring: float, *, band: float = 5.0, max_gap: float = 5.0) -> list[float]:
-    """Y samples in (spring, spring+band] with a sub-max_gap even-odd slit."""
-    from typekernel.optics.space import ink_intervals_at_y
-
-    bad: list[float] = []
-    y = spring + 0.25
-    while y <= spring + band:
-        iv = ink_intervals_at_y([outline], y)
-        for i in range(len(iv) - 1):
-            gap = iv[i + 1][0] - iv[i][1]
-            if 0.0 < gap < max_gap:
-                bad.append(y)
-                break
-        y += 0.5
-    return bad
-
-
-def _assert_stem_springs_sealed(ctx: DesignContext, drawn: dict, label: str) -> None:
-    """Fail the skill validate if n/h/m/r/a still show spring hairlines."""
-    checks = {
-        "n": (ctx.x_height, 5.0),
-        "h": (ctx.x_height, 5.0),
-        "m": (ctx.x_height, 5.0),
-        "r": (ctx.x_height, 5.0),
-        "a": (ctx.x_height * 0.06, 8.0),  # bowl–stem lower spring band
-        "g": (ctx.x_height * 0.06, 8.0),  # single-storey bowl–stem springs
-        "j": (ctx.x_height, 5.0),  # hook crown (turned r)
-    }
-    failures = []
-    for ch, (spring, band) in checks.items():
-        if ch not in drawn:
-            continue
-        ol = drawn[ch].solids[0]
-        bad = _spring_hairlines(ol, spring, band=band)
-        if ch in ("a", "g"):
-            # Upper bowl–stem join sits ~stem below x-height, not only at crown.
-            bad += _spring_hairlines(ol, ctx.x_height - ctx.stem * 0.45, band=band)
-            bad += _spring_hairlines(ol, ctx.x_height - band, band=band)
-        if bad:
-            failures.append(f"{ch}@{label}:{bad[:4]}")
-    if failures:
-        raise SystemExit(f"stem/bowl spring hairlines still open: {', '.join(failures)}")
 
 
 
-
-def _assert_diagonal_crotches_sealed(ctx: DesignContext, drawn: dict, label: str) -> None:
-    """Fail if v/w/x/y/k still show sub-4 even-odd crotch slits."""
-    from typekernel.optics.space import ink_intervals_at_y
-
-    failures = []
-    for ch in ("v", "w", "x", "y", "k"):
-        if ch not in drawn:
-            continue
-        ol = drawn[ch].solids[0]
-        bad = []
-        y = -20.0
-        while y <= 900.0:
-            iv = ink_intervals_at_y([ol], y)
-            for i in range(len(iv) - 1):
-                gap = iv[i + 1][0] - iv[i][1]
-                if 0.0 < gap < 4.0:
-                    bad.append(y)
-                    break
-            y += 0.5
-        if bad:
-            failures.append(f"{ch}@{label}:{bad[:4]}")
-    if failures:
-        raise SystemExit(f"diagonal crotch hairlines still open: {', '.join(failures)}")
 
 def _ctx() -> DesignContext:
     return DesignContext.geometric_sans().tuned(
@@ -335,10 +270,6 @@ def main() -> None:
 
     r1 = recipe1_builders(ctx)
     r2 = recipe2_raw_yokes(ctx)
-    _assert_stem_springs_sealed(ctx, r1, "recipe1")
-    _assert_stem_springs_sealed(ctx, r2, "recipe2")
-    _assert_diagonal_crotches_sealed(ctx, r1, "recipe1")
-    _assert_diagonal_crotches_sealed(ctx, r2, "recipe2")
 
     # Contour-code fingerprint (topology) to show recipes differ structurally
     def topo(g):
@@ -574,13 +505,18 @@ Proofs: `proof_compare.png`, `proof_recipe1.png`, `proof_recipe2.png`, `proof_st
 
 ## Visual
 
-- **Look different? YES.** Recipe 2 reads wider on stem letters (`n` ink ≈+11%, `r` ≈+23%).
-- **Stitch / kit-of-parts / missing-yoke on covered bodies? NO.** Lint clean; `n`/`h`/`m`/`u`/`r` are single continuous yoke contours. Small waterfall aliasing is not a seam.
-- Recipe 2 uses public yokes for `i`/`l`/`f`/`t`/`o` as well (stem / hook / bowl bodies).
+Smoke does **not** claim visual quality. Proofs under `artifacts/skill-validate/`
+(and `/workspace/uploads/visual_accept_*.png` when emitted) are for a **vision
+agent** to review — see `examples/skill_validate/VISUAL_ACCEPT.md`.
+
+Recipe 2 is intentionally wider (part params). Structural note only:
+`n`/`h`/`m`/`u`/`r` are continuous yoke contours; lint/topology smoke is separate.
 
 ## Verdict
 
-**PASS** — two Usage A skill recipes compile + proof; yokes usable; recipes look different by part params; stem/bowl spring hairline gate clean on n/h/m/r/a; italic-vf-construct untouched.
+**SMOKE ONLY** — recipes compile + export OTFs + write proofs. **Not ship.**
+Vision must read proofs (joins, counters, weight ladder). No code hairline /
+width-delta visual PASS. italic-vf-construct untouched.
 """
         ,
         encoding="utf-8",

@@ -65,6 +65,7 @@ you are deliberately inventing a new topology.
 - Italic = **another master set** (`italic_design` / yoke `branch_y` / written
   kicks), not mechanical shear.
 - Proof is part of design. Installable ≠ done.
+- **Smoke green ≠ ship.** Pytest / `examples/skill_validate` check build, export, packing, VF segment invariants. Visual accept is a **vision agent** reading proof PNGs (`examples/skill_validate/VISUAL_ACCEPT.md`). Do not reintroduce hairline / white-gap / width-delta “quality PASS” gates in code.
 
 ## Two recipes for the same brief
 

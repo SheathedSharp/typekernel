@@ -6,7 +6,7 @@ import pytest
 
 from typekernel.axes.interpolatable import check_interpolatable
 from typekernel.geo.contour import signed_area
-from typekernel.geo.outline import Outline, bounds
+from typekernel.geo.outline import bounds
 from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
     DesignContext,
@@ -67,21 +67,6 @@ def test_vertical_extents(ctx: DesignContext) -> None:
         b = bounds(DERIVE[letter](o, n).solids[0])
         assert b[1] == pytest.approx(ctx.descender)
         assert b[3] == pytest.approx(ctx.x_height + m.overshoot)
-
-
-def test_b_outer_ink_continuous_across_stem_bowl_join(ctx: DesignContext) -> None:
-    """Mirrored ``b`` must not leave a hairline gap between stem and bowl (even-odd)."""
-    o, n = build_o(ctx), build_n(ctx)
-    outer = Outline((b_from_o(o, n).solids[0].contours[0],))
-    y = ctx.x_height * 0.55
-    assert len(ink_intervals_at_y([outer], y)) == 1
-
-
-def test_p_outer_ink_continuous_across_stem_bowl_join(ctx: DesignContext) -> None:
-    o, n = build_o(ctx), build_n(ctx)
-    outer = Outline((p_from_o(o, n).solids[0].contours[0],))
-    y = ctx.descender + 30.0
-    assert len(ink_intervals_at_y([outer], y)) == 1
 
 
 def test_b_mirrors_d(ctx: DesignContext) -> None:

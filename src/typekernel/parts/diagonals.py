@@ -71,7 +71,7 @@ def _along(from_p: Pt, to_p: Pt, dist: float) -> Pt:
 
 
 def _crotch_seal_flat(stem: float) -> float:
-    """Target chord width for a truncated crotch (clears even-odd hairline gate)."""
+    """Target chord width for a truncated crotch (VF-safe tip flattening)."""
     return max(5.5, stem * 0.10)
 
 
@@ -189,8 +189,8 @@ def v_points(
     """Two compensated diagonals meeting at a flat apex on the baseline.
 
     When ``seal_crotches`` (default), the inner crotch tip is truncated to a
-    flat of width :func:`_crotch_seal_flat` so even-odd scans show no hairline
-    (7→8 points; VF-safe across masters).
+    flat of width :func:`_crotch_seal_flat` (7→8 points; VF-safe across masters).
+    Visual join quality is vision-reviewed on proofs, not coded as a gate.
     """
     a0, hw, cy, _ = _v_geometry(stem, height, width, contrast, apex)
     w, h = width, height + top_overshoot

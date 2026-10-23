@@ -1,8 +1,8 @@
-"""No derived glyph self-intersects, backtracks or overlaps, hairline to black.
+"""Structural outline invariant: derived glyphs must not self-intersect.
 
-Topology checks only compare segment counts; a contour that doubles back on
-itself passes them. pathops ``simplify`` resolves such geometry, so any glyph
-whose area changes under it is not a clean outline.
+Segment-count topology checks miss doubled-back contours; pathops
+``simplify`` area change catches illegal geometry. This is smoke — not a
+visual-quality accept gate.
 """
 
 from __future__ import annotations

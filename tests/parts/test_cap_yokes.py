@@ -6,7 +6,6 @@ import pytest
 
 from typekernel.font import Font, Master, check_masters
 from typekernel.geo.outline import bounds
-from typekernel.optics.space import ink_intervals_at_y
 from typekernel.parts import (
     A_yoke,
     B_yoke,
@@ -157,34 +156,6 @@ def test_cap_yokes_on_cap_zones(ctx: DesignContext) -> None:
     _, y0, _, y1 = bounds(O_yoke(ctx))
     assert y0 == pytest.approx(-ctx.overshoot, abs=0.5)
     assert y1 == pytest.approx(h.cap_height + ctx.overshoot, abs=0.5)
-
-
-def test_diagonal_cap_crotches_sealed(ctx: DesignContext) -> None:
-    def hairlines(outline, *, max_gap: float = 4.0) -> list[tuple[float, float]]:
-        bad: list[tuple[float, float]] = []
-        _, y0, _, y1 = bounds(outline)
-        y = y0 + 1.0
-        while y < y1 - 1.0:
-            iv = ink_intervals_at_y([outline], y)
-            for i in range(len(iv) - 1):
-                gap = iv[i + 1][0] - iv[i][1]
-                if 0.0 < gap < max_gap:
-                    bad.append((y, gap))
-                    break
-            y += 1.0
-        return bad
-
-    for stem in (48.0, 88.0, 140.0, 180.0):
-        tuned = ctx.tuned(stem=stem)
-        for name, fn in (
-            ("V", V_yoke),
-            ("W", W_yoke),
-            ("X", X_yoke),
-            ("A", A_yoke),
-            ("K", K_yoke),
-            ("Y", Y_yoke),
-        ):
-            assert hairlines(fn(tuned)) == [], f"{name} stem={stem}"
 
 
 def test_full_cap_alphabet_interpolates_across_stems() -> None:
