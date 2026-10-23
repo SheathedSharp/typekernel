@@ -151,6 +151,18 @@ def _soft_corner_polygon(points: list[Pt], soft: frozenset[int], radius: float) 
     return outline_with_axis_extrema_on_curve(_ccw(b.build()))
 
 
+
+def _diag_stroke_weight(stem: float, *, base: float = 1.0, thin: float = 0.20) -> float:
+    """Scale diagonal stroke weight toward black so v/w do not out-ink x/y/k.
+
+    Uses :func:`~typekernel.parts.weight_relief.stem_weight_fraction` only —
+    topology (point counts) stays fixed for VF.
+    """
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
+    return base * (1.0 - thin * stem_weight_fraction(stem))
+
+
 def _hwidth(stem: float, contrast: float, run: float, rise: float, weight: float = 1.0) -> float:
     """Horizontal width of a diagonal whose centreline runs ``run`` over ``rise``."""
     phi = math.degrees(math.atan2(abs(run), abs(rise)))
@@ -159,7 +171,12 @@ def _hwidth(stem: float, contrast: float, run: float, rise: float, weight: float
 
 
 def _v_geometry(
-    stem: float, height: float, width: float, contrast: float, apex: float
+    stem: float,
+    height: float,
+    width: float,
+    contrast: float,
+    apex: float,
+    weight: float = 1.0,
 ) -> tuple[float, float, float, float]:
     """``(a0, hw, crotch_y, tan)`` for a ``v`` of outer ``width``.
 
@@ -169,7 +186,7 @@ def _v_geometry(
     flat = apex * stem
     a0 = (width - flat) / 2.0
     tan = a0 / height
-    hw = _hwidth(stem, contrast, a0, height)
+    hw = _hwidth(stem, contrast, a0, height, weight)
     if hw <= flat / 2.0 or hw >= width / 2.0:
         raise ValueError("diagonal strokes do not fit this width; widen it or thin the stem")
     crotch_y = height * (1.0 - (width / 2.0 - hw) / a0)
@@ -185,14 +202,16 @@ def v_points(
     *,
     top_overshoot: float = 0.0,
     seal_crotches: bool = True,
+    weight: float = 1.0,
 ) -> list[Pt]:
     """Two compensated diagonals meeting at a flat apex on the baseline.
 
     When ``seal_crotches`` (default), the inner crotch tip is truncated to a
     flat of width :func:`_crotch_seal_flat` (7→8 points; VF-safe across masters).
     Visual join quality is vision-reviewed on proofs, not coded as a gate.
+    ``weight`` thins strokes toward black (optical match with ``x``/``k``).
     """
-    a0, hw, cy, _ = _v_geometry(stem, height, width, contrast, apex)
+    a0, hw, cy, _ = _v_geometry(stem, height, width, contrast, apex, weight)
     w, h = width, height + top_overshoot
     pts = [(0.0, h), (a0, 0.0), (w - a0, 0.0), (w, h), (w - hw, h), (w / 2.0, cy), (hw, h)]
     if seal_crotches:
@@ -324,16 +343,18 @@ def k_points(
     width: float,
     contrast: float,
     vertex: float = 0.42,
+    weight: float = 1.0,
 ) -> list[Pt]:
     """Stem to ``stem_top`` with arm (to ``arm_top``) and leg meeting at the stem.
 
     Arm and leg centrelines meet on the stem's right face at ``vertex`` ×
     ``arm_top``; the arm ends flat at ``arm_top``, the leg on the baseline.
+    ``weight`` scales arm/leg stroke (stem stays ``stem`` wide).
     """
     t, w, xh = stem, width, arm_top
     yj = vertex * xh
-    hw_a = _hwidth(t, contrast, w - t, xh - yj)
-    hw_l = _hwidth(t, contrast, w - t, yj)
+    hw_a = _hwidth(t, contrast, w - t, xh - yj, weight)
+    hw_l = _hwidth(t, contrast, w - t, yj, weight)
     arm_c = (w - hw_a / 2.0, xh)
     leg_c = (w - hw_l / 2.0, 0.0)
     v = (t, yj)
@@ -413,7 +434,11 @@ def v_from_n(
             scale += 0.018
         w = m.width * scale
     bump = c.sharp_overshoot
-    pts = v_points(m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump)
+    # Thin diagonals toward black so v does not optically out-weigh x/y/k.
+    dw = _diag_stroke_weight(m.stem, thin=0.22)
+    pts = v_points(
+        m.stem, m.x_height, w, c.contrast, apex, top_overshoot=bump, weight=dw
+    )
     top = m.x_height + bump
     if _italic_diags(c):
         # Asymmetric italic v: bias apex/crotch right; cursive cubic crotch.
@@ -478,9 +503,13 @@ def y_from_n(
             if s >= 198.0:
                 scale += 0.04
                 apex_eff = min(apex_eff, 0.32)
+        from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+        scale += 0.04 * _swf(s)
         w = m.width * scale
     xh, desc = m.x_height, c.descender
-    _, hw, cy, tan = _v_geometry(m.stem, xh, w, c.contrast, apex_eff)
+    dw = _diag_stroke_weight(m.stem, thin=0.18)
+    _, hw, cy, tan = _v_geometry(m.stem, xh, w, c.contrast, apex_eff, dw)
     # left outer edge x = (xh - y)·tan meets the right stroke's left edge
     # x = w - hw - (xh - y)·tan
     join_y = xh - (w - hw) / (2.0 * tan)
@@ -586,8 +615,12 @@ def w_from_n(
             scale += 0.03
         if s >= 198.0:
             scale += 0.02
+        from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+        scale -= 0.06 * _swf(s)  # rein in optical size vs x/y/k
         ww = m.width * scale
     bump = c.sharp_overshoot
+    dw = _diag_stroke_weight(m.stem, base=weight, thin=0.24)
     pts = w_points(
         m.stem,
         m.x_height,
@@ -595,7 +628,7 @@ def w_from_n(
         c.contrast,
         apex=apex,
         peak=peak,
-        weight=weight,
+        weight=dw,
         top_overshoot=bump,
     )
     anchors = {"top": (ww / 2.0, m.x_height), "bottom": (ww / 2.0, 0.0)}
@@ -640,8 +673,13 @@ def x_from_n(
             scale += 0.026
         if s >= 168.0:
             scale += 0.022
+        from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+        scale += 0.055 * _swf(s)  # optical size vs heavy v/w
         w = m.width * scale
-    pts = x_points(m.stem, m.x_height, w, c.contrast)
+    # Keep x stroke near upright stem; slight heavy-stem fatten vs over-thin v.
+    xw = _diag_stroke_weight(m.stem, thin=0.06)
+    pts = x_points(m.stem, m.x_height, w, c.contrast, weight=xw)
     if _italic_diags(c):
         # Classic italic x: raise the crossing; round the waist notches.
         dy = 0.07 * m.x_height
@@ -745,6 +783,9 @@ def k_from_n(
                 scale += 0.055 if c.style.serif == "bracketed" else 0.045
             if 100.0 <= s <= 118.0:
                 scale += 0.035
+        from typekernel.parts.weight_relief import stem_weight_fraction as _swf
+
+        scale += 0.045 * _swf(s)
         w = m.width * scale
     if c.terminal_style in ("angled", "flared", "ball") and width is None:
         w *= 1.026
@@ -771,7 +812,9 @@ def k_from_n(
     if _italic_diags(c):
         # Branch arm/leg join higher (closer to italic shoulder language).
         vertex_eff = min(0.58, max(vertex_eff, 0.50))
-    pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff)
+    # Fatten arm/leg slightly toward black so k matches heavy v/w optical weight.
+    kw = _diag_stroke_weight(m.stem, thin=-0.10)
+    pts = k_points(m.stem, m.ascender, m.x_height, w, c.contrast, vertex_eff, kw)
     half = m.stem / 2.0
     anchors = {
         "top": (half, m.ascender),

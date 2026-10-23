@@ -11,10 +11,11 @@ Prefer the `visual_accept_*.png` pack (also copied under `/workspace/uploads/`):
 | --- | --- |
 | `visual_accept_stems.png` | `n h m r u` — continuous shoulders, no stitch look |
 | `visual_accept_diags.png` | `v w x y k` — crotches readable, not clipped to a slab |
-| `visual_accept_ag.png` | single `a`/`g` (defaults) + optional double forms |
+| `visual_accept_ag.png` | single `a`/`g` (product defaults) |
+| `visual_accept_ag_double.png` | double-storey `a`/`g` light→black counters |
 | `visual_accept_caps.png` | sample capitals `A H O N V` |
 | `visual_accept_figs.png` | lining `0–9` |
-| `visual_accept_ladder.png` | weight ladder (light → bold) on a short word |
+| `visual_accept_ladder.png` | weight ladder (light → bold → black) on `nhmar` |
 
 Also useful: `artifacts/skill-validate/proof_*.png` from `run_validate.py`.
 

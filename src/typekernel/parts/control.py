@@ -3152,14 +3152,18 @@ def _double_storey_a_composed(
     sx0, sx1 = width - stem, width
 
     # Bowl occupies the lower ~60% of x-height; upper eye sits fully above it.
-    bowl_ry = xh * 0.30
-    bowl_rx = bowl_ry * (o.rx / o.ry) * 0.92
+    # Grow bowl + thin walls toward black so counters stay readable (VF-safe).
+    from typekernel.parts.weight_relief import stem_weight_fraction
+
+    t_w = stem_weight_fraction(stem)
+    bowl_ry = xh * (0.30 + 0.04 * t_w)
+    bowl_rx = bowl_ry * (o.rx / o.ry) * (0.92 + 0.06 * t_w)
     bowl_cx = bowl_rx + stem * 0.42
     bowl_cy = bowl_ry
     bowl_top = bowl_cy + bowl_ry
-    # Cap bowl walls so heavy stems leave a readable lower counter.
-    bowl_tv = min(stem * 0.96, bowl_ry * 0.55, bowl_rx * 0.55)
-    bowl_th = min(stem * ctx.contrast * 0.96, bowl_rx * 0.55, bowl_ry * 0.55)
+    wall = 0.55 - 0.14 * t_w  # thinner walls toward black
+    bowl_tv = min(stem * 0.96, bowl_ry * wall, bowl_rx * wall)
+    bowl_th = min(stem * ctx.contrast * 0.96, bowl_rx * wall, bowl_ry * wall)
     lower_outer, lower_hole = bowl(
         ctx,
         bowl_cx,
@@ -3177,11 +3181,13 @@ def _double_storey_a_composed(
     join_y = bowl_top
     bowl_join = bowl_top - max(stem * 0.04, 3.0)
     eye_span = max(xh - join_y, stem * 2.0)
+    # Widen shoulder counter + lower inner crown toward black → larger upper eye.
     mm = m.tuned(
         join_y=join_y,
         crown_y=xh + max(ctx.overshoot, stem * 0.08),
         leg_top=xh - stem * 0.06,
-        inner_crown=join_y + eye_span * 0.55,
+        inner_crown=join_y + eye_span * (0.55 - 0.08 * t_w),
+        counter=m.counter * (1.0 + 0.12 * t_w),
     )
     # x0 from tuned counter so shoulder r0/r1 land on the stem faces.
     x0 = sx0 - mm.counter - stem
@@ -3622,13 +3628,17 @@ def _double_storey_g_composed(
     upper bowl at light when the stem missed the bowls.
     """
     stem, desc, xh = m.stem, ctx.descender, o.x_height
-    bowl_tv = min(stem * 0.96, xh * 0.14)
-    bowl_th = min(stem * ctx.contrast * 0.96, xh * 0.14)
+    from typekernel.parts.weight_relief import stem_weight_fraction
 
-    upper_ry = xh * 0.24
-    upper_rx = upper_ry * (o.rx / o.ry) * 0.92
+    t_w = stem_weight_fraction(stem)
+    # Grow bowls + cap walls by bowl size (not flat xh·0.14) so holes scale.
+    upper_ry = xh * (0.24 + 0.05 * t_w)
+    upper_rx = upper_ry * (o.rx / o.ry) * (0.92 + 0.06 * t_w)
     upper_cx = upper_rx + stem * 0.20
     upper_cy = xh - upper_ry * 0.72
+    wall = 0.48 - 0.12 * t_w
+    bowl_tv = min(stem * 0.96, upper_ry * wall)
+    bowl_th = min(stem * ctx.contrast * 0.96, upper_rx * wall)
     upper_outer, upper_hole = bowl(
         ctx,
         upper_cx,
@@ -3641,8 +3651,8 @@ def _double_storey_g_composed(
         n=o.exponent,
     )
 
-    lower_ry = xh * 0.34
-    lower_rx = lower_ry * (o.rx / o.ry) * 0.9
+    lower_ry = xh * (0.34 + 0.05 * t_w)
+    lower_rx = lower_ry * (o.rx / o.ry) * (0.9 + 0.06 * t_w)
     lower_cx = upper_cx
     lower_cy = desc + lower_ry * 1.08
     lower_outer, lower_hole = bowl(
