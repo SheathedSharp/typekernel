@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
+from elements import bowl, stem_rect
+
 from typekernel.project import glyph
 from typekernel.system import System
-
-from elements import bowl, stem_rect
 
 
 @glyph("q", group="lc.bowl")
 def q(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    asc = float(system.zones.asc)
     desc = float(system.zones.desc)
     ov = float(system.overshoot.round)
     width = float(system.tokens["o_width"])
