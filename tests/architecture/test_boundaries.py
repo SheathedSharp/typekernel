@@ -273,3 +273,59 @@ def test_guards_are_runnable_when_packages_empty() -> None:
     for root in _kernel_roots():
         files.extend(_py_files(root))
     assert isinstance(files, list)
+
+
+# Default-path heal/blend/seal is forbidden in draw / plugins / cli / starters
+# (ARCHITECTURE §3.3 / §5: blend_corners is optional L0 tool, not default).
+_DEFAULT_PATH_ROOTS = ("draw", "plugins", "cli", "starters")
+_HEAL_IMPORT_NAMES = {
+    "blend_corners",
+    "heal_corners",
+    "seal_corners",
+    "soften_corners",
+    "heal",
+    "seal",
+}
+
+
+@pytest.fixture(scope="module")
+def default_path_files() -> list[Path]:
+    files: list[Path] = []
+    for name in _DEFAULT_PATH_ROOTS:
+        files.extend(_py_files(SRC / name))
+    return files
+
+
+def test_no_heal_blend_seal_on_default_path(default_path_files: list[Path]) -> None:
+    """draw/plugins/cli/starters must not import or call heal/blend/seal joins."""
+    violations: list[str] = []
+    for path in default_path_files:
+        tree = _parse(path)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                mod = node.module or ""
+                for alias in node.names:
+                    if alias.name in _HEAL_IMPORT_NAMES:
+                        violations.append(
+                            f"{_rel(path)}:{node.lineno}: from {mod} import {alias.name}"
+                        )
+                    if alias.name == "joins" and (
+                        mod.endswith(".geo.joins")
+                        or mod.endswith(".optics.joins")
+                        or mod in {"typekernel.geo.joins", "typekernel.optics.joins"}
+                    ):
+                        # Importing the joins module wholesale on the default path
+                        # is also banned — call sites would still be heal-shaped.
+                        violations.append(
+                            f"{_rel(path)}:{node.lineno}: import joins module {mod}"
+                        )
+            elif isinstance(node, ast.Call):
+                func = node.func
+                name = None
+                if isinstance(func, ast.Name):
+                    name = func.id
+                elif isinstance(func, ast.Attribute):
+                    name = func.attr
+                if name in _HEAL_IMPORT_NAMES:
+                    violations.append(f"{_rel(path)}:{node.lineno}: call {name}()")
+    assert not violations, "heal/blend/seal on default path:\n" + "\n".join(violations)
