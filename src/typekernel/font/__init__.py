@@ -1,19 +1,14 @@
 """Font model — glyph set, metrics, cmap, kerning and features for one style.
 
-Sits between the design layers and the compile bridge::
+Sits between the design layers and the compile bridge.
 
-    DesignContext ──► parts / control glyphs ──► Font ──► compile (UFO → OTF/TTF)
+New (ARCHITECTURE.md M2) path::
 
-Typical use::
+    System ──► Project / @glyph ──► Drawing ──► Glyph.from_drawing ──► Font ──► compile
 
-    from typekernel.compile import build_font
-    from typekernel.font import Font
-    from typekernel.parts import DesignContext, build_n, build_o
+Legacy path (kept until M4)::
 
-    ctx = DesignContext.code_clear()
-    font = Font.from_context(ctx, "My Sans")      # .notdef + space included
-    font.add_chars({"n": build_n(ctx), "o": build_o(ctx)})
-    build_font(font, "build/")                    # UFO + OTF + TTF
+    DesignContext ──► parts / control glyphs ──► Font.from_context ──► compile
 """
 
 from __future__ import annotations
@@ -26,9 +21,11 @@ from typekernel.font.glyph import (
     glyph_name_for_char,
     normalize_winding,
     notdef_glyph,
+    notdef_glyph_from_system,
     space_glyph,
+    space_glyph_from_system,
 )
-from typekernel.font.info import FontInfo, alignment_zones
+from typekernel.font.info import FontInfo, alignment_zones, alignment_zones_from_system
 from typekernel.font.masters import AXIS_NAMES, Master, axis_ranges, check_masters
 
 __all__ = [
@@ -40,10 +37,13 @@ __all__ = [
     "Glyph",
     "Master",
     "alignment_zones",
+    "alignment_zones_from_system",
     "axis_ranges",
     "check_masters",
     "glyph_name_for_char",
     "normalize_winding",
     "notdef_glyph",
+    "notdef_glyph_from_system",
     "space_glyph",
+    "space_glyph_from_system",
 ]

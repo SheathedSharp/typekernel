@@ -16,12 +16,14 @@ from dataclasses import dataclass, field
 from fontTools.agl import UV2AGL
 from fontTools.pens.pointInsidePen import PointInsidePen
 
+from typekernel.draw.drawing import Drawing
 from typekernel.geo.contour import Contour, reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.pens import draw_outline
 from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.context import DesignContext
+from typekernel.system import System
 
 __all__ = [
     "Anchor",
@@ -30,7 +32,9 @@ __all__ = [
     "glyph_name_for_char",
     "normalize_winding",
     "notdef_glyph",
+    "notdef_glyph_from_system",
     "space_glyph",
+    "space_glyph_from_system",
 ]
 
 Transform = tuple[float, float, float, float, float, float]
@@ -134,6 +138,31 @@ class Glyph:
             components=components,
         )
 
+    @classmethod
+    def from_drawing(
+        cls,
+        name: str,
+        drawing: Drawing,
+        *,
+        advance: float,
+        unicodes: Iterable[int] = (),
+        anchors: Iterable[Anchor] = (),
+        components: Iterable[Component] = (),
+    ) -> Glyph:
+        """Bind a :class:`~typekernel.draw.Drawing` outline to a name and metrics.
+
+        Prefer this over :meth:`from_composed` for new ``draw`` / ``project``
+        workflows (ARCHITECTURE.md §5 / §9.7a). ``from_composed`` stays until M4.
+        """
+        return cls(
+            name=name,
+            outline=drawing.outline(),
+            advance=advance,
+            unicodes=tuple(unicodes),
+            anchors=tuple(anchors),
+            components=tuple(components),
+        )
+
 
 def glyph_name_for_char(char: str) -> str:
     """AGL production name for ``char`` (``a``, ``comma``), else ``uniXXXX``."""
@@ -177,13 +206,12 @@ def normalize_winding(outline: Outline, *, invert: bool = False) -> Outline:
     return Outline(tuple(out))
 
 
-def notdef_glyph(ctx: DesignContext) -> Glyph:
-    """Hollow-box ``.notdef`` sized from the family's cap height and stem."""
-    stroke = max(ctx.stem * 0.5, 0.04 * ctx.units_per_em)
-    sb = 0.05 * ctx.units_per_em
-    w = 0.5 * ctx.cap_height + 2.0 * stroke
+def _hollow_notdef(*, stem: float, units_per_em: float, cap_height: float) -> Glyph:
+    stroke = max(stem * 0.5, 0.04 * units_per_em)
+    sb = 0.05 * units_per_em
+    w = 0.5 * cap_height + 2.0 * stroke
     x0, x1 = sb, sb + w
-    y0, y1 = 0.0, ctx.cap_height
+    y0, y1 = 0.0, cap_height
 
     b = PathBuilder()
     b.moveTo(x0, y0)
@@ -199,7 +227,38 @@ def notdef_glyph(ctx: DesignContext) -> Glyph:
     return Glyph(".notdef", normalize_winding(b.build()), advance=x1 + sb)
 
 
+def _primary_stem(system: System) -> float:
+    for key in ("lc", "uc", "lc_h"):
+        if key in system.stem:
+            return float(system.stem[key])
+    if system.stem:
+        return float(next(iter(system.stem.values())))
+    return 0.08 * system.upm
+
+
+def notdef_glyph(ctx: DesignContext) -> Glyph:
+    """Hollow-box ``.notdef`` sized from the family's cap height and stem."""
+    return _hollow_notdef(
+        stem=ctx.stem, units_per_em=ctx.units_per_em, cap_height=ctx.cap_height
+    )
+
+
+def notdef_glyph_from_system(system: System) -> Glyph:
+    """Hollow-box ``.notdef`` from a :class:`~typekernel.system.System`."""
+    return _hollow_notdef(
+        stem=_primary_stem(system),
+        units_per_em=system.upm,
+        cap_height=system.zones.cap,
+    )
+
+
 def space_glyph(ctx: DesignContext, width: float | None = None) -> Glyph:
     """Empty ``space`` (U+0020). Default width is half the x-height."""
     advance = 0.5 * ctx.x_height if width is None else width
+    return Glyph("space", Outline(()), advance=advance, unicodes=(0x20,))
+
+
+def space_glyph_from_system(system: System, width: float | None = None) -> Glyph:
+    """Empty ``space`` (U+0020) from a :class:`~typekernel.system.System`."""
+    advance = 0.5 * system.zones.x if width is None else width
     return Glyph("space", Outline(()), advance=advance, unicodes=(0x20,))

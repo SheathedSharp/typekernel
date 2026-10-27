@@ -47,19 +47,25 @@ def read_font_from_ufo(
         ) from exc
 
     ufo = ufoLib2.Font.open(ufo_path)
-    ctx = context or DesignContext(
-        units_per_em=float(ufo.info.unitsPerEm or 1000),
-        x_height=float(ufo.info.xHeight or 500),
-        cap_height=float(ufo.info.capHeight or 700),
-        ascender=float(ufo.info.ascender or 750),
-        descender=float(ufo.info.descender or -200),
-    )
-    info = FontInfo.from_context(
-        ctx,
-        ufo.info.familyName or "Imported",
-        ufo.info.styleName or "Regular",
-    )
-    font = Font(info=info, context=ctx)
+    if context is not None:
+        info = FontInfo.from_context(
+            context,
+            ufo.info.familyName or "Imported",
+            ufo.info.styleName or "Regular",
+        )
+        font = Font(info=info, context=context)
+    else:
+        # System/Drawing path: FontInfo alone — no DesignContext required.
+        info = FontInfo(
+            family_name=ufo.info.familyName or "Imported",
+            style_name=ufo.info.styleName or "Regular",
+            units_per_em=float(ufo.info.unitsPerEm or 1000),
+            ascender=float(ufo.info.ascender or 750),
+            descender=float(ufo.info.descender or -200),
+            x_height=float(ufo.info.xHeight or 500),
+            cap_height=float(ufo.info.capHeight or 700),
+        )
+        font = Font(info=info)
     for glyph in ufo:
         if not glyph.name:
             continue

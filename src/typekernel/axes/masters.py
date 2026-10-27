@@ -8,6 +8,7 @@ It does not interpolate and does not write designspace XML — that is
 
 from __future__ import annotations
 
+from typekernel.draw.drawing import Drawing
 from typekernel.geo.outline import Outline
 
 
@@ -28,6 +29,10 @@ class GlyphMasters:
     def add(self, location: dict[str, float], outline: Outline) -> None:
         """Store ``outline`` at ``location``, replacing any previous entry."""
         self._by_location[_location_key(location)] = outline
+
+    def add_drawing(self, location: dict[str, float], drawing: Drawing) -> None:
+        """Store ``drawing.outline()`` at ``location``."""
+        self.add(location, drawing.outline())
 
     def get(self, location: dict[str, float]) -> Outline:
         """Return the outline stored at exactly ``location``.

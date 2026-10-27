@@ -26,9 +26,4 @@ def drawing_to_glyph(
     unicodes: tuple[int, ...] = (),
 ) -> Glyph:
     """Wrap a Drawing's contours as a ``font.Glyph``."""
-    return Glyph(
-        name=name,
-        outline=drawing.outline(),
-        advance=advance,
-        unicodes=unicodes,
-    )
+    return Glyph.from_drawing(name, drawing, advance=advance, unicodes=unicodes)

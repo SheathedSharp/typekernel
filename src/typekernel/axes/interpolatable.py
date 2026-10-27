@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from typekernel.draw.drawing import Drawing
 from typekernel.geo.outline import Outline
 
 
@@ -53,3 +54,21 @@ def check_interpolatable(outlines: Sequence[Outline]) -> list[str]:
                         f"!= reference {ref_seg.kind!r}"
                     )
     return problems
+
+
+def check_drawing_interpolatable(drawings: Sequence[Drawing]) -> list[str]:
+    """Topology + Drawing.signature check across master drawings.
+
+    Prefer this for new ``draw`` / ``project`` masters. Falls back to outline
+    topology via :func:`check_interpolatable` after comparing signatures.
+    """
+    if len(drawings) < 2:
+        return []
+    problems: list[str] = []
+    reference = drawings[0].signature()
+    for index, drawing in enumerate(drawings[1:], start=1):
+        if drawing.signature() != reference:
+            problems.append(f"drawing[{index}]: signature differs from reference")
+    problems.extend(check_interpolatable([d.outline() for d in drawings]))
+    return problems
+

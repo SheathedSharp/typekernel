@@ -12,12 +12,22 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from typekernel.font.glyph import Component, Glyph, glyph_name_for_char, notdef_glyph, space_glyph
+from typekernel.draw.drawing import Drawing
+from typekernel.font.glyph import (
+    Component,
+    Glyph,
+    glyph_name_for_char,
+    notdef_glyph,
+    notdef_glyph_from_system,
+    space_glyph,
+    space_glyph_from_system,
+)
 from typekernel.font.info import FontInfo
 from typekernel.geo.outline import Outline
 from typekernel.parts.compose import Anchor, ComposedGlyph
 from typekernel.parts.context import DesignContext
 from typekernel.parts.metrics import ClassKernTable, KernTable
+from typekernel.system import System
 
 __all__ = ["Font"]
 
@@ -36,6 +46,7 @@ class Font:
 
     info: FontInfo
     context: DesignContext | None = None
+    system: System | None = None
     _glyphs: dict[str, Glyph] = field(default_factory=dict)
     groups: dict[str, tuple[str, ...]] = field(default_factory=dict)
     kerning: dict[tuple[str, str], float] = field(default_factory=dict)
@@ -51,11 +62,32 @@ class Font:
         space_width: float | None = None,
         **info_overrides: Any,
     ) -> Font:
-        """New font with info derived from ``ctx`` plus ``.notdef`` and ``space``."""
+        """New font with info derived from ``ctx`` plus ``.notdef`` and ``space``.
+
+        Kept until M4 for the legacy ``parts`` path. Prefer :meth:`from_system`
+        for new ``draw`` / ``project`` workflows.
+        """
         info = FontInfo.from_context(ctx, family_name, style_name, **info_overrides)
         font = cls(info=info, context=ctx)
         font.add_glyph(notdef_glyph(ctx))
         font.add_glyph(space_glyph(ctx, space_width))
+        return font
+
+    @classmethod
+    def from_system(
+        cls,
+        system: System,
+        family_name: str,
+        style_name: str = "Regular",
+        *,
+        space_width: float | None = None,
+        **info_overrides: Any,
+    ) -> Font:
+        """New font with info derived from ``system`` plus ``.notdef`` and ``space``."""
+        info = FontInfo.from_system(system, family_name, style_name, **info_overrides)
+        font = cls(info=info, system=system)
+        font.add_glyph(notdef_glyph_from_system(system))
+        font.add_glyph(space_glyph_from_system(system, space_width))
         return font
 
     # --- glyphs -----------------------------------------------------------
@@ -66,6 +98,21 @@ class Font:
             raise ValueError(f"glyph {glyph.name!r} already exists (pass replace=True)")
         self._glyphs[glyph.name] = glyph
         return glyph
+
+    def add_drawing(
+        self,
+        name: str,
+        drawing: Drawing,
+        *,
+        advance: float,
+        unicodes: tuple[int, ...] = (),
+        replace: bool = False,
+    ) -> Glyph:
+        """Add a :class:`~typekernel.draw.Drawing` as a named glyph."""
+        return self.add_glyph(
+            Glyph.from_drawing(name, drawing, advance=advance, unicodes=unicodes),
+            replace=replace,
+        )
 
     def add_char(self, char: str, composed: ComposedGlyph, *, replace: bool = False) -> Glyph:
         """Add a parts-layer glyph for ``char`` (AGL name, ``ord(char)`` mapped)."""

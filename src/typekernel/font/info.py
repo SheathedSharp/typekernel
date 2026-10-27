@@ -13,8 +13,9 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from typekernel.parts.context import DesignContext
+from typekernel.system import System
 
-__all__ = ["FontInfo", "alignment_zones"]
+__all__ = ["FontInfo", "alignment_zones", "alignment_zones_from_system"]
 
 Zone = tuple[float, float]
 
@@ -46,6 +47,25 @@ def alignment_zones(ctx: DesignContext) -> tuple[tuple[Zone, ...], tuple[Zone, .
         ]
     )
     others = _merge_zones([(ctx.descender - o, ctx.descender)])
+    return tuple(blues), tuple(others)
+
+
+def alignment_zones_from_system(
+    system: System,
+) -> tuple[tuple[Zone, ...], tuple[Zone, ...]]:
+    """Return ``(blue_zones, other_blues)`` from a :class:`~typekernel.system.System`."""
+    o = abs(system.overshoot.round)
+    sharp = abs(system.overshoot.pointed)
+    z = system.zones
+    blues = _merge_zones(
+        [
+            (-o, z.base),
+            (z.x, z.x + sharp),
+            (z.cap, z.cap + sharp),
+            (z.asc, z.asc + o),
+        ]
+    )
+    others = _merge_zones([(z.desc - o, z.desc)])
     return tuple(blues), tuple(others)
 
 
@@ -120,6 +140,50 @@ class FontInfo:
             other_blues=others,
             stem_snap_v=(ctx.stem,),
             stem_snap_h=(ctx.thin,),
+        )
+        return replace(info, **overrides) if overrides else info
+
+    @classmethod
+    def from_system(
+        cls,
+        system: System,
+        family_name: str,
+        style_name: str = "Regular",
+        *,
+        line_height: float = 1.2,
+        weight_class: int = 400,
+        **overrides: Any,
+    ) -> FontInfo:
+        """Derive metrics, zones and stem snaps from a :class:`~typekernel.system.System`.
+
+        ``line_height`` (in em) sets the line gap so that
+        ``ascender - descender + line_gap == line_height * units_per_em``.
+        Remaining keyword arguments override fields of the result.
+        """
+        z = system.zones
+        body = z.asc - z.desc
+        blues, others = alignment_zones_from_system(system)
+        stem_v = tuple(float(v) for v in system.stem.values())
+        if "thin" in system.tokens:
+            stem_h: tuple[float, ...] = (float(system.tokens["thin"]),)
+        elif "lc_h" in system.stem:
+            stem_h = (float(system.stem["lc_h"]),)
+        else:
+            stem_h = stem_v
+        info = cls(
+            family_name=family_name,
+            style_name=style_name,
+            units_per_em=system.upm,
+            ascender=z.asc,
+            descender=z.desc,
+            x_height=z.x,
+            cap_height=z.cap,
+            line_gap=max(0.0, line_height * system.upm - body),
+            weight_class=weight_class,
+            blue_zones=blues,
+            other_blues=others,
+            stem_snap_v=stem_v,
+            stem_snap_h=stem_h,
         )
         return replace(info, **overrides) if overrides else info
 
