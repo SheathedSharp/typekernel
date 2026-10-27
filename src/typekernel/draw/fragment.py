@@ -3,35 +3,28 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from typekernel.draw.errors import ContinuityError
+from typekernel.draw.geomutil import (
+    Segment,
+    map_segment,
+    points_close,
+    reverse_segment,
+    segment_end,
+    segment_start,
+)
 from typekernel.geo.point import Point
-from typekernel.geo.segment import CubicSegment, LineSegment
+from typekernel.geo.segment import CubicSegment
 from typekernel.geo.smoothness import (
     g1_join_error,
     incoming_tangent,
     outgoing_tangent,
 )
 
-Segment = LineSegment | CubicSegment
-
-_CHAIN_TOL = 1e-9
 _G1_TOL = 1e-6
-
-
-def _seg_start(seg: Segment) -> Point:
-    return seg.p0
-
-
-def _seg_end(seg: Segment) -> Point:
-    return seg.p1 if isinstance(seg, LineSegment) else seg.p3
-
-
-def _points_close(a: Point, b: Point, tol: float = _CHAIN_TOL) -> bool:
-    return abs(a.x - b.x) <= tol and abs(a.y - b.y) <= tol
 
 
 def _unit(v: Point) -> Point:
@@ -39,18 +32,6 @@ def _unit(v: Point) -> Point:
     if length < 1e-12:
         return Point(0.0, 0.0)
     return Point(v.x / length, v.y / length)
-
-
-def _reverse_segment(seg: Segment) -> Segment:
-    if isinstance(seg, LineSegment):
-        return LineSegment(seg.p1, seg.p0)
-    return CubicSegment(seg.p3, seg.p2, seg.p1, seg.p0)
-
-
-def _map_segment(seg: Segment, fn: Callable[[Point], Point]) -> Segment:
-    if isinstance(seg, LineSegment):
-        return LineSegment(fn(seg.p0), fn(seg.p1))
-    return CubicSegment(fn(seg.p0), fn(seg.p1), fn(seg.p2), fn(seg.p3))
 
 
 def _freeze_meta(meta: Mapping[str, float]) -> Mapping[str, float]:
@@ -70,12 +51,7 @@ def _is_curve(seg: Segment) -> bool:
 
 @dataclass(frozen=True, slots=True)
 class Node:
-    """A named on-curve point on a fragment or contour.
-
-    ``index`` is the on-curve ordinal (0 = fragment start). ``tag`` uses dotted
-    names such as ``stem.l.foot.o``. ``meta`` carries optional numeric hints for
-    plugins (stem width, ``cusp=1``, …).
-    """
+    """A named on-curve point on a fragment or contour."""
 
     index: int
     tag: str
@@ -87,12 +63,7 @@ class Node:
 
 @dataclass(frozen=True, slots=True)
 class Fragment:
-    """An open, non-empty chain of segments with optional named nodes.
-
-    Construction checks end-to-end chaining and G1 at joins that involve a
-    curve, unless the join node marks ``cusp=1``. Transforms act on control
-    points only — never via sampling.
-    """
+    """An open, non-empty chain of segments with optional named nodes."""
 
     segments: tuple[Segment, ...]
     nodes: tuple[Node, ...] = ()
@@ -108,8 +79,8 @@ class Fragment:
 
         for i in range(len(self.segments) - 1):
             prev, nxt = self.segments[i], self.segments[i + 1]
-            end, start = _seg_end(prev), _seg_start(nxt)
-            if not _points_close(end, start):
+            end, start = segment_end(prev), segment_start(nxt)
+            if not points_close(end, start):
                 raise ValueError(
                     f"Fragment segments do not chain at join {i + 1}: "
                     f"end {end.as_tuple()} != start {start.as_tuple()}"
@@ -131,24 +102,21 @@ class Fragment:
 
     @property
     def start(self) -> Point:
-        return _seg_start(self.segments[0])
+        return segment_start(self.segments[0])
 
     @property
     def end(self) -> Point:
-        return _seg_end(self.segments[-1])
+        return segment_end(self.segments[-1])
 
     def start_tangent(self) -> Point:
-        """Unit tangent leaving the fragment start."""
         return _unit(outgoing_tangent(self.segments[0]))
 
     def end_tangent(self) -> Point:
-        """Unit tangent arriving at the fragment end."""
         return _unit(incoming_tangent(self.segments[-1]))
 
     def reversed(self) -> Fragment:
-        """Reverse direction; remap node indices to the new on-curve order."""
         n_seg = len(self.segments)
-        new_segs = tuple(_reverse_segment(s) for s in reversed(self.segments))
+        new_segs = tuple(reverse_segment(s) for s in reversed(self.segments))
         new_nodes = tuple(
             Node(index=n_seg - n.index, tag=n.tag, meta=n.meta) for n in self.nodes
         )
@@ -158,32 +126,27 @@ class Fragment:
         def move(p: Point) -> Point:
             return Point(p.x + dx, p.y + dy)
 
-        return Fragment(tuple(_map_segment(s, move) for s in self.segments), self.nodes)
+        return Fragment(tuple(map_segment(s, move) for s in self.segments), self.nodes)
 
     def mirrored_x(self, axis_x: float) -> Fragment:
-        """Mirror across ``x = axis_x``, then reverse so winding sense is kept."""
-
         def mirror(p: Point) -> Point:
             return Point(2.0 * axis_x - p.x, p.y)
 
         mirrored = Fragment(
-            tuple(_map_segment(s, mirror) for s in self.segments), self.nodes
+            tuple(map_segment(s, mirror) for s in self.segments), self.nodes
         )
         return mirrored.reversed()
 
     def mirrored_y(self, axis_y: float) -> Fragment:
-        """Mirror across ``y = axis_y``, then reverse so winding sense is kept."""
-
         def mirror(p: Point) -> Point:
             return Point(p.x, 2.0 * axis_y - p.y)
 
         mirrored = Fragment(
-            tuple(_map_segment(s, mirror) for s in self.segments), self.nodes
+            tuple(map_segment(s, mirror) for s in self.segments), self.nodes
         )
         return mirrored.reversed()
 
     def tagged(self, prefix: str) -> Fragment:
-        """Return a copy with ``prefix.`` prepended to every node tag."""
         if not prefix:
             return self
         new_nodes = tuple(
