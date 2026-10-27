@@ -1,0 +1,71 @@
+"""Skeleton helpers for the humanist-italic starter (project-side only)."""
+
+from __future__ import annotations
+
+import math
+
+from typekernel.draw import Drawing
+from typekernel.geo.stroke import Centerline
+from typekernel.plugins.construct import broad_nib, expand_skeleton
+from typekernel.system import System
+
+
+def _slant_x(x: float, y: float, slant: float) -> float:
+    return x + slant * y
+
+
+def project_pen(system: System):
+    """Broad nib sized from ``system.stem['lc']`` and pen tokens."""
+    thickness = float(system.stem["lc"])
+    contrast = float(system.tokens.get("pen_contrast", 0.55))
+    angle = float(system.tokens.get("pen_angle_deg", 30.0))
+    return broad_nib(thickness, contrast=contrast, angle_deg=angle)
+
+
+def slanted_polyline(
+    points: list[tuple[float, float]],
+    slant: float,
+    *,
+    closed: bool = False,
+) -> Centerline:
+    slanted = [(_slant_x(x, y, slant), y) for x, y in points]
+    return Centerline.from_points(slanted, closed=closed)
+
+
+def stroke(
+    system: System,
+    points: list[tuple[float, float]],
+    *,
+    closed: bool = False,
+    thickness: float | None = None,
+) -> Drawing:
+    """Expand a (pre-slant) polyline with the project broad nib."""
+    slant = float(system.tokens.get("slant", 0.0))
+    cl = slanted_polyline(points, slant, closed=closed)
+    if thickness is None:
+        pen = project_pen(system)
+    else:
+        pen = broad_nib(
+            float(thickness),
+            contrast=float(system.tokens.get("pen_contrast", 0.55)),
+            angle_deg=float(system.tokens.get("pen_angle_deg", 30.0)),
+        )
+    return expand_skeleton(cl, pen, join="round", cap="round")
+
+
+def oval_points(
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    *,
+    n: int = 28,
+) -> list[tuple[float, float]]:
+    """Unslanted oval sample points (closed centerline)."""
+    return [
+        (
+            cx + rx * math.cos(2.0 * math.pi * i / n),
+            cy + ry * math.sin(2.0 * math.pi * i / n),
+        )
+        for i in range(n)
+    ]

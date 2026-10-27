@@ -10,6 +10,7 @@ __all__ = ["STARTERS", "create_project"]
 # Starter directory name under typekernel/starters/ → CLI --starter value.
 STARTERS: dict[str, str] = {
     "latin-sans": "latin_sans",
+    "latin-humanist-italic": "latin_humanist_italic",
 }
 
 _SYSTEM_PY = '''\
@@ -89,8 +90,8 @@ def create_project(
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
-    ``latin-sans`` to copy ``starters/latin_sans`` (system, elements, control
-    glyphs).
+    ``latin-sans`` or ``latin-humanist-italic`` to copy the matching starter
+    (system, elements, control glyphs).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
         raise ValueError(f"invalid project name: {name!r}")
@@ -129,8 +130,17 @@ def create_project(
     # Stamp the project family name from the directory name.
     system_py = root / "system.py"
     if system_py.is_file():
+        import re
+
         text = system_py.read_text(encoding="utf-8")
         family = name.replace("_", " ").title()
-        text = text.replace('FAMILY_NAME = "Latin Sans"', f'FAMILY_NAME = "{family}"')
-        system_py.write_text(text, encoding="utf-8")
+        text, n = re.subn(
+            r'^FAMILY_NAME\s*=\s*"[^"]*"',
+            f'FAMILY_NAME = "{family}"',
+            text,
+            count=1,
+            flags=re.M,
+        )
+        if n:
+            system_py.write_text(text, encoding="utf-8")
     return root
