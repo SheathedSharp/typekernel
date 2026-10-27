@@ -60,7 +60,7 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 
 ## Agent workflow checklist
 
-1. Prefer library APIs (`typekernel.geo` / `parts`) over one-off example hacks.
+1. Prefer library APIs (`typekernel.geo` / `draw` / `project` / `plugins`) over one-off hacks.
 2. Before commit: `pytest -q`, `ruff check src tests`, `mypy -p typekernel` when touching typed surfaces.
 3. Refresh only the showcase proofs that `.gitignore` explicitly un-ignores.
 4. Write conventional subjects; refuse `TK-…` style subjects even if history has them.
@@ -70,8 +70,8 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 
 When creating or extending faces in this repo:
 
-1. Follow `.agents/skills/typekernel-font-design/` **Usage A** (parts → Font → space → compile → proof).
-2. Compose glyphs from parts / letter builders in your own script. Do **not** treat
-   `FormSources.build_all`, `DesignSequence`, or `unlock_*` as the design method.
-3. Specimen sentences are late proofs, not the design driver.
-4. Prefer new examples under `examples/<face>/`; do not copy `examples/_legacy/agent_*`.
+1. Follow `.agents/skills/typekernel-font-design/` (ARCHITECTURE.md §4: tk new → system →
+   control proofs → elements → audit → plugins → spacing → masters → build).
+2. Letter geometry stays in the project starter; never resurrect `parts` / DesignContext.
+3. Change fragments/elements — never heal / blend / seal.
+4. Prefer examples under `examples/latin_sans_quickstart/` or `examples/zayju_letter/`.

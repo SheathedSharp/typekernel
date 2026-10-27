@@ -76,7 +76,8 @@ print(result.binaries["otf"])
 
 **校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 
-Agent 试验记录：[`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。
+Agent 试验记录：[`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。  
+历史开发计划（含 §8）：[`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md)。
 
 ## 开发
 
