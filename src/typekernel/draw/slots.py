@@ -209,20 +209,46 @@ def _assert_path_endpoints(path: Fragment, start: Point, end: Point) -> None:
 
 
 def _is_degenerate_line(seg: Segment) -> bool:
-    """True for near-zero line inserts (e.g. ``corners.plain`` sharp keep)."""
+    """True for near-zero line segments (ignored by continuity checks)."""
     return isinstance(seg, LineSegment) and _seg_length(seg) < 1e-9
 
 
-def _check_contour_g1(segments: tuple[Segment, ...]) -> None:
+def _is_noop_corner_fill(fill: CornerFill) -> bool:
+    """§9.5: plain ≡ unmatched — zero trim + only degenerate path segs is a no-op.
+
+    Explicit ``corners.plain`` (and zero-radius rounded fallbacks) must not insert
+    zero-length segments; geometry and the corner slot stay as in the unmatched case.
+    """
+    if fill.trim_in > 1e-12 or fill.trim_out > 1e-12:
+        return False
+    segs = fill.path.segments
+    if not segs:
+        return True
+    return all(_is_degenerate_line(s) for s in segs)
+
+
+def _check_contour_g1(
+    segments: tuple[Segment, ...],
+    *,
+    exempt_nodes: set[int] | None = None,
+) -> None:
+    """Post-fill G1 check; ``exempt_nodes`` are on-curve indices still marked corner.
+
+    Sharp corners left unmatched or filled with ``plain`` (geometry no-op) remain
+    discontinuous by design (§9.3 / §9.5) and must stay exempt.
+    """
     if len(segments) < 2:
         return
-    pairs = list(itertools.pairwise(segments))
-    pairs.append((segments[-1], segments[0]))
-    for prev, nxt in pairs:
+    n = len(segments)
+    exempt = exempt_nodes or set()
+    for i in range(n):
+        if i in exempt:
+            continue
+        prev = segments[(i - 1) % n]
+        nxt = segments[i]
         if isinstance(prev, LineSegment) and isinstance(nxt, LineSegment):
             continue
-        # Sharp corner fillers may insert a degenerate line between a curve and
-        # an edge; that join is intentionally not G1.
+        # Defensive: ignore accidental zero-length inserts next to a curve.
         if _is_degenerate_line(prev) or _is_degenerate_line(nxt):
             continue
         err = g1_join_error(prev, nxt)
@@ -322,7 +348,7 @@ def apply_slots(
     ends: Mapping[str, EndFiller],
     named: Mapping[str, CornerFiller | EndFiller] | None = None,
 ) -> Drawing:
-    """Apply corner/end fillers; unmatched slots stay plain (``plain`` equivalent)."""
+    """Apply corner/end fillers; unmatched and ``plain`` leave geometry unchanged."""
     named_map: dict[str, CornerFiller | EndFiller] = dict(named or {})
     new_contours: list[Contour] = []
     new_nodes: list[tuple[Node, ...]] = []
@@ -349,7 +375,6 @@ def apply_slots(
                 remaining_slots.append(slot)
                 continue
             planned.append((slot, slot.node))
-            applied.add(slot.tag)
 
         for slot, node_index in sorted(planned, key=lambda t: t[1], reverse=True):
             corner_filler = _match_filler(slot.tag, corners, named_map, slot.fill)
@@ -400,7 +425,12 @@ def apply_slots(
                 raise SlotFillError(
                     f"corner filler for {slot.tag!r} returned {type(fill)}"
                 )
+            # plain / zero-radius: leave geometry + corner slot (§9.5 ≡ unmatched).
+            if _is_noop_corner_fill(fill):
+                remaining_slots.append(slot)
+                continue
             working = _apply_corner(working, idx, fill, site)
+            applied.add(slot.tag)
 
         for slot in end_slots:
             end_filler = _match_filler(slot.tag, ends, named_map, slot.fill)
@@ -428,7 +458,12 @@ def apply_slots(
             applied.add(slot.tag)
 
         new_contour = Contour(tuple(working), closed=True)
-        _check_contour_g1(new_contour.segments)
+        exempt = {
+            s.node
+            for s in remaining_slots
+            if s.contour == ci and s.kind == "corner"
+        }
+        _check_contour_g1(new_contour.segments, exempt_nodes=exempt)
         new_contours.append(new_contour)
         new_nodes.append(tuple(node for node in cnodes if node.tag not in applied))
 

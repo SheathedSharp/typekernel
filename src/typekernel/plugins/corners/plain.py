@@ -1,4 +1,4 @@
-"""Plain (sharp) corner filler — trim zero, degenerate join path."""
+"""Plain (sharp) corner filler — geometry no-op (§9.5)."""
 
 from __future__ import annotations
 
@@ -9,12 +9,12 @@ from typekernel.system import System
 
 
 def plain() -> CornerFiller:
-    """Return a filler that keeps the corner sharp.
+    """Return a filler that keeps the corner sharp without changing segments.
 
-    Unmatched slots are already left as-is by ``apply_slots`` (plain-equivalent).
-    This filler is for explicit ``corners={...: plain()}`` / ``fill="plain"``
-    wiring: it trims nothing and inserts a zero-length segment at the corner
-    point so path endpoints still land on the trim points.
+    Unmatched slots already leave geometry as-is (plain-equivalent). This filler
+    is for explicit ``corners={...: plain()}`` / ``fill="plain"`` wiring: it
+    reports zero trim and a degenerate path so ``apply_slots`` treats it as a
+    no-op and keeps the corner slot (§9.5 ≡ unmatched).
     """
 
     def fill(site: CornerSite, system: System) -> CornerFill:
