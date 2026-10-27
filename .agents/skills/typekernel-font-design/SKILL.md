@@ -8,6 +8,8 @@ description: >-
 
 # typekernel font design (coding agent)
 
+> **冻结（见 [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md)）**：不再新增 letter builder、yoke 参数或风格分支（衬线 / 斜体 / VF 等）。新工作走 `typekernel.draw` + 插件；旧 `parts` 只读，直到 M4 删除。
+
 ## Product goal
 
 **typekernel is a composable parts toolbox + compile exit for coding agents.**
