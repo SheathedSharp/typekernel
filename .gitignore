@@ -153,3 +153,6 @@ examples/zayju_script/out/**
 !examples/zayju_script/out/sentence_brief_display.png
 !examples/zayju_script/out/grid.png
 !examples/zayju_script/out/glyph_D.png
+
+# example build outputs
+examples/**/out/
