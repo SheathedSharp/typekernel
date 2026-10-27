@@ -7,8 +7,11 @@ No letter names — projects supply centerlines; this module only expands pens.
 from __future__ import annotations
 
 from collections.abc import Sequence
+
 from typekernel.draw.drawing import ContourRole, Drawing
 from typekernel.geo.contour import Contour, reverse_contour, signed_area
+from typekernel.geo.point import Point
+from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.geo.stroke import (
     CapStyle,
     Centerline,
@@ -48,6 +51,56 @@ def pointed_pen(
     return Pen(thickness=float(thickness), contrast=float(contrast), angle_deg=float(angle_deg))
 
 
+
+_DEGEN_LEN = 1e-9
+
+
+def _seg_len(seg: LineSegment | CubicSegment) -> float:
+    a, b = seg.points[0], seg.points[-1]
+    return ((b.x - a.x) ** 2 + (b.y - a.y) ** 2) ** 0.5
+
+
+def _drop_degenerate_segments(contour: Contour) -> Contour:
+    """Remove near-zero line segments left by elliptical pen joins/caps.
+
+    Project ``apply_slots`` rejects zero-length lines (ARCHITECTURE §9.5);
+    skeleton expand can emit them at round joins. Dropping them keeps the
+    Drawing usable without heal/blend passes.
+    """
+    kept: list[LineSegment | CubicSegment] = []
+    for seg in contour.segments:
+        if isinstance(seg, LineSegment) and _seg_len(seg) < _DEGEN_LEN:
+            continue
+        kept.append(seg)
+    if len(kept) < 2:
+        return contour
+    # Re-stitch endpoints so consecutive segments meet after drops.
+    stitched: list[LineSegment | CubicSegment] = []
+    for i, seg in enumerate(kept):
+        if not stitched:
+            stitched.append(seg)
+            continue
+        prev = stitched[-1]
+        prev_end = prev.points[-1]
+        start = seg.points[0]
+        if abs(prev_end.x - start.x) > 1e-9 or abs(prev_end.y - start.y) > 1e-9:
+            # Force shared joint onto prev_end.
+            if isinstance(seg, LineSegment):
+                seg = LineSegment(prev_end, seg.p1)
+            else:
+                seg = CubicSegment(prev_end, seg.p1, seg.p2, seg.p3)
+        stitched.append(seg)
+    if contour.closed and stitched:
+        first, last = stitched[0], stitched[-1]
+        end = last.points[-1]
+        start = first.points[0]
+        if abs(end.x - start.x) > 1e-9 or abs(end.y - start.y) > 1e-9:
+            if isinstance(last, LineSegment):
+                stitched[-1] = LineSegment(last.p0, start)
+            else:
+                stitched[-1] = CubicSegment(last.p0, last.p1, last.p2, start)
+    return Contour(tuple(stitched), closed=contour.closed)
+
 def _normalize_winding(contour: Contour, *, want_positive: bool) -> Contour:
     area = signed_area(contour)
     if area == 0.0:
@@ -65,6 +118,7 @@ def _drawing_from_contours(contours: tuple[Contour, ...]) -> Drawing:
     """
     if not contours:
         return Drawing((), (), (), slots=())
+    contours = tuple(_drop_degenerate_segments(c) for c in contours)
     if len(contours) == 1:
         ink = _normalize_winding(contours[0], want_positive=True)
         return Drawing((ink,), ("ink",), ((),), slots=())
