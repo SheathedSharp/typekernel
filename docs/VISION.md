@@ -10,15 +10,23 @@
 
 typekernel 补的是那一层：**可编程的光学与结构内核**，不是又一个编辑器，也不是又一个 fontmake 包装器。
 
-**Coding agent 目标**：让 agent 用本库零件 **像人类字体设计师一样** 拼出整族（字重、符号、spacing、特性、proof）。**唯一用法**：自己写 Python 组合 parts → Font → 自选间距 → compile → proof（Usage A）。见 [AGENT_GOAL.md](AGENT_GOAL.md) 与 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。
+**Coding agent 目标**：让 agent 像人类字体设计师一样，用项目代码写出整族（字重、符号、spacing、特性、proof）。**现行唯一用法**（ARCHITECTURE.md §4）：
+
+```
+tk new → brief.md → system.py → 控制字 → tk proof
+      → elements / glyphs → tk audit → corners/ends 插件
+      → spacing.py → 母版 → tk build
+```
+
+见 [AGENT_GOAL.md](AGENT_GOAL.md) 与 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。不要再走已删除的 `typekernel.parts` / `DesignContext` / yoke 路径。
 
 ## 分层（目标架构）
 
 | 层 | 职责 | 本仓 vs 依赖 |
 | --- | --- | --- |
-| **geo-kernel** | 三次曲线一等公民的几何核 | 自建 |
-| **type-semantics** | overshoot、stem、对比、接合、designed deltas | 自建 |
-| **compile** | UFO / designspace → OT 表 / VF | **fontTools** (+ ufo2ft / fontmake 等) |
+| **geo / draw** | 三次曲线一等公民的片段与轮廓 | 自建 |
+| **system / project / plugins** | System、@glyph、角点/端点插件 | 自建 |
+| **font / compile** | Glyph / Font → UFO / designspace → OT / VF | **fontTools** (+ ufo2ft 等) |
 
 明确**不重造**：OpenType 表、TTX、varLib、feaLib、cu2qu。
 
@@ -31,14 +39,10 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 
 ## 完整计划
 
-详细调研、缺口分析与 12 个月路线图写在独立规划文档里（作者本地 / 工作区：`font-from-code-foundation-plan.md`）。本仓只保留这份愿景摘要；计划定稿后可链到仓库 `docs/` 或外部 URL。
+详细调研、缺口分析与路线图见 [ARCHITECTURE.md](ARCHITECTURE.md) M0–M6 与历史 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。本仓以 ARCHITECTURE 为现行交接规格。
 
 ## 状态
 
-**Geo-kernel**, **optical semantics**, **parts → Font** composition,
-**compile bridge** (static + variable OTF/TTF/WOFF2, UFO round-trip), and
-**qa.proof** specimen helpers are in the tree. Usage B aggregate pipelines (`Controls` / `DesignSequence` / `unlock_*` / `build_all`) were removed. Agents compose parts (Usage A); optional `FormSources.derive` is stock sugar only.
+**geo / draw / system / project / plugins / cli / starters/latin_sans** 已按 ARCHITECTURE.md §9 落地（M0–M5）。字母几何在 starter 项目里；内核无 letter builders。`typekernel.parts` / `DesignContext` / FormSources / yoke 已删除。
 
-**Italic**: `italic_design` construct slant + branching letters; do not ship mechanical
-oblique as Italic. OpenType `case` / `liga` / `frac` / `ordn` and width/`opsz` examples
-are in-tree. See [dev-standards.md](dev-standards.md) and `approvals/*.json`.
+**Italic / 第二套 starter（skeleton+pen）** 仍属后续里程碑（M6+），不要用机械 oblique 冒充 Italic。见 [dev-standards.md](dev-standards.md)。
