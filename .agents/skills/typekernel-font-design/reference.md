@@ -9,6 +9,7 @@
 | `tk build --variable` | Light / Regular / Bold → designspace + VF |
 | `tk proof SET [PATH]` | `control` \| `spacing` \| `kern` \| `charset` \| `all` |
 | `tk audit [PATH]` | stem / zone / direction / master-compat diagnostics |
+| `tk diff [PATH]` | changed glyphs via `outline_hash` (`--snapshot` / `--against`) |
 
 ## System
 
