@@ -381,6 +381,8 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
+**已落地（控制字切片）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（`n o H O`）+ `tk new --starter latin-humanist-italic`。内核不改；字组扩展、spacing、斜体母版仍属后续。
+
 ---
 
 ## 7. 守住方向的检查清单
@@ -442,7 +444,8 @@ src/typekernel/
   cli/
     __main__.py        # tk new / proof / audit / build / diff
   starters/
-    latin_sans/        # tk new 拷贝的模板源（M4 才填）
+    latin_sans/              # tk new --starter latin-sans
+    latin_humanist_italic/   # tk new --starter latin-humanist-italic（M6 控制字）
 ```
 
 `draw` / `system` / `project` / `cli` 是内核；`plugins` 是插件；`starters` 是模板数据，**不被任何内核模块 import**。
@@ -590,6 +593,24 @@ def apply_slots(
 - 填充后的轮廓仍要通过 9.3 的连续性检查；插件产生不连续视为插件 bug。零长段不得靠 post-fill「跳过」蒙混——故意保留的切线不连续只走角点槽豁免；line–line 接合不要求 G1。
 - 填充是**确定性**的：同一 `System` 结构下，不同母版填充出的段类型序列必须相同（插件契约测试覆盖）。
 - `trim_in > in_len` 或路径首尾不落在裁剪点上 → `SlotFillError`。
+
+### 9.5b 构造插件 `plugins.construct`（M6）
+
+字母无关。项目提供骨架，插件只负责笔模型展开为 `Drawing`：
+
+```python
+def broad_nib(thickness: float, *, contrast: float = 0.55, angle_deg: float = 30.0) -> Pen
+def pointed_pen(thickness: float, *, contrast: float = 1.0, angle_deg: float = 0.0) -> Pen
+def expand_skeleton(centerline, pen, *, join="round", cap="round", miter_limit=4.0) -> Drawing
+def expand_skeleton_cubic(centerline, pen, *, join="round", cap="round", ...) -> tuple[Drawing, CenterlineExpandReport]
+```
+
+规则：
+
+- 复用 `geo.stroke.Pen` / `Centerline` / `CubicCenterline` / `expand` / `expand_cubic`；不 import starter，不出现字母名。
+- 展开结果去掉近零长线段；单轮廓一律 `ink`（必要时翻成 CCW）；环：最大 |area| → `ink`，其余 → `counter`。
+- 无角点/端点槽的 skeleton 字形：`Project` 可不配置 `corners`/`ends`，从而跳过 `apply_slots`（笔迹接合不是 Writer G1 链）。
+- `blend_corners` / heal / seal **不是**本插件路径。
 
 ### 9.6 几何构造器（`draw.construct`，M1）
 
