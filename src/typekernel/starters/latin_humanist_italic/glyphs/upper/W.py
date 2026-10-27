@@ -1,4 +1,4 @@
-"""W — double-v capitals (skeleton+pen)."""
+"""W — continuous double-V rail (shared peaks/valleys)."""
 
 from __future__ import annotations
 
@@ -19,9 +19,8 @@ def W(system: System):
     x1 = lsb + width * 0.35
     x2 = lsb + width * 0.65
     mid = (x1 + x2) / 2.0
-    return (
-        stroke(system, [(x0, cap), (x1, 0.0)], thickness=uc)
-        + stroke(system, [(x1, 0.0), (mid, cap * 0.55)], thickness=uc)
-        + stroke(system, [(mid, cap * 0.55), (x2, 0.0)], thickness=uc)
-        + stroke(system, [(x2, 0.0), (x3, cap)], thickness=uc)
+    return stroke(
+        system,
+        [(x0, cap), (x1, 0.0), (mid, cap * 0.55), (x2, 0.0), (x3, cap)],
+        thickness=uc,
     )

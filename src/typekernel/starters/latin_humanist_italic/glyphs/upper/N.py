@@ -1,4 +1,4 @@
-"""N — two stems + diagonal (skeleton+pen)."""
+"""N — continuous left stem + diagonal + right stem."""
 
 from __future__ import annotations
 
@@ -16,7 +16,8 @@ def N(system: System):
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     x0 = lsb + uc * 0.5
     x1 = lsb + width - uc * 0.5
-    left = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    right = stroke(system, [(x1, 0.0), (x1, cap)], thickness=uc)
-    diag = stroke(system, [(x0, cap), (x1, 0.0)], thickness=uc)
-    return left + right + diag
+    return stroke(
+        system,
+        [(x0, 0.0), (x0, cap), (x1, 0.0), (x1, cap)],
+        thickness=uc,
+    )

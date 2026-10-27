@@ -1,4 +1,4 @@
-"""A — two diagonals + crossbar (skeleton+pen)."""
+"""A — continuous inverted-V skeleton + crossbar (shared stroke)."""
 
 from __future__ import annotations
 
@@ -17,12 +17,11 @@ def A(system: System):
     x0 = lsb + uc * 0.2
     x1 = lsb + width - uc * 0.2
     apex = (x0 + x1) / 2.0
-    left = stroke(system, [(x0, 0.0), (apex, cap)], thickness=uc)
-    right = stroke(system, [(x1, 0.0), (apex, cap)], thickness=uc)
+    # One continuous diagonal rail through the apex (no separate join heal).
+    body = stroke(system, [(x0, 0.0), (apex, cap), (x1, 0.0)], thickness=uc)
     bar_y = cap * 0.38
-    # Crossbar between the diagonals at bar_y.
     t = bar_y / cap
     xl = x0 + (apex - x0) * t
     xr = x1 + (apex - x1) * t
     bar = stroke(system, [(xl, bar_y), (xr, bar_y)], thickness=uc * 0.85)
-    return left + right + bar
+    return body + bar

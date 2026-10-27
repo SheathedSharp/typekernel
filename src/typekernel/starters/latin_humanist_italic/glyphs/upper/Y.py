@@ -1,4 +1,4 @@
-"""Y — fork into stem (skeleton+pen)."""
+"""Y — continuous left-arm+stem rail + right arm to shared join."""
 
 from __future__ import annotations
 
@@ -18,8 +18,6 @@ def Y(system: System):
     x1 = lsb + width - uc * 0.2
     mid = (x0 + x1) / 2.0
     join = cap * 0.42
-    return (
-        stroke(system, [(x0, cap), (mid, join)], thickness=uc)
-        + stroke(system, [(x1, cap), (mid, join)], thickness=uc)
-        + stroke(system, [(mid, join), (mid, 0.0)], thickness=uc)
-    )
+    left = stroke(system, [(x0, cap), (mid, join), (mid, 0.0)], thickness=uc)
+    right = stroke(system, [(x1, cap), (mid, join)], thickness=uc)
+    return left + right

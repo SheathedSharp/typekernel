@@ -1,4 +1,4 @@
-"""L — stem + baseline bar (skeleton+pen)."""
+"""L — continuous stem + baseline bar."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ def L(system: System):
     width = float(system.tokens.get("L_width", 480.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     x = lsb + uc * 0.5
-    stem = stroke(system, [(x, 0.0), (x, cap)], thickness=uc)
-    bar = stroke(system, [(x, 0.0), (lsb + width, 0.0)], thickness=uc * 0.9)
-    return stem + bar
+    return stroke(
+        system,
+        [(x, cap), (x, 0.0), (lsb + width, 0.0)],
+        thickness=uc,
+    )

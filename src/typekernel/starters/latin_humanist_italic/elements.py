@@ -177,3 +177,17 @@ def nest_bowl(
         raise ValueError(f"side must be left/right, got {side!r}")
     return bowl(system, cx=cx, cy=cy_v, rx=rx_v, ry=ry_v, thickness=st)
 
+
+
+def uc_stem(
+    system: System,
+    x: float,
+    *,
+    y0: float = 0.0,
+    y1: float | None = None,
+    thickness: float | None = None,
+) -> Drawing:
+    """Shared capital vertical stem (H / E / F / K / …)."""
+    cap = float(system.zones.cap) if y1 is None else float(y1)
+    st = float(system.stem["uc"]) if thickness is None else float(thickness)
+    return stroke(system, [(x, y0), (x, cap)], thickness=st)

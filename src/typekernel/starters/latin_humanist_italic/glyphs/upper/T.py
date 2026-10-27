@@ -1,4 +1,4 @@
-"""T — top bar + stem (skeleton+pen)."""
+"""T — continuous left-half bar into stem + right bar (shared apex)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ def T(system: System):
     width = float(system.tokens.get("T_width", 560.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     mid = lsb + width / 2.0
-    bar = stroke(system, [(lsb, cap), (lsb + width, cap)], thickness=uc * 0.9)
-    stem = stroke(system, [(mid, 0.0), (mid, cap)], thickness=uc)
-    return bar + stem
+    # Left bar → stem is one rail; right bar meets at mid/cap.
+    left = stroke(system, [(lsb, cap), (mid, cap), (mid, 0.0)], thickness=uc)
+    right = stroke(system, [(mid, cap), (lsb + width, cap)], thickness=uc)
+    return left + right

@@ -1,8 +1,8 @@
-"""K — stem + two diagonal legs (skeleton+pen)."""
+"""K — shared uc_stem + continuous arm/leg through stem join."""
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,8 +17,6 @@ def K(system: System):
     x0 = lsb + uc * 0.5
     x1 = lsb + width - uc * 0.25
     join = cap * 0.45
-    return (
-        stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-        + stroke(system, [(x0 + uc * 0.15, join), (x1, cap)], thickness=uc)
-        + stroke(system, [(x0 + uc * 0.15, join), (x1, 0.0)], thickness=uc)
-    )
+    # Arms meet exactly on the stem so overlays share ink (no gap spur).
+    arms = stroke(system, [(x1, cap), (x0, join), (x1, 0.0)], thickness=uc)
+    return uc_stem(system, x0, thickness=uc) + arms

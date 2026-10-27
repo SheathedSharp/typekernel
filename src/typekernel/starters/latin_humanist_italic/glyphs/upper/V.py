@@ -1,4 +1,4 @@
-"""V — two diagonals (skeleton+pen)."""
+"""V — continuous diagonal rail through the baseline apex."""
 
 from __future__ import annotations
 
@@ -17,7 +17,4 @@ def V(system: System):
     x0 = lsb + uc * 0.2
     x1 = lsb + width - uc * 0.2
     mid = (x0 + x1) / 2.0
-    return (
-        stroke(system, [(x0, cap), (mid, 0.0)], thickness=uc)
-        + stroke(system, [(x1, cap), (mid, 0.0)], thickness=uc)
-    )
+    return stroke(system, [(x0, cap), (mid, 0.0), (x1, cap)], thickness=uc)

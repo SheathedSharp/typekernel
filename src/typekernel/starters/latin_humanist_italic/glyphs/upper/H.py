@@ -1,8 +1,8 @@
-"""Control glyph H — three slanted strokes (stems + bar) overlaid."""
+"""Control glyph H — shared uc_stem pair + crossbar."""
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,11 +17,7 @@ def H(system: System):
     bar_y = cap * 0.48
     x_l = lsb + uc * 0.5
     x_r = lsb + width - uc * 0.5
-    left = stroke(system, [(x_l, 0.0), (x_l, cap)], thickness=uc)
-    right = stroke(system, [(x_r, 0.0), (x_r, cap)], thickness=uc)
-    bar = stroke(
-        system,
-        [(x_l, bar_y), (x_r, bar_y)],
-        thickness=uc * 0.85,
-    )
+    left = uc_stem(system, x_l, thickness=uc)
+    right = uc_stem(system, x_r, thickness=uc)
+    bar = stroke(system, [(x_l, bar_y), (x_r, bar_y)], thickness=uc * 0.85)
     return left + right + bar

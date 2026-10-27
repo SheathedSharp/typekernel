@@ -1,4 +1,4 @@
-"""X — crossing diagonals (skeleton+pen)."""
+"""X — crossing diagonals sharing the optical center."""
 
 from __future__ import annotations
 
@@ -16,7 +16,10 @@ def X(system: System):
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     x0 = lsb + uc * 0.2
     x1 = lsb + width - uc * 0.2
+    cx = (x0 + x1) / 2.0
+    cy = cap / 2.0
+    # Two rails that both pass through the shared center (ink merges at cross).
     return (
-        stroke(system, [(x0, cap), (x1, 0.0)], thickness=uc)
-        + stroke(system, [(x1, cap), (x0, 0.0)], thickness=uc)
+        stroke(system, [(x0, cap), (cx, cy), (x1, 0.0)], thickness=uc)
+        + stroke(system, [(x1, cap), (cx, cy), (x0, 0.0)], thickness=uc)
     )
