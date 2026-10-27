@@ -1,4 +1,4 @@
-"""Round glyph g — binocular: upper bowl + lower loop (geometric sans)."""
+"""Round glyph g — binocular: o-like bowl + ear stem + descender bowl."""
 
 from __future__ import annotations
 
@@ -16,28 +16,39 @@ def g(system: System):
     width = float(system.tokens["g_width"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     ov = float(system.overshoot.round)
-    # Upper bowl like o but slightly smaller, sitting on the baseline-ish.
-    cx = lsb + width / 2.0
-    upper_cy = xh * 0.55
-    upper_ry = xh * 0.45 + ov * 0.5
-    upper_rx = width / 2.0 * 0.92
+
+    # Upper bowl: same zone/overshoot recipe as o, inset so the ear overlaps
+    # its right wall (a-style stem+bowl overlap).
+    upper_rx = (width - st * 0.35) / 2.0
+    upper_cx = lsb + upper_rx
     upper = bowl(
-        system, cx=cx, cy=upper_cy, rx=upper_rx, ry=upper_ry, thickness=st
+        system,
+        cx=upper_cx,
+        cy=xh / 2.0,
+        rx=upper_rx,
+        ry=xh / 2.0 + ov,
+        thickness=st,
     )
-    # Right ear/stem linking upper to lower loop.
-    ear = stem_rect(
-        lsb + width - st, lsb + width, desc + abs(desc) * 0.35, xh * 0.85, prefix="ear"
-    )
-    # Lower loop (bowl) in the descender.
+
     lower_cy = desc / 2.0
-    lower_ry = abs(desc) / 2.0 + ov * 0.4
-    lower_rx = width / 2.0 * 0.85
+    lower_ry = abs(desc) / 2.0 + ov * 0.35
+    lower_rx = width / 2.0 * 0.88
+    lower_cx = lsb + width / 2.0 - st * 0.1
     lower = bowl(
         system,
-        cx=cx - st * 0.15,
+        cx=lower_cx,
         cy=lower_cy,
         rx=lower_rx,
         ry=lower_ry,
         thickness=st * 0.95,
+    )
+
+    # Ear bridges upper and lower bowls (overlap both; no heal).
+    ear = stem_rect(
+        lsb + width - st,
+        lsb + width,
+        lower_cy - lower_ry * 0.2,
+        xh * 0.78,
+        prefix="ear",
     )
     return upper + ear + lower
