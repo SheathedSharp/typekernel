@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from typekernel.plugins.corners.bracketed import bracketed
 from typekernel.plugins.corners.plain import plain
 from typekernel.plugins.corners.rounded import rounded
 from typekernel.plugins.corners.slab import slab
 
-__all__ = ["plain", "rounded", "slab"]
+__all__ = ["bracketed", "plain", "rounded", "slab"]
