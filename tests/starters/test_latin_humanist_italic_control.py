@@ -99,3 +99,13 @@ def test_n_group_glyphs_evaluate() -> None:
         assert len(drawing.contours) >= 1
         assert drawing.roles[0] == "ink"
         assert project.to_glyph(name).advance > 0
+
+
+def test_o_group_glyphs_evaluate() -> None:
+    project = load_project(STARTER)
+    project.discover()
+    for name in ("b", "d", "p", "q"):
+        drawing = project.evaluate(name)
+        assert len(drawing.contours) >= 2  # stem ink + bowl (+counter)
+        assert "ink" in drawing.roles
+        assert project.to_glyph(name).advance > 0
