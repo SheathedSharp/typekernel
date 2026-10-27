@@ -630,6 +630,58 @@ class System:
 
 不得有 `aperture` / `roundness` 这类“一个数影响多处几何”的旋钮。
 
+### 9.7a `Project` / `@glyph` / `Master`（M2）
+
+```python
+@dataclass(frozen=True, slots=True)
+class Master:
+    name: str
+    system: System
+
+def glyph(name: str, *, group: str = "") -> Callable[[GlyphFn], GlyphFn]:
+    """Register a glyph builder. ``fn(system) -> Drawing``.
+
+    Attach master overrides with ``@fn.master("Black")`` on a second function
+    of the same shape. Glyph ``name`` is a production name (may be a letter in
+    *projects*); kernel tests must still use synthetic names (§9.8 rule 5).
+    """
+
+@dataclass(frozen=True, slots=True)
+class GlyphSpec:
+    name: str
+    group: str
+    build: Callable[[System], Drawing]
+    masters: Mapping[str, Callable[[System], Drawing]]  # override builders
+
+class Project:
+    def __init__(
+        self,
+        system: System,
+        glyphs: str | Path,
+        *,
+        masters: Sequence[Master] = (),
+        corners: Mapping[str, CornerFiller] | None = None,
+        ends: Mapping[str, EndFiller] | None = None,
+        default_advance: float | None = None,
+    ) -> None: ...
+    def discover(self) -> None:
+        """Import every ``*.py`` under ``glyphs`` and collect ``@glyph`` specs."""
+    def specs(self) -> Mapping[str, GlyphSpec]: ...
+    def evaluate(self, name: str, *, master: str | None = None) -> Drawing:
+        """Run the glyph (or its master override) with the resolved System.
+        Applies ``corners`` / ``ends`` via ``apply_slots`` when configured.
+        """
+    def to_glyph(self, name: str, *, master: str | None = None, advance: float | None = None) -> "font.Glyph":
+        """``evaluate`` then wrap contours as ``font.Glyph`` (advance default:
+        bbox width, or ``default_advance``, or ``tokens['advance']``)."""
+```
+
+规则：
+
+- `@glyph` 注册发生在模块 import 时；`discover()` 负责把 `glyphs/` 加进导入路径并加载。
+- 默认母版用 `Project.system`；`masters` 里同名覆盖 `System`，字形侧 `@build.master(name)` 覆盖画法。
+- `Project` / `glyph` / `Master` / `GlyphSpec` 是内核公开符号；不 import `parts`。
+
 ### 9.8 架构守卫（M0，CI 必跑）
 
 `tests/architecture/test_boundaries.py`，对 `draw` / `system` / `project` / `cli` / `plugins` 生效：
