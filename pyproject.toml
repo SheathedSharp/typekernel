@@ -53,6 +53,9 @@ specimen = [
   "pillow>=10",
 ]
 
+[project.scripts]
+tk = "typekernel.cli.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/SheathedSharp/typekernel"
 Repository = "https://github.com/SheathedSharp/typekernel"
