@@ -69,3 +69,27 @@ def oval_points(
         )
         for i in range(n)
     ]
+
+
+def open_arc_points(
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    *,
+    start_deg: float,
+    end_deg: float,
+    n: int = 20,
+) -> list[tuple[float, float]]:
+    """Unslanted elliptical arc samples (open centerline), degrees CCW from +x."""
+    a0 = math.radians(start_deg)
+    a1 = math.radians(end_deg)
+    # Go the short/long way as given (end may be < start for clockwise).
+    return [
+        (
+            cx + rx * math.cos(a0 + (a1 - a0) * i / (n - 1)),
+            cy + ry * math.sin(a0 + (a1 - a0) * i / (n - 1)),
+        )
+        for i in range(n)
+    ]
+
