@@ -570,7 +570,7 @@ class EndSite:
 @dataclass(frozen=True, slots=True)
 class EndFill:
     trim_a: float; trim_b: float
-    path: Fragment
+    path: Fragment | None = None  # None + 零 trim = 几何 no-op（≡ 未匹配；退化参数同）
 
 class EndFiller(Protocol):
     def __call__(self, site: EndSite, system: System) -> EndFill: ...
@@ -586,8 +586,8 @@ def apply_slots(
 
 规则：
 
-- 未匹配任何模式的槽保持原样（等价于 `plain`）。显式 `plain()` 与退化参数（如 `rounded(radius=0)`）必须走同一 no-op：`trim=0` 且 `path=None`，不插入零长段、不消费角点槽。
-- 填充后的轮廓仍要通过 9.3 的连续性检查；插件产生不连续视为插件 bug。
+- 未匹配任何模式的槽保持原样（等价于 `plain`）。显式 `plain()` 与退化参数（如 `rounded(radius=0)`、`ball(radius=0)`、`flare(amount=0, depth=0)`、`angled(deg=0)`、`flat(inset=0)`）必须走同一 no-op：`trim=0` 且 `path=None`，不插入零长段、不消费角点/端点槽。
+- 填充后的轮廓仍要通过 9.3 的连续性检查；插件产生不连续视为插件 bug。零长段不得靠 post-fill「跳过」蒙混——故意保留的切线不连续只走角点槽豁免；line–line 接合不要求 G1。
 - 填充是**确定性**的：同一 `System` 结构下，不同母版填充出的段类型序列必须相同（插件契约测试覆盖）。
 - `trim_in > in_len` 或路径首尾不落在裁剪点上 → `SlotFillError`。
 
@@ -605,7 +605,17 @@ def spring(stem_edge_x: float, y_from: float, y_to: float, toward: Point,
     # 直线笔画边进入曲线的过渡段（肩 / 碗接干处），保证 G1
 def diagonal_band(p_top: Point, p_bottom: Point, *, weight: float, compensate: bool = True) -> tuple[Fragment, Fragment]
     # 斜笔两条边，weight 为期望的视觉粗细，compensate 时按角度修正垂直宽
-def hook(...) -> Fragment     # 签名在 M1 设计评审时定，先不实现也可以
+def hook(
+    stem_edge_x: float,
+    y_join: float,
+    tip: Point,
+    *,
+    depth: float,
+    tension: float = 0.55,
+    tip_tangent: Point | None = None,
+) -> Fragment
+    # 竖直干边 (stem_edge_x, y_join) 出发的钩形终端：G1 离开干（竖直切线朝 tip.y），
+    # 经 depth 控制的腹点到 tip；默认 tip 切线水平回指干（回卷）。两段 tensioned_arc，腹点 G1。
 ```
 
 可以从 `geo.curves`、`geo.path_helpers` 以及旧 `parts.control._shoulder` 的数学中**抄思路**，但不得 import `typekernel.parts`。
@@ -711,6 +721,7 @@ class Project:
 | `Drawing + Drawing` | 轮廓叠加、tag 冲突报错 |
 | `apply_slots` 用测试内的假填充 | 角点被替换、仍连续、未匹配槽不变、`trim` 越界报错 |
 | `tensioned_arc` / `superellipse_quarter` / `spring` | 端点、端切线正确；与相邻直线 G1 |
+| `hook` | 干接合 G1；终点 = tip；腹点在干同侧且 |Δx|≈depth；默认 tip 切线回指干 |
 | `diagonal_band(compensate=True)` | 垂直于笔画方向的实测宽度 = `weight`（容差 0.5 单位） |
 | M1 出口样例 | 一个“直干 + 拱 + 直干”的合成单轮廓（测试里叫 `arch_body`，不叫 `n`），≤ 40 行，全部节点 G1 或已声明角点 |
 

@@ -7,6 +7,7 @@ import math
 from typekernel.draw import (
     Fragment,
     diagonal_band,
+    hook,
     spring,
     superellipse_quarter,
     tensioned_arc,
@@ -63,3 +64,31 @@ def test_diagonal_band_perpendicular_width() -> None:
     m0, m1 = mid(left), mid(right)
     dist = math.hypot(m0.x - m1.x, m0.y - m1.y)
     assert abs(dist - 20.0) < 0.5
+
+
+def test_hook_g1_stem_and_tip() -> None:
+    from typekernel.geo.segment import CubicSegment
+
+    frag = hook(0.0, 0.0, tip=(-20.0, 30.0), depth=12.0, tension=0.55)
+    assert frag.start == Point(0.0, 0.0)
+    assert frag.end == Point(-20.0, 30.0)
+    stem = LineSegment(Point(0, -10), Point(0, 0))
+    assert g1_join_error(stem, frag.segments[0]) < 1e-6
+    assert isinstance(frag.segments[0], CubicSegment)
+    assert isinstance(frag.segments[1], CubicSegment)
+    belly_pt = frag.segments[0].p3
+    assert math.isclose(belly_pt.x, -12.0, abs_tol=1e-9)
+    assert math.isclose(belly_pt.y, 15.0, abs_tol=1e-9)
+    # Default tip tangent curls back toward the stem (+x here).
+    et = frag.end_tangent()
+    assert et.x > 0 and abs(et.y) < 1e-6
+    assert g1_join_error(frag.segments[0], frag.segments[1]) < 1e-6
+
+
+def test_hook_rejects_same_y() -> None:
+    try:
+        hook(0.0, 10.0, tip=(-5.0, 10.0), depth=4.0)
+    except ValueError as exc:
+        assert "tip.y" in str(exc)
+    else:
+        raise AssertionError("expected ValueError")

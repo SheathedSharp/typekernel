@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typekernel.draw.construct import (
     diagonal_band,
+    hook,
     spring,
     superellipse_quarter,
     tensioned_arc,
@@ -40,6 +41,7 @@ __all__ = [
     "Writer",
     "apply_slots",
     "diagonal_band",
+    "hook",
     "spring",
     "superellipse_quarter",
     "tensioned_arc",

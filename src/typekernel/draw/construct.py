@@ -101,6 +101,43 @@ def spring(
     return tensioned_arc(p0, t0, p1, t1, tension=tension)
 
 
+
+def hook(
+    stem_edge_x: float,
+    y_join: float,
+    tip: PointLike,
+    *,
+    depth: float,
+    tension: float = 0.55,
+    tip_tangent: PointLike | None = None,
+) -> Fragment:
+    """G1 hook from a vertical stem edge to ``tip`` (ARCHITECTURE.md §9.6).
+
+    Leaves ``(stem_edge_x, y_join)`` with a vertical tangent toward ``tip.y``,
+    passes through a belly at horizontal offset ``depth`` (same side as the tip),
+    and arrives at ``tip``. Default tip tangent is horizontal back toward the
+    stem (curl). Built as two ``tensioned_arc`` cubics meeting G1 at the belly.
+    """
+    if depth < 0:
+        raise ValueError(f"depth must be >= 0, got {depth!r}")
+    tip_p = _as_point(tip)
+    p0 = Point(stem_edge_x, y_join)
+    dy = tip_p.y - y_join
+    if abs(dy) < 1e-12:
+        raise ValueError("tip.y must differ from y_join for a vertical-stem hook")
+    t0 = Point(0.0, 1.0 if dy > 0 else -1.0)
+    side = 1.0 if tip_p.x >= stem_edge_x else -1.0
+    if tip_tangent is None:
+        t1 = Point(-side, 0.0)
+    else:
+        t1 = _unit(_as_point(tip_tangent))
+    belly = Point(stem_edge_x + side * depth, (y_join + tip_p.y) * 0.5)
+    # Horizontal tangent at belly keeps both cubics G1 (same in/out direction).
+    t_belly = Point(side, 0.0)
+    first = tensioned_arc(p0, t0, belly, t_belly, tension=tension)
+    second = tensioned_arc(belly, t_belly, tip_p, t1, tension=tension)
+    return Fragment(first.segments + second.segments)
+
 def diagonal_band(
     p_top: PointLike,
     p_bottom: PointLike,
