@@ -18,6 +18,7 @@ system = System(
         "pen_contrast": 0.52,
         "pen_angle_deg": 28.0,
         "n_width": 400.0,
+        "m_width": 640.0,
         "o_width": 420.0,
         "H_width": 560.0,
         "O_width": 620.0,

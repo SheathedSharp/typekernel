@@ -89,3 +89,13 @@ def test_proof_control_png(tmp_path: Path) -> None:
     assert len(written) == 1
     assert written[0].is_file()
     assert written[0].stat().st_size > 100
+
+
+def test_n_group_glyphs_evaluate() -> None:
+    project = load_project(STARTER)
+    project.discover()
+    for name in ("h", "m", "u", "i", "l"):
+        drawing = project.evaluate(name)
+        assert len(drawing.contours) >= 1
+        assert drawing.roles[0] == "ink"
+        assert project.to_glyph(name).advance > 0
