@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from typekernel.cli.build import build_project
+from typekernel.cli.build import build_project, build_variable_project
 from typekernel.cli.load import load_project
 from typekernel.cli.new import create_project
 from typekernel.cli.proof_cmd import proof_project
@@ -109,3 +109,49 @@ def test_o_group_glyphs_evaluate() -> None:
         assert len(drawing.contours) >= 2  # stem ink + bowl (+counter)
         assert "ink" in drawing.roles
         assert project.to_glyph(name).advance > 0
+
+
+
+def test_masters_signature_compatible() -> None:
+    """Light / Regular / Bold drawings share signatures for every glyph."""
+    from typekernel.starters.latin_humanist_italic.system import (
+        MASTER_LOCATIONS,
+        _weight_system,
+        masters,
+        system,
+    )
+
+    assert len(masters) == 2
+    assert set(MASTER_LOCATIONS) >= {"Light", "Regular", "Bold"}
+    project = load_project(STARTER)
+    project.discover()
+    names = sorted(project.specs())
+    scales = {
+        "Light": 0.62,
+        "Regular": 1.0,
+        "Bold": 1.38,
+    }
+    for name in names:
+        sigs = []
+        for label, scale in scales.items():
+            sys_w = system if scale == 1.0 else _weight_system(system, scale)
+            from typekernel.project import Project
+
+            p = Project(sys_w, STARTER / "glyphs", masters=())
+            p.discover()
+            sigs.append(p.evaluate(name).signature())
+        assert sigs[0] == sigs[1] == sigs[2], name
+
+
+def test_variable_font_builds(tmp_path: Path) -> None:
+    pytest.importorskip("ufoLib2")
+    pytest.importorskip("ufo2ft")
+    root = create_project("demo_hi_vf", parent=tmp_path, starter="latin-humanist-italic")
+    # Starter copy includes masters from the template.
+    from typekernel.cli.load import load_project as _lp
+
+    proj = _lp(root)
+    assert len(proj.masters) == 2
+    _masters, result = build_variable_project(root, out_dir=root / "build", formats=("ttf",))
+    assert "ttf" in result.binaries
+    assert result.binaries["ttf"].is_file()

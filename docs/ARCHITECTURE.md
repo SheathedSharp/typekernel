@@ -381,7 +381,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**已落地（starter ASCII + spacing）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern）+ `tk new --starter latin-humanist-italic`。内核不改。**仍属后续**：Light/Bold 母版 + VF——椭圆形 `expand_skeleton` 随粗细改变 contour segment 签名，若干叠字（`a`/`g`/`eight`…）过不了 `Drawing.signature()` 兼容检查；待 expand 厚度稳定或这些字改成单条连续骨架后再开。
+**已落地（starter ASCII + spacing + masters/VF）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改。**仍属后续**：人文斜体光学打磨（弱字）、更多字重/斜度轴若需要。
 
 ---
 
@@ -608,7 +608,7 @@ def expand_skeleton_cubic(centerline, pen, *, join="round", cap="round", ...) ->
 规则：
 
 - 复用 `geo.stroke.Pen` / `Centerline` / `CubicCenterline` / `expand` / `expand_cubic`；不 import starter，不出现字母名。
-- 展开结果去掉近零长线段；单轮廓一律 `ink`（必要时翻成 CCW）；环：最大 |area| → `ink`，其余 → `counter`。
+- 展开结果去掉近零长线段，并把剩余 `line` 提升为共线 handle 的 `cubic`（椭圆 round join 会随笔宽在 line/cubic 间翻转；统一成 cubic 后 `Drawing.signature()` 跨字重稳定，可开 Light/Bold/VF）；单轮廓一律 `ink`（必要时翻成 CCW）；环：最大 |area| → `ink`，其余 → `counter`。
 - 无角点/端点槽的 skeleton 字形：`Project` 可不配置 `corners`/`ends`，从而跳过 `apply_slots`（笔迹接合不是 Writer G1 链）。
 - `blend_corners` / heal / seal **不是**本插件路径。
 

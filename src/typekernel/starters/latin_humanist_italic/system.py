@@ -2,11 +2,8 @@
 
 Construction is skeleton + broad nib — not contour Writer outlines.
 
-Light/Bold masters + VF are scaffolded below but left empty: elliptical
-``expand_skeleton`` changes contour segment signatures with thickness, so
-``Drawing.signature()`` (master-compat) fails for several overlays (a/g/eight…).
-Re-enable masters once expand is thickness-stable or those glyphs are rebuilt
-on a single continuous centerline.
+Light/Bold masters scale ``stem`` only; ``expand_skeleton`` promotes lines to
+cubics so ``Drawing.signature()`` stays thickness-stable for VF.
 """
 
 from __future__ import annotations
@@ -81,10 +78,13 @@ def _weight_system(base: System, stem_scale: float) -> System:
     return base.tuned(stem=stem)
 
 
-# Empty until expand signatures are thickness-stable (see module docstring).
-masters: tuple[Master, ...] = ()
+# Project evaluation masters (Regular is the default ``system``).
+masters: tuple[Master, ...] = (
+    Master("Light", _weight_system(system, 0.62)),
+    Master("Bold", _weight_system(system, 1.38)),
+)
 
-# Designspace locations ready for ``tk build --variable`` once masters land.
+# Designspace locations for ``tk build --variable`` (wght user coords).
 MASTER_LOCATIONS: dict[str, dict[str, float]] = {
     "Light": {"wght": 300.0},
     "Regular": {"wght": 400.0},
