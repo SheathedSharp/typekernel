@@ -26,5 +26,5 @@ def glyph_Y(system: System):
     right = diagonal_stroke(
         (lsb + width - st * 0.3, cap), (cx, join_y), weight=wt, tag_prefix="Y.r"
     )
-    stem = stem_rect(cx - st / 2.0, cx + st / 2.0, 0.0, join_y + st * 0.35, prefix="Y.stem")
+    stem = stem_rect(cx - st / 2.0, cx + st / 2.0, 0.0, join_y + st * 0.35, prefix="stem")
     return left + right + stem

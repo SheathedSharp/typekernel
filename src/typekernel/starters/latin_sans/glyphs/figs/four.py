@@ -18,7 +18,7 @@ def four(system: System):
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     h = float(system.zones.cap) * 0.72
     x_stem = lsb + width * 0.62
-    stem = stem_rect(x_stem, x_stem + st, 0.0, h, prefix="four.stem")
+    stem = stem_rect(x_stem, x_stem + st, 0.0, h, prefix="stem")
     bar = crossbar(system, x0=lsb, x1=lsb + width, cy=h * 0.38, tag_prefix="four.bar")
     ang = math.degrees(math.atan2(width * 0.5, h * 0.55))
     wt = compensated_weight(st, ang)
