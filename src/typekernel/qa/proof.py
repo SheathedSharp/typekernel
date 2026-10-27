@@ -57,6 +57,15 @@ def _fit_line(draw: Any, text: str, font: Any, max_width: float) -> str:
     return " ".join(words)
 
 
+def _text_feature_kwargs() -> dict[str, Any]:
+    """OpenType features need libraqm; omit them when Pillow was built without it."""
+    from PIL import features
+
+    if features.check("raqm"):
+        return {"features": ["kern"]}
+    return {}
+
+
 def _save(img: Any, out: str | Path) -> Path:
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -79,7 +88,7 @@ def proof_context(
     img = Image.new("RGB", (width, margin * 2 + int(size * 1.6)), _BG)
     draw = ImageDraw.Draw(img)
     line = _fit_line(draw, text, face, width - 2 * margin)
-    draw.text((margin, margin), line, font=face, fill=_INK, features=["kern"])
+    draw.text((margin, margin), line, font=face, fill=_INK, **_text_feature_kwargs())
     return _save(img, out)
 
 
@@ -106,7 +115,7 @@ def proof_labeled_waterfall(
         for size in sizes:
             face = ImageFont.truetype(str(binary), size)
             line = _fit_line(draw, text, face, width - x - margin)
-            draw.text((x, y), line, font=face, fill=_INK, features=["kern"])
+            draw.text((x, y), line, font=face, fill=_INK, **_text_feature_kwargs())
             y += int(size * 1.5) + 16
         y += 24
     return _save(img, out)
@@ -146,7 +155,7 @@ def proof_axis_ladder(
             font=label_font,
             fill=_LABEL,
         )
-        draw.text((x, y), line, font=face, fill=_INK, features=["kern"])
+        draw.text((x, y), line, font=face, fill=_INK, **_text_feature_kwargs())
         y += int(size * 1.35)
     return _save(img, out)
 
@@ -220,7 +229,7 @@ def proof_kern_pairs(
     y = margin
     for left, right in pairs:
         chunk = f"{left}{right}"
-        draw.text((x, y), chunk, font=face, fill=_INK, features=["kern"])
+        draw.text((x, y), chunk, font=face, fill=_INK, **_text_feature_kwargs())
         x += draw.textlength(chunk, font=face) + gap
     return _save(img, out)
 
