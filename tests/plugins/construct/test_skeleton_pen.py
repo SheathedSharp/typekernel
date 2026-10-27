@@ -91,3 +91,20 @@ def test_expand_over_thicknesses(thickness: float) -> None:
     )
     assert drawing.contours[0].closed
     assert signed_area(drawing.contours[0]) > 0.0
+
+
+def test_expand_signature_stable_across_thickness() -> None:
+    """Closed oval expand must keep Drawing.signature across pen weight (VF)."""
+    pts = [
+        (250.0 + 150.0 * math.cos(2.0 * math.pi * i / 28.0), 260.0 + 200.0 * math.sin(2.0 * math.pi * i / 28.0))
+        for i in range(28)
+    ]
+    cl = Centerline.from_points(pts, closed=True)
+    sigs = []
+    for thickness in (44.0, 72.0, 100.0):
+        pen = broad_nib(thickness, contrast=0.52, angle_deg=28.0)
+        drawing = expand_skeleton(cl, pen, join="round", cap="round")
+        # All segments promoted to cubics for master-compat.
+        assert all(seg.kind == "cubic" for c in drawing.contours for seg in c.segments)
+        sigs.append(drawing.signature())
+    assert sigs[0] == sigs[1] == sigs[2]
