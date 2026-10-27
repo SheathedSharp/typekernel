@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     p_new.add_argument(
         "--starter",
         default=None,
-        help="starter name (M2: empty template; latin-sans reserved for M4)",
+        help="starter template: omit/empty, or latin-sans (control glyphs n o H O)",
     )
     p_new.set_defaults(func=_cmd_new)
 

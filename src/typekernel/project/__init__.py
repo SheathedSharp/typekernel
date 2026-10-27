@@ -10,7 +10,11 @@ from types import MappingProxyType, ModuleType
 
 from typekernel.draw import CornerFiller, Drawing, EndFiller, apply_slots
 from typekernel.font.glyph import Glyph
-from typekernel.project.evaluate import advance_from_drawing, drawing_to_glyph
+from typekernel.project.evaluate import (
+    advance_from_drawing,
+    drawing_to_glyph,
+    unicodes_for_glyph_name,
+)
 from typekernel.project.registry import (
     GlyphSpec,
     Master,
@@ -24,6 +28,7 @@ __all__ = [
     "Master",
     "Project",
     "glyph",
+    "unicodes_for_glyph_name",
 ]
 
 
@@ -116,16 +121,22 @@ class Project:
         """``evaluate`` then wrap contours as ``font.Glyph``.
 
         Advance resolution when ``advance`` is omitted: ``default_advance``,
-        else ``system.tokens['advance']``, else bbox width of the drawing.
+        else ``system.tokens['<name>_advance']``, else ``tokens['advance']``,
+        else bbox width of the drawing. Unicodes are derived from the glyph
+        name (AGL / single character) when available.
         """
         drawing = self.evaluate(name, master=master)
         if advance is None:
-            advance = self._resolve_advance(drawing)
+            advance = self._resolve_advance(drawing, name=name)
         return drawing_to_glyph(name, drawing, advance=advance)
 
-    def _resolve_advance(self, drawing: Drawing) -> float:
+    def _resolve_advance(self, drawing: Drawing, *, name: str = "") -> float:
         if self._default_advance is not None:
             return float(self._default_advance)
+        if name:
+            keyed = self._system.tokens.get(f"{name}_advance")
+            if keyed is not None:
+                return float(keyed)
         token = self._system.tokens.get("advance")
         if token is not None:
             return float(token)

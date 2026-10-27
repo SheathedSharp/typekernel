@@ -1,10 +1,16 @@
-"""``tk new`` — scaffold an empty typekernel project."""
+"""``tk new`` — scaffold an empty typekernel project or copy a starter."""
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
-__all__ = ["create_project"]
+__all__ = ["STARTERS", "create_project"]
+
+# Starter directory name under typekernel/starters/ → CLI --starter value.
+STARTERS: dict[str, str] = {
+    "latin-sans": "latin_sans",
+}
 
 _SYSTEM_PY = '''\
 """Designer numeric table for this project."""
@@ -69,39 +75,62 @@ One ``.py`` file per glyph. Example::
 '''
 
 
+def _starters_root() -> Path:
+    # typekernel/cli/new.py → typekernel/starters/
+    return Path(__file__).resolve().parents[1] / "starters"
+
+
 def create_project(
     name: str,
     *,
     parent: str | Path = ".",
     starter: str | None = None,
 ) -> Path:
-    """Create an empty project directory ``parent/name``.
+    """Create project directory ``parent/name``.
 
-    ``starter`` is accepted for forward compatibility; M2 only scaffolds the
-    empty layout (``latin-sans`` content lands in M4).
+    Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
+    ``latin-sans`` to copy ``starters/latin_sans`` (system, elements, control
+    glyphs).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
         raise ValueError(f"invalid project name: {name!r}")
-    # M2: empty template only; named starters arrive in M4.
-    if (
-        starter is not None
-        and starter not in ("", "empty", "latin-sans")
-    ):
-        raise ValueError(
-            f"unknown starter {starter!r}; M2 supports only the empty "
-            "template (omit --starter, or pass latin-sans as a reserved name)"
-        )
+
+    starter_key = starter or "empty"
+    if starter_key in ("", "empty"):
+        starter_key = "empty"
+    elif starter_key not in STARTERS:
+        known = ", ".join(sorted(STARTERS) + ["empty"])
+        raise ValueError(f"unknown starter {starter!r}; choose from {known}")
 
     root = Path(parent).resolve() / name
     if root.exists():
         raise FileExistsError(f"project path already exists: {root}")
 
-    glyphs = root / "glyphs"
-    glyphs.mkdir(parents=True)
-    (root / "system.py").write_text(
-        _SYSTEM_PY.replace("{family_name}", name.replace("_", " ").title()),
-        encoding="utf-8",
+    if starter_key == "empty":
+        glyphs = root / "glyphs"
+        glyphs.mkdir(parents=True)
+        family = name.replace("_", " ").title()
+        (root / "system.py").write_text(
+            _SYSTEM_PY.replace("{family_name}", family),
+            encoding="utf-8",
+        )
+        (root / "font.py").write_text(_FONT_PY, encoding="utf-8")
+        (glyphs / "README.md").write_text(_GLYPH_README, encoding="utf-8")
+        return root
+
+    src = _starters_root() / STARTERS[starter_key]
+    if not src.is_dir():
+        raise FileNotFoundError(f"starter template missing: {src}")
+    shutil.copytree(
+        src,
+        root,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
     )
-    (root / "font.py").write_text(_FONT_PY, encoding="utf-8")
-    (glyphs / "README.md").write_text(_GLYPH_README, encoding="utf-8")
+    # Stamp the project family name from the directory name.
+    system_py = root / "system.py"
+    if system_py.is_file():
+        text = system_py.read_text(encoding="utf-8")
+        family = name.replace("_", " ").title()
+        text = text.replace('FAMILY_NAME = "Latin Sans"', f'FAMILY_NAME = "{family}"')
+        system_py.write_text(text, encoding="utf-8")
     return root

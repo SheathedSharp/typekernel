@@ -208,6 +208,11 @@ def _assert_path_endpoints(path: Fragment, start: Point, end: Point) -> None:
         )
 
 
+def _is_degenerate_line(seg: Segment) -> bool:
+    """True for near-zero line inserts (e.g. ``corners.plain`` sharp keep)."""
+    return isinstance(seg, LineSegment) and _seg_length(seg) < 1e-9
+
+
 def _check_contour_g1(segments: tuple[Segment, ...]) -> None:
     if len(segments) < 2:
         return
@@ -215,6 +220,10 @@ def _check_contour_g1(segments: tuple[Segment, ...]) -> None:
     pairs.append((segments[-1], segments[0]))
     for prev, nxt in pairs:
         if isinstance(prev, LineSegment) and isinstance(nxt, LineSegment):
+            continue
+        # Sharp corner fillers may insert a degenerate line between a curve and
+        # an edge; that join is intentionally not G1.
+        if _is_degenerate_line(prev) or _is_degenerate_line(nxt):
             continue
         err = g1_join_error(prev, nxt)
         if err > _G1_TOL:
@@ -352,19 +361,37 @@ def apply_slots(
                 orig_site = _corner_site_from_segs(
                     original, node_index, tag=slot.tag, role=role, meta=slot.meta
                 )
-                found = next(
-                    (
-                        j
-                        for j in range(n)
-                        if points_close(segment_start(working[j]), orig_site.point, 1e-4)
-                    ),
-                    None,
-                )
-                if found is None:
+                candidates = [
+                    j
+                    for j in range(n)
+                    if points_close(segment_start(working[j]), orig_site.point, 1e-4)
+                ]
+                if not candidates:
                     raise SlotFillError(
                         f"could not relocate corner {slot.tag!r} after prior fill"
                     )
-                idx = found
+                if len(candidates) == 1:
+                    idx = candidates[0]
+                else:
+                    # Same coordinates can appear twice (e.g. n shoulder meet).
+                    # Prefer the candidate whose in/out directions match the
+                    # original site so we do not fill a G1 join by mistake.
+                    best_j = candidates[0]
+                    best_score = float("inf")
+                    for j in candidates:
+                        site_j = _corner_site_from_segs(
+                            working, j, tag=slot.tag, role=role, meta=slot.meta
+                        )
+                        score = (
+                            (site_j.in_dir.x - orig_site.in_dir.x) ** 2
+                            + (site_j.in_dir.y - orig_site.in_dir.y) ** 2
+                            + (site_j.out_dir.x - orig_site.out_dir.x) ** 2
+                            + (site_j.out_dir.y - orig_site.out_dir.y) ** 2
+                        )
+                        if score < best_score:
+                            best_score = score
+                            best_j = j
+                    idx = best_j
             site = _corner_site_from_segs(
                 working, idx, tag=slot.tag, role=role, meta=slot.meta
             )

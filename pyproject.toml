@@ -65,7 +65,7 @@ Issues = "https://github.com/SheathedSharp/typekernel/issues"
 where = ["src"]
 
 [tool.setuptools.package-data]
-typekernel = ["py.typed"]
+typekernel = ["py.typed", "starters/**/*"]
 
 [tool.ruff]
 line-length = 100
