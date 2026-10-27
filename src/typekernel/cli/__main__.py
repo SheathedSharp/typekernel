@@ -70,10 +70,37 @@ def _cmd_audit(args: argparse.Namespace) -> int:
     return 1 if report.errors else 0
 
 
+def _cmd_diff(args: argparse.Namespace) -> int:
+    from typekernel.cli.diff_cmd import (
+        DEFAULT_SNAPSHOT_NAME,
+        diff_project,
+        format_diff,
+        write_snapshot,
+    )
+
+    root = Path(args.path).resolve()
+    if args.snapshot is not None:
+        dest = (
+            root / "build" / DEFAULT_SNAPSHOT_NAME
+            if args.snapshot == ""
+            else Path(args.snapshot)
+        )
+        path = write_snapshot(root, dest, master=args.master)
+        import json
+
+        n = len(json.loads(path.read_text(encoding="utf-8"))["glyphs"])
+        print(f"wrote {path}")
+        print(f"snapshot glyphs: {n}")
+        return 0
+    result = diff_project(root, against=args.against, master=args.master)
+    print(format_diff(result))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
-        description="typekernel project tools (ARCHITECTURE.md M2)",
+        description="typekernel project tools (ARCHITECTURE.md §4 / M2)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -149,6 +176,38 @@ def main(argv: list[str] | None = None) -> int:
     p_audit.add_argument("--no-zone", action="store_true")
     p_audit.add_argument("--no-direction", action="store_true")
     p_audit.set_defaults(func=_cmd_audit)
+
+
+    p_diff = sub.add_parser(
+        "diff",
+        help="list glyphs whose outlines/advances changed (outline_hash)",
+    )
+    p_diff.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="project root (default: .)",
+    )
+    p_diff.add_argument(
+        "--against",
+        default=None,
+        help="baseline: glyph_hashes.json or another project root "
+        "(default: <project>/build/glyph_hashes.json)",
+    )
+    p_diff.add_argument(
+        "--snapshot",
+        nargs="?",
+        const="",
+        default=None,
+        help="write current glyph hashes JSON "
+        "(default path: <project>/build/glyph_hashes.json)",
+    )
+    p_diff.add_argument(
+        "--master",
+        default=None,
+        help="optional Project master name for evaluation",
+    )
+    p_diff.set_defaults(func=_cmd_diff)
 
     args = parser.parse_args(argv)
     if args.command == "build" and not args.format:

@@ -78,3 +78,25 @@ def test_tk_proof_control_writes_png(tmp_path: Path) -> None:
     assert main(["build", str(root)]) == 0
     assert main(["proof", "control", str(root), "--out", str(root / "proofs")]) == 0
     assert (root / "proofs" / "control.png").is_file()
+
+
+def test_tk_diff_snapshot_and_change_detection(tmp_path: Path) -> None:
+    """tk diff uses outline_hash; not a golden gate (ARCHITECTURE.md §3.3)."""
+    root = create_project("diff_proj", parent=tmp_path)
+    _write_synthetic_glyphs(root / "glyphs")
+    snap = root / "build" / "glyph_hashes.json"
+    assert main(["diff", str(root), "--snapshot", str(snap)]) == 0
+    assert snap.is_file()
+    # unchanged → empty report
+    assert main(["diff", str(root), "--against", str(snap)]) == 0
+    # mutate glyph geometry
+    syn = (root / "glyphs" / "syn_box.py").read_text(encoding="utf-8")
+    (root / "glyphs" / "syn_box.py").write_text(
+        syn.replace("w = 100.0 + s * 0.1", "w = 140.0 + s * 0.1"),
+        encoding="utf-8",
+    )
+    from typekernel.cli.diff_cmd import diff_project, format_diff
+
+    result = diff_project(root, against=snap)
+    assert "syn.box" in result["changed"]
+    assert "changed" in format_diff(result)
