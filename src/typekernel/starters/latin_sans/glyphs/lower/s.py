@@ -17,15 +17,13 @@ def s(system: System):
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0
     rx = width / 2.0 * 0.95
-    # Stack so upper south stroke and lower north stroke cross at mid
-    # (ink overlap like n stem+trough — not hollow bbox overlap).
-    ry = xh * 0.36 + ov * 0.3
-    mid = xh / 2.0
+    # Fit within [-ov, xh+ov]; choose ry so south/north strokes overlap.
     overlap = st * 0.55
+    ry = max(xh * 0.30, (xh + 2.0 * ov + overlap) / 4.0)
     upper = open_bowl(
         system,
         cx=cx,
-        cy=mid + ry - overlap,
+        cy=(xh + ov) - ry,
         rx=rx,
         ry=ry,
         thickness=st,
@@ -35,7 +33,7 @@ def s(system: System):
     lower = open_bowl(
         system,
         cx=cx,
-        cy=mid - ry + overlap,
+        cy=(-ov) + ry,
         rx=rx,
         ry=ry,
         thickness=st,

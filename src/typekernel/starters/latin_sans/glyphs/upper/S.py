@@ -17,13 +17,12 @@ def glyph_S(system: System):
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0
     rx = width / 2.0 * 0.95
-    ry = cap * 0.36 + ov * 0.3
-    mid = cap / 2.0
     overlap = st * 0.55
+    ry = max(cap * 0.30, (cap + 2.0 * ov + overlap) / 4.0)
     upper = open_bowl(
         system,
         cx=cx,
-        cy=mid + ry - overlap,
+        cy=(cap + ov) - ry,
         rx=rx,
         ry=ry,
         thickness=st,
@@ -33,7 +32,7 @@ def glyph_S(system: System):
     lower = open_bowl(
         system,
         cx=cx,
-        cy=mid - ry + overlap,
+        cy=(-ov) + ry,
         rx=rx,
         ry=ry,
         thickness=st,
