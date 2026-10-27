@@ -79,6 +79,10 @@ def test_rounded_over_angles(system: System, angle_deg: float) -> None:
 
 
 def test_rounded_zero_radius_is_sharp(system: System) -> None:
+    """radius=0 must follow plain/unmatched noop (no extra segments, slot kept)."""
     drawing = square_with_knee()
+    unmatched = apply_slots(drawing, system, corners={}, ends={})
     out = apply_slots(drawing, system, corners={"knee": rounded(radius=0.0)}, ends={})
     assert all(isinstance(s, LineSegment) for s in out.contours[0].segments)
+    assert len(out.contours[0].segments) == len(unmatched.contours[0].segments) == 4
+    assert {s.tag for s in out.slots if s.kind == "corner"} == {"knee"}

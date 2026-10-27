@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from typekernel.plugins.corners import bracketed, slab
+from typekernel.plugins.corners import bracketed, plain, slab
 from typekernel.project import Project
 from typekernel.system import Overshoot, System, Zones
 
@@ -142,9 +142,10 @@ def test_three_corner_configs_leave_glyph_sources_unchanged(tmp_path: Path) -> N
     files = _write_synthetic_glyphs(glyphs)
     before = _hash_files(files)
 
-    # Empty map ≡ plain (unmatched slots stay sharp). Foot slots only for serifs.
+    # Named configs: explicit plain() (not {}), plus slab / bracketed.
+    # Source hashes must stay identical across the three Project wirings.
     configs = {
-        "plain": {},
+        "plain": {"*": plain()},
         "slab": {"*foot*": slab(length=0.42, thickness=0.18)},
         "bracketed": {"*foot*": bracketed(length=0.42, thickness=0.18)},
     }
@@ -161,6 +162,11 @@ def test_three_corner_configs_leave_glyph_sources_unchanged(tmp_path: Path) -> N
 
     assert results["plain"]["syn.stem1"] != results["slab"]["syn.stem1"]
     assert results["slab"]["syn.stem1"] != results["bracketed"]["syn.stem1"]
+    # §9.5: explicit plain() wiring ≡ unmatched empty map on segment kinds.
+    empty = Project(_system(), glyphs, corners={}, ends={})
+    empty.discover()
+    for name in names:
+        assert results["plain"][name] == _kinds(empty, name)
     for label in configs:
         for name in names:
             assert len(results[label][name]) >= 4
