@@ -45,4 +45,4 @@ tk new → brief.md → system.py → 控制字 → tk proof
 
 **geo / draw / system / project / plugins / cli / starters/latin_sans** 已按 ARCHITECTURE.md §9 落地（M0–M5）。字母几何在 starter 项目里；内核无 letter builders。`typekernel.parts` / `DesignContext` / FormSources / yoke 已删除。
 
-**Italic / 第二套 starter（skeleton+pen）** 仍属后续里程碑（M6+），不要用机械 oblique 冒充 Italic。见 [dev-standards.md](dev-standards.md)。
+**Italic / 第二套 starter（skeleton+pen）** 已在 M6 以 `latin-humanist-italic` 落地；不要用机械 oblique 冒充 Italic。见 [ARCHITECTURE.md](ARCHITECTURE.md) M6 与 [dev-standards.md](dev-standards.md)。

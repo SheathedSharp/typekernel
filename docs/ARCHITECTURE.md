@@ -381,7 +381,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**已落地（starter ASCII + spacing + masters/VF）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改。**仍属后续**：人文斜体继续光学打磨（更多大写细节、间距微调等）、更多字重/斜度轴若需要。已用共用 `bowl`/`open_bowl`/`nest_bowl` 收紧 s/S、c/C/G、数字（含 eight/three/five/six/nine/zero）与 B/P/R/D；Light/Bold/VF 仍绿。
+**出口已达成（2026-10-27）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改——证明第二 starter 零改内核/插件即可承载不同构造。光学收口：共用 `bowl`/`open_bowl`/`nest_bowl`/`uc_stem`；小写碗组与 B/P/R/D 嵌碗；大写 A/E/F/K/M/N/R/V/W/X/Y（及 L/T/H）连续骨架接合；间距/kern 按对角与 LT 微调。Light/Bold/VF 绿；`tk audit` 0 errors。**M6 关闭**。再往后（非本里程碑）：更多字重/斜度轴、非拉丁 starter——仅新 starter/新插件，内核不改。
 
 ---
 
