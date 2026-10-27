@@ -6,7 +6,7 @@ from typekernel.draw.fragment import Fragment
 from typekernel.draw.slots import EndFill, EndFiller, EndSite
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.plugins.ends.geom import cut_len, stem_ref, tip_outs, unit
+from typekernel.plugins.ends.geom import cut_len, noop_end_fill, stem_ref, tip_outs, unit
 from typekernel.system import System
 
 
@@ -21,10 +21,12 @@ def flare(*, amount: float = 0.35, depth: float = 0.25) -> EndFiller:
     def fill(site: EndSite, system: System) -> EndFill:
         width = cut_len(site)
         if width <= 1e-12:
-            return EndFill(0.0, 0.0, Fragment((LineSegment(site.a, site.b),)))
+            return noop_end_fill(site)
         stem = stem_ref(site, system)
         extra = max(0.0, float(amount) * stem)
         dep = max(0.0, float(depth) * stem)
+        if extra <= 1e-12 and dep <= 1e-12:
+            return noop_end_fill(site)
         across = unit(Point(site.b.x - site.a.x, site.b.y - site.a.y))
         out_a, out_b = tip_outs(site)
         # Widen outward from a (opposite across) and from b (along across).

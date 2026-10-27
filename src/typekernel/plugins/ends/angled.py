@@ -8,7 +8,7 @@ from typekernel.draw.fragment import Fragment
 from typekernel.draw.slots import EndFill, EndFiller, EndSite
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.plugins.ends.geom import cut_len, tip_outs
+from typekernel.plugins.ends.geom import cut_len, noop_end_fill, tip_outs
 from typekernel.system import System
 
 
@@ -24,17 +24,15 @@ def angled(*, deg: float = 12.0) -> EndFiller:
         del system
         width = cut_len(site)
         if width <= 1e-12:
-            return EndFill(0.0, 0.0, Fragment((LineSegment(site.a, site.b),)))
+            return noop_end_fill(site)
+        if abs(float(deg)) <= 1e-12:
+            return noop_end_fill(site)
         shear = width * math.tan(math.radians(float(deg)))
-        # Mean protrusion keeps the tip roughly centered; shear tilts it.
-        base = abs(shear) * 0.5
-        s_a = base + shear * 0.5
-        s_b = base - shear * 0.5
-        # Ensure non-negative outward steps (flip sense if needed).
-        if s_a < 0.0 or s_b < 0.0:
-            shift = min(s_a, s_b)
-            s_a -= shift
-            s_b -= shift
+        # Mean protrusion = |shear| so both outward steps stay strictly
+        # positive when deg != 0 (avoids zero-length stub segments).
+        mean = abs(shear)
+        s_a = mean + shear * 0.5
+        s_b = mean - shear * 0.5
         out_a, out_b = tip_outs(site)
         p1 = Point(site.a.x + out_a.x * s_a, site.a.y + out_a.y * s_a)
         p2 = Point(site.b.x + out_b.x * s_b, site.b.y + out_b.y * s_b)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from typekernel.draw.slots import EndSite
+from typekernel.draw.slots import EndFill, EndSite
 from typekernel.geo.point import Point
 from typekernel.system import System
 
@@ -39,3 +39,13 @@ def stem_ref(site: EndSite, system: System) -> float:
     if system.stem:
         return float(next(iter(system.stem.values())))
     return max(cut_len(site), 1.0)
+
+
+def noop_end_fill(site: EndSite) -> EndFill:
+    """Canonical §9.5 geometry no-op for ends (inset/radius/amount → 0).
+
+    Zero trim and ``path=None`` so ``apply_slots`` skips ``_apply_end``,
+    leaves the cut unchanged, and keeps the end slot — same as unmatched.
+    """
+    del site
+    return EndFill(trim_a=0.0, trim_b=0.0, path=None)

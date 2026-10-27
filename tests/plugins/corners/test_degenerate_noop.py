@@ -10,6 +10,7 @@ from tests.plugins.corners.helpers import (
     segment_kind_sequence,
     square_with_knee,
 )
+from typekernel.draw.geomutil import segment_end, segment_start
 from typekernel.draw import apply_slots
 from typekernel.plugins.corners import bracketed, ink_trap, rounded, slab, wedge
 from typekernel.system import System
@@ -44,6 +45,9 @@ def test_degenerate_corner_fill_does_not_increase_segment_count(
     assert segment_kind_sequence(out) == segment_kind_sequence(unmatched)
     assert corner_slot_tags(out) == corner_slot_tags(unmatched)
     assert "knee" in corner_slot_tags(out)
+    for a, b in zip(out.contours[0].segments, unmatched.contours[0].segments, strict=True):
+        assert segment_start(a) == segment_start(b)
+        assert segment_end(a) == segment_end(b)
 
 
 

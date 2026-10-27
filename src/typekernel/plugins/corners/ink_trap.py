@@ -55,7 +55,10 @@ def ink_trap(
             site.point.y + site.out_dir.y * trim_out,
         )
         inn = interior_unit(site)
-        tip = Point(site.point.x + inn.x * tip_d, site.point.y + inn.y * tip_d)
+        # Tip from the chord midpoint so a 90° corner cannot collapse tip onto a/b
+        # (corner+interior*depth == b when depth==trim_out and interior==out_dir).
+        mid = Point(0.5 * (a.x + b.x), 0.5 * (a.y + b.y))
+        tip = Point(mid.x + inn.x * tip_d, mid.y + inn.y * tip_d)
 
         if not curved:
             path = Fragment((LineSegment(a, tip), LineSegment(tip, b)))

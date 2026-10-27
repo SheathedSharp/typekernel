@@ -173,7 +173,7 @@ class EndSite:
 class EndFill:
     trim_a: float
     trim_b: float
-    path: Fragment
+    path: Fragment | None = None  # None + zero trim → geometry no-op (§9.5)
 
 
 class EndFiller(Protocol):
@@ -229,6 +229,21 @@ def _is_noop_corner_fill(fill: CornerFill) -> bool:
     return all(_is_degenerate_line(s) for s in segs)
 
 
+def _is_noop_end_fill(fill: EndFill) -> bool:
+    """§9.5: degenerate end params ≡ unmatched — zero trim and no real path.
+
+    Preferred signal: ``path is None`` (see ``plugins.ends.geom.noop_end_fill``).
+    """
+    if fill.trim_a > 1e-12 or fill.trim_b > 1e-12:
+        return False
+    if fill.path is None:
+        return True
+    segs = fill.path.segments
+    if not segs:
+        return True
+    return all(_is_degenerate_line(s) for s in segs)
+
+
 def _check_contour_g1(
     segments: tuple[Segment, ...],
     *,
@@ -236,8 +251,12 @@ def _check_contour_g1(
 ) -> None:
     """Post-fill G1 check; ``exempt_nodes`` are on-curve indices still marked corner.
 
-    Sharp corners left unmatched or filled with ``plain`` (geometry no-op) remain
-    discontinuous by design (§9.3 / §9.5) and must stay exempt.
+    Intentional skips (ARCHITECTURE.md §9.3 / §9.5):
+    - ``exempt_nodes``: sharp corners left unmatched or filled with plain/noop.
+    - line–line joins: G1 is not required (sharp corners between straights).
+
+    Zero-length segments are **not** skipped: fillers must return ``path=None``
+    instead of inserting degenerates. Finding one is a ContinuityError.
     """
     if len(segments) < 2:
         return
@@ -248,11 +267,13 @@ def _check_contour_g1(
             continue
         prev = segments[(i - 1) % n]
         nxt = segments[i]
-        if isinstance(prev, LineSegment) and isinstance(nxt, LineSegment):
-            continue
-        # Defensive only: do not expand. Real fillers must noop (path=None)
-        # instead of inserting zero-length segments next to curves.
         if _is_degenerate_line(prev) or _is_degenerate_line(nxt):
+            pt = segment_end(prev)
+            raise ContinuityError(
+                f"post-fill zero-length segment at {pt.as_tuple()}; "
+                "fillers must noop (path=None) instead of inserting degenerates"
+            )
+        if isinstance(prev, LineSegment) and isinstance(nxt, LineSegment):
             continue
         err = g1_join_error(prev, nxt)
         if err > _G1_TOL:
@@ -332,6 +353,8 @@ def _apply_end(segs: list[Segment], node_index: int, fill: EndFill, site: EndSit
             f"end trim exceeds cut length for {site.tag!r}: "
             f"{fill.trim_a}+{fill.trim_b} > {cut_len}"
         )
+    if fill.path is None:
+        raise SlotFillError(f"end fill for {site.tag!r} has path=None (use noop skip)")
     pa = _point_along(cut, from_start=True, distance=fill.trim_a)
     pb = _point_along(cut, from_start=False, distance=fill.trim_b)
     _assert_path_endpoints(fill.path, pa, pb)
@@ -456,6 +479,14 @@ def apply_slots(
             if not isinstance(fill_e, EndFill):
                 raise SlotFillError(
                     f"end filler for {slot.tag!r} returned {type(fill_e)}"
+                )
+            # Degenerate end params: leave geometry + end slot (§9.5 ≡ unmatched).
+            if _is_noop_end_fill(fill_e):
+                remaining_slots.append(slot)
+                continue
+            if fill_e.path is None:
+                raise SlotFillError(
+                    f"end filler for {slot.tag!r} returned path=None with non-zero trim"
                 )
             working = _apply_end(working, idx, fill_e, site_e)
             applied.add(slot.tag)

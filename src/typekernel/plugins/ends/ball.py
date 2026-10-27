@@ -8,7 +8,7 @@ from typekernel.draw.fragment import Fragment
 from typekernel.draw.slots import EndFill, EndFiller, EndSite
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.plugins.ends.geom import cut_len, tip_outs, unit
+from typekernel.plugins.ends.geom import cut_len, noop_end_fill, tip_outs, unit
 from typekernel.system import System
 
 
@@ -24,11 +24,11 @@ def ball(*, radius: float | None = None, samples: int = 8) -> EndFiller:
         del system
         width = cut_len(site)
         if width <= 1e-12:
-            return EndFill(0.0, 0.0, Fragment((LineSegment(site.a, site.b),)))
+            return noop_end_fill(site)
         r = float(radius) if radius is not None else 0.5 * width
         r = max(0.0, r)
         if r <= 1e-12:
-            return EndFill(0.0, 0.0, Fragment((LineSegment(site.a, site.b),)))
+            return noop_end_fill(site)
         out_a, out_b = tip_outs(site)
         out = unit(Point(out_a.x + out_b.x, out_a.y + out_b.y))
         if abs(out.x) < 1e-12 and abs(out.y) < 1e-12:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from typekernel.draw import (
+    ContinuityError,
     CornerFill,
     CornerSite,
     Fragment,
@@ -82,3 +83,28 @@ def test_trim_out_of_range_raises() -> None:
 
     with pytest.raises(SlotFillError, match="trim exceeds"):
         apply_slots(drawing, _system(), corners={"knee": too_much}, ends={})
+
+
+def test_zero_length_fill_segment_raises_continuity_error() -> None:
+    """Post-fill must not silently skip zero-length segments (§9.5 / slots G1).
+
+    Intentional skips are only: remaining corner-slot nodes, and line–line joins.
+    A filler that inserts ``Line(p, p)`` must fail loudly.
+    """
+    drawing = _square_with_corner()
+
+    def insert_degenerate(site: CornerSite, system: System) -> CornerFill:
+        trim = 2.0
+        a = Point(
+            site.point.x - site.in_dir.x * trim,
+            site.point.y - site.in_dir.y * trim,
+        )
+        b = Point(
+            site.point.x + site.out_dir.x * trim,
+            site.point.y + site.out_dir.y * trim,
+        )
+        path = Fragment((LineSegment(a, a), LineSegment(a, b)))
+        return CornerFill(trim_in=trim, trim_out=trim, path=path)
+
+    with pytest.raises(ContinuityError, match="zero-length"):
+        apply_slots(drawing, _system(), corners={"knee": insert_degenerate}, ends={})

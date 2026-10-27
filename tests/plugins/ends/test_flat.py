@@ -10,15 +10,18 @@ from typekernel.system import System
 
 
 def test_flat_identity_keeps_topology(system: System) -> None:
+    """inset=0 is §9.5 noop ≡ unmatched (geometry + tip slot kept)."""
     drawing = stem_with_tip_end()
     before = contour_area_sign(drawing)
     n_before = len(drawing.contours[0].segments)
+    unmatched = apply_slots(drawing, system, corners={}, ends={})
     out = apply_slots(drawing, system, corners={}, ends={"tip": flat()})
     assert out.contours[0].closed
     assert contour_area_sign(out) == before
     assert all(isinstance(s, LineSegment) for s in out.contours[0].segments)
-    assert len(out.contours[0].segments) == n_before
-    assert all(s.tag != "tip" for s in out.slots)
+    assert len(out.contours[0].segments) == n_before == len(unmatched.contours[0].segments)
+    assert {s.tag for s in out.slots if s.kind == "end"} == {"tip"}
+    assert {s.tag for s in unmatched.slots if s.kind == "end"} == {"tip"}
 
 
 def test_flat_with_inset_cap(system: System) -> None:

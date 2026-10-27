@@ -38,3 +38,11 @@ def contour_area_sign(drawing) -> float:
     if area < 0:
         return -1.0
     return 0.0
+
+
+def segment_kind_sequence(drawing) -> tuple[str, ...]:
+    return tuple(type(s).__name__ for s in drawing.contours[0].segments)
+
+
+def end_slot_tags(drawing) -> set[str]:
+    return {s.tag for s in drawing.slots if s.kind == "end"}
