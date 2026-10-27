@@ -11,15 +11,30 @@ from typekernel.project import Project
 
 __all__ = ["apply_project_spacing", "apply_project_spacing_with_system", "build_font_from_project", "load_project"]
 
-def _purge_project_local_modules() -> None:
+def _purge_project_local_modules(project_root: Path | None = None) -> None:
     """Drop bare ``system`` / ``elements`` / ``spacing`` so the next project root wins.
 
     Starter ``font.py`` does ``from system import …``. Concurrent or sequential
     tests that load different project roots would otherwise reuse the first
     ``system`` module left on ``sys.modules``.
+
+    Also clears that root's ``__pycache__`` for those modules so same-second
+    edits are not masked by stale ``.pyc`` (needed for ``tk diff`` / in-process
+    rebuild loops).
     """
+    import importlib
+
     for bare in ("system", "elements", "spacing", "font"):
         sys.modules.pop(bare, None)
+    importlib.invalidate_caches()
+    if project_root is None:
+        return
+    cache = Path(project_root) / "__pycache__"
+    if not cache.is_dir():
+        return
+    for bare in ("system", "elements", "spacing", "font"):
+        for pyc in cache.glob(f"{bare}.cpython-*.pyc"):
+            pyc.unlink(missing_ok=True)
 
 
 
@@ -38,7 +53,7 @@ def load_project(root: str | Path) -> Project:
     if root_s not in sys.path:
         sys.path.insert(0, root_s)
 
-    _purge_project_local_modules()
+    _purge_project_local_modules(root_path)
 
     # Unique module name so multiple projects / reloads do not clash.
     mod_name = f"_typekernel_user_font_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
