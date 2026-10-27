@@ -50,7 +50,11 @@ def stroke(
             contrast=float(system.tokens.get("pen_contrast", 0.55)),
             angle_deg=float(system.tokens.get("pen_angle_deg", 30.0)),
         )
-    return expand_skeleton(cl, pen, join="round", cap="round")
+    # Closed rails: bevel keeps offset point order thickness-stable for VF
+    # (elliptical round joins reverse the counter under Bold). Open strokes keep
+    # round caps/joins for terminal shape.
+    join = "bevel" if closed else "round"
+    return expand_skeleton(cl, pen, join=join, cap="round")
 
 
 def oval_points(
