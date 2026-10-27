@@ -1,4 +1,4 @@
-"""P — stem + upper bowl (skeleton+pen)."""
+"""P — stem + bowl arc nestled into the stem."""
 
 from __future__ import annotations
 
@@ -14,15 +14,14 @@ def P(system: System):
     cap = float(system.zones.cap)
     width = float(system.tokens.get("P_width", 520.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
+    ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5
     stem = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    cx = lsb + width * 0.42
+    rx = width * 0.42
     cy = cap * 0.68
-    rx = width * 0.48
-    ry = cap * 0.28
-    bowl = stroke(
-        system,
-        open_arc_points(cx, cy, rx, ry, start_deg=90.0, end_deg=-90.0, n=18),
-        thickness=uc,
+    ry = cap * 0.28 + ov * 0.25
+    pull = 0.38
+    arc = open_arc_points(
+        x0 + rx * pull, cy, rx, ry, start_deg=125.0, end_deg=-125.0, n=22
     )
-    return stem + bowl
+    return stem + stroke(system, arc, thickness=uc)

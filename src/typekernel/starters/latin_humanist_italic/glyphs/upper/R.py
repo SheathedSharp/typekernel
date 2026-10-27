@@ -1,4 +1,4 @@
-"""R — stem + upper bowl + leg (skeleton+pen)."""
+"""R — stem + nestled bowl arc + leg from lower terminal."""
 
 from __future__ import annotations
 
@@ -14,21 +14,27 @@ def R(system: System):
     cap = float(system.zones.cap)
     width = float(system.tokens.get("R_width", 580.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
+    ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5
     stem = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    cx = lsb + width * 0.40
+    rx = width * 0.40
     cy = cap * 0.68
-    rx = width * 0.45
-    ry = cap * 0.28
-    bowl = stroke(
-        system,
-        open_arc_points(cx, cy, rx, ry, start_deg=90.0, end_deg=-90.0, n=18),
-        thickness=uc,
+    ry = cap * 0.28 + ov * 0.25
+    pull = 0.38
+    arc = open_arc_points(
+        x0 + rx * pull, cy, rx, ry, start_deg=125.0, end_deg=-125.0, n=22
     )
-    join_y = cy - ry
+    bowl = stroke(system, arc, thickness=uc)
+    # Leg from lower bowl terminal toward baseline-right.
+    join = arc[len(arc) // 2]  # east belly — too far; use lower terminal
+    join = arc[-1]
+    # Nudge join slightly off the stem into the bowl before dropping the leg.
     leg = stroke(
         system,
-        [(cx + rx * 0.2, join_y), (lsb + width - uc * 0.2, 0.0)],
+        [
+            (join[0] + rx * 0.15, join[1]),
+            (lsb + width - uc * 0.15, 0.0),
+        ],
         thickness=uc,
     )
     return stem + bowl + leg

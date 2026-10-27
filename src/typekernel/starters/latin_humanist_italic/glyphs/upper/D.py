@@ -1,8 +1,8 @@
-"""D — stem + right bowl arc (skeleton+pen)."""
+"""D — stem + nestled closed bowl (shared nest_bowl)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import nest_bowl, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,14 +17,17 @@ def D(system: System):
     ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5
     stem = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    cx = lsb + width * 0.42
-    cy = cap / 2.0
-    rx = width * 0.52
-    ry = cap / 2.0 + ov * 0.4
-    # Right half bowl from top of stem to bottom.
-    arc = stroke(
+    bowl = nest_bowl(
         system,
-        open_arc_points(cx, cy, rx, ry, start_deg=90.0, end_deg=-90.0, n=22),
+        stem_x=x0,
+        side="right",
+        width=width,
+        xh=cap,
+        lsb=lsb,
         thickness=uc,
+        cy=cap / 2.0,
+        rx=width * 0.44,
+        ry=cap / 2.0 + ov * 0.4 - uc * 0.1,
+        pull=0.62,
     )
-    return stem + arc
+    return stem + bowl
