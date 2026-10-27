@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typekernel.plugins.ends.angled import angled
 from typekernel.plugins.ends.flat import flat
 
-__all__ = ["flat"]
+__all__ = ["angled", "flat"]
