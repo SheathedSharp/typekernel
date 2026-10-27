@@ -244,7 +244,7 @@ def apply_spacing(font: Font, system: System) -> dict[str, tuple[float, float]]:
 
     # Default space width from n rhythm when present.
     if "space" in font and "n" in resolved:
-        n_lsb, n_rsb = resolved["n"]
+        n_lsb, _n_rsb = resolved["n"]
         space_adv = float(system.stem["lc"]) * 2.5 + n_lsb * 0.5
         g = font["space"]
         font.add_glyph(replace(g, advance=space_adv), replace=True)
