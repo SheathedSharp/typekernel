@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typekernel.draw import Drawing, Fragment, Writer, superellipse_quarter, tensioned_arc
 from typekernel.system import System
 
-__all__ = ["Arch", "arch", "bowl", "cap_stem", "crossbar"]
+__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "shoulder_trough", "stem_rect"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +18,7 @@ class Arch:
     inner: Fragment
 
 
-def _arch_span(
+def arch_span(
     x0: float,
     y0: float,
     x1: float,
@@ -55,8 +55,8 @@ def arch(system: System, *, left: float, counter: float) -> Arch:
     outer_crown = xh + float(system.overshoot.round) * 0.35
     inner_crown = xh - stem + float(system.overshoot.round) * 0.15
     return Arch(
-        outer=_arch_span(left, xh, right_outer, xh, outer_crown, tension=tension),
-        inner=_arch_span(
+        outer=arch_span(left, xh, right_outer, xh, outer_crown, tension=tension),
+        inner=arch_span(
             right_inner, xh, left, xh, inner_crown, tension=tension
         ),
     )
@@ -143,6 +143,69 @@ def crossbar(
         .line((x1, y0))
         .corner(f"{tag_prefix}.br")
         .line((x0, y0))
+        .close()
+        .build()
+    )
+
+
+def stem_rect(
+    x0: float,
+    x1: float,
+    y0: float,
+    y1: float,
+    *,
+    prefix: str,
+) -> Drawing:
+    """Closed vertical stem with corner tags for future serifs."""
+    return (
+        Writer()
+        .start((x0, y0))
+        .corner(f"{prefix}.foot.o")
+        .line((x0, y1))
+        .corner(f"{prefix}.top.o")
+        .line((x1, y1))
+        .corner(f"{prefix}.top.i")
+        .line((x1, y0))
+        .corner(f"{prefix}.foot.i")
+        .line((x0, y0))
+        .close()
+        .build()
+    )
+
+
+def shoulder_trough(
+    system: System,
+    *,
+    x_left: float,
+    x_right: float,
+    y_top: float,
+    y_bot: float,
+    tag_prefix: str = "arch",
+) -> Drawing:
+    """Closed overlapping shoulder between ``x_left``..``x_right``.
+
+    Top edge is a raised arch at ``y_top``; bottom is a lower counter arch at
+    ``y_bot``. Intended to overlap vertical stems (ARCHITECTURE.md overlap).
+    """
+    tension = float(system.tokens.get("shoulder_tension", 0.55))
+    ov = float(system.overshoot.round) * 0.35
+    outer = arch_span(
+        x_left, y_top, x_right, y_top, y_top + ov + 8.0, tension=tension
+    )
+    inner = arch_span(
+        x_right, y_bot, x_left, y_bot, y_bot - abs(y_top - y_bot) * 0.2, tension=tension
+    )
+    return (
+        Writer()
+        .start((x_left, y_bot))
+        .corner(f"{tag_prefix}.l.bot")
+        .line((x_left, y_top))
+        .corner(f"{tag_prefix}.l.top")
+        .fragment(outer)
+        .corner(f"{tag_prefix}.r.top")
+        .line((x_right, y_bot))
+        .corner(f"{tag_prefix}.r.bot")
+        .fragment(inner)
         .close()
         .build()
     )

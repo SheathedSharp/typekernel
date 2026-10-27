@@ -9,7 +9,7 @@ from typekernel.system import System
 
 
 @glyph("O", group="uc.bowl")
-def O(system: System):
+def glyph_O(system: System):
     width = float(system.tokens["O_width"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     cap = float(system.zones.cap)

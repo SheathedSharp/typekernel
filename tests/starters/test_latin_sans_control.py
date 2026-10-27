@@ -25,8 +25,8 @@ def test_starter_tree_has_control_files() -> None:
 def test_starter_discover_evaluate_to_glyph() -> None:
     project = load_project(STARTER)
     project.discover()
-    assert set(project.specs()) == {"n", "o", "H", "O"}
-    expected_uni = {"n": 0x6E, "o": 0x6F, "H": 0x48, "O": 0x4F}
+    assert {"n", "o", "H", "O"} <= set(project.specs())
+    expected_uni = {"n": 0x6E, "o": 0x6F, "H": 0x48, "O": 0x4F, "h": 0x68, "m": 0x6D, "u": 0x75, "r": 0x72}
     for name, uni in expected_uni.items():
         drawing = project.evaluate(name)
         assert len(drawing.contours) >= 1
