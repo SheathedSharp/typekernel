@@ -381,7 +381,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**已落地（控制字切片）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（`n o H O`）+ `tk new --starter latin-humanist-italic`。内核不改；字组扩展、spacing、斜体母版仍属后续。
+**已落地（控制字 + n/o 组切片）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（控制字 `n o H O`；n 组 `h m u i l`；o 组 `a b d e p q`）+ `tk new --starter latin-humanist-italic`。内核不改；其余字组、spacing、斜体母版仍属后续。
 
 ---
 
