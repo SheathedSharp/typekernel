@@ -1,0 +1,29 @@
+"""o-group glyph p — stem + bowl (overlap)."""
+
+from __future__ import annotations
+
+from typekernel.project import glyph
+from typekernel.system import System
+
+from elements import bowl, stem_rect
+
+
+@glyph("p", group="lc.bowl")
+def p(system: System):
+    st = float(system.stem["lc"])
+    xh = float(system.zones.x)
+    asc = float(system.zones.asc)
+    desc = float(system.zones.desc)
+    ov = float(system.overshoot.round)
+    width = float(system.tokens["o_width"])
+    lsb = float(system.tokens.get("lsb_lc", 40.0))
+    # Stem placement / height depend on letter.
+    # Descender stem on the left.
+    stem = stem_rect(lsb, lsb + st, desc, xh, prefix="stem.l")
+
+    cx = lsb + width / 2.0
+    cy = xh / 2.0
+    rx = width / 2.0
+    ry = xh / 2.0 + ov
+    ring = bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=st)
+    return stem + ring
