@@ -14,7 +14,16 @@ from typekernel.draw import (
 )
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.system import System
+from typekernel.system import Overshoot, System, Zones
+
+
+def _system() -> System:
+    return System(
+        upm=1000,
+        zones=Zones(x=500, cap=700, asc=750, desc=-200),
+        overshoot=Overshoot(round=12, pointed=10),
+        stem={"lc": 80},
+    )
 
 
 def _square_with_corner() -> object:
@@ -47,7 +56,7 @@ def _chamfer(site: CornerSite, system: System) -> CornerFill:
 
 def test_apply_slots_replaces_matched_corner_and_stays_continuous() -> None:
     drawing = _square_with_corner()
-    system = System()
+    system = _system()
     out = apply_slots(drawing, system, corners={"knee": _chamfer}, ends={})
     assert all(s.tag != "knee" for s in out.slots)
     # Corner cut: more than 4 segments (chamfer adds an edge, removes the sharp corner)
@@ -57,7 +66,7 @@ def test_apply_slots_replaces_matched_corner_and_stays_continuous() -> None:
 
 def test_unmatched_slot_preserved() -> None:
     drawing = _square_with_corner()
-    out = apply_slots(drawing, System(), corners={"other*": _chamfer}, ends={})
+    out = apply_slots(drawing, _system(), corners={"other*": _chamfer}, ends={})
     assert any(s.tag == "knee" for s in out.slots)
     assert len(out.contours[0].segments) == 4
 
@@ -72,4 +81,4 @@ def test_trim_out_of_range_raises() -> None:
         return CornerFill(trim_in=trim, trim_out=1.0, path=Fragment((LineSegment(a, b),)))
 
     with pytest.raises(SlotFillError, match="trim exceeds"):
-        apply_slots(drawing, System(), corners={"knee": too_much}, ends={})
+        apply_slots(drawing, _system(), corners={"knee": too_much}, ends={})
