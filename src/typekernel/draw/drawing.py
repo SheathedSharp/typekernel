@@ -67,6 +67,50 @@ class Drawing:
     def outline(self) -> Outline:
         return Outline(self.contours)
 
+
+    def signature(self) -> tuple[tuple[ContourRole, tuple[str, ...], tuple[str, ...]], ...]:
+        """Compatibility signature: per contour (role, segment kinds, tags).
+
+        Equal signatures mean masters are structurally interpolatable (M1 only
+        builds the signature; axes.interpolatable hooks up in M2).
+        """
+        parts: list[tuple[ContourRole, tuple[str, ...], tuple[str, ...]]] = []
+        for role, contour, cnodes in zip(self.roles, self.contours, self.nodes, strict=True):
+            kinds = tuple(seg.kind for seg in contour.segments)
+            tags = tuple(sorted(n.tag for n in cnodes))
+            parts.append((role, kinds, tags))
+        return tuple(parts)
+
+    def __add__(self, other: Drawing) -> Drawing:
+        """Overlay contours (overlap construction); conflicting tags raise."""
+        if not isinstance(other, Drawing):
+            return NotImplemented
+        seen = {n.tag for group in self.nodes for n in group}
+        for group in other.nodes:
+            for node in group:
+                if node.tag in seen:
+                    raise ValueError(f"tag conflict on overlay: {node.tag!r}")
+                seen.add(node.tag)
+        offset = len(self.contours)
+        shifted_slots = tuple(
+            Slot(
+                kind=s.kind,
+                tag=s.tag,
+                contour=s.contour + offset,
+                node=s.node,
+                meta=s.meta,
+                fill=s.fill,
+            )
+            for s in other.slots
+        )
+        return Drawing(
+            contours=self.contours + other.contours,
+            roles=self.roles + other.roles,
+            nodes=self.nodes + other.nodes,
+            slots=self.slots + shifted_slots,
+        )
+
+
     def translated(self, dx: float, dy: float = 0.0) -> Drawing:
         def move(p: Point) -> Point:
             return Point(p.x + dx, p.y + dy)
