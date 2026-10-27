@@ -1,8 +1,8 @@
-"""Figure 3 — two stacked open arcs (skeleton+pen)."""
+"""Figure 3 — stacked left-open bowls overlapping at the waist."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,30 @@ def three(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    cx = lsb + width * 0.42
-    upper = open_arc_points(cx, h * 0.70, width * 0.40, h * 0.26, start_deg=160.0, end_deg=-20.0, n=14)
-    lower = open_arc_points(cx, h * 0.28, width * 0.42, h * 0.30, start_deg=20.0, end_deg=-160.0, n=14)
-    return stroke(system, list(upper) + list(lower), thickness=st)
+    ov = float(system.overshoot.round) * 0.35
+    cx = lsb + width * 0.52
+    rx = width * 0.40
+    overlap = st * 0.5
+    ry_u = max(h * 0.24, (h * 0.55 + overlap) / 4.0)
+    ry_l = max(h * 0.28, (h * 0.55 + overlap) / 4.0)
+    upper = open_bowl(
+        system,
+        cx=cx,
+        cy=h * 0.72,
+        rx=rx * 0.92,
+        ry=ry_u + ov,
+        thickness=st,
+        open_side="left",
+        aperture_deg=90.0,
+    )
+    lower = open_bowl(
+        system,
+        cx=cx,
+        cy=h * 0.28,
+        rx=rx,
+        ry=ry_l + ov,
+        thickness=st,
+        open_side="left",
+        aperture_deg=90.0,
+    )
+    return upper + lower

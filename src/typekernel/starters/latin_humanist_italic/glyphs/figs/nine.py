@@ -1,8 +1,8 @@
-"""Figure 9 — bowl with lower stem (skeleton+pen)."""
+"""Figure 9 — bowl with overlapping lower open spine."""
 
 from __future__ import annotations
 
-from elements import oval_points, open_arc_points, stroke
+from elements import bowl, open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,15 +15,23 @@ def nine(system: System):
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
     cx = lsb + width / 2.0
-    bowl = stroke(
+    upper = bowl(
         system,
-        oval_points(cx, h * 0.68, width * 0.38, h * 0.28),
-        closed=True,
+        cx=cx,
+        cy=h * 0.68,
+        rx=width * 0.40,
+        ry=h * 0.28,
         thickness=st,
     )
-    spine = stroke(
+    spine = open_bowl(
         system,
-        open_arc_points(cx, h * 0.40, width * 0.40, h * 0.42, start_deg=20.0, end_deg=-90.0, n=14),
+        cx=cx,
+        cy=h * 0.40,
+        rx=width * 0.40,
+        ry=h * 0.40,
         thickness=st,
+        open_side="left",
+        aperture_deg=120.0,
+        n=20,
     )
-    return bowl + spine
+    return upper + spine

@@ -1,8 +1,8 @@
-"""S — stacked open arcs (skeleton+pen)."""
+"""S — capital stacked open_bowl pair (same element as s)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -16,8 +16,27 @@ def S(system: System):
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0
-    rx = width / 2.0 * 0.92
-    ry = cap * 0.28
-    upper = open_arc_points(cx, (cap + ov) - ry, rx, ry, start_deg=40.0, end_deg=220.0, n=18)
-    lower = open_arc_points(cx, (-ov) + ry, rx, ry, start_deg=40.0, end_deg=-140.0, n=18)
-    return stroke(system, list(upper) + list(lower), thickness=uc)
+    rx = width / 2.0 * 0.98
+    overlap = uc * 0.85
+    ry = max(cap * 0.32, (cap + 2.0 * ov + overlap) / 4.0)
+    upper = open_bowl(
+        system,
+        cx=cx,
+        cy=(cap + ov) - ry,
+        rx=rx,
+        ry=ry,
+        thickness=uc,
+        open_side="right",
+        aperture_deg=72.0,
+    )
+    lower = open_bowl(
+        system,
+        cx=cx,
+        cy=(-ov) + ry,
+        rx=rx,
+        ry=ry,
+        thickness=uc,
+        open_side="left",
+        aperture_deg=72.0,
+    )
+    return upper + lower

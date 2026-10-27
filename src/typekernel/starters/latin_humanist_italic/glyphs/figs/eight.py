@@ -1,8 +1,8 @@
-"""Figure 8 — stacked ovals (skeleton+pen)."""
+"""Figure 8 — two stacked bowls (shared bowl element)."""
 
 from __future__ import annotations
 
-from elements import oval_points, stroke
+from elements import bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,17 +14,23 @@ def eight(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
+    ov = float(system.overshoot.round) * 0.5
     cx = lsb + width / 2.0
-    upper = stroke(
+    # Larger rings + intentional waist overlap so stroke reads near o-weight.
+    top = bowl(
         system,
-        oval_points(cx, h * 0.68, width * 0.34, h * 0.26),
-        closed=True,
+        cx=cx,
+        cy=h * 0.70,
+        rx=width * 0.42,
+        ry=h * 0.28 + ov,
         thickness=st,
     )
-    lower = stroke(
+    bot = bowl(
         system,
-        oval_points(cx, h * 0.30, width * 0.38, h * 0.30),
-        closed=True,
+        cx=cx,
+        cy=h * 0.30,
+        rx=width * 0.46,
+        ry=h * 0.30 + ov,
         thickness=st,
     )
-    return upper + lower
+    return top + bot

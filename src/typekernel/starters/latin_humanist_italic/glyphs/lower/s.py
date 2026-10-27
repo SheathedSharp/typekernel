@@ -1,8 +1,8 @@
-"""s — stacked open arcs overlapping at the waist (skeleton+pen)."""
+"""Round glyph s — stacked open_bowl pair overlapping at the waist."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -16,11 +16,27 @@ def s(system: System):
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0
-    rx = width / 2.0 * 0.92
-    ry = xh * 0.30
-    # Upper bowl open on the right; lower open on the left — continuous S path.
-    upper = open_arc_points(cx, (xh + ov) - ry, rx, ry, start_deg=40.0, end_deg=220.0, n=18)
-    lower = open_arc_points(cx, (-ov) + ry, rx, ry, start_deg=40.0, end_deg=-140.0, n=18)
-    # One continuous skeleton: upper then lower (share waist).
-    pts = list(upper) + list(lower)
-    return stroke(system, pts, thickness=st)
+    rx = width / 2.0 * 0.98
+    overlap = st * 0.85
+    ry = max(xh * 0.32, (xh + 2.0 * ov + overlap) / 4.0)
+    upper = open_bowl(
+        system,
+        cx=cx,
+        cy=(xh + ov) - ry,
+        rx=rx,
+        ry=ry,
+        thickness=st,
+        open_side="right",
+        aperture_deg=72.0,
+    )
+    lower = open_bowl(
+        system,
+        cx=cx,
+        cy=(-ov) + ry,
+        rx=rx,
+        ry=ry,
+        thickness=st,
+        open_side="left",
+        aperture_deg=72.0,
+    )
+    return upper + lower

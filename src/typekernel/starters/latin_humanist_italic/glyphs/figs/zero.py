@@ -1,8 +1,8 @@
-"""Figure 0 — elliptical bowl (skeleton+pen)."""
+"""Figure 0 — elliptical bowl (shared bowl element)."""
 
 from __future__ import annotations
 
-from elements import oval_points, stroke
+from elements import bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,9 +15,11 @@ def zero(system: System):
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
     ov = float(system.overshoot.round)
-    return stroke(
+    return bowl(
         system,
-        oval_points(lsb + width / 2.0, h / 2.0, width / 2.0 * 0.9, h / 2.0 + ov * 0.4),
-        closed=True,
+        cx=lsb + width / 2.0,
+        cy=h / 2.0,
+        rx=width / 2.0 * 0.9,
+        ry=h / 2.0 + ov * 0.4,
         thickness=st,
     )

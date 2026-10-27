@@ -1,8 +1,8 @@
-"""Control glyph o — slanted oval skeleton (broad nib ring)."""
+"""Control glyph o — slanted oval skeleton (shared bowl)."""
 
 from __future__ import annotations
 
-from elements import oval_points, stroke
+from elements import bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,4 +19,4 @@ def o(system: System):
     cy = xh / 2.0
     rx = width / 2.0 - st * 0.15
     ry = xh / 2.0 + ov - st * 0.15
-    return stroke(system, oval_points(cx, cy, rx, ry), closed=True, thickness=st)
+    return bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=st)

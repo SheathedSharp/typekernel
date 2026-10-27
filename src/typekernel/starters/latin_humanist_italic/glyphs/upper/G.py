@@ -1,8 +1,8 @@
-"""G — open oval + spur bar (skeleton+pen)."""
+"""G — open capital bowl + spur bar (shared open_bowl)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,12 +19,22 @@ def G(system: System):
     cy = cap / 2.0
     rx = width / 2.0 - uc * 0.1
     ry = cap / 2.0 + ov - uc * 0.1
-    bowl = stroke(
+    # Slightly smaller aperture than C so the spur has a longer right stub.
+    bowl = open_bowl(
         system,
-        open_arc_points(cx, cy, rx, ry, start_deg=30.0, end_deg=330.0, n=28),
+        cx=cx,
+        cy=cy,
+        rx=rx,
+        ry=ry,
         thickness=uc,
+        open_side="right",
+        aperture_deg=55.0,
+        n=28,
     )
-    # Spur: vertical stub + inward bar at mid-right.
     sx = cx + rx * 0.92
-    spur = stroke(system, [(sx, cy), (sx, cy - uc * 0.1), (cx + rx * 0.15, cy)], thickness=uc * 0.9)
+    spur = stroke(
+        system,
+        [(sx, cy + uc * 0.05), (sx, cy), (cx + rx * 0.15, cy)],
+        thickness=uc * 0.9,
+    )
     return bowl + spur

@@ -1,8 +1,8 @@
-"""Figure 5 — top bar + spine + lower bowl (skeleton+pen)."""
+"""Figure 5 — top bar + continuous spine into lower open_bowl."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,13 +14,26 @@ def five(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    top = stroke(system, [(lsb + width * 0.15, h), (lsb + width * 0.85, h)], thickness=st)
-    spine = stroke(system, [(lsb + width * 0.22, h), (lsb + width * 0.22, h * 0.48)], thickness=st)
-    bowl = stroke(
+    # Continuous open skeleton: top bar into spine down to bowl join.
+    x_spine = lsb + width * 0.22
+    top_spine = stroke(
         system,
-        open_arc_points(
-            lsb + width * 0.48, h * 0.30, width * 0.38, h * 0.30, start_deg=160.0, end_deg=-40.0, n=16
-        ),
+        [
+            (lsb + width * 0.82, h),
+            (x_spine, h),
+            (x_spine, h * 0.48),
+        ],
         thickness=st,
     )
-    return top + spine + bowl
+    # Lower bowl open on the left so it nests against the spine foot.
+    bowl = open_bowl(
+        system,
+        cx=lsb + width * 0.52,
+        cy=h * 0.30,
+        rx=width * 0.38,
+        ry=h * 0.30,
+        thickness=st,
+        open_side="left",
+        aperture_deg=85.0,
+    )
+    return top_spine + bowl

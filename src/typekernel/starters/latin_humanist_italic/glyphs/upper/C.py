@@ -1,8 +1,8 @@
-"""C — open capital oval (skeleton+pen)."""
+"""C — open capital bowl (shared open_bowl)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,5 +19,14 @@ def C(system: System):
     cy = cap / 2.0
     rx = width / 2.0 - uc * 0.1
     ry = cap / 2.0 + ov - uc * 0.1
-    pts = open_arc_points(cx, cy, rx, ry, start_deg=35.0, end_deg=325.0, n=28)
-    return stroke(system, pts, thickness=uc)
+    return open_bowl(
+        system,
+        cx=cx,
+        cy=cy,
+        rx=rx,
+        ry=ry,
+        thickness=uc,
+        open_side="right",
+        aperture_deg=70.0,
+        n=28,
+    )

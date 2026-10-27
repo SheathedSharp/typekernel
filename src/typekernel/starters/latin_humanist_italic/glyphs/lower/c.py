@@ -1,8 +1,8 @@
-"""Round glyph c — open oval aperture on the right (skeleton+pen)."""
+"""Round glyph c — open_bowl aperture on the right."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,6 +19,13 @@ def c(system: System):
     cy = xh / 2.0
     rx = width / 2.0 - st * 0.1
     ry = xh / 2.0 + ov * 0.5 - st * 0.1
-    # Open on the right: arc from ~40° to ~320° CCW (skip east aperture).
-    pts = open_arc_points(cx, cy, rx, ry, start_deg=40.0, end_deg=320.0, n=24)
-    return stroke(system, pts, thickness=st)
+    return open_bowl(
+        system,
+        cx=cx,
+        cy=cy,
+        rx=rx,
+        ry=ry,
+        thickness=st,
+        open_side="right",
+        aperture_deg=80.0,
+    )
