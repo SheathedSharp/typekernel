@@ -129,12 +129,14 @@ def test_no_letter_named_functions(kernel_files: list[Path]) -> None:
                 pass
             elif isinstance(node, ast.Assign):
                 for target in node.targets:
-                    if isinstance(target, ast.Name) and LETTER_FN.match(target.id):
-                        # module-level callables assigned as builders
-                        if isinstance(node.value, (ast.Lambda, ast.Call)):
-                            violations.append(
-                                f"{_rel(path)}:{node.lineno}: {target.id} = ..."
-                            )
+                    if (
+                        isinstance(target, ast.Name)
+                        and LETTER_FN.match(target.id)
+                        and isinstance(node.value, (ast.Lambda, ast.Call))
+                    ):
+                        violations.append(
+                            f"{_rel(path)}:{node.lineno}: {target.id} = ..."
+                        )
     assert not violations, "letter-named functions:\n" + "\n".join(violations)
 
 
@@ -182,16 +184,19 @@ def test_plugin_isolation_and_no_private_imports(kernel_files: list[Path]) -> No
                             f"{_rel(path)}:{node.lineno}: cross-plugin from {mod}"
                         )
                 # relative from plugins/<fam>/file into sibling family
-                if family and node.level >= 1:
-                    # climbing out of family into another plugins/<y>
-                    # e.g. from ..corners import x while in ends/
-                    if node.level >= 2 and mod:
-                        top = mod.split(".", 1)[0]
-                        known = {p.name for p in (SRC / "plugins").iterdir() if p.is_dir()} if (SRC / "plugins").is_dir() else set()
-                        if top in known and top != family[0]:
-                            violations.append(
-                                f"{_rel(path)}:{node.lineno}: relative cross-plugin from {'.' * node.level}{mod}"
-                            )
+                # climbing out of family into another plugins/<y>
+                # e.g. from ..corners import x while in ends/
+                if family and node.level >= 2 and mod:
+                    top = mod.split(".", 1)[0]
+                    known = (
+                        {p.name for p in (SRC / "plugins").iterdir() if p.is_dir()}
+                        if (SRC / "plugins").is_dir()
+                        else set()
+                    )
+                    if top in known and top != family[0]:
+                        violations.append(
+                            f"{_rel(path)}:{node.lineno}: relative cross-plugin from {'.' * node.level}{mod}"
+                        )
                 full = (("." * node.level) + mod) if node.level else mod
                 _check_private_import(path, node.lineno, full, violations)
                 for alias in node.names:
@@ -241,12 +246,15 @@ def test_kernel_tests_avoid_letter_glyph_names() -> None:
         for path in _py_files(base):
             tree = _parse(path)
             for node in ast.walk(tree):
-                if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    if GLYPH_NAME_STR.match(node.value):
-                        violations.append(
-                            f"{_rel(path)}:{getattr(node, 'lineno', '?')}: "
-                            f"glyph name string {node.value!r}"
-                        )
+                if (
+                    isinstance(node, ast.Constant)
+                    and isinstance(node.value, str)
+                    and GLYPH_NAME_STR.match(node.value)
+                ):
+                    violations.append(
+                        f"{_rel(path)}:{getattr(node, 'lineno', '?')}: "
+                        f"glyph name string {node.value!r}"
+                    )
     assert not violations, "letter glyph strings in kernel tests:\n" + "\n".join(
         violations
     )
