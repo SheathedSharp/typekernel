@@ -4,10 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typekernel.draw import Drawing, Fragment, Writer, superellipse_quarter, tensioned_arc
+from typekernel.draw import (
+    Drawing,
+    Fragment,
+    Writer,
+    diagonal_band,
+    superellipse_quarter,
+    tensioned_arc,
+)
 from typekernel.system import System
 
-__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "shoulder_trough", "stem_rect"]
+__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "diagonal_stroke", "shoulder_trough", "stem_rect"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,6 +213,39 @@ def shoulder_trough(
         .line((x_right, y_bot))
         .corner(f"{tag_prefix}.r.bot")
         .fragment(inner)
+        .close()
+        .build()
+    )
+
+
+
+def diagonal_stroke(
+    p_top: tuple[float, float],
+    p_bottom: tuple[float, float],
+    *,
+    weight: float,
+    tag_prefix: str = "diag",
+    compensate: bool = True,
+) -> Drawing:
+    """Closed parallelogram for one diagonal stem via ``diagonal_band``.
+
+    ``p_top`` / ``p_bottom`` are the stroke centerline endpoints (top → bottom).
+    """
+    left, right = diagonal_band(
+        p_top, p_bottom, weight=weight, compensate=compensate
+    )
+    # left: top→bot; right: bot→top. Join across tip then head.
+    return (
+        Writer()
+        .start(left.start)
+        .corner(f"{tag_prefix}.top.l")
+        .fragment(left)
+        .corner(f"{tag_prefix}.bot.l")
+        .line(right.start)
+        .corner(f"{tag_prefix}.bot.r")
+        .fragment(right)
+        .corner(f"{tag_prefix}.top.r")
+        .line(left.start)
         .close()
         .build()
     )
