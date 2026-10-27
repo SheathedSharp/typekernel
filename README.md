@@ -22,113 +22,66 @@ Depends on [fontTools](https://github.com/fonttools/fonttools); **does not** reb
 | 导出到 UFO / designspace，再经 fontTools 编译 | 重造 OT 表、TTX、varLib、feaLib |
 | 日后给 [oh-my-font](https://github.com/SheathedSharp/oh-my-font)（LihuiT / zayJu）与其他项目复用的地基 | 成品字族发行仓 |
 
-## 分层（目标）
+## 分层（现行）
 
 ```
-geo-kernel  →  type-semantics  →  compile (fontTools / UFO / designspace)
-三次曲线核      光学与字族轴语义      OT 表与二进制：不重造，只依赖
+geo / draw  →  system / project / plugins  →  font / compile (fontTools)
+片段与轮廓        System + @glyph + 角点/端点插件      Glyph / Font → UFO / OTF / VF
 ```
+
+旧的 `typekernel.parts` / `DesignContext` 字母 API 已在 M4 删除。字母几何写在**项目**里（starter），不进内核。
 
 ## 状态
 
 版本仍是 `0.0.0`。已落地：
 
-- **几何核**（`typekernel.geo`）— 三次曲线轮廓、路径构建、笔桥；可选 boolean 并集（`skia-pathops`）
-- **零件组装**（`typekernel.parts`）— 共享 `DesignContext` + Stem/Bowl/Arch 等零件，像搭积木组字
-- **光学原语**（`typekernel.optics`）— overshoot 等（合成 O 标本已过人审）
-- **字重 / 轴**（`typekernel.axes`）— `WeightDelta`、masters、`.designspace` 导出（点位移，不是涂粗）
-
-- **字体模型**（`typekernel.font`）— `Font` / `Glyph` / `FontInfo`：字形名、码位、锚点、组件、字偶组、特性代码；竖直度量与对齐区从 `DesignContext` 推出
-
-**编译桥**（`typekernel.compile`）— `build_font` / `build_variable_font` → OTF、TTF、可选 WOFF2；UFO 回流 `read_font_from_ufo`；斜体母版 `italic_design`（`ital` 轴）、机械倾斜 `oblique_font`（`slnt`）；基础 `tnum` 特性文本。人审见 `approvals/compile-bridge.json`。
-
-**推荐路径（Usage A）**：`DesignContext` → 零件 / letter builders 拼字形 → `Font.add_chars` → 自选间距（如 `space_font`）→ `build_font` / `build_variable_font`。  
-**不要**把 `FormSources.build_all` / `DesignSequence` / `unlock_*` 当设计方法（旧示例见 `examples/_legacy/`）。
-
-**校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
+- **几何核**（`typekernel.geo`）— 三次曲线轮廓、路径构建、笔桥
+- **绘图**（`typekernel.draw`）— `Writer` / `Fragment` / `Drawing`、角点槽、overlap 构造
+- **System / Project**（`typekernel.system` / `typekernel.project`）— 设计数值表、`@glyph`、母版求值
+- **插件**（`typekernel.plugins`）— corners / ends / passes（plain、overshoot、diagonal_comp…）
+- **光学原语**（`typekernel.optics`）— overshoot、stem 测量、光学间距
+- **字体模型**（`typekernel.font`）— `Font` / `Glyph` / kerning；从 `System` 推度量
+- **CLI** — `tk new` / `tk build` / `tk proof` / `tk audit`
+- **Starter** — `latin-sans`（a–z A–Z 0–9 + 标点 + spacing + Light/Bold VF）
 
 ## 做一个能安装的字体
 
-[`examples/first_font/`](examples/first_font/) 从比例走到 OTF / TTF，并用编译出的字体排校样。
+按 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) **§4** 工作流：
 
-**Coding agent 用库做字**：按 [`.agents/skills/typekernel-font-design/`](.agents/skills/typekernel-font-design/SKILL.md) 的 Usage A 自己写拼装脚本（同一 brief ≥2 种拼法见 skill）。需 `pip install -e ".[compile,specimen,boolean]"`。不是一键出字脚本。
+```bash
+pip install -e ".[compile,specimen]"
+tk new myface --starter latin-sans
+cd myface
+# 改 system.py → 看控制字 → 扩字组 → tk audit → spacing.py → 母版 →
+tk build .
+tk proof control .
+tk audit .
+```
+
+Coding agent 技能：[`.agents/skills/typekernel-font-design/`](.agents/skills/typekernel-font-design/SKILL.md)。
+
+最小可跑示例：[`examples/latin_sans_quickstart/`](examples/latin_sans_quickstart/)（脚手架 + 出 OTF + 控制样张）。  
+Geo 层示范（不经 starter）：[`examples/zayju_letter/`](examples/zayju_letter/)。
 
 ```python
-from typekernel.compile import build_font
-from typekernel.font import Font
-from typekernel.optics.space import space_font
-from typekernel.parts import DesignContext, build_n, build_o, h_from_n
+# 项目内（tk new 之后）：system.py + glyphs/*.py + font.py
+# 不要再 from typekernel.parts import DesignContext
+from typekernel.cli.build import build_project
+from typekernel.cli.new import create_project
 
-ctx = DesignContext.code_clear().tuned(stem=80)
-n, o = build_n(ctx), build_o(ctx)
-drawn = {"n": n, "o": o, "h": h_from_n(n, ctx)}
-spaced = space_font(drawn, ctx)
-font = Font.from_context(ctx, "My Sans")
-font.add_chars(spaced)
-build_font(font, "out/")
+root = create_project("demo", parent="/tmp", starter="latin-sans")
+font, result = build_project(root, formats=("otf",))
+print(result.binaries["otf"])
 ```
 
-![first font proof](docs/images/first-font-proof.png)
+**校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 
-多字重：每个字重从自己的控制表画出母版，`build_variable_font` 检查母版兼容后编成可变字体，见 [`examples/variable_family/`](examples/variable_family/)：
+Agent 试验记录：[`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。
 
-![variable family proof](docs/images/variable-family-proof.png)
+## 开发
 
-**质量 / 样品**（`typekernel.qa`）— 轮廓稳定哈希、PNG 预览样品（仅供人眼看，三次曲线仍是真相）、人审记录辅助（`approvals/*.json`）。程序级出口见 [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) §8：`PYTHONPATH=src python examples/run_program_exit.py`（或 `pytest -q tests/docs/test_development_plan_section8.py`）；衬线/斜体与附录 B-13–B-15 校样 [`examples/human_review_bundle.py`](examples/human_review_bundle.py)（`--only serif|italic|appendix-b`）；字重阶梯 PNG[`examples/weight_ladder_sheet.py`](examples/weight_ladder_sheet.py)；全字符校样/叠图[`examples/contact_sheet.py`](examples/contact_sheet.py)、[`examples/diff_overlay.py`](examples/diff_overlay.py)；轮廓 golden 刷新[`examples/regenerate_outline_hashes.py`](examples/regenerate_outline_hashes.py)；Agent 试验 [`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)（`examples/_legacy/agent_trial/snapshot_design.py` 写快照、`validate_snapshot.py` 复核 JSON）。合成 O 样品：
-
-![合成 O 样品](docs/images/synthetic-O.png)
-
-愿景摘要：[docs/VISION.md](docs/VISION.md)。**Coding agent 字体创作目标**：[docs/AGENT_GOAL.md](docs/AGENT_GOAL.md)（工作流见 [.agents/skills/typekernel-font-design/](.agents/skills/typekernel-font-design/SKILL.md)）。开发约定：[docs/dev-standards.md](docs/dev-standards.md)。
-
-## 动手试一颗字
-
-[`examples/zayju_letter/`](examples/zayju_letter/) 用公开 API 画了一颗受 zayJu 启发的小写 **n**（三次曲线手搭，不是描边膨胀）：
-
-![zayJu-inspired n](docs/images/zayju-inspired-n.png)
+见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9 与 [docs/dev-standards.md](docs/dev-standards.md)。本地：
 
 ```bash
-pip install -e ".[dev,specimen,compile]"
-python examples/zayju_letter/design_n.py
+pytest -q
 ```
-
-
-
-## 三栏对比：用零件组装「zayju」
-
-![苹果 / Anthropic / typekernel 零件组装](docs/images/zayju-apple-anthropic-typekernel.png)
-
-```bash
-pip install -e ".[dev,specimen,boolean]" && pip install brotli
-python examples/anthropic_zayju/design_zayju.py
-```
-
-## 安装（占位）
-
-
-```bash
-# 尚未发布到 PyPI；本地可编辑安装：
-pip install -e ".[dev]"
-```
-
-需要 Python ≥ 3.11；运行时依赖 `fonttools`。写 UFO / 编 TTF 时再装可选 extra：`pip install -e ".[compile]"`。
-
-## 文档
-
-| Doc | 内容 |
-| --- | --- |
-| [docs/VISION.md](docs/VISION.md) | 产品愿景 |
-| [docs/dev-standards.md](docs/dev-standards.md) | 提交信息、typing、几何原则、公开 API 纪律 |
-| [docs/notes/fonttools-reuse.md](docs/notes/fonttools-reuse.md) | fontTools / pathops 复用对照 |
-| [docs/compile/build-manifest.md](docs/compile/build-manifest.md) | 编译产物 BuildManifest 字段说明 |
-| [approvals/geo-public-api.json](approvals/geo-public-api.json) | Geo 公开 API 人审记录 |
-| [approvals/optical-overshoot.json](approvals/optical-overshoot.json) | Overshoot 人审记录 |
-
-## 贡献
-
-先读 [docs/VISION.md](docs/VISION.md) 与 [docs/dev-standards.md](docs/dev-standards.md)。
-合并前跑通 `pytest -q`、`ruff check src tests`、`mypy -p typekernel`。
-Issue / PR 模板与行为准则后续再加。
-
-## 许可
-
-[MIT](LICENSE) © 2026 zayju
