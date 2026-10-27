@@ -9,7 +9,7 @@ from pathlib import Path
 from typekernel.font.font import Font
 from typekernel.project import Project
 
-__all__ = ["apply_project_spacing", "build_font_from_project", "load_project"]
+__all__ = ["apply_project_spacing", "apply_project_spacing_with_system", "build_font_from_project", "load_project"]
 
 
 def load_project(root: str | Path) -> Project:
@@ -53,6 +53,47 @@ def apply_project_spacing(font: Font, project: Project, project_root: Path) -> N
     Starter / user spacing is project code (ARCHITECTURE.md §3.2) — not kernel
     letter builders. Missing file is a no-op so empty scaffolds still build.
     """
+    apply_project_spacing_with_system(font, project.system, project_root)
+
+
+def build_font_from_project(
+    project: Project,
+    *,
+    family_name: str,
+    style_name: str = "Regular",
+    project_root: str | Path | None = None,
+    apply_spacing: bool = True,
+    master: str | None = None,
+) -> Font:
+    """Discover glyphs and assemble a :class:`~typekernel.font.Font`.
+
+    When ``project_root`` is set (or inferred from ``project`` glyphs parent)
+    and ``apply_spacing`` is true, load optional ``spacing.py`` so advances /
+    LSB / RSB are metrics-key based rather than bbox-only.
+
+    ``master`` selects a Project master System (and per-glyph overrides) for
+    Light/Bold evaluation; default ``None`` uses the project's base system.
+    """
+    project.discover()
+    system = project.system
+    if master is not None:
+        by_name = {m.name: m for m in project.masters}
+        if master not in by_name:
+            raise KeyError(f"unknown master {master!r}")
+        system = by_name[master].system
+    font = Font.from_system(system, family_name, style_name)
+    for name in project.specs():
+        font.add_glyph(project.to_glyph(name, master=master), replace=True)
+    if apply_spacing:
+        root = Path(project_root) if project_root is not None else Path(project._glyphs).resolve().parent
+        # Pack with the master's stem values so bearings track weight.
+        # Temporarily swap project.system view: apply_spacing takes system arg.
+        apply_project_spacing_with_system(font, system, root)
+    return font
+
+
+def apply_project_spacing_with_system(font: Font, system, project_root: Path) -> None:
+    """Like :func:`apply_project_spacing` but with an explicit System (masters)."""
     spacing_py = project_root / "spacing.py"
     if not spacing_py.is_file():
         return
@@ -71,28 +112,4 @@ def apply_project_spacing(font: Font, project: Project, project_root: Path) -> N
     apply_fn = getattr(module, "apply_spacing", None)
     if apply_fn is None:
         return
-    apply_fn(font, project.system)
-
-
-def build_font_from_project(
-    project: Project,
-    *,
-    family_name: str,
-    style_name: str = "Regular",
-    project_root: str | Path | None = None,
-    apply_spacing: bool = True,
-) -> Font:
-    """Discover glyphs and assemble a :class:`~typekernel.font.Font`.
-
-    When ``project_root`` is set (or inferred from ``project`` glyphs parent)
-    and ``apply_spacing`` is true, load optional ``spacing.py`` so advances /
-    LSB / RSB are metrics-key based rather than bbox-only.
-    """
-    project.discover()
-    font = Font.from_system(project.system, family_name, style_name)
-    for name in project.specs():
-        font.add_glyph(project.to_glyph(name), replace=True)
-    if apply_spacing:
-        root = Path(project_root) if project_root is not None else Path(project._glyphs).resolve().parent
-        apply_project_spacing(font, project, root)
-    return font
+    apply_fn(font, system)

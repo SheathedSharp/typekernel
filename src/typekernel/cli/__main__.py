@@ -16,9 +16,22 @@ def _cmd_new(args: argparse.Namespace) -> int:
 
 
 def _cmd_build(args: argparse.Namespace) -> int:
-    from typekernel.cli.build import build_project
+    from typekernel.cli.build import build_project, build_variable_project
 
     root = Path(args.path).resolve()
+    if getattr(args, "variable", False):
+        masters, result = build_variable_project(
+            root, out_dir=args.out, formats=tuple(args.format) or ("ttf",)
+        )
+        print(f"masters: {', '.join(m.style_name for m in masters)}")
+        print(f"designspace: {result.designspace}")
+        for fmt, path in result.binaries.items():
+            print(f"{fmt}: {path}")
+        for path in result.masters:
+            print(f"ufo: {path}")
+        if result.warnings:
+            print(f"warnings: {len(result.warnings)}")
+        return 0
     font, result = build_project(root, out_dir=args.out, formats=tuple(args.format))
     print(f"glyphs: {len(font)}")
     print(f"ufo: {result.ufo}")
@@ -82,6 +95,11 @@ def main(argv: list[str] | None = None) -> int:
         choices=("otf", "ttf", "woff2"),
         default=None,
         help="output format (repeatable; default: otf)",
+    )
+    p_build.add_argument(
+        "--variable",
+        action="store_true",
+        help="build Light/Regular/Bold masters and a variable font (wght)",
     )
     p_build.set_defaults(func=_cmd_build)
 

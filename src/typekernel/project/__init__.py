@@ -59,6 +59,10 @@ class Project:
     def system(self) -> System:
         return self._system
 
+    @property
+    def masters(self) -> tuple[Master, ...]:
+        return self._masters
+
     def discover(self) -> None:
         """Import every ``*.py`` under ``glyphs`` and collect ``@glyph`` specs."""
         root = self._glyphs.resolve()

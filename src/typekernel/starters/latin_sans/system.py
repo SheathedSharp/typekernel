@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typekernel.project import Master
 from typekernel.system import Overshoot, System, Zones
 
 system = System(
@@ -144,7 +145,24 @@ system = System(
     },
 )
 
-masters = ()
+def _weight_system(base: System, stem_scale: float) -> System:
+    """Scale stem thicknesses; overlap construction stays topology-compatible."""
+    stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
+    return base.tuned(stem=stem)
+
+
+# Project evaluation masters (Regular is the default ``system``).
+masters = (
+    Master("Light", _weight_system(system, 0.62)),
+    Master("Bold", _weight_system(system, 1.38)),
+)
+
+# Designspace locations for ``tk build --variable`` (wght user coords).
+MASTER_LOCATIONS: dict[str, dict[str, float]] = {
+    "Light": {"wght": 300.0},
+    "Regular": {"wght": 400.0},
+    "Bold": {"wght": 700.0},
+}
 
 FAMILY_NAME = "Latin Sans"
 STYLE_NAME = "Regular"
