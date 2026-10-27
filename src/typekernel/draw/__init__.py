@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from typekernel.draw.construct import (
+    diagonal_band,
+    spring,
+    superellipse_quarter,
+    tensioned_arc,
+)
 from typekernel.draw.drawing import ContourRole, Drawing, Slot
 from typekernel.draw.errors import ContinuityError
 from typekernel.draw.fragment import Fragment, Node
@@ -33,4 +39,8 @@ __all__ = [
     "SlotFillError",
     "Writer",
     "apply_slots",
+    "diagonal_band",
+    "spring",
+    "superellipse_quarter",
+    "tensioned_arc",
 ]
