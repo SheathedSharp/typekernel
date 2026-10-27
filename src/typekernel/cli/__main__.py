@@ -56,6 +56,20 @@ def _cmd_proof(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_audit(args: argparse.Namespace) -> int:
+    from typekernel.cli.audit import audit_project, format_report
+
+    report = audit_project(
+        args.path,
+        check_stem=not args.no_stem,
+        check_zone=not args.no_zone,
+        check_direction=not args.no_direction,
+        check_compat=args.compat or not args.no_compat,
+    )
+    print(format_report(report))
+    return 1 if report.errors else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
@@ -121,6 +135,20 @@ def main(argv: list[str] | None = None) -> int:
         help="directory with OTF/TTF (default: <project>/build)",
     )
     p_proof.set_defaults(func=_cmd_proof)
+
+    p_audit = sub.add_parser("audit", help="stem / zone / direction / compat diagnostics")
+    p_audit.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="project root (default: .)",
+    )
+    p_audit.add_argument("--compat", action="store_true", help="force master compat check")
+    p_audit.add_argument("--no-compat", action="store_true", help="skip master compat")
+    p_audit.add_argument("--no-stem", action="store_true")
+    p_audit.add_argument("--no-zone", action="store_true")
+    p_audit.add_argument("--no-direction", action="store_true")
+    p_audit.set_defaults(func=_cmd_audit)
 
     args = parser.parse_args(argv)
     if args.command == "build" and not args.format:
