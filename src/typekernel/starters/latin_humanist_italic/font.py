@@ -2,6 +2,9 @@
 
 Skeleton+pen outlines have no corner/end slots; leave corners/ends unset so
 ``evaluate`` does not run ``apply_slots`` (pen joins are not Writer G1 chains).
+
+Sidebearings / kern pairs live in ``spacing.py`` and are applied by
+``tk build`` via :func:`typekernel.cli.load.apply_project_spacing`.
 """
 
 from __future__ import annotations
