@@ -2,6 +2,8 @@
 
 **一句话**：自建设计 DSL + 光学语义层；编译与 OpenType 表全部复用 [fontTools](https://github.com/fonttools/fonttools)；用 [oh-my-font](https://github.com/SheathedSharp/oh-my-font)（LihuiT / zayJu）当硬狗粮。
 
+> **现行架构与实现路线**：[ARCHITECTURE.md](ARCHITECTURE.md)（第 1–8 节方向，第 9 节交接规格）。本文保留愿景摘要；与 ARCHITECTURE 冲突时以 ARCHITECTURE 为准。
+
 ## 要解决什么
 
 「用代码写字体」常常能导出 TTF，却写不出成熟字族——字重靠描边膨胀、三次曲线被采样成折线、斜体靠 shear、没有 overshoot / stem / 对比等光学原语，也没有人眼样张门禁。生态强在**编译**（fontTools / fontmake），弱在**设计判断**。

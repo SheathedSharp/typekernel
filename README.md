@@ -5,6 +5,8 @@ Depends on [fontTools](https://github.com/fonttools/fonttools); **does not** reb
 
 > 自建设计层，编译层坐在 fontTools 上。不是编辑器，不是又一个 fontmake 包装器。
 
+> **架构入口（现行）**：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 三层分离、M0–M6 路线与交接规格。实现与评审以该文为准。
+
 ## 一眼看懂
 
 ![typekernel 概览：几何、光学、字重](docs/images/what-typekernel-does.jpg)
