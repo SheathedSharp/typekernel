@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from typekernel.draw import (
@@ -14,7 +15,7 @@ from typekernel.draw import (
 )
 from typekernel.system import System
 
-__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "diagonal_stroke", "shoulder_trough", "stem_rect"]
+__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "diagonal_stroke", "open_bowl", "shoulder_trough", "stem_rect"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,9 +83,7 @@ def bowl(
 
     Vertical ``ry`` should already include round overshoot when desired.
     """
-    stem = float(system.stem["lc"] if thickness is None else thickness)
-    thin = float(system.stem.get("lc_h", stem * 0.85))
-    exp = float(system.tokens.get("bowl_exponent", 2.15))
+    stem, thin, exp = _bowl_thickness(system, thickness)
     outer_rx, outer_ry = float(rx), float(ry)
     inner_rx = max(outer_rx - stem, 1.0)
     inner_ry = max(outer_ry - thin, 1.0)
@@ -100,6 +99,115 @@ def bowl(
         return w.close(role="counter" if counter else "ink").build()
 
     return _ring(outer_rx, outer_ry) + _ring(inner_rx, inner_ry, counter=True)
+
+
+def _bowl_thickness(system: System, thickness: float | None) -> tuple[float, float, float]:
+    """Return ``(stem, thin, exponent)`` shared by ``bowl`` / ``open_bowl``."""
+    stem = float(system.stem["lc"] if thickness is None else thickness)
+    thin = float(system.stem.get("lc_h", stem * 0.85))
+    if thickness is not None:
+        # Keep horizontal thin proportional when an explicit thickness is passed.
+        base = float(system.stem["lc"])
+        base_h = float(system.stem.get("lc_h", base * 0.85))
+        thin = stem * (base_h / base) if base else stem * 0.85
+    exp = float(system.tokens.get("bowl_exponent", 2.15))
+    return stem, thin, exp
+
+
+def _superellipse_x_at_y_frac(rx: float, y_frac: float, exp: float) -> float:
+    """Positive x on a superellipse at ``y = y_frac * ry`` (``|y_frac|`` in 0..1)."""
+    t = min(abs(y_frac), 1.0)
+    return float(rx) * (max(1.0 - t**exp, 0.0)) ** (1.0 / exp)
+
+
+def _ccw_unit(dx: float, dy: float) -> tuple[float, float]:
+    """Unit tangent: radius ``(dx,dy)`` rotated 90° CCW."""
+    length = math.hypot(dx, dy) or 1.0
+    return (-dy / length, dx / length)
+
+
+def open_bowl(
+    system: System,
+    *,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    thickness: float | None = None,
+    open_side: str = "right",
+    aperture: float | None = None,
+    tag_prefix: str = "aperture",
+) -> Drawing:
+    """Superellipse ring with a vertical-chord aperture (same metrics as ``bowl``).
+
+    ``open_side`` is ``"right"`` (c/C) or ``"left"`` (lower s bowl). ``aperture``
+    is the half-opening as a fraction of ``ry`` (default token ``bowl_aperture``).
+    Built as one ink contour: outer stubs + back quarters + inner reverse —
+    no private Approximate arches in glyph files.
+    """
+    if open_side not in ("right", "left"):
+        raise ValueError(f"open_side must be 'right' or 'left', got {open_side!r}")
+    stem, thin, exp = _bowl_thickness(system, thickness)
+    y_frac = float(
+        system.tokens.get("bowl_aperture", 0.42) if aperture is None else aperture
+    )
+    if not 0.05 < y_frac < 0.95:
+        raise ValueError(f"aperture fraction out of range: {y_frac!r}")
+    tension = float(system.tokens.get("shoulder_tension", 0.55))
+    outer_rx, outer_ry = float(rx), float(ry)
+    inner_rx = max(outer_rx - stem, 1.0)
+    inner_ry = max(outer_ry - thin, 1.0)
+
+    # Build the right-open form at this center; mirror for left.
+    x_o = _superellipse_x_at_y_frac(outer_rx, y_frac, exp)
+    x_i = _superellipse_x_at_y_frac(inner_rx, y_frac, exp)
+    y_o = y_frac * outer_ry
+    y_i = y_frac * inner_ry
+    top_o = (cx + x_o, cy + y_o)
+    bot_o = (cx + x_o, cy - y_o)
+    top_i = (cx + x_i, cy + y_i)
+    bot_i = (cx + x_i, cy - y_i)
+    north_o = (cx, cy + outer_ry)
+    south_o = (cx, cy - outer_ry)
+    north_i = (cx, cy + inner_ry)
+    south_i = (cx, cy - inner_ry)
+
+    o1 = superellipse_quarter((cx, cy), outer_rx, outer_ry, 1, exponent=exp)
+    o2 = superellipse_quarter((cx, cy), outer_rx, outer_ry, 2, exponent=exp)
+    i1 = superellipse_quarter((cx, cy), inner_rx, inner_ry, 1, exponent=exp)
+    i2 = superellipse_quarter((cx, cy), inner_rx, inner_ry, 2, exponent=exp)
+
+    stub_top_o = tensioned_arc(
+        top_o, _ccw_unit(x_o, y_o), north_o, (-1.0, 0.0), tension=tension
+    )
+    stub_bot_o = tensioned_arc(
+        south_o, (1.0, 0.0), bot_o, _ccw_unit(x_o, -y_o), tension=tension
+    )
+    stub_top_i = tensioned_arc(
+        top_i, _ccw_unit(x_i, y_i), north_i, (-1.0, 0.0), tension=tension
+    )
+    stub_bot_i = tensioned_arc(
+        south_i, (1.0, 0.0), bot_i, _ccw_unit(x_i, -y_i), tension=tension
+    )
+
+    tag = tag_prefix
+    w = Writer()
+    w.start(top_o).corner(f"{tag}.top.o")
+    w.fragment(stub_top_o)
+    w.fragment(o1).fragment(o2)
+    w.fragment(stub_bot_o)
+    w.corner(f"{tag}.bot.o")
+    w.line(bot_i).corner(f"{tag}.bot.i")
+    w.fragment(stub_bot_i.reversed())
+    w.fragment(i2.reversed()).fragment(i1.reversed())
+    w.fragment(stub_top_i.reversed())
+    w.corner(f"{tag}.top.i")
+    w.line(top_o)
+    drawing = w.close().build()
+    if open_side == "left":
+        drawing = drawing.mirrored_x(cx)
+    return drawing
+
 
 
 def cap_stem(

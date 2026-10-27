@@ -17,6 +17,7 @@ system = System(
         "O_width": 700,
         "shoulder_tension": 0.58,
         "bowl_exponent": 2.15,
+        "bowl_aperture": 0.42,
         "lsb_lc": 40,
         "rsb_lc": 40,
         "lsb_uc": 50,
