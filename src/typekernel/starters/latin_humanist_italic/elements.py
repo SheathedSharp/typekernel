@@ -98,6 +98,52 @@ def open_arc_points(
     ]
 
 
+def bowl(
+    system: System,
+    *,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    thickness: float | None = None,
+) -> Drawing:
+    """Closed oval ring via the project broad nib (shared by o / zero / eight)."""
+    st = float(system.stem["lc"]) if thickness is None else float(thickness)
+    return stroke(system, oval_points(cx, cy, rx, ry), closed=True, thickness=st)
+
+
+def open_bowl(
+    system: System,
+    *,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    thickness: float | None = None,
+    open_side: str = "right",
+    aperture_deg: float = 80.0,
+    n: int = 24,
+) -> Drawing:
+    """Open elliptical bowl; aperture centered on +x (right) or 180° (left).
+
+    Covers most of the ellipse so stacked s/S / c / three bowls share ink at
+    overlaps instead of a private Approximate join.
+    """
+    if open_side not in ("right", "left"):
+        raise ValueError(f"open_side must be 'right' or 'left', got {open_side!r}")
+    st = float(system.stem["lc"]) if thickness is None else float(thickness)
+    half = float(aperture_deg) / 2.0
+    if open_side == "right":
+        start_deg, end_deg = half, 360.0 - half
+    else:
+        start_deg, end_deg = 180.0 + half, 180.0 - half + 360.0
+    return stroke(
+        system,
+        open_arc_points(cx, cy, rx, ry, start_deg=start_deg, end_deg=end_deg, n=n),
+        thickness=st,
+    )
+
+
 def nest_bowl(
     system: System,
     *,
@@ -107,24 +153,27 @@ def nest_bowl(
     xh: float,
     lsb: float,
     thickness: float | None = None,
+    cy: float | None = None,
+    rx: float | None = None,
+    ry: float | None = None,
+    pull: float = 0.78,
 ) -> Drawing:
-    """Oval bowl nestled against a stem (``side`` is ``"left"`` or ``"right"`` of stem)."""
+    """Oval bowl nestled against a stem (``side`` is ``"left"`` or ``"right"`` of stem).
+
+    Optional ``cy`` / ``rx`` / ``ry`` override the default x-height bowl metrics
+    so capitals (B/P/R) can reuse the same pull.
+    """
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
     ov = float(system.overshoot.round)
-    rx = width * 0.36
-    ry = xh / 2.0 + ov * 0.45
-    cy = xh / 2.0
+    rx_v = width * 0.36 if rx is None else float(rx)
+    ry_v = (xh / 2.0 + ov * 0.45) if ry is None else float(ry)
+    cy_v = (xh / 2.0) if cy is None else float(cy)
     # Pull bowl center toward the stem so overlays share ink instead of a spur gap.
     if side == "right":
-        cx = stem_x + rx * 0.78
+        cx = stem_x + rx_v * float(pull)
     elif side == "left":
-        cx = stem_x - rx * 0.78
+        cx = stem_x - rx_v * float(pull)
     else:
         raise ValueError(f"side must be left/right, got {side!r}")
-    return stroke(
-        system,
-        oval_points(cx, cy, rx, ry),
-        closed=True,
-        thickness=st,
-    )
+    return bowl(system, cx=cx, cy=cy_v, rx=rx_v, ry=ry_v, thickness=st)
 
