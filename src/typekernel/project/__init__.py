@@ -184,14 +184,14 @@ def _ensure_parent_packages(mod_name: str) -> None:
 def _load_glyph_module(root: Path, path: Path) -> ModuleType:
     name = _module_name(root, path)
     _ensure_parent_packages(name)
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load glyph module from {path}")
-    module = sys.modules.get(name)
-    if module is None:
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-    # Re-exec on every discover so @glyph runs again into the active collector.
-    # Avoid importlib.reload — it requires real parent packages on sys.modules.
-    spec.loader.exec_module(module)
+    # Compile from current file bytes so same-second edits are not masked by
+    # SourceFileLoader / __pycache__ mtime races (needed for ``tk diff``).
+    source = path.read_text(encoding="utf-8")
+    code = compile(source, str(path), "exec")
+    module = ModuleType(name)
+    module.__file__ = str(path)
+    module.__loader__ = None
+    module.__package__ = name.rpartition(".")[0] or None
+    sys.modules[name] = module
+    exec(code, module.__dict__)
     return module
