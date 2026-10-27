@@ -97,3 +97,34 @@ def open_arc_points(
         for i in range(n)
     ]
 
+
+def nest_bowl(
+    system: System,
+    *,
+    stem_x: float,
+    side: str,
+    width: float,
+    xh: float,
+    lsb: float,
+    thickness: float | None = None,
+) -> Drawing:
+    """Oval bowl nestled against a stem (``side`` is ``"left"`` or ``"right"`` of stem)."""
+    st = float(system.stem["lc"]) if thickness is None else float(thickness)
+    ov = float(system.overshoot.round)
+    rx = width * 0.36
+    ry = xh / 2.0 + ov * 0.45
+    cy = xh / 2.0
+    # Pull bowl center toward the stem so overlays share ink instead of a spur gap.
+    if side == "right":
+        cx = stem_x + rx * 0.78
+    elif side == "left":
+        cx = stem_x - rx * 0.78
+    else:
+        raise ValueError(f"side must be left/right, got {side!r}")
+    return stroke(
+        system,
+        oval_points(cx, cy, rx, ry),
+        closed=True,
+        thickness=st,
+    )
+

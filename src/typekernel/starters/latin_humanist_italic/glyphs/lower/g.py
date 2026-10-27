@@ -1,8 +1,8 @@
-"""g — binocular: upper oval + ear + descender bowl (skeleton+pen)."""
+"""g — binocular: upper oval + continuous ear into lower bowl (skeleton+pen)."""
 
 from __future__ import annotations
 
-from elements import oval_points, stroke
+from elements import open_arc_points, oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -26,22 +26,23 @@ def g(system: System):
         thickness=st,
     )
 
-    # Keep lower bowl inside desc zone (tol ~24 on ymin).
+    # Continuous open skeleton: ear down the right, then lower bowl arc.
     lower_cy = desc / 2.0
-    lower_ry = abs(desc) / 2.0 - st * 0.15
-    lower_rx = width / 2.0 * 0.82
-    lower_cx = lsb + width / 2.0 - st * 0.1
-    lower = stroke(
-        system,
-        oval_points(lower_cx, lower_cy, lower_rx, max(lower_ry, st * 1.2)),
-        closed=True,
-        thickness=st * 0.95,
+    lower_ry = max(abs(desc) / 2.0 - st * 0.2, st * 1.2)
+    lower_rx = width / 2.0 * 0.78
+    lower_cx = lsb + width / 2.0 - st * 0.05
+    ear_x = lower_cx + lower_rx * 0.92
+    ear_top = xh * 0.72
+    lower_arc = open_arc_points(
+        lower_cx,
+        lower_cy,
+        lower_rx,
+        lower_ry,
+        start_deg=20.0,
+        end_deg=-200.0,
+        n=22,
     )
-
-    ear_x = lsb + width - st * 0.5
-    ear = stroke(
-        system,
-        [(ear_x, lower_cy - lower_ry * 0.1), (ear_x, xh * 0.78)],
-        thickness=st,
-    )
-    return upper + ear + lower
+    # Start at ear top, down to arc start, then around the bowl.
+    pts = [(ear_x, ear_top), (ear_x, lower_arc[0][1])] + list(lower_arc)
+    ear_lower = stroke(system, pts, thickness=st * 0.95)
+    return upper + ear_lower
