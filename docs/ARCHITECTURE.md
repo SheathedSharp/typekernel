@@ -553,7 +553,7 @@ class CornerSite:
 class CornerFill:
     trim_in: float            # 从角点沿进入边回退的距离
     trim_out: float           # 沿离开边前进的距离
-    path: Fragment            # 从回退点到前进点的替换路径
+    path: Fragment | None = None  # 替换路径；None + 零 trim = 几何 no-op（≡ plain / 未匹配）
 
 class CornerFiller(Protocol):
     def __call__(self, site: CornerSite, system: System) -> CornerFill: ...
@@ -586,7 +586,7 @@ def apply_slots(
 
 规则：
 
-- 未匹配任何模式的槽保持原样（等价于 `plain`）。
+- 未匹配任何模式的槽保持原样（等价于 `plain`）。显式 `plain()` 与退化参数（如 `rounded(radius=0)`）必须走同一 no-op：`trim=0` 且 `path=None`，不插入零长段、不消费角点槽。
 - 填充后的轮廓仍要通过 9.3 的连续性检查；插件产生不连续视为插件 bug。
 - 填充是**确定性**的：同一 `System` 结构下，不同母版填充出的段类型序列必须相同（插件契约测试覆盖）。
 - `trim_in > in_len` 或路径首尾不落在裁剪点上 → `SlotFillError`。

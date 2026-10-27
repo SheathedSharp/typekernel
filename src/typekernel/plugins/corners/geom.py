@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from typekernel.draw.slots import CornerSite
+from typekernel.draw.slots import CornerFill, CornerSite
 from typekernel.geo.point import Point
 from typekernel.system import System
 
@@ -48,3 +48,15 @@ def clamp_trim(distance: float, limit: float) -> float:
     if distance < 0.0:
         return 0.0
     return min(distance, max(0.0, limit - 1e-9))
+
+
+def noop_corner_fill(site: CornerSite) -> CornerFill:
+    """Canonical §9.5 geometry no-op (plain / radius·size → 0).
+
+    Zero trim and ``path=None`` so ``apply_slots`` skips ``_apply_corner``,
+    leaves contour segments unchanged, and keeps the corner slot — same as
+    an unmatched pattern. Fillers must call this instead of inventing
+    zero-length segments.
+    """
+    del site  # site identity unused; signature documents the call site
+    return CornerFill(trim_in=0.0, trim_out=0.0, path=None)

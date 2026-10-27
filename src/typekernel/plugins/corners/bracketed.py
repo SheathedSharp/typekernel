@@ -7,7 +7,13 @@ from typekernel.draw.fragment import Fragment
 from typekernel.draw.slots import CornerFill, CornerFiller, CornerSite
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.plugins.corners.geom import clamp_trim, exterior_unit, stem_ref, unit
+from typekernel.plugins.corners.geom import (
+    clamp_trim,
+    exterior_unit,
+    noop_corner_fill,
+    stem_ref,
+    unit,
+)
 from typekernel.system import System
 
 
@@ -34,8 +40,7 @@ def bracketed(
         trim_out = clamp_trim(raw_out, site.out_len)
         depth = min(depth, max(trim_in, trim_out, 0.0))
         if trim_in <= 1e-12 and trim_out <= 1e-12:
-            p = site.point
-            return CornerFill(0.0, 0.0, Fragment((LineSegment(p, p),)))
+            return noop_corner_fill(site)
 
         a = Point(
             site.point.x - site.in_dir.x * trim_in,

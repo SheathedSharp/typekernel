@@ -7,7 +7,7 @@ from typekernel.draw.slots import CornerFill, CornerFiller, CornerSite
 from typekernel.geo.path_helpers import KAPPA
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment
-from typekernel.plugins.corners.geom import clamp_trim, stem_ref
+from typekernel.plugins.corners.geom import clamp_trim, noop_corner_fill, stem_ref
 from typekernel.system import System
 
 
@@ -30,10 +30,7 @@ def rounded(*, radius: float | None = None) -> CornerFiller:
         r = min(r_req, site.in_len * 0.5, site.out_len * 0.5)
         r = clamp_trim(r, min(site.in_len, site.out_len))
         if r <= 1e-12:
-            p = site.point
-            from typekernel.geo.segment import LineSegment
-
-            return CornerFill(0.0, 0.0, Fragment((LineSegment(p, p),)))
+            return noop_corner_fill(site)
 
         start = Point(
             site.point.x - site.in_dir.x * r,

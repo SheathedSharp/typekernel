@@ -101,3 +101,22 @@ def test_plain_ignores_system_and_meta(system: System) -> None:
     drawing = square_with_knee(meta={"stem": 40.0})
     out = apply_slots(drawing, system, corners={"knee": plain()}, ends={})
     assert len(out.contours[0].segments) == 4
+
+
+def test_plain_fill_returns_shared_noop(system: System) -> None:
+    """Filler itself signals no-op via path=None (not a zero-length segment)."""
+    from typekernel.draw.slots import CornerSite
+    from typekernel.geo.point import Point
+
+    site = CornerSite(
+        tag="knee",
+        point=Point(20.0, 0.0),
+        in_dir=Point(1.0, 0.0),
+        out_dir=Point(0.0, 1.0),
+        in_len=20.0,
+        out_len=20.0,
+        role="ink",
+    )
+    fill = plain()(site, system)
+    assert fill.trim_in == 0.0 and fill.trim_out == 0.0
+    assert fill.path is None

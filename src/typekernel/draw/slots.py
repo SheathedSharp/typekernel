@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import fnmatch
-import itertools
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -149,7 +148,7 @@ class CornerSite:
 class CornerFill:
     trim_in: float
     trim_out: float
-    path: Fragment
+    path: Fragment | None = None  # None + zero trim → geometry no-op (§9.5)
 
 
 class CornerFiller(Protocol):
@@ -214,13 +213,16 @@ def _is_degenerate_line(seg: Segment) -> bool:
 
 
 def _is_noop_corner_fill(fill: CornerFill) -> bool:
-    """§9.5: plain ≡ unmatched — zero trim + only degenerate path segs is a no-op.
+    """§9.5: plain ≡ unmatched — zero trim and no real path is a no-op.
 
-    Explicit ``corners.plain`` (and zero-radius rounded fallbacks) must not insert
-    zero-length segments; geometry and the corner slot stay as in the unmatched case.
+    Preferred signal: ``path is None`` (see ``plugins.corners.geom.noop_corner_fill``).
+    Legacy zero-length-only paths are still treated as no-op so old fillers do not
+    insert segments; new code must not emit those segments.
     """
     if fill.trim_in > 1e-12 or fill.trim_out > 1e-12:
         return False
+    if fill.path is None:
+        return True
     segs = fill.path.segments
     if not segs:
         return True
@@ -248,7 +250,8 @@ def _check_contour_g1(
         nxt = segments[i]
         if isinstance(prev, LineSegment) and isinstance(nxt, LineSegment):
             continue
-        # Defensive: ignore accidental zero-length inserts next to a curve.
+        # Defensive only: do not expand. Real fillers must noop (path=None)
+        # instead of inserting zero-length segments next to curves.
         if _is_degenerate_line(prev) or _is_degenerate_line(nxt):
             continue
         err = g1_join_error(prev, nxt)

@@ -6,7 +6,7 @@ from typekernel.draw.fragment import Fragment
 from typekernel.draw.slots import CornerFill, CornerFiller, CornerSite
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.plugins.corners.geom import clamp_trim, interior_unit, stem_ref
+from typekernel.plugins.corners.geom import clamp_trim, interior_unit, noop_corner_fill, stem_ref
 from typekernel.system import System
 
 
@@ -44,8 +44,7 @@ def ink_trap(
         depth_frac = float(size) if depth is None else float(depth)
         tip_d = max(0.0, depth_frac * stem)
         if trim_in <= 1e-12 and trim_out <= 1e-12:
-            p = site.point
-            return CornerFill(0.0, 0.0, Fragment((LineSegment(p, p),)))
+            return noop_corner_fill(site)
 
         a = Point(
             site.point.x - site.in_dir.x * trim_in,
