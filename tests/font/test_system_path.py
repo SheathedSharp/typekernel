@@ -51,7 +51,6 @@ def test_font_from_system_seeds_notdef_and_space() -> None:
     s = _system()
     font = Font.from_system(s, "Sys Sans", space_width=250.0)
     assert font.system is s
-    assert font.context is None
     assert font.glyph_order == [".notdef", "space"]
     assert font["space"].advance == 250.0
     assert font.info.units_per_em == 1000

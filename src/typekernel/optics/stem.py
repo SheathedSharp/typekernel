@@ -229,7 +229,7 @@ def diagonal_compensation(
     stem. ``contrast`` further leans the result toward the family's thin target
     as the bar approaches horizontal (``w *= 1 - (1-contrast)*|sin φ|``).
 
-    This is a construction aid for :func:`~typekernel.parts.primitives.diagonal_stem`,
+    This is a construction aid for :func:`~starter diagonal strokes`,
     not a weight-axis buffer / stroke expand.
     """
     if stem <= 0:

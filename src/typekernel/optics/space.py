@@ -2,39 +2,50 @@
 
 Sidebearings and kern here use **silhouette white space** along a vertical
 band (typically baseline → x-height), not equal left/right heuristics and not
-bounding-box gaps. Bounding-box gaps can look even while the word still feels
-uneven — that is exactly what this module measures.
+bounding-box gaps.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from fontTools.misc.bezierTools import curveLineIntersections, lineLineIntersections
 
+from typekernel.font.glyph import Glyph
+from typekernel.font.kerning import KernPair, KernTable
 from typekernel.geo.layout import union_bounds
 from typekernel.geo.outline import Outline, bounds
 from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.optics.context import OpticalContext
-from typekernel.parts.compose import ComposedGlyph
-from typekernel.parts.context import DesignContext
-from typekernel.parts.metrics import KernPair, KernTable, RhythmSpec, rhythm_from_control_glyphs
+
+__all__ = [
+    "OpticalSpacingResult",
+    "fit_kern_pair",
+    "ink_intervals_at_y",
+    "measure_side_whitespace",
+    "pair_gap_bbox",
+    "pair_gap_optical",
+    "silhouette_edge",
+    "space_font",
+    "space_word_optical",
+    "suggest_sidebearings_optical",
+    "with_sidebearings",
+]
 
 _T_EPS = 1e-6
-DEFAULT_DEPTH = 0.12  # max counted white depth, fraction of x-height
+DEFAULT_DEPTH = 0.12
 _X_MERGE = 0.05
 
 
-def _ink_outlines(glyph: ComposedGlyph) -> list[Outline]:
-    return list(glyph.solids) + list(glyph.holes)
+def _ink_outlines(glyph: Glyph) -> list[Outline]:
+    return [glyph.outline] if glyph.outline.contours else []
 
 
 def _segment_ray_xs(
     segment: LineSegment | CubicSegment,
     ray: list[tuple[float, float]],
 ) -> list[float]:
-    """Return intersection x values with ``t1,t2`` clamped to the segment."""
     if isinstance(segment, LineSegment):
         hits = lineLineIntersections(
             segment.p0.as_tuple(),
@@ -118,15 +129,7 @@ def measure_side_whitespace(
     samples: int = 17,
     depth: float | None = None,
 ) -> float:
-    """Mean inset from the ink bbox edge to the silhouette along ``side``.
-
-    ``depth`` caps each scanline's inset (design units): deep openings such as
-    the inside of a ``y`` V do not count as more than ``depth`` of white, the
-    same depth limit used by classic auto-spacing tools.
-
-    Large inset (diagonal flanks, open bowls) means more corner white — optical
-    sidebearings should usually be smaller on that side.
-    """
+    """Mean inset from the ink bbox edge to the silhouette along ``side``."""
     outlines = [outline] if isinstance(outline, Outline) else list(outline)
     try:
         min_x, _, max_x, _ = union_bounds(outlines)
@@ -147,204 +150,158 @@ def measure_side_whitespace(
 
 
 def suggest_sidebearings_optical(
-    outline: Outline | list[Outline] | ComposedGlyph,
-    ctx: DesignContext | OpticalContext,
+    outline: Outline | list[Outline] | Glyph,
+    ctx: OpticalContext,
     *,
     samples: int = 17,
     target_air: float | None = None,
 ) -> tuple[float, float]:
-    """Suggest ``(lsb, rsb)`` from silhouette insets and a target air budget.
-
-    ``lsb = target_air - mean_left_inset`` (floored), likewise for ``rsb``.
-    Flat stems (inset ≈ 0) keep nearly full ``target_air``; open / diagonal
-    flanks pull the bearing in so neighboring letters do not look sparse.
-    """
-    if isinstance(outline, ComposedGlyph):
-        outlines = _ink_outlines(outline)
+    """Suggest ``(lsb, rsb)`` from silhouette insets and a target air budget."""
+    if isinstance(outline, Glyph):
+        outlines: list[Outline] = _ink_outlines(outline)
+    elif isinstance(outline, Outline):
+        outlines = [outline]
     else:
-        outlines = [outline] if isinstance(outline, Outline) else list(outline)
-
-    if isinstance(ctx, DesignContext):
-        x_height = ctx.x_height
-        units = ctx.units_per_em
-        ratio = ctx.sidebearing_ratio
-    else:
-        x_height = ctx.x_height
-        units = ctx.units_per_em
-        ratio = 0.10
-
+        outlines = list(outline)
     y0 = 0.0
-    y1 = x_height
-    air = (
-        max(0.04 * units, ratio * x_height)
-        if target_air is None
-        else target_air
-    )
-    cap = DEFAULT_DEPTH * x_height
+    y1 = float(ctx.x_height)
+    depth = DEFAULT_DEPTH * y1
     left_inset = measure_side_whitespace(
-        outlines, "left", y0=y0, y1=y1, samples=samples, depth=cap
+        outlines, "left", y0=y0, y1=y1, samples=samples, depth=depth
     )
     right_inset = measure_side_whitespace(
-        outlines, "right", y0=y0, y1=y1, samples=samples, depth=cap
+        outlines, "right", y0=y0, y1=y1, samples=samples, depth=depth
     )
-    # ``air`` is the target mean white from silhouette to the sidebearing.
-    # Inset already counts corner white inside the depth cap — do not add
-    # ``cap/2`` or flat-stem pairs overshoot the rhythm gap (≈ 2 × air).
-    # Keep a hair of bearing on extreme open flanks (inset > air).
-    floor = 0.02 * units
+    ratio = float(getattr(ctx, "sidebearing_ratio", 0.2) or 0.2)
+    air = float(target_air) if target_air is not None else ratio * y1
+    floor = 0.0
     lsb = max(floor, air - left_inset)
     rsb = max(floor, air - right_inset)
     return (lsb, rsb)
 
 
 def pair_gap_optical(
-    left: ComposedGlyph,
-    right: ComposedGlyph,
+    left: Glyph,
+    right: Glyph,
     *,
     kern: float = 0.0,
     samples: int = 17,
     y0: float | None = None,
     y1: float | None = None,
-    depth: float | None = None,
 ) -> float:
-    """Mean depth-limited silhouette gap between ``left`` and ``right``.
-
-    Positive = separation; negative = silhouette overlap in the band. Uses the
-    left glyph's advance + ``kern`` as the pen advance (tracking not included).
-    """
-    ctx = left.context
-    band0 = 0.0 if y0 is None else y0
-    band1 = ctx.x_height if y1 is None else y1
+    """Mean optical gap between two glyphs' silhouettes (positive = open)."""
     left_o = _ink_outlines(left)
     right_o = _ink_outlines(right)
-    cap = DEFAULT_DEPTH * ctx.x_height if depth is None else depth
-    lb = union_bounds(left_o)
-    rb = union_bounds(right_o)
+    if not left_o or not right_o:
+        return float(left.advance) + kern
+    try:
+        _, lmin_y, _, lmax_y = union_bounds(left_o)
+        _, rmin_y, _, rmax_y = union_bounds(right_o)
+    except ValueError:
+        return float(left.advance) + kern
+    lo = y0 if y0 is not None else max(lmin_y, rmin_y)
+    hi = y1 if y1 is not None else min(lmax_y, rmax_y)
+    if hi <= lo:
+        return float(left.advance) + kern
     gaps: list[float] = []
-    for y in _y_samples(band0, band1, samples):
+    for y in _y_samples(lo, hi, samples):
         l_edge = silhouette_edge(left_o, y, "right")
         r_edge = silhouette_edge(right_o, y, "left")
-        # A missed scanline counts as maximum depth (open side).
-        l_edge = lb[2] - cap if l_edge is None else max(l_edge, lb[2] - cap)
-        r_edge = rb[0] + cap if r_edge is None else min(r_edge, rb[0] + cap)
-        # right glyph origin at left.advance + kern
+        if l_edge is None or r_edge is None:
+            continue
         gaps.append((left.advance + kern + r_edge) - l_edge)
+    if not gaps:
+        return float(left.advance) + kern
     return sum(gaps) / len(gaps)
 
 
-def pair_gap_bbox(
-    left: ComposedGlyph,
-    right: ComposedGlyph,
-    *,
-    kern: float = 0.0,
-) -> float:
-    """Bounding-box gap: ``RSB(left) + LSB(right) + kern``."""
-    lb = union_bounds(_ink_outlines(left))
-    rb = union_bounds(_ink_outlines(right))
+def pair_gap_bbox(left: Glyph, right: Glyph, *, kern: float = 0.0) -> float:
+    """Bounding-box gap: ``left.advance - left.xmax + right.xmin + kern``."""
+    try:
+        lb = bounds(left.outline)
+        rb = bounds(right.outline)
+    except ValueError:
+        return float(left.advance) + kern
     return (left.advance - lb[2]) + rb[0] + kern
 
 
 def fit_kern_pair(
-    left: ComposedGlyph,
-    right: ComposedGlyph,
+    left: Glyph,
+    right: Glyph,
     target_gap: float,
     *,
     samples: int = 17,
-    lo: float = -200.0,
-    hi: float = 80.0,
-    iterations: int = 24,
 ) -> float:
-    """Binary-search kern so :func:`pair_gap_optical` ≈ ``target_gap``."""
-    best = 0.0
-    best_err = float("inf")
-    # Widen the bracket until it contains the target (shapes vary a lot).
-    low, high = lo, hi
-    for _ in range(8):
-        if pair_gap_optical(left, right, kern=high, samples=samples) >= target_gap:
-            break
-        high += (hi - lo)
-    for _ in range(8):
-        if pair_gap_optical(left, right, kern=low, samples=samples) <= target_gap:
-            break
-        low -= (hi - lo)
-    for _ in range(iterations):
-        mid = (low + high) / 2.0
-        gap = pair_gap_optical(left, right, kern=mid, samples=samples)
-        err = abs(gap - target_gap)
-        if err < best_err:
-            best_err = err
-            best = mid
-        if gap > target_gap:
-            # too much air → pull together (more negative / less positive kern)
-            high = mid
-        else:
-            low = mid
-    return best
+    """Solve kern so optical gap ≈ ``target_gap``."""
+    current = pair_gap_optical(left, right, kern=0.0, samples=samples)
+    return float(target_gap - current)
 
 
-def with_sidebearings(glyph: ComposedGlyph, lsb: float, rsb: float) -> ComposedGlyph:
+def with_sidebearings(glyph: Glyph, lsb: float, rsb: float) -> Glyph:
     """Return a copy whose ink starts at ``lsb`` and advance is ``lsb+ink+rsb``."""
-    ink = _ink_outlines(glyph)
-    box = union_bounds(ink)
-    ink_w = box[2] - box[0]
-    shifted = glyph.translated(lsb - box[0])
-    return replace(shifted, advance=lsb + ink_w + rsb)
+    if not glyph.outline.contours:
+        return replace(glyph, advance=max(glyph.advance, lsb + rsb))
+    box = bounds(glyph.outline)
+    ink_w = float(box[2] - box[0])
+    dx = lsb - float(box[0])
+    from typekernel.draw.geomutil import map_segment
+    from typekernel.geo.contour import Contour
+    from typekernel.geo.point import Point
+
+    def move(p: Point) -> Point:
+        return Point(p.x + dx, p.y)
+
+    shifted = Outline(
+        tuple(
+            Contour(tuple(map_segment(s, move) for s in c.segments), closed=c.closed)
+            for c in glyph.outline.contours
+        )
+    )
+    return replace(glyph, outline=shifted, advance=lsb + ink_w + rsb)
 
 
 @dataclass(frozen=True, slots=True)
 class OpticalSpacingResult:
     """Glyphs re-packed with optical sidebearings plus a fitted kern table."""
 
-    glyphs: tuple[ComposedGlyph, ...]
+    glyphs: tuple[Glyph, ...]
     names: tuple[str, ...]
     kerning: KernTable
     target_gap: float
 
 
 def space_word_optical(
-    glyphs: list[ComposedGlyph],
-    names: list[str],
+    glyphs: Sequence[Glyph],
+    names: Sequence[str],
+    ctx: OpticalContext,
     *,
-    target_gap: float | None = None,
     samples: int = 17,
+    target_gap: float | None = None,
 ) -> OpticalSpacingResult:
-    """Re-space a word: optical sidebearings, then kern pairs to ``target_gap``.
-
-    If ``target_gap`` is omitted, uses the median *bbox* gap of the input word
-    (with zero kern) so overall tightness stays familiar while optical rhythm
-    evening happens in the pair fits.
-    """
-    if len(glyphs) != len(names):
-        raise ValueError("names length must match glyphs")
+    """Re-space a word: optical sidebearings, then kern pairs to ``target_gap``."""
     if not glyphs:
         return OpticalSpacingResult((), (), KernTable(), 0.0)
-
-    ctx = glyphs[0].context
-    # 1) optical sidebearings per glyph
-    packed: list[ComposedGlyph] = []
-    for g in glyphs:
-        lsb, rsb = suggest_sidebearings_optical(g, ctx, samples=samples)
-        packed.append(with_sidebearings(g, lsb, rsb))
-
-    # 2) choose target from median *optical* gap (kern=0) so overall air stays
-    # familiar while pair rhythm evens out. Bbox median tends to crush pairs
-    # that already carry large silhouette white (diagonals, hooks).
+    packed = [
+        with_sidebearings(g, *suggest_sidebearings_optical(g, ctx, samples=samples))
+        for g in glyphs
+    ]
     if target_gap is None:
-        opt_gaps = [
+        gaps = [
             pair_gap_optical(packed[i], packed[i + 1], kern=0.0, samples=samples)
             for i in range(len(packed) - 1)
         ]
-        opt_gaps.sort()
-        target = opt_gaps[len(opt_gaps) // 2] if opt_gaps else 0.16 * ctx.x_height
+        gaps.sort()
+        target = gaps[len(gaps) // 2] if gaps else 0.0
     else:
         target = target_gap
-
-    # 3) fit each pair
-    pairs: list[KernPair] = []
-    for i in range(len(packed) - 1):
-        k = fit_kern_pair(packed[i], packed[i + 1], target, samples=samples)
-        pairs.append(KernPair(names[i], names[i + 1], k))
-
+    pairs = [
+        KernPair(
+            names[i],
+            names[i + 1],
+            fit_kern_pair(packed[i], packed[i + 1], target, samples=samples),
+        )
+        for i in range(len(packed) - 1)
+    ]
     return OpticalSpacingResult(
         glyphs=tuple(packed),
         names=tuple(names),
@@ -354,42 +311,17 @@ def space_word_optical(
 
 
 def space_font(
-    glyphs: Mapping[str, ComposedGlyph],
-    ctx: DesignContext | None = None,
+    glyphs: Mapping[str, Glyph],
+    ctx: OpticalContext,
     *,
-    rhythm: RhythmSpec | None = None,
     samples: int = 17,
-) -> dict[str, ComposedGlyph]:
-    """Apply optical sidebearings across a glyph set (Tracy-style rhythm).
-
-    Lowercase and punctuation use ``n``/``o`` rhythm when ``rhythm`` is
-    omitted; pass :func:`~typekernel.parts.metrics.rhythm_from_control_glyphs`
-    explicitly to lock the target. Digits are left to :func:`~typekernel.parts.figures.tabular`.
-    """
-    from typekernel.parts.figures import tabular
-
-    if not glyphs:
-        return {}
-
-    first = next(iter(glyphs.values()))
-    ctx = ctx or first.context
-    if rhythm is None and "n" in glyphs and "o" in glyphs:
-        rhythm = rhythm_from_control_glyphs(glyphs["n"], glyphs["o"], samples=samples)
-    target_air = rhythm.target_gap * 0.5 if rhythm is not None else None
-
-    punct = frozenset(".,;:!?'\"-–—")
-    out: dict[str, ComposedGlyph] = {}
-    for ch, g in glyphs.items():
-        if ch.isdigit():
-            out[ch] = g
-            continue
-        air: float | None = target_air
-        if air is not None and ch in punct:
-            air = air * 0.72
-        lsb, rsb = suggest_sidebearings_optical(g, ctx, samples=samples, target_air=air)
-        out[ch] = with_sidebearings(g, lsb, rsb)
-
-    digits = {ch: out[ch] for ch in out if ch.isdigit()}
-    if digits:
-        out.update(tabular(digits))
+    target_air: float | None = None,
+) -> dict[str, Glyph]:
+    """Apply optical sidebearings across a glyph set."""
+    out: dict[str, Glyph] = {}
+    for name, g in glyphs.items():
+        lsb, rsb = suggest_sidebearings_optical(
+            g, ctx, samples=samples, target_air=target_air
+        )
+        out[name] = with_sidebearings(g, lsb, rsb)
     return out

@@ -46,5 +46,5 @@ class ObliqueTransform:
         return Outline(tuple(new_contours))
 
 
-# True italic masters: ``typekernel.parts.italic.italic_design`` (construct slant
+# True italic masters: project glyphs_italic/ (construct slant
 # at compose time). Do not use this transform under a Roman master name.

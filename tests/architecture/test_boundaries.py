@@ -15,7 +15,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src" / "typekernel"
 
-# Packages under the new boundary (M0–M3 scope for rules 1–4).
+# M4 exit: rule 1 covers the whole package tree (no typekernel.parts anywhere).
+# Rules 2–4 still scope to the new-kernel packages below.
 KERNEL_PACKAGES = ("draw", "system", "project", "cli", "plugins")
 KERNEL_TEST_DIRS = ("draw", "system", "project")
 
@@ -89,10 +90,15 @@ def kernel_files() -> list[Path]:
     return files
 
 
-def test_no_parts_import_in_new_packages(kernel_files: list[Path]) -> None:
-    """Rule 1: new packages must not import typekernel.parts (whole-repo at M4)."""
+@pytest.fixture(scope="module")
+def all_src_files() -> list[Path]:
+    return _py_files(SRC)
+
+
+def test_no_parts_import_anywhere(all_src_files: list[Path]) -> None:
+    """Rule 1 (M4): no ``typekernel.parts`` imports anywhere under src/typekernel."""
     violations: list[str] = []
-    for path in kernel_files:
+    for path in all_src_files:
         tree = _parse(path)
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

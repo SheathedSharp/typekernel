@@ -1,9 +1,4 @@
-"""Optical primitives for typekernel.
-
-These operators adjust designed outlines for perception (overshoot, stem
-measure, join cleanup, contrast targets, optical spacing). They are **not**
-stroke expansion and must never be implemented as pen-radius weight.
-"""
+"""Optical primitives for typekernel."""
 
 from __future__ import annotations
 
@@ -13,7 +8,6 @@ from typekernel.optics.contrast import (
     apply_designed_contrast,
     validate_contrast_params,
 )
-from typekernel.optics.glyph_polish import GlyphPolishOptions, polish_glyph, polish_glyph_map
 from typekernel.optics.joins import cleanup_joins
 from typekernel.optics.overshoot import apply_overshoot
 from typekernel.optics.pipeline import apply
@@ -46,7 +40,6 @@ from typekernel.optics.stem import (
 
 __all__ = [
     "ContrastParams",
-    "GlyphPolishOptions",
     "HorizontalStemSpan",
     "OpticalContext",
     "OpticalSpacingResult",
@@ -69,8 +62,6 @@ __all__ = [
     "measure_vertical_stem",
     "pair_gap_bbox",
     "pair_gap_optical",
-    "polish_glyph",
-    "polish_glyph_map",
     "space_font",
     "space_word_optical",
     "suggest_sidebearings",

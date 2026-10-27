@@ -21,8 +21,6 @@ from typekernel.geo.contour import Contour, reverse_contour, signed_area
 from typekernel.geo.outline import Outline
 from typekernel.geo.path_builder import PathBuilder
 from typekernel.geo.pens import draw_outline
-from typekernel.parts.compose import Anchor, ComposedGlyph
-from typekernel.parts.context import DesignContext
 from typekernel.system import System
 
 __all__ = [
@@ -31,14 +29,21 @@ __all__ = [
     "Glyph",
     "glyph_name_for_char",
     "normalize_winding",
-    "notdef_glyph",
     "notdef_glyph_from_system",
-    "space_glyph",
     "space_glyph_from_system",
 ]
 
 Transform = tuple[float, float, float, float, float, float]
 IDENTITY: Transform = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
+
+@dataclass(frozen=True, slots=True)
+class Anchor:
+    """Named attachment point. ``top`` on a base pairs with ``_top`` on a mark."""
+
+    name: str
+    x: float
+    y: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,18 +63,7 @@ class Component:
 
 @dataclass(frozen=True, slots=True)
 class Glyph:
-    """One glyph of a font.
-
-    Attributes:
-        name: Glyph name (AGL-style production names are recommended; see
-            :func:`glyph_name_for_char`).
-        outline: Ink in font winding. May be empty for ``space`` or for
-            glyphs built purely from components.
-        advance: Advance width in design units.
-        unicodes: Code points mapped to this glyph (first is primary).
-        anchors: Attachment points for mark positioning.
-        components: Other glyphs drawn by reference.
-    """
+    """One glyph of a font."""
 
     name: str
     outline: Outline
@@ -85,60 +79,6 @@ class Glyph:
             raise ValueError(f"glyph {self.name!r} has duplicate unicodes")
 
     @classmethod
-    def from_composed(
-        cls,
-        name: str,
-        composed: ComposedGlyph,
-        *,
-        unicodes: Iterable[int] = (),
-        anchors: Iterable[Anchor] = (),
-        components: Iterable[Component] = (),
-    ) -> Glyph:
-        """Bind a parts-layer :class:`ComposedGlyph` to a name and code points.
-
-        Solids and un-subtracted holes are merged into one outline with font
-        winding, so counters stay open after compilation (nonzero fill).
-        The glyph's own anchors are kept; ``anchors`` adds to them and wins
-        on a name clash.
-        """
-        contours: list[Contour] = []
-        for solid in composed.solids:
-            contours.extend(normalize_winding(solid).contours)
-        for hole in composed.holes:
-            contours.extend(normalize_winding(hole, invert=True).contours)
-        extra = tuple(anchors)
-        override = {a.name for a in extra}
-        merged = tuple(a for a in composed.anchors if a.name not in override) + extra
-        return cls(
-            name=name,
-            outline=Outline(tuple(contours)),
-            advance=composed.advance,
-            unicodes=tuple(unicodes),
-            anchors=merged,
-            components=tuple(components),
-        )
-
-    @classmethod
-    def for_char(
-        cls,
-        char: str,
-        composed: ComposedGlyph,
-        *,
-        anchors: Iterable[Anchor] = (),
-        components: Iterable[Component] = (),
-    ) -> Glyph:
-        """Like :meth:`from_composed`, naming and mapping the glyph from ``char``."""
-        if len(char) != 1:
-            raise ValueError(f"expected one character, got {char!r}")
-        return cls.from_composed(
-            glyph_name_for_char(char),
-            composed,
-            unicodes=(ord(char),),
-            anchors=anchors,
-            components=components,
-        )
-
-    @classmethod
     def from_drawing(
         cls,
         name: str,
@@ -149,11 +89,7 @@ class Glyph:
         anchors: Iterable[Anchor] = (),
         components: Iterable[Component] = (),
     ) -> Glyph:
-        """Bind a :class:`~typekernel.draw.Drawing` outline to a name and metrics.
-
-        Prefer this over :meth:`from_composed` for new ``draw`` / ``project``
-        workflows (ARCHITECTURE.md §5 / §9.7a). ``from_composed`` stays until M4.
-        """
+        """Bind a :class:`~typekernel.draw.Drawing` outline to a name and metrics."""
         return cls(
             name=name,
             outline=drawing.outline(),
@@ -182,12 +118,7 @@ def _contains(outer: Contour, x: float, y: float) -> bool:
 
 
 def normalize_winding(outline: Outline, *, invert: bool = False) -> Outline:
-    """Orient contours by nesting depth: even depth CCW, odd depth CW.
-
-    Nesting is measured only among contours of ``outline``, so separate solids
-    passed as separate outlines never cut each other. ``invert`` flips the
-    result (used for counters stored apart from their solid).
-    """
+    """Orient contours by nesting depth: even depth CCW, odd depth CW."""
     contours = outline.contours
     out: list[Contour] = []
     for i, contour in enumerate(contours):
@@ -199,63 +130,35 @@ def normalize_winding(outline: Outline, *, invert: bool = False) -> Outline:
         depth = sum(
             1
             for j, other in enumerate(contours)
-            if j != i and other.segments and _contains(other, probe.x, probe.y)
+            if i != j and other.segments and _contains(other, probe.x, probe.y)
         )
-        want_ccw = (depth % 2 == 0) != invert
-        out.append(contour if (area > 0) == want_ccw else reverse_contour(contour))
+        want_positive = (depth % 2 == 0) ^ invert
+        if (area > 0) == want_positive:
+            out.append(contour)
+        else:
+            out.append(reverse_contour(contour))
     return Outline(tuple(out))
 
 
-def _hollow_notdef(*, stem: float, units_per_em: float, cap_height: float) -> Glyph:
-    stroke = max(stem * 0.5, 0.04 * units_per_em)
-    sb = 0.05 * units_per_em
-    w = 0.5 * cap_height + 2.0 * stroke
-    x0, x1 = sb, sb + w
-    y0, y1 = 0.0, cap_height
-
+def notdef_glyph_from_system(system: System) -> Glyph:
+    """Hollow-box ``.notdef`` from a :class:`~typekernel.system.System`."""
+    xh = float(system.zones.x)
+    w = 0.5 * xh
+    sb = 0.1 * xh
+    x0, y0, x1, y1 = sb, 0.0, sb + w, xh
+    inset = 0.08 * xh
     b = PathBuilder()
     b.moveTo(x0, y0)
     b.lineTo(x1, y0)
     b.lineTo(x1, y1)
     b.lineTo(x0, y1)
     b.closePath()
-    b.moveTo(x0 + stroke, y0 + stroke)
-    b.lineTo(x0 + stroke, y1 - stroke)
-    b.lineTo(x1 - stroke, y1 - stroke)
-    b.lineTo(x1 - stroke, y0 + stroke)
+    b.moveTo(x0 + inset, y0 + inset)
+    b.lineTo(x0 + inset, y1 - inset)
+    b.lineTo(x1 - inset, y1 - inset)
+    b.lineTo(x1 - inset, y0 + inset)
     b.closePath()
     return Glyph(".notdef", normalize_winding(b.build()), advance=x1 + sb)
-
-
-def _primary_stem(system: System) -> float:
-    for key in ("lc", "uc", "lc_h"):
-        if key in system.stem:
-            return float(system.stem[key])
-    if system.stem:
-        return float(next(iter(system.stem.values())))
-    return 0.08 * system.upm
-
-
-def notdef_glyph(ctx: DesignContext) -> Glyph:
-    """Hollow-box ``.notdef`` sized from the family's cap height and stem."""
-    return _hollow_notdef(
-        stem=ctx.stem, units_per_em=ctx.units_per_em, cap_height=ctx.cap_height
-    )
-
-
-def notdef_glyph_from_system(system: System) -> Glyph:
-    """Hollow-box ``.notdef`` from a :class:`~typekernel.system.System`."""
-    return _hollow_notdef(
-        stem=_primary_stem(system),
-        units_per_em=system.upm,
-        cap_height=system.zones.cap,
-    )
-
-
-def space_glyph(ctx: DesignContext, width: float | None = None) -> Glyph:
-    """Empty ``space`` (U+0020). Default width is half the x-height."""
-    advance = 0.5 * ctx.x_height if width is None else width
-    return Glyph("space", Outline(()), advance=advance, unicodes=(0x20,))
 
 
 def space_glyph_from_system(system: System, width: float | None = None) -> Glyph:

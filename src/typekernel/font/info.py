@@ -2,7 +2,7 @@
 
 The same numbers that shape the letters (x-height, cap height, ascender,
 descender, overshoot, stem) also define the font's vertical metrics and
-PostScript alignment zones. :meth:`FontInfo.from_context` keeps them in one
+PostScript alignment zones. :meth:`FontInfo.from_system` keeps them in one
 place so a family never ships metrics that disagree with its drawings.
 """
 
@@ -12,10 +12,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from typekernel.parts.context import DesignContext
 from typekernel.system import System
 
-__all__ = ["FontInfo", "alignment_zones", "alignment_zones_from_system"]
+__all__ = ["FontInfo", "alignment_zones_from_system"]
 
 Zone = tuple[float, float]
 
@@ -28,26 +27,6 @@ def _merge_zones(zones: list[Zone]) -> list[Zone]:
         else:
             merged.append((lo, hi))
     return merged
-
-
-def alignment_zones(ctx: DesignContext) -> tuple[tuple[Zone, ...], tuple[Zone, ...]]:
-    """Return ``(blue_zones, other_blues)`` from the context's overshoot.
-
-    Blue zones cover baseline (below), x-height, cap height and ascender
-    (above). The descender zone goes to ``other_blues`` as PostScript requires.
-    """
-    o = abs(ctx.overshoot)
-    sharp = abs(ctx.sharp_bump())
-    blues = _merge_zones(
-        [
-            (-o, 0.0),
-            (ctx.x_height, ctx.x_height + sharp),
-            (ctx.cap_height, ctx.cap_height + sharp),
-            (ctx.ascender, ctx.ascender + o),
-        ]
-    )
-    others = _merge_zones([(ctx.descender - o, ctx.descender)])
-    return tuple(blues), tuple(others)
 
 
 def alignment_zones_from_system(
@@ -106,42 +85,6 @@ class FontInfo:
             raise ValueError(f"descender must be <= 0, got {self.descender}")
         if not 1 <= self.weight_class <= 1000:
             raise ValueError(f"weight_class must be in 1..1000, got {self.weight_class}")
-
-    @classmethod
-    def from_context(
-        cls,
-        ctx: DesignContext,
-        family_name: str,
-        style_name: str = "Regular",
-        *,
-        line_height: float = 1.2,
-        weight_class: int = 400,
-        **overrides: Any,
-    ) -> FontInfo:
-        """Derive metrics, zones and stem snaps from a :class:`DesignContext`.
-
-        ``line_height`` (in em) sets the line gap so that
-        ``ascender - descender + line_gap == line_height * units_per_em``.
-        Remaining keyword arguments override fields of the result.
-        """
-        body = ctx.ascender - ctx.descender
-        blues, others = alignment_zones(ctx)
-        info = cls(
-            family_name=family_name,
-            style_name=style_name,
-            units_per_em=ctx.units_per_em,
-            ascender=ctx.ascender,
-            descender=ctx.descender,
-            x_height=ctx.x_height,
-            cap_height=ctx.cap_height,
-            line_gap=max(0.0, line_height * ctx.units_per_em - body),
-            weight_class=weight_class,
-            blue_zones=blues,
-            other_blues=others,
-            stem_snap_v=(ctx.stem,),
-            stem_snap_h=(ctx.thin,),
-        )
-        return replace(info, **overrides) if overrides else info
 
     @classmethod
     def from_system(

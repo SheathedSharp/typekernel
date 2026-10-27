@@ -38,4 +38,4 @@ def test_font_to_ufo_from_system_font() -> None:
     assert "fixture.box" in ufo
     assert ufo["fixture.box"].width == 120
     assert ufo.info.familyName == "Sys Export"
-    assert font.context is None
+    

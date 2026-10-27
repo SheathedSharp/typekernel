@@ -72,6 +72,17 @@ class Project:
         root_s = str(root)
         if root_s not in sys.path:
             sys.path.insert(0, root_s)
+        # Project root (parent of glyphs/) holds elements.py / system.py.
+        project_root = str(root.parent)
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
+        for bare in ("elements", "system", "spacing"):
+            mod = sys.modules.get(bare)
+            if mod is None:
+                continue
+            mod_file = getattr(mod, "__file__", "") or ""
+            if not mod_file.startswith(project_root):
+                sys.modules.pop(bare, None)
 
         collected: dict[str, GlyphSpec] = {}
         with registration_target(collected):

@@ -13,20 +13,16 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from typekernel.draw.drawing import Drawing
+from typekernel.font.kerning import ClassKernTable, KernTable
 from typekernel.font.glyph import (
     Component,
     Glyph,
     glyph_name_for_char,
-    notdef_glyph,
     notdef_glyph_from_system,
-    space_glyph,
     space_glyph_from_system,
 )
 from typekernel.font.info import FontInfo
 from typekernel.geo.outline import Outline
-from typekernel.parts.compose import Anchor, ComposedGlyph
-from typekernel.parts.context import DesignContext
-from typekernel.parts.metrics import ClassKernTable, KernTable
 from typekernel.system import System
 
 __all__ = ["Font"]
@@ -45,33 +41,11 @@ class Font:
     """
 
     info: FontInfo
-    context: DesignContext | None = None
     system: System | None = None
     _glyphs: dict[str, Glyph] = field(default_factory=dict)
     groups: dict[str, tuple[str, ...]] = field(default_factory=dict)
     kerning: dict[tuple[str, str], float] = field(default_factory=dict)
     features: str = ""
-
-    @classmethod
-    def from_context(
-        cls,
-        ctx: DesignContext,
-        family_name: str,
-        style_name: str = "Regular",
-        *,
-        space_width: float | None = None,
-        **info_overrides: Any,
-    ) -> Font:
-        """New font with info derived from ``ctx`` plus ``.notdef`` and ``space``.
-
-        Kept until M4 for the legacy ``parts`` path. Prefer :meth:`from_system`
-        for new ``draw`` / ``project`` workflows.
-        """
-        info = FontInfo.from_context(ctx, family_name, style_name, **info_overrides)
-        font = cls(info=info, context=ctx)
-        font.add_glyph(notdef_glyph(ctx))
-        font.add_glyph(space_glyph(ctx, space_width))
-        return font
 
     @classmethod
     def from_system(
@@ -113,16 +87,6 @@ class Font:
             Glyph.from_drawing(name, drawing, advance=advance, unicodes=unicodes),
             replace=replace,
         )
-
-    def add_char(self, char: str, composed: ComposedGlyph, *, replace: bool = False) -> Glyph:
-        """Add a parts-layer glyph for ``char`` (AGL name, ``ord(char)`` mapped)."""
-        return self.add_glyph(Glyph.for_char(char, composed), replace=replace)
-
-    def add_chars(
-        self, glyphs: Mapping[str, ComposedGlyph], *, replace: bool = False
-    ) -> list[Glyph]:
-        """Add many ``{char: ComposedGlyph}`` entries at once."""
-        return [self.add_char(ch, g, replace=replace) for ch, g in glyphs.items()]
 
     def add_composite(
         self,
