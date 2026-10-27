@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typekernel.plugins.passes.diagonal_comp import compensated_weight, diagonal_comp
 from typekernel.plugins.passes.overshoot import overshoot
 
-__all__ = ["overshoot"]
+__all__ = ["compensated_weight", "diagonal_comp", "overshoot"]
