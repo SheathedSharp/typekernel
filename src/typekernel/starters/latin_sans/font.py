@@ -1,4 +1,8 @@
-"""Wire System + glyphs/ into a Project (sans: corners default plain)."""
+"""Wire System + glyphs/ into a Project (sans: corners default plain).
+
+Sidebearings / kern pairs live in ``spacing.py`` and are applied by
+``tk build`` via :func:`typekernel.cli.load.apply_project_spacing`.
+"""
 
 from __future__ import annotations
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from typekernel.font.font import Font
 from typekernel.project import Project
 
-__all__ = ["build_font_from_project", "load_project"]
+__all__ = ["apply_project_spacing", "build_font_from_project", "load_project"]
 
 
 def load_project(root: str | Path) -> Project:
@@ -47,16 +47,52 @@ def load_project(root: str | Path) -> Project:
     return project
 
 
+def apply_project_spacing(font: Font, project: Project, project_root: Path) -> None:
+    """If ``project_root/spacing.py`` defines ``apply_spacing``, run it.
+
+    Starter / user spacing is project code (ARCHITECTURE.md §3.2) — not kernel
+    letter builders. Missing file is a no-op so empty scaffolds still build.
+    """
+    spacing_py = project_root / "spacing.py"
+    if not spacing_py.is_file():
+        return
+    root_s = str(project_root.resolve())
+    if root_s not in sys.path:
+        sys.path.insert(0, root_s)
+    mod_name = f"_typekernel_user_spacing_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
+    spec = importlib.util.spec_from_file_location(mod_name, spacing_py)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {spacing_py}")
+    module = sys.modules.get(mod_name)
+    if module is None:
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[mod_name] = module
+    spec.loader.exec_module(module)
+    apply_fn = getattr(module, "apply_spacing", None)
+    if apply_fn is None:
+        return
+    apply_fn(font, project.system)
+
+
 def build_font_from_project(
     project: Project,
     *,
     family_name: str,
     style_name: str = "Regular",
+    project_root: str | Path | None = None,
+    apply_spacing: bool = True,
 ) -> Font:
-    """Discover glyphs and assemble a :class:`~typekernel.font.Font`."""
+    """Discover glyphs and assemble a :class:`~typekernel.font.Font`.
+
+    When ``project_root`` is set (or inferred from ``project`` glyphs parent)
+    and ``apply_spacing`` is true, load optional ``spacing.py`` so advances /
+    LSB / RSB are metrics-key based rather than bbox-only.
+    """
     project.discover()
     font = Font.from_system(project.system, family_name, style_name)
     for name in project.specs():
         font.add_glyph(project.to_glyph(name), replace=True)
+    if apply_spacing:
+        root = Path(project_root) if project_root is not None else Path(project._glyphs).resolve().parent
+        apply_project_spacing(font, project, root)
     return font
-

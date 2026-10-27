@@ -43,7 +43,9 @@ def build_project(
     root_path = Path(root).resolve()
     project = load_project(root_path)
     family, style = _family_and_style(root_path)
-    font = build_font_from_project(project, family_name=family, style_name=style)
+    font = build_font_from_project(
+        project, family_name=family, style_name=style, project_root=root_path
+    )
     dest = Path(out_dir) if out_dir is not None else root_path / "build"
     result = build_font(font, dest, formats=formats)
     return font, result
