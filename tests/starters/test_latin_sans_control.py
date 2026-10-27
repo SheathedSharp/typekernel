@@ -26,7 +26,7 @@ def test_starter_discover_evaluate_to_glyph() -> None:
     project = load_project(STARTER)
     project.discover()
     assert {"n", "o", "H", "O"} <= set(project.specs())
-    expected_uni = {"n": 0x6E, "o": 0x6F, "H": 0x48, "O": 0x4F, "h": 0x68, "m": 0x6D, "u": 0x75, "r": 0x72, "b": 0x62, "d": 0x64, "p": 0x70, "q": 0x71, "v": 0x76, "w": 0x77, "x": 0x78, "y": 0x79, "z": 0x7A, "k": 0x6B}
+    expected_uni = {**{ch: ord(ch) for ch in "abcdefghijklmnopqrstuvwxyz"}, "H": 0x48, "O": 0x4F}
     for name, uni in expected_uni.items():
         drawing = project.evaluate(name)
         assert len(drawing.contours) >= 1
