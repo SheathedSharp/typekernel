@@ -381,7 +381,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**已落地（控制字 + n/o 组切片）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（控制字 `n o H O`；n 组 `h m u i l`；o 组 `a b d e p q`）+ `tk new --starter latin-humanist-italic`。内核不改；其余字组、spacing、斜体母版仍属后续。
+**已落地（starter ASCII + spacing）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern）+ `tk new --starter latin-humanist-italic`。内核不改。**仍属后续**：Light/Bold 母版 + VF——椭圆形 `expand_skeleton` 随粗细改变 contour segment 签名，若干叠字（`a`/`g`/`eight`…）过不了 `Drawing.signature()` 兼容检查；待 expand 厚度稳定或这些字改成单条连续骨架后再开。
 
 ---
 
@@ -445,7 +445,7 @@ src/typekernel/
     __main__.py        # tk new / proof / audit / build / diff
   starters/
     latin_sans/              # tk new --starter latin-sans
-    latin_humanist_italic/   # tk new --starter latin-humanist-italic（M6 控制字）
+    latin_humanist_italic/   # tk new --starter latin-humanist-italic（M6 ASCII）
 ```
 
 `draw` / `system` / `project` / `cli` 是内核；`plugins` 是插件；`starters` 是模板数据，**不被任何内核模块 import**。
