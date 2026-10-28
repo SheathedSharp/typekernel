@@ -36,6 +36,7 @@ class CheckContext:
     system: System
     project: Project
     stem_kinds: Mapping[str, Sequence[str]]
+    declared_stems: Mapping[str, Sequence[str]] = field(default_factory=dict)
     findings: list[Finding] = field(default_factory=list)
 
 

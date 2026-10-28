@@ -39,7 +39,7 @@ def check(ctx: CheckContext, *, tol: float = 24.0) -> None:
                 f"ymax {max_y:.1f} above zones+overshoot ({ceiling:.1f})",
             )
         )
-    if name in {"o", "O", "c", "e", "a"} and abs(
+    if name in {"o", "O", "c", "e"} and abs(
         max_y - float(system.zones.x if name.islower() else system.zones.cap)
     ) < 1.0:
         ctx.findings.append(

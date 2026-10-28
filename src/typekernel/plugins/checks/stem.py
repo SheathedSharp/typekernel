@@ -5,8 +5,10 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 
+from typekernel.draw import Drawing
 from typekernel.geo.outline import bounds
 from typekernel.optics.stem import (
+    VerticalStemSpan,
     list_vertical_stems,
     measure_oriented_stem,
     vertical_equiv_from_diagonal,
@@ -16,7 +18,7 @@ from typekernel.plugins.checks.protocol import CheckContext, Finding
 __all__ = ["check"]
 
 
-def _stem_from_nodes(drawing, prefix: str) -> float | None:
+def _stem_from_nodes(drawing: Drawing, prefix: str) -> float | None:
     try:
         a = drawing.point(f"{prefix}.foot.o")
         b = drawing.point(f"{prefix}.foot.i")
@@ -25,7 +27,7 @@ def _stem_from_nodes(drawing, prefix: str) -> float | None:
     return abs(float(b.x) - float(a.x))
 
 
-def _oriented_from_nodes(drawing, prefix: str) -> float | None:
+def _oriented_from_nodes(drawing: Drawing, prefix: str) -> float | None:
     try:
         a = drawing.point(f"{prefix}.foot.o")
         b = drawing.point(f"{prefix}.foot.i")
@@ -82,18 +84,21 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
                 deg = float(system.stem_direction_deg())
                 try:
                     w = measure_oriented_stem(outline, origin, deg)
-                except Exception:
+                except Exception:  # noqa: BLE001 - best-effort optical probe
                     w = None
-                if w is not None and w > 0:
-                    if abs(w - stem_target) / stem_target <= 0.25:
-                        measured.append(("optical.slanted_vertical", w, stem_target))
-            best: list = []
+                if (
+                    w is not None
+                    and w > 0
+                    and abs(w - stem_target) / stem_target <= 0.25
+                ):
+                    measured.append(("optical.slanted_vertical", w, stem_target))
+            best: list[VerticalStemSpan] = []
             best_score = float("inf")
             agreeing_bands = 0
             for frac in (0.32, 0.5, 0.68):
                 try:
                     spans = list_vertical_stems(outline, y=zone * frac)
-                except Exception:
+                except Exception:  # noqa: BLE001, S112 - best-effort optical probe
                     continue
                 near = []
                 for span in spans:
@@ -121,7 +126,7 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
             for deg in (45.0, 135.0, -45.0):
                 try:
                     w = measure_oriented_stem(outline, origin, deg)
-                except Exception:
+                except Exception:  # noqa: BLE001 - best-effort optical probe
                     w = None
                 if w is None or w <= 0:
                     continue
@@ -144,11 +149,21 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
             continue
         err = abs(got - expected) / expected
         if err > tol_ratio:
+            # Auto diagonal probes are informative, not a gate: the simple
+            # vertical-equivalent model is not pen-specific. A project that
+            # declares AUDIT_STEMS[glyph] = ("diagonal",) opts into warnings.
+            auto_diagonal = label.startswith("optical.diag") and name not in ctx.declared_stems
+            level = "info" if auto_diagonal else "warn"
+            suffix = (
+                " (auto diagonal probe; declare AUDIT_STEMS to make this a warning)"
+                if auto_diagonal
+                else ""
+            )
             ctx.findings.append(
                 Finding(
                     "stem",
-                    "warn",
+                    level,
                     name,
-                    f"{label} width {got:.1f} vs System {expected:.1f} ({err:.0%})",
+                    f"{label} width {got:.1f} vs System {expected:.1f} ({err:.0%}){suffix}",
                 )
             )

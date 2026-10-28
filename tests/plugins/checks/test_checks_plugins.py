@@ -130,13 +130,15 @@ def test_overlap_skips_pure_multi_ink() -> None:
     assert findings == []
 
 
-def test_overlap_warns_when_cancel_adjoins_counter(tmp_path: Path) -> None:
-    """Bowl+stem starters (b) should still warn — cancel touches 字腔."""
+def test_overlap_warns_only_when_cancel_enters_counter(tmp_path: Path) -> None:
+    """b's stem/bowl cancel stays in the ring; Q's tail cancel enters 字腔."""
     root = create_project("ovnear", parent=tmp_path, starter="latin-sans")
-    report = audit_project(root, glyphs=["b", "n"], check_overlap=True)
+    report = audit_project(root, glyphs=["b", "Q", "n"], check_overlap=True)
     b_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "b"]
+    q_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "Q"]
     n_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "n"]
-    assert b_warns, "expected cavity-adjacent overlap warn on b"
+    assert not b_warns, "b's cancel island sits in the ring, not the counter"
+    assert q_warns, "Q's tail/bowl cancel overlaps the counter"
     assert not n_warns, "pure multi-ink n must not warn"
 
 
@@ -147,3 +149,10 @@ def test_auto_kinds_diagonal_default() -> None:
     assert _auto_kinds("X") == ("diagonal",)
     assert _auto_kinds("o") == ()
     assert _auto_kinds("n") == ("vertical",)
+    # k/K/R have real vertical stems; do not silence them.
+    assert _auto_kinds("k") == ("vertical",)
+    assert _auto_kinds("K") == ("vertical",)
+    assert _auto_kinds("R") == ("vertical",)
+    # zero/seven are bowls/diagonals, not upright stems.
+    assert _auto_kinds("zero") == ()
+    assert _auto_kinds("seven") == ()
