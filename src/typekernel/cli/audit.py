@@ -22,7 +22,7 @@ from typekernel.plugins.checks import builtin_checks
 from typekernel.plugins.checks.protocol import CheckContext, Finding, raw_drawing
 from typekernel.project import Project
 
-__all__ = ["AuditReport", "Finding", "audit_project", "format_report", "load_audit_stems"]
+__all__ = ["AuditReport", "Finding", "audit_project", "format_report", "load_audit_stems", "load_intent"]
 
 # Glyphs that rarely carry upright stems; optical vertical probes on these are
 # usually measuring diagonals or bowls. Projects may override via AUDIT_STEMS.
@@ -147,6 +147,23 @@ def load_extra_checks(root: Path) -> tuple:
     return tuple(raw)
 
 
+def load_intent(root: Path):
+    """Load optional ``BRIEF`` / ``INTENT`` from the project's ``system.py``.
+
+    Returns an :class:`~typekernel.system.intent.Intent` or ``None``. Accepts
+    ``Brief``, ``Intent``, or a mapping of Intent fields.
+    """
+    from typekernel.system.intent import coerce_intent
+
+    module = _load_system_module(root)
+    if module is None:
+        return None
+    raw = getattr(module, "BRIEF", None)
+    if raw is None:
+        raw = getattr(module, "INTENT", None)
+    return coerce_intent(raw)
+
+
 def _normalize_kinds(value: Any) -> tuple[str, ...]:
     if value is None or value == "none" or value == ():
         return ()
@@ -211,6 +228,8 @@ def audit_project(
 
     Project ``system.py`` may define ``EXTRA_CHECKS`` (or ``CHECKS``) as a
     sequence of ``CheckFn`` callables appended after the built-ins.
+    Optional ``BRIEF`` / ``INTENT`` is checked once against ``System``
+    (:mod:`typekernel.system.intent`) — warnings only, not aesthetics AI.
     """
     root_path = Path(root).resolve()
     project = load_project(root_path)
@@ -218,6 +237,21 @@ def audit_project(
     names = glyphs if glyphs is not None else sorted(project.specs())
     report = AuditReport(glyphs=len(names))
     stem_kinds = load_audit_stems(root_path)
+
+    # Project-level intent check (once): prose Brief / typed Intent vs System.
+    intent = load_intent(root_path)
+    if intent is not None:
+        from typekernel.system.intent import check_intent
+
+        for mismatch in check_intent(project.system, intent):
+            report.findings.append(
+                Finding(
+                    kind="intent",
+                    level=mismatch.level,
+                    glyph="*",
+                    message=f"{mismatch.field}: {mismatch.message}",
+                )
+            )
     checks = list(
         builtin_checks(
             check_stem=check_stem,

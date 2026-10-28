@@ -14,12 +14,29 @@ STARTERS: dict[str, str] = {
     "latin-chancery": "latin_chancery",
 }
 
+_BRIEF_MD = """\
+# Brief
+
+Write the face in prose. Typed intent (contrast / slant / openness / weight) lives
+in ``system.py`` as ``BRIEF`` / ``INTENT`` — see ``typekernel.system.intent`` and
+the font-design skill. ``tk audit`` warns when System drifts outside Intent bands;
+it does not score beauty (use ``tk proof``).
+"""
+
 _SYSTEM_PY = '''\
 """Designer numeric table for this project."""
 
 from __future__ import annotations
 
-from typekernel.system import Overshoot, System, Zones
+from typekernel.system import Brief, Intent, Overshoot, System, Zones
+
+# Optional: typed intent checked by ``tk audit`` (see typekernel.system.intent).
+# Uncomment and keep System numbers inside the published bands.
+# BRIEF = Brief(
+#     prose="Describe the face; keep Intent fields honest.",
+#     intent=Intent(contrast="medium", slant="upright", openness="normal", weight="regular"),
+# )
+# INTENT = BRIEF.intent
 
 system = System(
     upm=1000,
@@ -116,6 +133,7 @@ def create_project(
             _SYSTEM_PY.replace("{family_name}", family),
             encoding="utf-8",
         )
+        (root / "brief.md").write_text(_BRIEF_MD, encoding="utf-8")
         (root / "font.py").write_text(_FONT_PY, encoding="utf-8")
         (glyphs / "README.md").write_text(_GLYPH_README, encoding="utf-8")
         return root
