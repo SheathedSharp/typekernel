@@ -55,6 +55,24 @@ _DEFAULT_NON_VERTICAL = frozenset(
     }
 )
 
+# Diagonal-primary letters: default optical probe is oriented (not vertical),
+# so sans does not flood with "vertical stem on a diagonal" noise, but italic /
+# diagonal projects still get measure_oriented_stem without declaring AUDIT_STEMS.
+_DEFAULT_DIAGONAL = frozenset(
+    {
+        "v",
+        "w",
+        "x",
+        "y",
+        "z",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+    }
+)
+
 
 @dataclass
 class AuditReport:
@@ -160,10 +178,15 @@ def _kinds_for(name: str, declared: Mapping[str, Sequence[str]]) -> tuple[str, .
 def _auto_kinds(name: str) -> tuple[str, ...]:
     """Default optical policy when the project does not declare AUDIT_STEMS.
 
-    Letters without upright stems skip optical vertical probes (the historical
-    false-noise source). Oriented / diagonal optical probes run only when the
+    Letters without upright stems skip optical **vertical** probes (the
+    historical false-noise source). Diagonal-primary letters
+    (``v w x y z`` and caps) default to oriented ``diagonal`` probes via
+    ``measure_oriented_stem`` — quiet on upright sans, useful when stems are
+    truly diagonal. Bowl letters (``o e c s …``) stay silent unless the
     project opts in via ``AUDIT_STEMS``.
     """
+    if name in _DEFAULT_DIAGONAL:
+        return ("diagonal",)
     if name in _DEFAULT_NON_VERTICAL:
         return ()
     return ("vertical",)
@@ -181,9 +204,10 @@ def audit_project(
 ) -> AuditReport:
     """Run named-node / outline audits on a project; return a structured report.
 
-    ``check_overlap`` is opt-in: overlap construction is the recommended VF
-    pattern, so pairwise ink∩ink is noisy as a default. Pass True (CLI
-    ``--overlap``) when hunting even-odd cavity defects.
+    ``check_overlap`` is opt-in: pairwise ink∩ink is filtered to cancels that
+    adjoin a declared counter (字腔 notch under even-odd). Pure multi-ink
+    overlap without counters stays quiet. Pass True (CLI ``--overlap``) when
+    hunting cavity defects on bowls with overlapping stems.
 
     Project ``system.py`` may define ``EXTRA_CHECKS`` (or ``CHECKS``) as a
     sequence of ``CheckFn`` callables appended after the built-ins.
