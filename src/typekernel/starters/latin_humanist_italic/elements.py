@@ -14,12 +14,51 @@ def _slant_x(x: float, y: float, slant: float) -> float:
     return x + slant * y
 
 
-def project_pen(system: System):
-    """Broad nib sized from ``system.stem['lc']`` and pen tokens."""
-    thickness = float(system.stem["lc"])
+def _pen_params(system: System) -> tuple[float, float]:
+    """Return ``(pen_contrast, pen_angle_deg)`` from System tokens."""
     contrast = float(system.tokens.get("pen_contrast", 0.55))
     angle = float(system.tokens.get("pen_angle_deg", 30.0))
+    return contrast, angle
+
+
+def slanted_vertical_optical_ratio(system: System) -> float:
+    """Horizontal stem width per unit pen thickness for a slanted vertical.
+
+    ``tk audit`` measures filled horizontal spans (``list_vertical_stems``).
+    An elliptical broad nib at ``pen_angle_deg`` on a stem leaned by ``slant``
+    yields optical width ``ratio * thickness``, not ``thickness`` itself.
+    Calibrating pens by this ratio keeps System.stem aligned with audit.
+    """
+    from typekernel.optics.stem import list_vertical_stems
+
+    contrast, angle = _pen_params(system)
+    slant = float(system.tokens.get("slant", 0.0))
+    # Unit thickness probe — expand is linear in thickness for this pen model.
+    probe_th = 40.0
+    cl = slanted_polyline([(200.0, 0.0), (200.0, 500.0)], slant, closed=False)
+    drawing = expand_skeleton(
+        cl,
+        broad_nib(probe_th, contrast=contrast, angle_deg=angle),
+        join="round",
+        cap="round",
+    )
+    spans = list_vertical_stems(drawing.outline(), y=250.0)
+    if not spans or spans[0].width <= 0:
+        return 1.0
+    return float(spans[0].width) / probe_th
+
+
+def pen_for_optical_stem(system: System, optical: float):
+    """Broad nib whose slanted vertical measures ``optical`` horizontally."""
+    contrast, angle = _pen_params(system)
+    ratio = slanted_vertical_optical_ratio(system)
+    thickness = float(optical) / ratio if ratio > 0 else float(optical)
     return broad_nib(thickness, contrast=contrast, angle_deg=angle)
+
+
+def project_pen(system: System):
+    """Broad nib sized so slanted vertical stems hit ``system.stem['lc']``."""
+    return pen_for_optical_stem(system, float(system.stem["lc"]))
 
 
 def slanted_polyline(
@@ -39,22 +78,61 @@ def stroke(
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
-    """Expand a (pre-slant) polyline with the project broad nib."""
+    """Expand a (pre-slant) polyline with the project broad nib.
+
+    ``thickness`` is the *optical* horizontal stem target (System.stem units),
+    not raw ``Pen.thickness`` — elliptical angle + italic slant are calibrated
+    out so ``tk audit`` stem checks match the numeric table.
+    """
     slant = float(system.tokens.get("slant", 0.0))
     cl = slanted_polyline(points, slant, closed=closed)
-    if thickness is None:
-        pen = project_pen(system)
-    else:
-        pen = broad_nib(
-            float(thickness),
-            contrast=float(system.tokens.get("pen_contrast", 0.55)),
-            angle_deg=float(system.tokens.get("pen_angle_deg", 30.0)),
-        )
+    optical = float(system.stem["lc"]) if thickness is None else float(thickness)
+    pen = pen_for_optical_stem(system, optical)
     # Closed rails: bevel keeps offset point order thickness-stable for VF
     # (elliptical round joins reverse the counter under Bold). Open strokes keep
     # round caps/joins for terminal shape.
     join = "bevel" if closed else "round"
     return expand_skeleton(cl, pen, join=join, cap="round")
+
+
+def diagonal_stroke(
+    system: System,
+    points: list[tuple[float, float]],
+    *,
+    thickness: float | None = None,
+) -> Drawing:
+    """Stroke a diagonal polyline so horizontal stem spans hit ``thickness``.
+
+    Upright ``stroke`` is calibrated for slanted *verticals*. Diagonals read
+    wider on a horizontal probe (``tk audit``); scale the optical request so
+    the expanded span matches ``System.stem`` without heal/blend passes.
+    """
+    from typekernel.optics.stem import list_vertical_stems
+
+    if len(points) < 2:
+        raise ValueError("diagonal_stroke needs at least two points")
+    optical = float(system.stem["lc"]) if thickness is None else float(thickness)
+    probe = stroke(system, points, thickness=optical)
+    ys = [float(p[1]) for p in points]
+    y = 0.5 * (min(ys) + max(ys))
+    # Prefer a band away from sharp apex cusps when the path folds.
+    if max(ys) - min(ys) > 1.0:
+        y = min(ys) + 0.62 * (max(ys) - min(ys))
+    try:
+        spans = list_vertical_stems(probe.outline(), y=y)
+    except Exception:
+        spans = []
+    near = [
+        s
+        for s in spans
+        if s.width > 0 and abs(s.width - optical) / optical <= 0.45
+    ]
+    if not near:
+        return probe
+    avg = sum(s.width for s in near) / len(near)
+    if avg <= 1e-6:
+        return probe
+    return stroke(system, points, thickness=optical * (optical / avg))
 
 
 def oval_points(

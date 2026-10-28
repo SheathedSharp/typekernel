@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import diagonal_stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,6 +17,6 @@ def v(system: System):
     x0 = lsb + st * 0.3
     x1 = lsb + width - st * 0.3
     mid = (x0 + x1) / 2.0
-    left = stroke(system, [(x0, xh), (mid, 0.0)], thickness=st)
-    right = stroke(system, [(x1, xh), (mid, 0.0)], thickness=st)
+    left = diagonal_stroke(system, [(x0, xh), (mid, 0.0)], thickness=st)
+    right = diagonal_stroke(system, [(x1, xh), (mid, 0.0)], thickness=st)
     return left + right

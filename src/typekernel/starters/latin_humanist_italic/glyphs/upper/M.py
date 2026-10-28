@@ -1,8 +1,8 @@
-"""M — continuous outer stems + inner diagonals as one rail."""
+"""M — outer uc stems + per-leg compensated diagonal valley."""
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import diagonal_stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,9 +17,10 @@ def M(system: System):
     x0 = lsb + uc * 0.5
     x3 = lsb + width - uc * 0.5
     mid = (x0 + x3) / 2.0
-    # Left stem up → valley → right stem down (continuous joins at peaks).
-    return stroke(
-        system,
-        [(x0, 0.0), (x0, cap), (mid, 0.0), (x3, cap), (x3, 0.0)],
-        thickness=uc,
+    left = uc_stem(system, x0, thickness=uc)
+    right = uc_stem(system, x3, thickness=uc)
+    valley = (
+        diagonal_stroke(system, [(x0, cap), (mid, 0.0)], thickness=uc)
+        + diagonal_stroke(system, [(mid, 0.0), (x3, cap)], thickness=uc)
     )
+    return left + valley + right

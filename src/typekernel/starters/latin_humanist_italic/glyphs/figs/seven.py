@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import diagonal_stroke, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,8 +14,14 @@ def seven(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    return stroke(
+    top = stroke(
         system,
-        [(lsb + width * 0.1, h), (lsb + width * 0.9, h), (lsb + width * 0.35, 0.0)],
+        [(lsb + width * 0.1, h), (lsb + width * 0.9, h)],
         thickness=st,
     )
+    leg = diagonal_stroke(
+        system,
+        [(lsb + width * 0.9, h), (lsb + width * 0.35, 0.0)],
+        thickness=st,
+    )
+    return top + leg

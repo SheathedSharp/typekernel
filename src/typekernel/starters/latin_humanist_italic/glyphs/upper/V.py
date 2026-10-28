@@ -1,8 +1,8 @@
-"""V — continuous diagonal rail through the baseline apex."""
+"""V — per-leg compensated diagonals meeting at the baseline apex."""
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import diagonal_stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,4 +17,6 @@ def V(system: System):
     x0 = lsb + uc * 0.2
     x1 = lsb + width - uc * 0.2
     mid = (x0 + x1) / 2.0
-    return stroke(system, [(x0, cap), (mid, 0.0), (x1, cap)], thickness=uc)
+    left = diagonal_stroke(system, [(x0, cap), (mid, 0.0)], thickness=uc)
+    right = diagonal_stroke(system, [(mid, 0.0), (x1, cap)], thickness=uc)
+    return left + right
