@@ -16,6 +16,7 @@ __all__ = [
     "proof_axis_ladder",
     "proof_charset_grid",
     "proof_context",
+    "proof_glyph",
     "proof_kern_pairs",
     "proof_labeled_waterfall",
     "proof_sheet",
@@ -90,6 +91,45 @@ def proof_context(
     line = _fit_line(draw, text, face, width - 2 * margin)
     draw.text((margin, margin), line, font=face, fill=_INK, **_text_feature_kwargs())
     return _save(img, out)
+
+
+def proof_glyph(
+    font_path: str | Path,
+    glyph: str,
+    out: str | Path,
+    *,
+    size: int = 240,
+    pad: int = 32,
+    canvas: int = 720,
+) -> Path:
+    """Zoom one character (or short cluster) and crop to ink + padding.
+
+    Used by ``tk proof --glyph`` so agents can inspect joins without writing a
+    bespoke PIL cropper. ``glyph`` is rendered as text (cmap character); for
+    multi-codepoint names pass the actual character(s).
+    """
+    Image, ImageDraw, ImageFont = _require_pil()
+    if not glyph:
+        raise ValueError("glyph must be a non-empty string")
+    face = ImageFont.truetype(str(font_path), size)
+    img = Image.new("RGB", (canvas, canvas), _BG)
+    draw = ImageDraw.Draw(img)
+    cx = cy = canvas // 2
+    draw.text((cx, cy), glyph, font=face, fill=_INK, anchor="mm", **_text_feature_kwargs())
+    # Crop to non-background ink bbox + pad.
+    from PIL import ImageChops
+
+    bg = Image.new("RGB", img.size, _BG)
+    diff = ImageChops.difference(img, bg)
+    bbox = diff.getbbox()
+    if bbox is None:
+        return _save(img, out)
+    left, top, right, bottom = bbox
+    left = max(0, left - pad)
+    top = max(0, top - pad)
+    right = min(canvas, right + pad)
+    bottom = min(canvas, bottom + pad)
+    return _save(img.crop((left, top, right, bottom)), out)
 
 
 def proof_labeled_waterfall(

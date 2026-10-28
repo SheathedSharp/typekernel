@@ -36,6 +36,7 @@ from typekernel.optics.stem import (
     measure_horizontal_stem,
     measure_oriented_stem,
     measure_vertical_stem,
+    vertical_equiv_from_diagonal,
 )
 
 __all__ = [

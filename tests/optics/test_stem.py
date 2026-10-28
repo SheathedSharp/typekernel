@@ -27,3 +27,12 @@ def test_right_stem_width() -> None:
 def test_gap_between_stems_is_not_a_stem() -> None:
     outline = load_synthetic_outline(FIXTURE)
     assert measure_vertical_stem(outline, x=300.0) is None
+
+
+def test_vertical_equiv_roundtrip() -> None:
+    from typekernel.optics.stem import diagonal_compensation, vertical_equiv_from_diagonal
+
+    stem = 84.0
+    perp = diagonal_compensation(45.0, stem, contrast=1.0)
+    back = vertical_equiv_from_diagonal(perp, 45.0, contrast=1.0)
+    assert abs(back - stem) < 1e-9

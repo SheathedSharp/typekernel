@@ -58,10 +58,14 @@ class Pen:
     """Elliptical (or circular) construction pen.
 
     Attributes:
-        thickness: Full width of a **vertical** stroke (design units). Equals
-            the horizontal diameter of the pen ellipse.
-        contrast: Horizontal-to-vertical ratio. ``1.0`` is a circular pen;
-            values below 1 make horizontal strokes thinner than vertical ones.
+        thickness: Full width of a stroke whose normal aligns with the pen's
+            major axis before rotation (design units). For ``angle_deg=0`` this
+            is the width of a **vertical** stroke (horizontal ellipse diameter).
+        contrast: Ellipse axis ratio ``ry/rx`` (not a stem vertical/horizontal
+            quota by itself). ``1.0`` is circular; values below 1 flatten the
+            ellipse. **Effective width depends on stroke direction relative to**
+            ``angle_deg`` — use ``tk pen --contrast … --angle …`` to see which
+            bearings thicken.
         angle_deg: Pen rotation in degrees (0 = axes-aligned ellipse).
     """
 

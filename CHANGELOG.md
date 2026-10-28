@@ -6,7 +6,16 @@ cut a versioned release yet, so everything below is unreleased.
 
 ## [Unreleased]
 
+### Added
+
+- `tk proof --text` / `--glyph` / `--size` and proof set `ladder` (arbitrary phrase + zoomed glyph + VF weight ladder).
+- `tk pen --contrast --angle` broad-nib effective-width preview.
+- `tk audit --overlap` (opt-in even-odd cavity report) and optional `AUDIT_STEMS` in `system.py` for vertical/diagonal optical probes; default skips vertical probes on non-upright letters.
+- Skill `reference.md` indexes `draw.construct` (`hook` / `tensioned_arc` / `spring` / `diagonal_band`) and `optics.stem.measure_oriented_stem` / `diagonal_compensation` / `vertical_equiv_from_diagonal`; cold-start checklist points there.
+- Clarified `self_union` vs design-time seal in anti-patterns; fixed `Pen.contrast` docstring.
+
 ### Changed
+
 
 - `docs/ARCHITECTURE.md` now describes the architecture as it is — three-layer
   separation, core concepts, standard workflow, acceptance, package layout,

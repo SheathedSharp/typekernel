@@ -100,3 +100,59 @@ def test_tk_diff_snapshot_and_change_detection(tmp_path: Path) -> None:
     result = diff_project(root, against=snap)
     assert "syn.box" in result["changed"]
     assert "changed" in format_diff(result)
+
+
+
+def test_tk_proof_text_and_glyph_via_api(tmp_path: Path) -> None:
+    pytest.importorskip("PIL")
+    pytest.importorskip("ufoLib2")
+    from typekernel.cli.proof_cmd import proof_project
+
+    root = create_project("proof_flags", parent=tmp_path)
+    _write_synthetic_glyphs(root / "glyphs")
+    assert main(["build", str(root)]) == 0
+    written = proof_project(
+        root,
+        None,
+        out_dir=root / "proofs",
+        text="hello syn",
+        glyph="H",
+        size=64,
+    )
+    names = {p.name for p in written}
+    assert "text.png" in names
+    assert any(n.startswith("glyph-") and n.endswith(".png") for n in names)
+
+
+def test_tk_proof_text_via_main(tmp_path: Path) -> None:
+    pytest.importorskip("PIL")
+    pytest.importorskip("ufoLib2")
+    root = create_project("proof_main", parent=tmp_path)
+    _write_synthetic_glyphs(root / "glyphs")
+    assert main(["build", str(root)]) == 0
+    # Omit SET; path last after flags.
+    assert (
+        main(
+            [
+                "proof",
+                "--text",
+                "phrase one",
+                "--glyph",
+                "A",
+                "--out",
+                str(root / "proofs"),
+                str(root),
+            ]
+        )
+        == 0
+    )
+    assert (root / "proofs" / "text.png").is_file()
+    assert list((root / "proofs").glob("glyph-*.png"))
+
+
+def test_tk_pen_writes_png(tmp_path: Path) -> None:
+    pytest.importorskip("PIL")
+    out = tmp_path / "pen.png"
+    assert main(["pen", "--contrast", "0.26", "--angle", "30", "--out", str(out)]) == 0
+    assert out.is_file()
+    assert out.stat().st_size > 1000

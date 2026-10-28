@@ -43,16 +43,49 @@ def _cmd_build(args: argparse.Namespace) -> int:
 def _cmd_proof(args: argparse.Namespace) -> int:
     from typekernel.cli.proof_cmd import PROOF_SETS, proof_project
 
+    tokens = list(getattr(args, "tokens", []) or [])
+    proof_set = None
+    path = "."
+    if tokens:
+        if tokens[0] in PROOF_SETS:
+            proof_set = tokens[0]
+            if len(tokens) > 1:
+                path = tokens[1]
+            if len(tokens) > 2:
+                print(
+                    "error: too many positional args; expected [SET] [PATH]",
+                    file=sys.stderr,
+                )
+                return 2
+        else:
+            # Bare project path with --text/--glyph (or mistaken SET).
+            if len(tokens) == 1:
+                path = tokens[0]
+            else:
+                print(
+                    f"error: unknown proof set {tokens[0]!r}; choose from {PROOF_SETS}",
+                    file=sys.stderr,
+                )
+                return 2
+
+    if proof_set is None and not args.text and not args.glyph:
+        print(
+            "error: need a proof set (control|spacing|kern|charset|ladder|all) "
+            "or --text / --glyph",
+            file=sys.stderr,
+        )
+        return 2
     paths = proof_project(
-        args.path,
-        args.set,
+        path,
+        proof_set,
         out_dir=args.out,
         build_dir=args.build_dir,
+        text=args.text,
+        glyph=args.glyph,
+        size=args.size,
     )
     for p in paths:
         print(p)
-    if args.set not in PROOF_SETS:
-        return 2
     return 0
 
 
@@ -65,9 +98,23 @@ def _cmd_audit(args: argparse.Namespace) -> int:
         check_zone=not args.no_zone,
         check_direction=not args.no_direction,
         check_compat=args.compat or not args.no_compat,
+        check_overlap=bool(getattr(args, "overlap", False)),
     )
     print(format_report(report))
     return 1 if report.errors else 0
+
+
+def _cmd_pen(args: argparse.Namespace) -> int:
+    from typekernel.cli.pen_cmd import render_pen_preview
+
+    path = render_pen_preview(
+        contrast=args.contrast,
+        angle_deg=args.angle,
+        thickness=args.thickness,
+        out=args.out,
+    )
+    print(path)
+    return 0
 
 
 def _cmd_diff(args: argparse.Namespace) -> int:
@@ -146,14 +193,28 @@ def main(argv: list[str] | None = None) -> int:
 
     p_proof = sub.add_parser("proof", help="render proof PNGs from the built font")
     p_proof.add_argument(
-        "set",
-        help="proof set: control | spacing | kern | charset | all",
+        "tokens",
+        nargs="*",
+        default=[],
+        metavar="SET|PATH",
+        help="optional SET (control|spacing|kern|charset|ladder|all) then PATH "
+        "(default PATH=.); omit SET when using only --text / --glyph",
     )
     p_proof.add_argument(
-        "path",
-        nargs="?",
-        default=".",
-        help="project root (default: .)",
+        "--text",
+        default=None,
+        help="render an arbitrary proof string to proofs/text.png",
+    )
+    p_proof.add_argument(
+        "--glyph",
+        default=None,
+        help="zoom one character (or short cluster) to proofs/glyph-*.png",
+    )
+    p_proof.add_argument(
+        "--size",
+        type=int,
+        default=None,
+        help="pixel size for --text / --glyph / control (defaults vary by mode)",
     )
     p_proof.add_argument("--out", default=None, help="PNG output directory")
     p_proof.add_argument(
@@ -175,8 +236,26 @@ def main(argv: list[str] | None = None) -> int:
     p_audit.add_argument("--no-stem", action="store_true")
     p_audit.add_argument("--no-zone", action="store_true")
     p_audit.add_argument("--no-direction", action="store_true")
+    p_audit.add_argument(
+        "--overlap",
+        action="store_true",
+        help="opt-in: warn when ink∩ink overlaps cancel under even-odd preview",
+    )
     p_audit.set_defaults(func=_cmd_audit)
 
+    p_pen = sub.add_parser(
+        "pen",
+        help="preview broad-nib contrast×angle (effective width by stroke direction)",
+    )
+    p_pen.add_argument("--contrast", type=float, default=0.55, help="ellipse axis ratio")
+    p_pen.add_argument("--angle", type=float, default=30.0, help="pen rotation degrees")
+    p_pen.add_argument("--thickness", type=float, default=100.0, help="vertical stroke width")
+    p_pen.add_argument(
+        "--out",
+        default="pen_preview.png",
+        help="PNG path (default: pen_preview.png)",
+    )
+    p_pen.set_defaults(func=_cmd_pen)
 
     p_diff = sub.add_parser(
         "diff",
