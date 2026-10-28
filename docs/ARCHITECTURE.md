@@ -19,12 +19,13 @@
                                 │ 只调用公开 API
 ┌───────────────────────────────┴─────────────────────────────────┐
 │  插件（可选、互相独立、按协议实现）                              │
-│  corners: slab / bracketed / wedge / ink_trap / rounded          │
-│  ends:    flat / angled / ball / flare / teardrop                │
-│  passes:  overshoot / diagonal_comp / crotch_thin / contrast     │
-│  construct: overlap / skeleton+broad_nib / skeleton+pointed_pen  │
-│  spacing: metrics_keys / tracy / optical                         │
-│  checks:  stem_audit / zone_audit / compat / direction           │
+│  corners: plain / rounded / slab / bracketed / wedge / ink_trap  │
+│  ends:    flat / angled / ball / flare                           │
+│  passes:  overshoot / diagonal_comp / crotch_thin /              │
+│           compensated_weight                                     │
+│  construct: skeleton_pen（broad_nib / pointed_pen）              │
+│  spacing: 预留（现行路径是项目里的 spacing.py）                  │
+│  checks:  预留（现行路径是 tk audit）                            │
 └───────────────────────────────▲─────────────────────────────────┘
                                 │ 只依赖内核
 ┌───────────────────────────────┴─────────────────────────────────┐
@@ -91,7 +92,8 @@ class Fragment:
 
 ```python
 # myfont/glyphs/lower/n.py
-from typekernel.draw import Writer, glyph
+from typekernel.draw import Writer
+from typekernel.project import glyph
 from myfont.elements import arch            # 项目自己的元素
 
 @glyph("n", group="lc.straight")
@@ -306,7 +308,7 @@ class Writer:
 
 1. **连续性在书写时检查，不在事后修。** `close()` 和 `build()` 时检查每个 on-curve 节点：若相邻两段至少一段是曲线，则必须 G1；被 `corner()` / `cusp()` 标记的节点除外。失败抛 `ContinuityError`，信息里带节点 tag 或坐标、实测角度。
 2. **两段都是直线的节点**默认允许转角，不需要声明。
-3. `role="ink"` 的轮廓在 `build()` 时规范为逆时针，`"counter"` 规范为顺时针（与 `geo` 的 `_ccw` 约定一致，方向反转时节点 index 同步重映射）。
+3. `role="ink"` 的轮廓在 `build()` 时规范为逆时针，`"counter"` 规范为顺时针（与 `geo.signed_area` 的符号约定一致——正为逆时针，方向反转时节点 index 同步重映射）。
 4. 同一 `Drawing` 内 tag 必须唯一；重复抛 `ValueError`。
 5. `Writer` 不知道任何字母、风格或 `System`。
 
@@ -386,7 +388,7 @@ def apply_slots(
     system: System,
     corners: Mapping[str, CornerFiller],   # 键是 tag 模式，按插入顺序首个匹配生效
     ends: Mapping[str, EndFiller],
-    named: Mapping[str, CornerFiller | EndFiller] = {},  # 供 Slot.fill 显式引用
+    named: Mapping[str, CornerFiller | EndFiller] | None = None,  # 供 Slot.fill 显式引用
 ) -> Drawing
 ```
 
