@@ -76,3 +76,74 @@ def test_direction_plugin_flags_cw_ink() -> None:
     )
     direction.check(ctx)
     assert any(f.kind == "direction" and f.level == "error" for f in findings)
+
+
+def test_overlap_skips_pure_multi_ink() -> None:
+    """n-style multi-ink with no counters must stay quiet under --overlap."""
+    from typekernel.plugins.checks import overlap as overlap_mod
+
+    a = (
+        Writer()
+        .start((0, 0))
+        .line((40, 0))
+        .line((40, 200))
+        .line((0, 200))
+        .close()
+        .build()
+        .contours[0]
+    )
+    b = (
+        Writer()
+        .start((20, 50))
+        .line((80, 50))
+        .line((80, 150))
+        .line((20, 150))
+        .close()
+        .build()
+        .contours[0]
+    )
+    d = Drawing((a, b), ("ink", "ink"), ((), ()), slots=())
+    system = System(
+        upm=1000,
+        stem={"lc": 70.0},
+        zones=Zones(x=500, cap=700, asc=750, desc=-200, base=0),
+        overshoot=Overshoot(round=12, pointed=8),
+    )
+
+    class _P:
+        masters = ()
+
+        def specs(self):
+            return {}
+
+    findings: list[Finding] = []
+    ctx = CheckContext(
+        name="n",
+        raw=d,
+        final=d,
+        system=system,
+        project=_P(),  # type: ignore[arg-type]
+        stem_kinds={},
+        findings=findings,
+    )
+    overlap_mod.check(ctx)
+    assert findings == []
+
+
+def test_overlap_warns_when_cancel_adjoins_counter(tmp_path: Path) -> None:
+    """Bowl+stem starters (b) should still warn — cancel touches 字腔."""
+    root = create_project("ovnear", parent=tmp_path, starter="latin-sans")
+    report = audit_project(root, glyphs=["b", "n"], check_overlap=True)
+    b_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "b"]
+    n_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "n"]
+    assert b_warns, "expected cavity-adjacent overlap warn on b"
+    assert not n_warns, "pure multi-ink n must not warn"
+
+
+def test_auto_kinds_diagonal_default() -> None:
+    from typekernel.cli.audit import _auto_kinds
+
+    assert _auto_kinds("v") == ("diagonal",)
+    assert _auto_kinds("X") == ("diagonal",)
+    assert _auto_kinds("o") == ()
+    assert _auto_kinds("n") == ("vertical",)

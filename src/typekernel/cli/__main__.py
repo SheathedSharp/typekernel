@@ -264,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
     p_audit.add_argument(
         "--overlap",
         action="store_true",
-        help="opt-in: warn when ink∩ink overlaps cancel under even-odd preview",
+        help="opt-in: warn when ink∩ink cancel adjoins a counter (cavity notch)",
     )
     p_audit.set_defaults(func=_cmd_audit)
 
