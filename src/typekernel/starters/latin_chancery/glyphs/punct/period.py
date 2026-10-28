@@ -1,8 +1,11 @@
 """period — baseline pen_dot."""
 from __future__ import annotations
+
 from elements import pen_dot
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("period", group="punct")
 def period(system: System):

@@ -1,8 +1,11 @@
 """Uppercase N — stems + diagonal."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("N", group="uc.straight")
 def N(system: System):

@@ -1,8 +1,11 @@
 """Lowercase p — descender stem + nestled bowl."""
 from __future__ import annotations
+
 from elements import nest_bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("p", group="lc.bowl")
 def p(system: System):

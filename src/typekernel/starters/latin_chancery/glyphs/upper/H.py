@@ -1,8 +1,11 @@
 """Control glyph H — two slanted stems + bar."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("H", group="control")
 def H(system: System):

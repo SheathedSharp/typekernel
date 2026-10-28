@@ -1,8 +1,11 @@
 """Lowercase g — bowl + descender loop (open)."""
 from __future__ import annotations
+
 from elements import nest_bowl, open_bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("g", group="lc.round")
 def g(system: System):

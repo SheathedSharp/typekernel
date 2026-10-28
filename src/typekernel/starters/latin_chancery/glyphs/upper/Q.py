@@ -1,8 +1,11 @@
 """Uppercase Q — O + tail."""
 from __future__ import annotations
+
 from elements import bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Q", group="uc.round")
 def Q(system: System):

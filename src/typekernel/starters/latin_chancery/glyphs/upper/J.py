@@ -1,8 +1,11 @@
 """Uppercase J — stem into fixed open-arc hook (VF-stable polyline)."""
 from __future__ import annotations
+
 from elements import open_arc_points, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("J", group="uc.straight")
 def J(system: System):

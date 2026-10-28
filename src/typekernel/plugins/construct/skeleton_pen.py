@@ -6,6 +6,7 @@ No letter names — projects supply centerlines; this module only expands pens.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 
 from typekernel.draw.drawing import ContourRole, Drawing
@@ -25,11 +26,11 @@ from typekernel.geo.stroke import (
 
 __all__ = [
     "broad_nib",
-    "pointed_pen",
-    "ellipse_point_count",
     "densify_polyline",
+    "ellipse_point_count",
     "expand_skeleton",
     "expand_skeleton_cubic",
+    "pointed_pen",
 ]
 
 
@@ -78,7 +79,7 @@ def ellipse_point_count(
     ratio = min(1.0, float(chord_budget) / r)
     # acos domain: 1 - ratio in [-1,1]; when budget >= r, one half is enough.
     n_f = math.pi / max(math.acos(1.0 - ratio), 1e-6)
-    n = int(math.ceil(n_f))
+    n = math.ceil(n_f)
     return max(minimum, min(maximum, n))
 
 
@@ -109,7 +110,13 @@ def densify_polyline(
             return pts[i % n]
         return pts[max(0, min(n - 1, i))]
 
-    def _cr(p0, p1, p2, p3, t: float) -> tuple[float, float]:
+    def _cr(
+        p0: tuple[float, float],
+        p1: tuple[float, float],
+        p2: tuple[float, float],
+        p3: tuple[float, float],
+        t: float,
+    ) -> tuple[float, float]:
         t2 = t * t
         t3 = t2 * t
         return (
@@ -139,7 +146,7 @@ def densify_polyline(
         length = _dist(a, b)
         if length <= chord_budget:
             continue
-        steps = max(1, int(math.ceil(length / chord_budget)))
+        steps = max(1, math.ceil(length / chord_budget))
         p0, p1, p2, p3 = _at(i - 1), a, b, _at(i + 2)
         for s in range(1, steps):
             out.append(_cr(p0, p1, p2, p3, s / steps))
@@ -154,7 +161,7 @@ _DEGEN_LEN = 1e-9
 
 def _seg_len(seg: LineSegment | CubicSegment) -> float:
     a, b = seg.points[0], seg.points[-1]
-    return ((b.x - a.x) ** 2 + (b.y - a.y) ** 2) ** 0.5
+    return math.hypot(b.x - a.x, b.y - a.y)
 
 
 def _drop_degenerate_segments(contour: Contour) -> Contour:

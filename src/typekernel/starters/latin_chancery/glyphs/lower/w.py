@@ -1,8 +1,11 @@
 """Lowercase w — double v."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("w", group="lc.diag")
 def w(system: System):

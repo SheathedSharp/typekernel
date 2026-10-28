@@ -10,7 +10,7 @@ import math
 
 from fontTools.misc.bezierTools import cubicPointAtT
 
-from typekernel.draw import Drawing, Fragment, hook, tensioned_arc
+from typekernel.draw import Drawing, Fragment, Writer, hook, tensioned_arc
 from typekernel.geo.point import Point
 from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.geo.stroke import Centerline
@@ -103,10 +103,13 @@ def pen_dot(
     *,
     radius: float | None = None,
 ) -> Drawing:
-    """Tittle / period-style filled dot (closed oval), center in pre-slant space.
+    """Tittle / period-style **filled** dot, center in pre-slant space.
 
     Radius tracks stem weight so Light→Bold outer contours gain weight
     (fixed ``dot_radius`` tokens alone make interpolatable underweight).
+
+    Built as one solid contour: stroking a closed circle here would produce an
+    annulus (ink + counter), i.e. a hollow ring for a period/tittle.
     """
     thin = float(system.stem.get("lc_h", system.stem["lc"]))
     if radius is None:
@@ -116,15 +119,22 @@ def pen_dot(
         r = thin * mul
     else:
         r = float(radius)
-    n = 24
+    # Match the old stroked ring's outer radius (centerline r + half pen).
+    outer = r + thin * 0.5
+    n = 48
     pts = [
-        (
-            cx + r * math.cos(2.0 * math.pi * i / n),
-            cy + r * math.sin(2.0 * math.pi * i / n),
+        system.map_xy(
+            cx + outer * math.cos(2.0 * math.pi * i / n),
+            cy + outer * math.sin(2.0 * math.pi * i / n),
         )
         for i in range(n)
     ]
-    return stroke(system, pts, closed=True, thickness=thin)
+    writer = Writer()
+    writer.start(pts[0])
+    for p in pts[1:]:
+        writer.line(p)
+    writer.close()
+    return writer.build()
 
 
 def flourish_exit(

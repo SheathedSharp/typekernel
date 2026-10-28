@@ -1,8 +1,11 @@
 """Lowercase r — stem + short shoulder."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("r", group="lc.straight")
 def r(system: System):

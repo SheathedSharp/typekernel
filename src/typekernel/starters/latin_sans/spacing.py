@@ -219,30 +219,33 @@ def _translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
 
 
 def _pack_glyph(glyph: Glyph, lsb: float, rsb: float, system: System | None = None) -> Glyph:
-    """Shift ink so sidebearing target matches; advance = lsb + ink + rsb.
+    """Shift ink so sidebearing target matches; advance = lsb + bbox + rsb.
 
-    Upright (``system is None`` or ``not system.is_italic``): bbox xmin → lsb.
-    Italic: silhouette left/right at mid x-height → lsb/rsb so kern/spacing
-    follow the lean instead of the sheared bounding box.
+    The advance always comes from the full ink bbox, so a slanted top arm or
+    diagonal cannot overhang its own advance. For italic **x-height** glyphs,
+    the shift is chosen from the mid-x-height silhouette instead of the bbox:
+    the old bbox shift put the lean's bottom/top extreme at ``lsb`` and made
+    x-height spacing depend on the shear. Caps and ascender/descender glyphs
+    keep the bbox shift, because their silhouette at x-height is only a stem
+    (a ``T`` would otherwise measure as thick as its stem and collide).
     """
     if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
         return replace(glyph, advance=max(glyph.advance, lsb + rsb))
 
-    if system is not None and system.is_italic:
-        from typekernel.optics.space import silhouette_edge
-
-        y = float(system.zones.x) * 0.5
-        left = silhouette_edge([glyph.outline], y, "left")
-        right = silhouette_edge([glyph.outline], y, "right")
-        if left is not None and right is not None:
-            ink = float(right - left)
-            dx = lsb - float(left)
-            shifted = _translate_outline(glyph.outline, dx)
-            return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
-
-    min_x, _miny, max_x, _maxy = bounds(glyph.outline)
+    min_x, min_y, max_x, max_y = bounds(glyph.outline)
     ink = float(max_x - min_x)
     dx = lsb - float(min_x)
+
+    if system is not None and system.is_italic:
+        xh = float(system.zones.x)
+        ov = float(system.overshoot.round)
+        if min_y >= -ov and max_y <= xh + ov:
+            from typekernel.optics.space import silhouette_edge
+
+            left = silhouette_edge([glyph.outline], xh * 0.5, "left")
+            if left is not None:
+                dx = lsb - float(left)
+
     shifted = _translate_outline(glyph.outline, dx)
     return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
 

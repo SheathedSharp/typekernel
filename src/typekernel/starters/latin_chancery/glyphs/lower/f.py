@@ -1,8 +1,11 @@
 """Lowercase f — tall stem + crossbar + entry flourish."""
 from __future__ import annotations
+
 from elements import flourish_entry, stroke, stroke_fragment
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("f", group="lc.straight")
 def f(system: System):

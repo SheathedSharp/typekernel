@@ -1,8 +1,11 @@
 """Control glyph o — slanted oval bowl."""
 from __future__ import annotations
+
 from elements import bowl
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("o", group="control")
 def o(system: System):

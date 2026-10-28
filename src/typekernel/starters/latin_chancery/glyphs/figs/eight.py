@@ -1,8 +1,11 @@
 """Figure 8 — two stacked bowls."""
 from __future__ import annotations
+
 from elements import bowl
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("eight", group="figs")
 def eight(system: System):

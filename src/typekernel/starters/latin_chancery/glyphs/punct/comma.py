@@ -1,8 +1,11 @@
 """comma — period + short flourish tail."""
 from __future__ import annotations
+
 from elements import flourish_exit, pen_dot, stroke_fragment
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("comma", group="punct")
 def comma(system: System):

@@ -1,8 +1,11 @@
 """Lowercase z — zigzag."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("z", group="lc.diag")
 def z(system: System):

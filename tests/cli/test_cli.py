@@ -156,3 +156,47 @@ def test_tk_pen_writes_png(tmp_path: Path) -> None:
     assert main(["pen", "--contrast", "0.26", "--angle", "30", "--out", str(out)]) == 0
     assert out.is_file()
     assert out.stat().st_size > 1000
+
+
+def test_find_variable_binary_accepts_otf(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``tk build --variable`` defaults to OTF; ladder must not miss it."""
+    import fontTools.ttLib
+
+    from typekernel.cli.proof_cmd import _find_variable_binary
+
+    (tmp_path / "Demo-Regular.otf").write_bytes(b"static")
+    vf = tmp_path / "Demo-VF.otf"
+    vf.write_bytes(b"variable")
+
+    class _FakeFont:
+        def __init__(self, path: str) -> None:
+            self._has_fvar = str(path).endswith("Demo-VF.otf")
+
+        def __contains__(self, key: object) -> bool:
+            return key == "fvar" and self._has_fvar
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(fontTools.ttLib, "TTFont", _FakeFont)
+    assert _find_variable_binary(tmp_path) == vf
+
+
+def test_find_variable_binary_ignores_static_otf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import fontTools.ttLib
+
+    from typekernel.cli.proof_cmd import _find_variable_binary
+
+    (tmp_path / "Demo-Regular.otf").write_bytes(b"static")
+
+    class _StaticFont:
+        def __contains__(self, key: object) -> bool:
+            return False
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(fontTools.ttLib, "TTFont", lambda path: _StaticFont())
+    assert _find_variable_binary(tmp_path) is None

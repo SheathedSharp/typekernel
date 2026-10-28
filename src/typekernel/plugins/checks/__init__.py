@@ -17,17 +17,17 @@ from typekernel.plugins.checks import compat, direction, overlap, stem, zone
 from typekernel.plugins.checks.protocol import CheckContext, CheckFn, Finding, raw_drawing
 
 __all__ = [
+    "DEFAULT_CHECKS",
     "CheckContext",
     "CheckFn",
     "Finding",
-    "raw_drawing",
+    "builtin_checks",
     "compat",
     "direction",
     "overlap",
+    "raw_drawing",
     "stem",
     "zone",
-    "DEFAULT_CHECKS",
-    "builtin_checks",
 ]
 
 
@@ -38,9 +38,9 @@ def builtin_checks(
     check_direction: bool = True,
     check_compat: bool = True,
     check_overlap: bool = False,
-) -> tuple:
+) -> tuple[CheckFn, ...]:
     """Return the default check callables for ``tk audit`` flags."""
-    out = []
+    out: list[CheckFn] = []
     if check_direction:
         out.append(direction.check)
     if check_stem:

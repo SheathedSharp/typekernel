@@ -1,8 +1,11 @@
 """Uppercase L — stem + baseline bar."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("L", group="uc.straight")
 def L(system: System):

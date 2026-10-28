@@ -1,8 +1,11 @@
 """Uppercase D — stem + nest bowl."""
 from __future__ import annotations
+
 from elements import nest_bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("D", group="uc.round")
 def D(system: System):

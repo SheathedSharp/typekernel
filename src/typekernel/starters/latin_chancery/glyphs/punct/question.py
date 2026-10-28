@@ -1,8 +1,11 @@
 """question — open hook + pen_dot."""
 from __future__ import annotations
+
 from elements import open_bowl, pen_dot, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("question", group="punct")
 def question(system: System):

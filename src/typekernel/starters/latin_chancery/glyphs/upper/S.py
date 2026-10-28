@@ -1,8 +1,11 @@
 """Uppercase S — stacked open bowls."""
 from __future__ import annotations
+
 from elements import open_bowl
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("S", group="uc.round")
 def S(system: System):

@@ -274,7 +274,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_pen.add_argument("--contrast", type=float, default=0.55, help="ellipse axis ratio")
     p_pen.add_argument("--angle", type=float, default=30.0, help="pen rotation degrees")
-    p_pen.add_argument("--thickness", type=float, default=100.0, help="vertical stroke width")
+    p_pen.add_argument(
+        "--thickness",
+        type=float,
+        default=100.0,
+        help="full width along the pen's major axis (angle=0: vertical stroke width)",
+    )
     p_pen.add_argument(
         "--out",
         default="pen_preview.png",

@@ -1,8 +1,11 @@
 """backslash — opposite diagonal (skeleton+pen)."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("backslash", group="punct")
 def backslash(system: System):

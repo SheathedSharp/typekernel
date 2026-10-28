@@ -120,7 +120,7 @@ def diagonal_stroke(
         y = min(ys) + 0.62 * (max(ys) - min(ys))
     try:
         spans = list_vertical_stems(probe.outline(), y=y)
-    except Exception:  # noqa: BLE001 - probe is best-effort
+    except Exception:  # noqa: BLE001 - best-effort optical probe
         spans = []
     near = [
         s

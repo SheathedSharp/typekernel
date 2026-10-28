@@ -6,7 +6,6 @@ from pathlib import Path
 
 from typekernel.cli.audit import audit_project, load_intent
 from typekernel.cli.new import create_project
-from typekernel.system import Intent
 
 
 def test_humanist_starter_intent_loads_and_matches(tmp_path: Path) -> None:
@@ -40,3 +39,12 @@ def test_empty_scaffold_has_brief_stub(tmp_path: Path) -> None:
     root = create_project("empty_brief", parent=tmp_path, starter="empty")
     assert (root / "brief.md").is_file()
     assert load_intent(root) is None  # Intent commented out in empty scaffold
+
+
+def test_chancery_starter_ships_brief_and_intent(tmp_path: Path) -> None:
+    root = create_project("chancery_intent", parent=tmp_path, starter="latin-chancery")
+    assert (root / "brief.md").is_file()
+    intent = load_intent(root)
+    assert intent is not None
+    assert intent.contrast == "high"
+    assert intent.slant == "italic"

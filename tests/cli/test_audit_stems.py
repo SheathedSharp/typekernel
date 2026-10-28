@@ -37,8 +37,6 @@ def test_measure_oriented_stem_on_diagonal_band() -> None:
     # Band from (0,0)-(200,200) with perp half-width 50.
     import math
 
-    from typekernel.geo.outline import Outline
-
     ux = uy = math.sqrt(0.5)
     nx, ny = -uy, ux
     half = 50.0
@@ -72,3 +70,19 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
     noisy = audit_project(root, check_overlap=True)
     assert quiet.warnings == []
     assert any(f.kind == "overlap" for f in noisy.warnings)
+
+
+def test_auto_diagonal_is_info_declared_diagonal_is_warn(tmp_path: Path) -> None:
+    root = create_project("diagkinds", parent=tmp_path, starter="latin-humanist-italic")
+    auto = audit_project(root, glyphs=["w"])
+    auto_w = [f for f in auto.findings if f.kind == "stem" and f.glyph == "w"]
+    assert auto_w and all(f.level == "info" for f in auto_w)
+
+    sys_py = root / "system.py"
+    sys_py.write_text(
+        sys_py.read_text(encoding="utf-8") + '\n\nAUDIT_STEMS = {"w": ("diagonal",)}\n',
+        encoding="utf-8",
+    )
+    declared = audit_project(root, glyphs=["w"])
+    declared_w = [f for f in declared.findings if f.kind == "stem" and f.glyph == "w"]
+    assert any(f.level == "warn" for f in declared_w)

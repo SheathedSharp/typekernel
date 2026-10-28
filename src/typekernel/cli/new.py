@@ -109,7 +109,7 @@ def create_project(
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
     ``latin-sans``, ``latin-humanist-italic``, or ``latin-chancery`` to copy the matching starter
-    (system, elements, control glyphs).
+    (system, elements, glyph set).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
         raise ValueError(f"invalid project name: {name!r}")

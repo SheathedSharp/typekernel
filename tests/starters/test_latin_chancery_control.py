@@ -24,6 +24,7 @@ def test_starter_tree_has_control_and_helpers() -> None:
     assert (STARTER / "elements.py").is_file()
     assert (STARTER / "font.py").is_file()
     assert (STARTER / "spacing.py").is_file()
+    assert (STARTER / "brief.md").is_file()
     elements = (STARTER / "elements.py").read_text(encoding="utf-8")
     assert "pen_dot" in elements
     assert "flourish_exit" in elements
@@ -54,6 +55,18 @@ def test_discover_evaluate_control_set() -> None:
         drawing = project.evaluate(name)
         assert len(drawing.contours) >= 1
         assert drawing.roles[0] == "ink"
+
+
+def test_pen_dot_is_solid_not_a_ring() -> None:
+    """A stroked closed circle would be ink+counter; a period must be one ink."""
+    project = load_project(STARTER)
+    project.discover()
+    period = project.evaluate("period")
+    assert len(period.contours) == 1
+    assert period.roles == ("ink",)
+
+    tittle = project.evaluate("i")
+    assert "counter" not in tittle.roles
 
 
 def test_tk_new_chancery_builds_otf(tmp_path: Path) -> None:

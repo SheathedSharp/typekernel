@@ -1,8 +1,11 @@
 """parenright — open arc."""
 from __future__ import annotations
+
 from elements import open_arc_points, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("parenright", group="punct")
 def parenright(system: System):

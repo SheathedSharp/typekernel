@@ -8,8 +8,8 @@ from typekernel.system import Overshoot, System, Zones
 
 
 def test_sans_and_humanist_declare_space_tokens() -> None:
-    from typekernel.starters.latin_sans.system import system as sans
     from typekernel.starters.latin_humanist_italic.system import system as hum
+    from typekernel.starters.latin_sans.system import system as sans
 
     for s in (sans, hum):
         assert "space_stem_mul" in s.tokens

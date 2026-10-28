@@ -190,4 +190,3 @@ def test_expand_chord_budget_auto_stable_across_thickness() -> None:
         drawing = expand_skeleton(cl, pen, join="bevel", chord_budget="auto")
         sigs.append(drawing.signature())
     assert sigs[0] == sigs[1] == sigs[2]
-

@@ -1,8 +1,11 @@
 """Uppercase M — four stems / diagonals."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("M", group="uc.straight")
 def M(system: System):

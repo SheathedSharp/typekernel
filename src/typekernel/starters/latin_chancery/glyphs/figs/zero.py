@@ -1,8 +1,11 @@
 """Figure 0 — elliptical bowl."""
 from __future__ import annotations
+
 from elements import bowl
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("zero", group="figs")
 def zero(system: System):

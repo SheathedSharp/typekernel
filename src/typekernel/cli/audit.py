@@ -15,14 +15,22 @@ import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 from typekernel.cli.load import load_project
 from typekernel.plugins.checks import builtin_checks
-from typekernel.plugins.checks.protocol import CheckContext, Finding, raw_drawing
-from typekernel.project import Project
+from typekernel.plugins.checks.protocol import CheckContext, CheckFn, Finding, raw_drawing
+from typekernel.system.intent import Intent
 
-__all__ = ["AuditReport", "Finding", "audit_project", "format_report", "load_audit_stems", "load_intent"]
+__all__ = [
+    "AuditReport",
+    "Finding",
+    "audit_project",
+    "format_report",
+    "load_audit_stems",
+    "load_intent",
+]
 
 # Glyphs that rarely carry upright stems; optical vertical probes on these are
 # usually measuring diagonals or bowls. Projects may override via AUDIT_STEMS.
@@ -46,12 +54,11 @@ _DEFAULT_NON_VERTICAL = frozenset(
         "O",
         "a",
         "A",
-        "k",
-        "K",
         "Q",
-        "R",
         "G",
         "C",
+        "zero",
+        "seven",
     }
 )
 
@@ -88,7 +95,7 @@ class AuditReport:
         return [f for f in self.findings if f.level == "warn"]
 
 
-def _load_system_module(root: Path):
+def _load_system_module(root: Path) -> ModuleType | None:
     system_py = root / "system.py"
     if not system_py.is_file():
         return None
@@ -102,7 +109,7 @@ def _load_system_module(root: Path):
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except Exception:
+    except Exception:  # noqa: BLE001 - optional metadata must not break audit
         return None
     return module
 
@@ -134,7 +141,7 @@ def load_audit_stems(root: Path) -> Mapping[str, Sequence[str]]:
     return out
 
 
-def load_extra_checks(root: Path) -> tuple:
+def load_extra_checks(root: Path) -> tuple[CheckFn, ...]:
     """Load optional ``EXTRA_CHECKS`` callables from ``system.py``."""
     module = _load_system_module(root)
     if module is None:
@@ -147,7 +154,7 @@ def load_extra_checks(root: Path) -> tuple:
     return tuple(raw)
 
 
-def load_intent(root: Path):
+def load_intent(root: Path) -> Intent | None:
     """Load optional ``BRIEF`` / ``INTENT`` from the project's ``system.py``.
 
     Returns an :class:`~typekernel.system.intent.Intent` or ``None``. Accepts
@@ -274,6 +281,7 @@ def audit_project(
             system=project.system,
             project=project,
             stem_kinds=resolved,
+            declared_stems=stem_kinds,
             findings=report.findings,
         )
         for fn in checks:
@@ -284,8 +292,10 @@ def audit_project(
 
 def format_report(report: AuditReport) -> str:
     lines = [
-        f"tk audit: {report.glyphs} glyphs, "
-        f"{len(report.errors)} errors, {len(report.warnings)} warnings"
+        (
+            f"tk audit: {report.glyphs} glyphs, "
+            f"{len(report.errors)} errors, {len(report.warnings)} warnings"
+        )
     ]
     for f in report.findings:
         lines.append(f"  [{f.level}] {f.kind} {f.glyph}: {f.message}")

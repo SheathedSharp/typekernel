@@ -7,7 +7,7 @@ Construction is skeleton + pen — no heal/blend/seal.
 from __future__ import annotations
 
 from typekernel.project import Master
-from typekernel.system import Overshoot, System, Zones
+from typekernel.system import Brief, Intent, Overshoot, System, Zones
 
 system = System(
     upm=1000,
@@ -65,10 +65,27 @@ system = System(
         "dot_radius": 28.0,
         "space_stem_mul": 2.5,
         "space_lsb_mul": 0.5,
-        # Multi-band italic packing (fraction of x-height for silhouette samples).
-        "italic_pack_ys": (0.28, 0.5, 0.72),
     },
 )
+
+
+# Typed intent (checked by ``tk audit``). Prose twin: brief.md.
+# Mapping tables: typekernel.system.intent — not an aesthetics score.
+BRIEF = Brief(
+    prose=(
+        "Chancery italic: broad nib at ~38°, high calligraphic contrast, normal "
+        "counters, Regular weight, 0.22 lean. Construction is skeleton + pen; "
+        "no heal/blend/seal."
+    ),
+    intent=Intent(
+        contrast="high",
+        slant="italic",
+        openness="normal",
+        weight="regular",
+        pen_angle_deg=38.0,
+    ),
+)
+INTENT = BRIEF.intent  # alias for agents / EXTRA tooling
 
 
 def _weight_system(base: System, stem_scale: float) -> System:
