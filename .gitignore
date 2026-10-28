@@ -80,11 +80,8 @@ artifacts/
 # Starter build dumps (tk build output inside a starter; regenerate locally)
 src/typekernel/starters/*/build/
 
-# Example build outputs: every example's out/ is ignored by default;
-# un-ignore only the showcase proofs worth showing in a README.
+# Example build outputs: every example's out/ is local build output only.
+# Run the example's own script to regenerate it; nothing under it is tracked.
 examples/*/out/**
-!examples/zayju_letter/out/.gitkeep
-!examples/zayju_letter/out/n_designed.png
-!examples/zayju_letter/out/n_overshoot_pair.png
 
 uploads/
