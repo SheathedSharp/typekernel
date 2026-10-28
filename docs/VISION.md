@@ -10,7 +10,7 @@
 
 typekernel 补的是那一层：**可编程的光学与结构内核**，不是又一个编辑器，也不是又一个 fontmake 包装器。
 
-**Coding agent 目标**：让 agent 像人类字体设计师一样，用项目代码写出整族（字重、符号、spacing、特性、proof）。**现行唯一用法**（ARCHITECTURE.md §4）：
+**Coding agent 目标**：让 agent 像人类字体设计师一样，用项目代码写出整族（字重、符号、spacing、特性、proof）。**现行唯一用法**（ARCHITECTURE.md 标准工作流）：
 
 ```
 tk new → brief.md → system.py → 控制字 → tk proof
@@ -18,7 +18,7 @@ tk new → brief.md → system.py → 控制字 → tk proof
       → spacing.py → 母版 → tk build
 ```
 
-见 [AGENT_GOAL.md](AGENT_GOAL.md) 与 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。不要再走已删除的 `typekernel.parts` / `DesignContext` / yoke 路径。
+见 [`.agents/skills/typekernel-font-design/`](../.agents/skills/typekernel-font-design/SKILL.md)。不要再走已删除的 `typekernel.parts` / `DesignContext` / yoke 路径。
 
 ## 分层（目标架构）
 
@@ -39,10 +39,10 @@ tk new → brief.md → system.py → 控制字 → tk proof
 
 ## 完整计划
 
-详细调研、缺口分析与路线图见 [ARCHITECTURE.md](ARCHITECTURE.md) M0–M6 与历史 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。本仓以 ARCHITECTURE 为现行交接规格。
+详细调研、缺口分析、分层落地顺序与交接规格见 [ARCHITECTURE.md](ARCHITECTURE.md)。本仓以该文为准。
 
 ## 状态
 
-**geo / draw / system / project / plugins / cli / starters/latin_sans** 已按 ARCHITECTURE.md §9 落地（M0–M5）。字母几何在 starter 项目里；内核无 letter builders。`typekernel.parts` / `DesignContext` / FormSources / yoke 已删除。
+**geo / draw / system / project / plugins / cli / starters/latin_sans** 已按 ARCHITECTURE.md 交接规格落地。字母几何在 starter 项目里；内核无 letter builders。`typekernel.parts` / `DesignContext` / FormSources / yoke 已删除。
 
-**Italic / 第二套 starter（skeleton+pen）** 已在 M6 以 `latin-humanist-italic` 落地；不要用机械 oblique 冒充 Italic。见 [ARCHITECTURE.md](ARCHITECTURE.md) M6 与 [dev-standards.md](dev-standards.md)。
+**Italic / 第二套 starter（skeleton+pen）** 已以 `latin-humanist-italic` 落地；不要用机械 oblique 冒充 Italic。见 [ARCHITECTURE.md](ARCHITECTURE.md) 第 6 节与 [dev-standards.md](dev-standards.md)。

@@ -7,7 +7,7 @@ Builds a throwaway project from the in-repo starter and compiles an OTF.
 python examples/latin_sans_quickstart/build.py
 ```
 
-Or by hand (ARCHITECTURE.md §4):
+Or by hand (ARCHITECTURE.md 标准工作流):
 
 ```bash
 tk new myface --starter latin-sans

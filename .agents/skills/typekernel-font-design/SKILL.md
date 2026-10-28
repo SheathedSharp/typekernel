@@ -1,17 +1,17 @@
 ---
 name: typekernel-font-design
 description: >-
-  Design fonts with typekernel via Project / System / draw / plugins (ARCHITECTURE.md §4).
+  Design fonts with typekernel via Project / System / draw / plugins (ARCHITECTURE.md「标准工作流」).
   Use when scaffolding with tk new, editing starters/latin_sans, writing glyphs with @glyph,
   running tk proof / tk audit / tk build, or when the user mentions typekernel font-as-code.
 ---
 
 # typekernel font design (coding agent)
 
-**This is the active workflow** ([docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) §4).
+**This is the active workflow** ([docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) 标准工作流).
 
 Letter geometry lives in the **project** (starter). The kernel has no letter builders.
-Do **not** import `typekernel.parts` or `DesignContext` — they were removed in M4.
+Do **not** import `typekernel.parts` or `DesignContext` — they were removed.
 
 ## Product goal
 
@@ -24,9 +24,7 @@ Write a font project that:
 5. spaces via `spacing.py` (metrics keys + kern),
 6. audits, proofs, and compiles (`tk audit` / `tk proof` / `tk build`).
 
-Canonical product copy: [docs/AGENT_GOAL.md](../../../docs/AGENT_GOAL.md).
-
-## §4 workflow (follow in order)
+## 标准工作流（按顺序执行）
 
 ```
 tk new myfont --starter latin-sans
@@ -50,7 +48,7 @@ Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/
 - Prefer **overlap construction** (stem + trough) over boolean unions for interpolatable masters.
 - Name nodes (`stem.l`, `arch.…`) so `tk audit` can measure them.
 - Advances / LSB / RSB: declare metrics keys in `spacing.py`; do not rely on bbox-only advances.
-- Conventional commits; local review against ARCHITECTURE.md §9 / §9.11 after each commit.
+- Conventional commits; local review against ARCHITECTURE.md 交接规格 / 硬约束 after each commit.
 
 ## Companion docs
 

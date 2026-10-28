@@ -3,7 +3,7 @@
 > 第一性原理：**人类字体设计师怎么做，coding agent 用 typekernel 时就怎么做。**
 > 库只提供“设计师的工具”，不提供“一副已经设计好的字”。
 
-本文是方向文件。它规定什么该进内核、什么该做成插件、什么属于用户的字体项目，以及从当前代码迁过去的顺序。和本文冲突的旧文档（`AGENT_GOAL.md`、skill 里的 yoke 教学、`.agents/01-architecture.md`）以本文为准，迁移期内逐步改写。
+本文是方向文件。它规定什么该进内核、什么该做成插件、什么属于用户的字体项目，以及从当前代码迁过去的顺序。和本文冲突的旧文档（skill 里的 yoke 教学、`.agents/01-architecture.md`）以本文为准，迁移期内逐步改写。
 
 ---
 
@@ -308,80 +308,80 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 | `parts.control` / `caps` / `diagonals` / `figures` / `punctuation` 的几何 | **不再是库 API**。作为素材，把干净的几何改写进 starter `latin-sans` 的 `elements.py` 和字形文件 |
 | `parts.context.DesignContext` / `style.Style` / `glyph_specs` / `family.FormSources` / `skeleton_recipes` / `*_yoke` | 冻结 → 迁移后删除 |
 | 引用 `build_n` / `*_from_*` / `*_yoke` / 预设的 80 个测试文件 | 随旧 API 一起移走；有价值的几何契约改写成合成形状测试 |
-| `examples/*` | 依赖旧 `parts` 的示例在 M4 出口时删除；新示例全部是 `tk new` 生成的项目 |
+| `examples/*` | 依赖旧 `parts` 的示例随旧 API 一起删除；新示例全部是 `tk new` 生成的项目 |
 
-**已定决策：旧字母代码不保留冻结副本。** M4 出口时直接删除（git 历史即存档）。M1–M4 期间旧代码只读，可以作为几何参考，不得被新包 import。
+**已定决策：旧字母代码不保留冻结副本。** 替换完成后直接删除（git 历史即存档）。迁移期间旧代码只读，可以作为几何参考，不得被新包 import。
 
 ---
 
-## 6. 实现路径
+## 6. 分层落地顺序与验收
 
-每个阶段都有明确出口，没过出口不进下一阶段。旧代码在 M4 之前不删除，只冻结。
+按依赖顺序逐层落地，每层有自己的验收标准，未达标不进入下一层。旧 `parts` 代码在替换完成前保持只读。
 
-### M0 冻结与立规（1–2 天）
+### 6.1 先立规：冻结旧路径
 
-- 合入本文；`AGENT_GOAL.md`、skill、README 指向本文。
+- 合入本文；skill、README 指向本文。
 - 宣布冻结：`parts` 不再新增字母 builder、yoke 参数、风格分支。
 - CI 加架构守卫（先对新包生效）：新内核包里禁止字母命名函数、禁止风格枚举分支、禁止跨插件 / 私有导入。
 
-**出口**：守卫在 CI 里能跑；团队（和 agent）不再往 `parts` 加东西。
+**验收**：守卫在 CI 里能跑；不再往 `parts` 加东西。
 
-### M1 内核：Fragment + Writer + Drawing（1–2 周）
+### 6.2 内核绘制层：Fragment + Writer + Drawing
 
 - `typekernel.draw`：`Fragment`、`Writer`（`start/line/curve/fragment/node/corner/end/close`）、`Drawing`（多轮廓 + 命名节点 + 槽位清单）。
 - 连续性检查：声明平滑的连接必须 G1，误差超限直接报错。
 - 内核几何构造器：`tensioned_arc`、`superellipse_quarter`、`spring`、`diagonal_band`、`hook`（从现有 `geo.curves` / `control._shoulder` 中抽出，去掉字母语义）。
 - 全部用合成形状测试。
 
-**出口**：用不到 40 行项目代码，画出一个单轮廓 `n`（标签齐全、G1 连续），**不调用任何 `parts` 函数**。
+**验收**：用不到 40 行项目代码，画出一个单轮廓（标签齐全、G1 连续），**不调用任何 `parts` 函数**。
 
-### M2 System + Project + CLI 骨架（1 周）
+### 6.3 System + Project + CLI 骨架
 
 - `typekernel.system.System`（纯数据）、`typekernel.project.Project`（发现 `glyphs/`、母版、插件配置）。
 - `@glyph` 注册、母版求值、`Drawing → font.Glyph → compile` 打通。
 - CLI：`tk new`（空模板）、`tk proof <set>`、`tk build`。
 - `compile` / `font` / `axes` 去掉对 `DesignContext` 的硬依赖。
 
-**出口**：一个只有 `n o H O` 的项目可以 `tk build` 出 OTF，`tk proof control` 出 PNG。
+**验收**：一个只有 `n o H O` 的项目可以 `tk build` 出 OTF，`tk proof control` 出 PNG。
 
-### M3 槽位插件（1–2 周）
+### 6.4 槽位插件
 
 - `plugins.corners`：`plain`、`rounded`、`slab`、`bracketed`、`wedge`、`ink_trap`。
 - `plugins.ends`：`flat`、`angled`、`ball`、`flare`。
 - `plugins.passes`：`overshoot`、`diagonal_comp`、`crotch_thin`。
 - 每个插件 = 一个函数 + 一组契约测试（合成角点 / 端点 × 多 stem 宽 × 多角度）。
 
-**出口（解耦试金石）**：同一份 `n h m H I` 字形文件，只改 `font.py` 的插件配置，就能产出无衬线 / slab / bracketed 三个版本，**字形文件 0 行改动**，样张肉眼合格。
+**验收（解耦试金石）**：同一份 `n h m H I` 字形文件，只改 `font.py` 的插件配置，就能产出无衬线 / slab / bracketed 三个版本，**字形文件 0 行改动**，样张肉眼合格。
 
-### M4 Starter `latin-sans`：用新方式重做一副字（3–4 周，最关键）
+### 6.5 Starter `latin-sans`：用新方式重做一副字
 
 - 按设计师顺序：控制字 `n o H O` → 字组 → 全 ASCII。几何从旧 `parts` 里借，但写成**项目代码**：`elements.py`（arch、bowl、spring、hook…）+ 每字一个文件。
 - 每个字组完成后跑 `tk proof <group>`，交视觉审阅；不合格就改片段，**禁止加修缝 pass**。
 - `tk audit`：stem、对齐区、兼容、方向审计落地。
 - 两个母版（Light / Bold）+ VF，验证 `overlap` 构造下的兼容性。
 
-**出口**：
-- 样张水平不低于现在 `skill_validate` 的产出；
+**验收**：
+- 样张水平不低于现有 `skill_validate` 的产出；
 - 任意一个字形文件可以独立修改而不影响其他字（除非显式共享元素）；
 - 全项目不 import `typekernel.parts`。
 
 达到后：删除旧 `parts` 字母代码、`DesignContext` / `Style` / `glyph_specs` / `FormSources`，以及依赖它们的测试和示例（不保留冻结副本）。
 
-### M5 设计师式验收 + skill 重写（1–2 周）
+### 6.6 设计师式验收与 skill 重写
 
 - 内置样张串、母版叠图、改动前后 diff、多字号瀑布。
 - 重写 `.agents/skills/typekernel-font-design/`：教第 4 节的工作流，教如何读样张和审计报告，教“改片段而不是加补丁”。
 - 用一个**全新 agent 会话**做试字：只给 brief 和 skill，看它能不能做出一副风格不同的字（例如窄体 slab）。
 
-**出口（降级，诚实，2026-10-27）**：skill 已按 §4 重写；`tk proof` / `tk audit` / `tk diff` 与 starter 试字工作流可跑。**未达成**原文「对实现零上下文的全新会话冷启动」——已记入 `docs/AGENT_TRIALS.md` 的均为同会话 assisted smoke，或父会话曾参与 M4/M5 的 executor 半冷启动（均有诚实声明）。真正独立冷启动仍按 `AGENT_TRIALS` 终验清单另开**未参与本库实现**的会话重做；在补上之前，M5 不宣称「冷启动出口已关」。
+**验收**：skill 已按标准工作流重写；`tk proof` / `tk audit` / `tk diff` 与 starter 试字工作流可跑。独立冷启动验收仍待另开**未参与本库实现**的会话完成，在此之前不宣称该验收已关闭。
 
-### M6 扩展构造方式与第二个 starter（之后）
+### 6.7 扩展构造方式与第二个 starter
 
 - `skeleton + pen` 构造插件（复用 `geo.stroke`），做 `latin-humanist-italic` starter。
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**出口已达成（2026-10-27）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改——证明第二 starter 零改内核/插件即可承载不同构造。光学收口：共用 `bowl`/`open_bowl`/`nest_bowl`/`uc_stem`；小写碗组与 B/P/R/D 嵌碗；大写 A/E/F/K/M/N/R/V/W/X/Y（及 L/T/H）连续骨架接合；间距/kern 按对角与 LT 微调。Light/Bold/VF 绿；`tk audit` 0 errors / 0 warnings（2026-10-27 光学校准后）。**M6 关闭**。再往后（非本里程碑）：更多字重/斜度轴、非拉丁 starter——仅新 starter/新插件，内核不改。
+**现状**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改——证明第二 starter 零改内核/插件即可承载不同构造。光学收口：共用 `bowl`/`open_bowl`/`nest_bowl`/`uc_stem`；小写碗组与 B/P/R/D 嵌碗；大写 A/E/F/K/M/N/R/V/W/X/Y（及 L/T/H）连续骨架接合；间距/kern 按对角与 LT 微调。`tk audit` 0 errors / 0 warnings。再往后：更多字重/斜度轴、非拉丁 starter——仅新 starter/新插件，内核不改。
 
 ---
 
@@ -398,7 +398,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 
 衡量进展的指标：
 
-| 指标 | 现在 | M4 后目标 |
+| 指标 | 迁移前 | 目标 |
 | --- | --- | --- |
 | 内核里字母命名的公开函数（`*_from_*` / `build_*` / `*_yoke`） | 约 190 | 0 |
 | 风格分支（serif / italic / vf_compat） | 约 250 处 | 0（变成插件和独立字形文件） |
@@ -413,7 +413,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 不做 GUI 编辑器；agent 的“编辑器”就是字形文件 + 样张。
 - 不在内核里放“能自动生成全套字”的工厂（包括“方便起见”的 `build_all`）。
 - 不用数值门禁冒充美学判断；美学由视觉审阅决定。
-- 不为了兼容旧 API 长期维持双轨：M4 出口后旧路径直接删除。
+- 不为了兼容旧 API 长期维持双轨：替换完成后旧路径直接删除。
 
 ---
 
@@ -445,7 +445,7 @@ src/typekernel/
     __main__.py        # tk new / proof / audit / build / diff
   starters/
     latin_sans/              # tk new --starter latin-sans
-    latin_humanist_italic/   # tk new --starter latin-humanist-italic（M6 ASCII）
+    latin_humanist_italic/   # tk new --starter latin-humanist-italic
 ```
 
 `draw` / `system` / `project` / `cli` 是内核；`plugins` 是插件；`starters` 是模板数据，**不被任何内核模块 import**。
@@ -536,9 +536,9 @@ class Drawing:
     def translated(...); def mirrored_x(...)             # 同 Fragment
 ```
 
-两个母版的 `signature()` 相等，就说明它们**结构可插值**（M1 只做签名，插值检查在 M2 接 `axes.interpolatable`）。
+两个母版的 `signature()` 相等，就说明它们**结构可插值**（`signature()` 只做结构比较；插值检查由 `axes.interpolatable` 负责）。
 
-### 9.5 槽位与填充协议（`draw.slots`，M1 定义，M3 实现插件）
+### 9.5 槽位与填充协议（`draw.slots`）
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -594,7 +594,7 @@ def apply_slots(
 - 填充是**确定性**的：同一 `System` 结构下，不同母版填充出的段类型序列必须相同（插件契约测试覆盖）。
 - `trim_in > in_len` 或路径首尾不落在裁剪点上 → `SlotFillError`。
 
-### 9.5b 构造插件 `plugins.construct`（M6）
+### 9.5b 构造插件 `plugins.construct`
 
 字母无关。项目提供骨架，插件只负责笔模型展开为 `Drawing`：
 
@@ -612,7 +612,7 @@ def expand_skeleton_cubic(centerline, pen, *, join="round", cap="round", ...) ->
 - 无角点/端点槽的 skeleton 字形：`Project` 可不配置 `corners`/`ends`，从而跳过 `apply_slots`（笔迹接合不是 Writer G1 链）。
 - `blend_corners` / heal / seal **不是**本插件路径。
 
-### 9.6 几何构造器（`draw.construct`，M1）
+### 9.6 几何构造器（`draw.construct`）
 
 全部只接收几何量，不接收 `System`，不出现字母名：
 
@@ -641,7 +641,7 @@ def hook(
 
 可以从 `geo.curves`、`geo.path_helpers` 以及旧 `parts.control._shoulder` 的数学中**抄思路**，但不得 import `typekernel.parts`。
 
-### 9.7 `System`（M2）
+### 9.7 `System`
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -661,7 +661,7 @@ class System:
 
 不得有 `aperture` / `roundness` 这类“一个数影响多处几何”的旋钮。
 
-### 9.7a `Project` / `@glyph` / `Master`（M2）
+### 9.7a `Project` / `@glyph` / `Master`
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -674,7 +674,7 @@ def glyph(name: str, *, group: str = "") -> Callable[[GlyphFn], GlyphFn]:
 
     Attach master overrides with ``@fn.master("Black")`` on a second function
     of the same shape. Glyph ``name`` is a production name (may be a letter in
-    *projects*); kernel tests must still use synthetic names (§9.8 rule 5).
+    *projects*); kernel tests must still use synthetic names（见 9.8 第 5 条）。
     """
 
 @dataclass(frozen=True, slots=True)
@@ -713,11 +713,11 @@ class Project:
 - 默认母版用 `Project.system`；`masters` 里同名覆盖 `System`，字形侧 `@build.master(name)` 覆盖画法。
 - `Project` / `glyph` / `Master` / `GlyphSpec` 是内核公开符号；不 import `parts`。
 
-### 9.8 架构守卫（M0，CI 必跑）
+### 9.8 架构守卫（CI 必跑）
 
 `tests/architecture/test_boundaries.py`，对 `draw` / `system` / `project` / `cli` / `plugins` 生效：
 
-1. 禁止 import `typekernel.parts`（M4 后对全仓生效）。
+1. 禁止 import `typekernel.parts`（对全仓生效）。
 2. 函数名不得匹配 `^(build_[A-Za-z]|[A-Za-z]_|[a-z]+_from_[A-Za-z]|\w+_yoke)$`。
 3. 源码不得出现 `style.serif`、`italic_slant_deg`、`vf_compat`。
 4. `plugins/<x>/` 不得 import `plugins/<y>/`；任何新包不得 import 其他模块的 `_` 私有名。
@@ -725,7 +725,7 @@ class Project:
 
 用 `ast` 扫描实现，不额外引入依赖。
 
-### 9.9 M1 测试清单（全部合成形状）
+### 9.9 测试清单（全部合成形状）
 
 | 测试 | 断言 |
 | --- | --- |
@@ -744,53 +744,44 @@ class Project:
 | `tensioned_arc` / `superellipse_quarter` / `spring` | 端点、端切线正确；与相邻直线 G1 |
 | `hook` | 干接合 G1；终点 = tip；腹点在干同侧且 |Δx|≈depth；默认 tip 切线回指干 |
 | `diagonal_band(compensate=True)` | 垂直于笔画方向的实测宽度 = `weight`（容差 0.5 单位） |
-| M1 出口样例 | 一个“直干 + 拱 + 直干”的合成单轮廓（测试里叫 `arch_body`，不叫 `n`），≤ 40 行，全部节点 G1 或已声明角点 |
+| 单轮廓合成样例 | 一个“直干 + 拱 + 直干”的合成单轮廓（测试里叫 `arch_body`，不叫 `n`），≤ 40 行，全部节点 G1 或已声明角点 |
 
-### 9.10 里程碑任务拆分（每条一个提交）
+### 9.10 落地顺序
 
-**M0**
-1. `docs`：本文入口 —— README、`VISION.md`、`AGENT_GOAL.md` 顶部指向本文；`AGENT_GOAL.md` 中 yoke 教学标注“迁移中，见 ARCHITECTURE.md”。
+按依赖顺序推进；每步的验收标准见第 6 节。
+
+1. `docs`：本文入口 —— README、`VISION.md` 顶部指向本文。
 2. `docs(skill)`：skill 顶部加冻结声明（不再新增 builder / yoke 参数 / 风格分支；新工作走 `draw`）。
 3. `test(architecture)`：9.8 守卫（新包为空时也能跑通）。
-
-**M1**
 4. `feat(draw)`：`Fragment` + `Node` + 变换 + 测试。
 5. `feat(draw)`：`Writer` + `Drawing` + 连续性检查 + 方向规范 + 测试。
 6. `feat(draw)`：`signature()` 与叠加。
 7. `feat(draw)`：槽位数据结构、`apply_slots`、填充协议 + 假填充测试。
 8. `feat(draw)`：`construct` 构造器 + 测试。
-9. `test(draw)`：M1 出口样例 `arch_body`。
-
-**M2**
+9. `test(draw)`：单轮廓合成样例 `arch_body`。
 10. `feat(system)`：`System` / `Zones` / `Overshoot`。
 11. `feat(project)`：`@glyph` 注册、目录发现、母版求值。
-12. `refactor(font,compile,axes)`：接受 `Drawing` / `System`；去掉对 `parts.DesignContext` 的硬依赖（保留旧入口到 M4）。
+12. `refactor(font,compile,axes)`：接受 `Drawing` / `System`；去掉对 `parts.DesignContext` 的硬依赖。
 13. `feat(cli)`：`tk new`（空模板）、`tk build`、`tk proof <set>`（复用 `qa.proof`）。
 14. `test(project)`：一个只含合成字形的临时项目端到端出 OTF。
-
-**M3**（每个插件一个提交：实现 + 契约测试）
-15–20. `corners.plain/rounded/slab/bracketed/wedge/ink_trap`
-21–24. `ends.flat/angled/ball/flare`
-25–27. `passes.overshoot/diagonal_comp/crotch_thin`
-28. `test(plugins)`：解耦试金石——同一组合成字形 × 三种 corner 配置，字形源码哈希不变。
-
-**M4**（每个字组一个提交，每个提交附样张，视觉审阅不过不进下一组）
-29. `starters/latin_sans`：`system.py` + `elements.py` + `n o H O`
-30. 小写 n 组 → o 组 → 斜笔组 → 其余小写
-31. 大写 H 组 → O 组 → 斜笔组 → 其余
-32. 数字、标点
-33. `spacing.py`（metrics keys）+ 字偶
-34. Light / Bold 母版 + VF（overlap 构造）
-35. `tk audit`：stem / zone / compat / direction
-36. **删除**：`parts` 字母代码、`DesignContext`、`Style`、`glyph_specs`、`FormSources`、`skeleton_recipes`、相关测试与示例、golden outline hash；守卫第 1 条扩到全仓
-
-**M5**
-37. 重写 `.agents/skills/typekernel-font-design/`（按第 4 节工作流）
-38. 新会话试字记录写进 `docs/AGENT_TRIALS.md`
+15. `feat(plugins)`：`corners.plain/rounded/slab/bracketed/wedge/ink_trap`，每个插件一个函数 + 契约测试。
+16. `feat(plugins)`：`ends.flat/angled/ball/flare`。
+17. `feat(plugins)`：`passes.overshoot/diagonal_comp/crotch_thin`。
+18. `test(plugins)`：解耦试金石——同一组合成字形 × 三种 corner 配置，字形源码哈希不变。
+19. `feat(starters)`：`starters/latin_sans` 的 `system.py` + `elements.py` + 控制字 `n o H O`。
+20. `feat(starters)`：小写 n 组 → o 组 → 斜笔组 → 其余小写。
+21. `feat(starters)`：大写 H 组 → O 组 → 斜笔组 → 其余。
+22. `feat(starters)`：数字、标点。
+23. `feat(starters)`：`spacing.py`（metrics keys）+ 字偶。
+24. `feat(starters)`：Light / Bold 母版 + VF（overlap 构造）。
+25. `feat(cli)`：`tk audit`：stem / zone / compat / direction。
+26. `refactor!`：删除 `parts` 字母代码、`DesignContext`、`Style`、`glyph_specs`、`FormSources`、`skeleton_recipes`、相关测试与示例、golden outline hash；守卫第 1 条扩到全仓。
+27. `docs(skill)`：重写 `.agents/skills/typekernel-font-design/`（按第 4 节工作流）。
+28. `feat(plugins)`：`skeleton + pen` 构造插件，承载第二个 starter。
 
 ### 9.11 给实现模型的硬约束
 
-- 不要“顺手”修旧 `parts`；M4 前它只读。
+- 不要“顺手”修旧 `parts`；迁移期间它只读。
 - 遇到某个连接画不好，**改构造器或片段**，不加任何事后的 blend / seal / heal pass。
 - 新增公开符号必须出现在本文 9.2–9.7 或先补进本文。
 - 不要为了让测试通过而放宽连续性容差；容差变更要写进本文。

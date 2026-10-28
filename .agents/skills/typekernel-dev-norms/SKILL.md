@@ -36,12 +36,11 @@ Track these so strangers can use and understand the library:
 
 | Keep in git | Examples |
 | --- | --- |
-| Product narrative | `README.md`, `docs/VISION.md`, `docs/AGENT_GOAL.md` |
+| Product narrative | `README.md`, `docs/VISION.md` |
 | Contributor norms | `docs/dev-standards.md`, `.agents/skills/**/SKILL.md` |
 | API / recipe docs | `.agents/skills/typekernel-font-design/`, `docs/agent-recipes.md` (pointer), module docstrings, typed `__all__` |
 | Examples that teach | `examples/*/build.py`, `design.py`, `README.md`, key showcase PNGs |
 | Tests and fixtures | `tests/**`, small golden hashes |
-| Program history (public) | `docs/DEVELOPMENT_PLAN.md`, `docs/AGENT_TRIALS.md` (summaries only) |
 | Approval gate records | `approvals/*.json` (durable human decisions) |
 
 ## What must NOT be in git
@@ -50,13 +49,12 @@ Track these so strangers can use and understand the library:
 | --- | --- |
 | Private planner / agent scratch | `.agents/*` except tracked `skills/` and `.agents/README.md` |
 | Local approval WIP / personal briefs | Keep off-tree or under ignored paths; do not invent ticket folders in-repo |
-| Huge / regenerable artifacts | `artifacts/build/**`, `artifacts/specimens/**`, `artifacts/trials/**`, `artifacts/human-review/**` |
-| Ticket-named specimen dumps | `artifacts/tk-*.png`, `artifacts/tk-*/` — regenerate locally |
+| Build / proof / specimen dumps | `artifacts/**` — regenerable, keep local |
 | Font binaries from dogfood | `*.otf` / `*.ttf` / `*.woff*` (fixtures under `tests/fixtures/` may be excepted) |
 | Example `out/` dumps | Ignored except a few named showcase proofs listed in `.gitignore` |
 | Secrets / credentials | Never commit tokens, private keys, or session cookies |
 
-When unsure: if a file is only useful to the author’s planner or a one-off agent trial, **do not commit it**. Summarize in `docs/AGENT_TRIALS.md` instead.
+When unsure: if a file is only useful to the author’s planner or a one-off agent run, **do not commit it**.
 
 ## Agent workflow checklist
 
@@ -70,7 +68,7 @@ When unsure: if a file is only useful to the author’s planner or a one-off age
 
 When creating or extending faces in this repo:
 
-1. Follow `.agents/skills/typekernel-font-design/` (ARCHITECTURE.md §4: tk new → system →
+1. Follow `.agents/skills/typekernel-font-design/` (ARCHITECTURE.md 标准工作流: tk new → system →
    control proofs → elements → audit → plugins → spacing → masters → build).
 2. Letter geometry stays in the project starter; never resurrect `parts` / DesignContext.
 3. Change fragments/elements — never heal / blend / seal.

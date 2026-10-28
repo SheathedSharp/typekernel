@@ -78,14 +78,14 @@ Human visual or API gates leave a JSON record under `approvals/` (for example
 `approvals/geo-public-api.json`). Those files are the durable decision record:
 what was approved, by whom, and with what test evidence.
 
-Program exit hooks (before signing pending serif/italic gates): [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) §8 — `PYTHONPATH=src python examples/run_program_exit.py` (`--gate all` runs §8 doc hooks, pending-gate `test_evidence`, and smoke modules including `tests/parts/test_knob_coverage.py`, `test_extended_latin_policy.py`, `test_multi_voice_exit.py`, `test_style_consistency.py`, `test_originality.py`, `test_glyph_specs.py`, `test_stress.py`, `test_stroke_program_acceptance.py`, `test_zayju_script` charset lint and sequential style gate; optional `--with-linters` for ruff/mypy; includes `tests/qa/test_gate_thresholds_locked.py` for frozen `AGENT_SENTENCE` / gate limits / `COUNTER_SCAN_MIN_RUN_OVER_STEM`) (or `pytest -q tests/docs/test_development_plan_section8.py` plus each gate’s `test_evidence` in `approvals/*.json`). Generate review PNGs/TTFs with `examples/human_review_bundle.py` (`--only serif|italic` for pending gates; `--only appendix-b` for appendix B-13–B-15 `3G`/`sS` sheets — no `approvals` JSON); optional charset/ladder/golden: `examples/contact_sheet.py`, `examples/diff_overlay.py`, `examples/weight_ladder_sheet.py`, `examples/regenerate_outline_hashes.py` → local `artifacts/specimens/` or golden refresh. Agent trial protocol: [AGENT_TRIALS.md](AGENT_TRIALS.md) (`snapshot_design.py`, `validate_snapshot.py` on written `snapshot.json`). Never relax `AGENT_SENTENCE` or L3 thresholds to pass a gate.
+验收与评审：`pytest -q` 跑全部测试；字形质量由视觉审阅决定，不用数值门禁冒充（校样用 `tk proof` 生成，落到本地 `artifacts/`）。公开符号的任何变更都要同步进 [ARCHITECTURE.md](ARCHITECTURE.md) 的交接规格。
 
 
 ## Public repository contents
 
 This repo is meant to read as a normal open-source library. Commit:
 
-- README / VISION / AGENT_GOAL / API and recipe docs
+- README / VISION / API and recipe docs
 - Examples that teach the API (scripts + a few showcase proofs)
 - Tests, typed sources, and durable `approvals/*.json` gate records
 

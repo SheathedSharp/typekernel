@@ -1,4 +1,4 @@
-# Reference (post-M4)
+# Reference
 
 ## CLI
 
@@ -26,7 +26,7 @@ system = System(
 light = system.tuned(stem={k: v * 0.62 for k, v in dict(system.stem).items()})
 ```
 
-No `aperture` / `roundness` mega-knobs (§9.7). Derived relations go in project `elements.py`.
+No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations go in project `elements.py`.
 
 ## @glyph
 

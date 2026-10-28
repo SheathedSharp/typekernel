@@ -9,4 +9,4 @@
 | Bbox-only advances forever | `spacing.py` metrics keys + `apply_spacing` |
 | Silent mega-knobs (`aperture`, `roundness`) | Explicit tokens + element functions |
 | Treating `tk audit` warnings as pass/fail cosmetics gate | Treat direction/compat as hard fail; stem/zone as fix list |
-| Resurrecting yoke / FormSources / Style recipes | Follow ARCHITECTURE.md §4 |
+| Resurrecting yoke / FormSources / Style recipes | Follow the ARCHITECTURE.md 标准工作流 |

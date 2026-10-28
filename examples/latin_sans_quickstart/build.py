@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Scaffold latin-sans → build OTF → write a control proof PNG.
 
-Demonstrates the post-M4 path: Project / @glyph / System — no ``parts``.
+Demonstrates the current path: Project / @glyph / System — no ``parts``.
 """
 
 from __future__ import annotations

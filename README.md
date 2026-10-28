@@ -5,7 +5,7 @@ Depends on [fontTools](https://github.com/fonttools/fonttools); **does not** reb
 
 > 自建设计层，编译层坐在 fontTools 上。不是编辑器，不是又一个 fontmake 包装器。
 
-> **架构入口（现行）**：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 三层分离、M0–M6 路线与交接规格。实现与评审以该文为准。
+> **架构入口（现行）**：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 三层分离、分层落地顺序与交接规格。实现与评审以该文为准。
 
 ## 一眼看懂
 
@@ -29,7 +29,7 @@ geo / draw  →  system / project / plugins  →  font / compile (fontTools)
 片段与轮廓        System + @glyph + 角点/端点插件      Glyph / Font → UFO / OTF / VF
 ```
 
-旧的 `typekernel.parts` / `DesignContext` 字母 API 已在 M4 删除。字母几何写在**项目**里（starter），不进内核。
+旧的 `typekernel.parts` / `DesignContext` 字母 API 已删除。字母几何写在**项目**里（starter），不进内核。
 
 ## 状态
 
@@ -46,7 +46,7 @@ geo / draw  →  system / project / plugins  →  font / compile (fontTools)
 
 ## 做一个能安装的字体
 
-按 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) **§4** 工作流：
+按 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) **标准工作流**：
 
 ```bash
 pip install -e ".[compile,specimen]"
@@ -76,12 +76,9 @@ print(result.binaries["otf"])
 
 **校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 
-Agent 试验记录：[`docs/AGENT_TRIALS.md`](docs/AGENT_TRIALS.md)。  
-历史开发计划（含 §8）：[`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md)。
-
 ## 开发
 
-见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9 与 [docs/dev-standards.md](docs/dev-standards.md)。本地：
+见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 交接规格 与 [docs/dev-standards.md](docs/dev-standards.md)。本地：
 
 ```bash
 pytest -q
