@@ -321,7 +321,8 @@ def _apply_corner(
         )
     trim_start = _point_along(segs[prev_i], from_start=False, distance=fill.trim_in)
     trim_end = _point_along(segs[next_i], from_start=True, distance=fill.trim_out)
-    _assert_path_endpoints(fill.path, trim_start, trim_end)
+    if fill.path is not None:
+        _assert_path_endpoints(fill.path, trim_start, trim_end)
 
     new_prev = _trim_segment_end(segs[prev_i], fill.trim_in)
     new_next = _trim_segment_start(segs[next_i], fill.trim_out)
@@ -333,7 +334,8 @@ def _apply_corner(
         i = (i + 1) % n
     if new_prev is not None:
         out.append(new_prev)
-    out.extend(fill.path.segments)
+    if fill.path is not None:
+        out.extend(fill.path.segments)
     if new_next is not None:
         out.append(new_next)
     if not out:

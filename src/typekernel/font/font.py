@@ -8,13 +8,13 @@ and builds binaries from it; nothing here touches OpenType tables.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
 from typekernel.draw.drawing import Drawing
-from typekernel.font.kerning import ClassKernTable, KernTable
 from typekernel.font.glyph import (
+    Anchor,
     Component,
     Glyph,
     glyph_name_for_char,
@@ -22,6 +22,7 @@ from typekernel.font.glyph import (
     space_glyph_from_system,
 )
 from typekernel.font.info import FontInfo
+from typekernel.font.kerning import ClassKernTable, KernTable
 from typekernel.geo.outline import Outline
 from typekernel.system import System
 

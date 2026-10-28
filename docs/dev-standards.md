@@ -32,6 +32,21 @@ Agent-facing short form: [`.agents/skills/typekernel-dev-norms/SKILL.md`](../.ag
 - Third-party stub policy: `fontTools.*` and `pathops` (skia-pathops) may use
   `ignore_missing_imports` in `[tool.mypy.overrides]` until typed stubs exist.
   Do not blanket-ignore the whole world.
+- **Starter templates are exempt** (`typekernel.starters.*` uses `ignore_errors`).
+  A starter is *project* code: `tk new` copies it into a user's font project,
+  where `elements` / `system` resolve because the project directory goes on
+  `sys.path` at runtime. It is written the way user project code is written, so
+  `strict` does not apply. The kernel is what carries the typed surface.
+
+## Linting
+
+- `ruff` is **version-pinned** in the `dev` extra and `[tool.ruff]` sets no
+  `select`, so the gate is ruff's curated default set at that version. That set
+  grows between releases; bumping ruff is a deliberate commit that may surface
+  new rules, not something that should happen by accident in CI.
+- `# noqa` is acceptable only with a reason on the same line, and only where the
+  rule genuinely does not apply (for example a best-effort optical probe that
+  must not abort the whole audit, or loading project modules by design).
 
 ## Geometry principles
 

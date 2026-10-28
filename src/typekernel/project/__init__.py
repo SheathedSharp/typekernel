@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -193,5 +192,7 @@ def _load_glyph_module(root: Path, path: Path) -> ModuleType:
     module.__loader__ = None
     module.__package__ = name.rpartition(".")[0] or None
     sys.modules[name] = module
-    exec(code, module.__dict__)
+    # Project glyph modules are user code loaded by design; this is not a
+    # sandbox boundary.
+    exec(code, module.__dict__)  # noqa: S102
     return module

@@ -29,27 +29,27 @@ def _cmd_build(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             return 2
-        masters, result = build_variable_project(
+        masters, vf = build_variable_project(
             root, out_dir=args.out, formats=tuple(args.format) or ("ttf",)
         )
         print(f"masters: {', '.join(m.style_name for m in masters)}")
-        print(f"designspace: {result.designspace}")
-        for fmt, path in result.binaries.items():
+        print(f"designspace: {vf.designspace}")
+        for fmt, path in vf.binaries.items():
             print(f"{fmt}: {path}")
-        for path in result.masters:
+        for path in vf.masters:
             print(f"ufo: {path}")
-        if result.warnings:
-            print(f"warnings: {len(result.warnings)}")
+        if vf.warnings:
+            print(f"warnings: {len(vf.warnings)}")
         return 0
-    font, result = build_project(
+    font, built = build_project(
         root,
         out_dir=args.out,
         formats=tuple(args.format),
         resolve_overlaps=resolve,
     )
     print(f"glyphs: {len(font)}")
-    print(f"ufo: {result.ufo}")
-    for fmt, path in result.binaries.items():
+    print(f"ufo: {built.ufo}")
+    for fmt, path in built.binaries.items():
         print(f"{fmt}: {path}")
     if resolve:
         print("resolve-overlaps: on (static packaging; not a design seal)")

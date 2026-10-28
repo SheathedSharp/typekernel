@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable
 
 from typekernel.font.glyph import Glyph
 from typekernel.geo.outline import Outline
@@ -35,4 +34,4 @@ def glyph_hash(glyph: Glyph, *, ndigits: int = DEFAULT_NDIGITS) -> str:
     """Hash a glyph's outline plus advance (for project diffs)."""
     base = outline_hash(glyph.outline, ndigits=ndigits)
     adv = _fmt(glyph.advance, ndigits)
-    return hashlib.sha256(f"{base}|{adv}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{base}|{adv}".encode()).hexdigest()

@@ -22,7 +22,7 @@ def oblique_font(font: Font, angle_degrees: float, *, style_name: str = "Oblique
         style_name=style_name,
         extra={**font.info.extra, "italicAngle": -angle_degrees},
     )
-    out = Font(info=info, context=font.context)
+    out = Font(info=info, system=font.system)
     for g in font:
         out.add_glyph(_shear_glyph(g, shear))
     out.groups = dict(font.groups)
