@@ -106,6 +106,11 @@ METRICS_KEYS: dict[str, dict[str, Any]] = {
     "parenleft": {"lsb": ("stem", "lc", 0.45), "rsb": ("stem", "lc", 0.25)},
     "parenright": {"lsb": ("stem", "lc", 0.25), "rsb": ("stem", "lc", 0.45)},
     "slash": {"lsb": ("stem", "lc", 0.25), "rsb": ("stem", "lc", 0.25)},
+    "backslash": {"lsb": ("stem", "lc", 0.3), "rsb": ("stem", "lc", 0.3)},
+    "endash": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.35)},
+    "emdash": {"lsb": ("stem", "lc", 0.25), "rsb": ("stem", "lc", 0.25)},
+    "bracketleft": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.35)},
+    "bracketright": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.55)},
 }
 
 KERN_PAIRS: list[tuple[str, str, float]] = [

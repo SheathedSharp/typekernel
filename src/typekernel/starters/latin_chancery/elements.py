@@ -24,13 +24,6 @@ def _pen_params(system: System) -> tuple[float, float]:
     return contrast, angle
 
 
-def project_pen(system: System, thickness: float | None = None):
-    """High-contrast broad nib (chancery look via contrast + angle)."""
-    contrast, angle = _pen_params(system)
-    th = float(system.stem["lc"] if thickness is None else thickness)
-    return broad_nib(th, contrast=contrast, angle_deg=angle)
-
-
 def slanted_polyline(
     points: list[tuple[float, float]],
     system: System,
@@ -41,6 +34,47 @@ def slanted_polyline(
     return Centerline.from_points(slanted, closed=closed)
 
 
+
+def slanted_vertical_optical_ratio(system: System) -> float:
+    """Horizontal stem width per unit pen thickness for a slanted vertical.
+
+    ``tk audit`` measures filled horizontal spans. An elliptical broad nib at
+    ``pen_angle_deg`` on a stem leaned by ``System.slant`` yields optical width
+    ``ratio * thickness``, not ``thickness`` itself. Calibrating pens by this
+    ratio keeps System.stem aligned with audit (no heal).
+    """
+    from typekernel.optics.stem import list_vertical_stems
+
+    contrast, angle = _pen_params(system)
+    probe_th = 40.0
+    cl = slanted_polyline([(200.0, 0.0), (200.0, 500.0)], system, closed=False)
+    drawing = expand_skeleton(
+        cl,
+        broad_nib(probe_th, contrast=contrast, angle_deg=angle),
+        join="round",
+        cap="round",
+    )
+    spans = list_vertical_stems(drawing.outline(), y=250.0)
+    if not spans or spans[0].width <= 0:
+        return 1.0
+    return float(spans[0].width) / probe_th
+
+
+def pen_for_optical_stem(system: System, optical: float):
+    """Broad nib whose slanted vertical measures ``optical`` horizontally."""
+    contrast, angle = _pen_params(system)
+    ratio = slanted_vertical_optical_ratio(system)
+    thickness = float(optical) / ratio if ratio > 0 else float(optical)
+    return broad_nib(thickness, contrast=contrast, angle_deg=angle)
+
+
+def project_pen(system: System, thickness: float | None = None):
+    """Broad nib sized so slanted verticals hit ``thickness`` (default lc stem)."""
+    optical = float(system.stem["lc"] if thickness is None else thickness)
+    return pen_for_optical_stem(system, optical)
+
+
+
 def stroke(
     system: System,
     points: list[tuple[float, float]],
@@ -48,10 +82,15 @@ def stroke(
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
-    """Expand a pre-slant polyline with the project pen (``System.slant`` applied)."""
+    """Expand a pre-slant polyline with the project pen (``System.slant`` applied).
+
+    ``thickness`` is the *optical* horizontal stem target (System.stem units),
+    not raw ``Pen.thickness`` — elliptical angle + italic slant are calibrated
+    out so ``tk audit`` stem checks match the numeric table.
+    """
     cl = slanted_polyline(points, system, closed=closed)
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
-    pen = project_pen(system, optical)
+    pen = pen_for_optical_stem(system, optical)
     join = "bevel" if closed else "round"
     return expand_skeleton(cl, pen, join=join, cap="round")
 
@@ -63,8 +102,19 @@ def pen_dot(
     *,
     radius: float | None = None,
 ) -> Drawing:
-    """Tittle / period-style filled dot (closed oval), center in pre-slant space."""
-    r = float(system.tokens["dot_radius"] if radius is None else radius)
+    """Tittle / period-style filled dot (closed oval), center in pre-slant space.
+
+    Radius tracks stem weight so Light→Bold outer contours gain weight
+    (fixed ``dot_radius`` tokens alone make interpolatable underweight).
+    """
+    thin = float(system.stem.get("lc_h", system.stem["lc"]))
+    if radius is None:
+        # Regular table: dot_radius / lc_h ≈ size; masters inherit via stem scale.
+        ref_h = 36.0  # design lc_h at Regular in system.py
+        mul = float(system.tokens.get("dot_radius", 28.0)) / ref_h
+        r = thin * mul
+    else:
+        r = float(radius)
     n = 24
     pts = [
         (
@@ -73,7 +123,6 @@ def pen_dot(
         )
         for i in range(n)
     ]
-    thin = float(system.stem.get("lc_h", system.stem["lc"]))
     return stroke(system, pts, closed=True, thickness=thin)
 
 

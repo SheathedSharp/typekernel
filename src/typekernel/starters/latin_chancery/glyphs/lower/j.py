@@ -12,11 +12,11 @@ def j(system: System):
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     x = lsb + st * 1.2
     stem = stroke(system, [(x, xh), (x, desc + 70.0)], thickness=st)
-    r = float(system.tokens["dot_radius"])
+    r = float(system.stem.get("lc_h", st)) * (float(system.tokens.get("dot_radius", 28.0)) / 36.0)
     cy = xh + float(system.overshoot.round) + r * 1.2
     hook = stroke(
         system,
         open_arc_points(x - 55.0, desc + 55.0, 70.0, 55.0, start_deg=10, end_deg=200, n=20),
         thickness=float(system.stem["lc_h"]),
     )
-    return stem + pen_dot(system, x, cy, radius=r) + hook
+    return stem + pen_dot(system, x, cy) + hook

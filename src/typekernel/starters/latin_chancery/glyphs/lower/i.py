@@ -11,6 +11,7 @@ def i(system: System):
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     x = lsb + st * 0.5
     stem = stroke(system, [(x, 0.0), (x, xh)], thickness=st)
-    r = float(system.tokens["dot_radius"])
+    # layout radius tracks stem (same rule as pen_dot default)
+    r = float(system.stem.get("lc_h", st)) * (float(system.tokens.get("dot_radius", 28.0)) / 36.0)
     cy = xh + float(system.overshoot.round) + r * 1.2
-    return stem + pen_dot(system, x, cy, radius=r)
+    return stem + pen_dot(system, x, cy)
