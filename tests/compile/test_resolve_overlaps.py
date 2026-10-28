@@ -42,9 +42,10 @@ def test_resolve_overlaps_recorded_in_manifest(tmp_path: Path) -> None:
 
 
 def test_cli_rejects_resolve_with_variable(tmp_path: Path) -> None:
-    from typekernel.cli.new import create_project
     import subprocess
     import sys
+
+    from typekernel.cli.new import create_project
 
     root = create_project("vfov", parent=tmp_path, starter="latin-sans")
     proc = subprocess.run(
@@ -59,6 +60,7 @@ def test_cli_rejects_resolve_with_variable(tmp_path: Path) -> None:
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert proc.returncode == 2
     assert "static-export only" in proc.stderr

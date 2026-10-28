@@ -68,5 +68,6 @@ __all__ = [
     "suggest_sidebearings",
     "suggest_sidebearings_optical",
     "validate_contrast_params",
+    "vertical_equiv_from_diagonal",
     "with_sidebearings",
 ]
