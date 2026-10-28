@@ -25,7 +25,7 @@ def _pen_params(system: System) -> tuple[float, float]:
 
 
 def project_pen(system: System, thickness: float | None = None):
-    """High-contrast broad nib (chancery look via low contrast + angle)."""
+    """High-contrast broad nib (chancery look via contrast + angle)."""
     contrast, angle = _pen_params(system)
     th = float(system.stem["lc"] if thickness is None else thickness)
     return broad_nib(th, contrast=contrast, angle_deg=angle)
@@ -63,10 +63,7 @@ def pen_dot(
     *,
     radius: float | None = None,
 ) -> Drawing:
-    """Tittle / period-style filled dot (closed oval), center in pre-slant space.
-
-    Agents should call this instead of hand-rolling a miniature oval each time.
-    """
+    """Tittle / period-style filled dot (closed oval), center in pre-slant space."""
     r = float(system.tokens["dot_radius"] if radius is None else radius)
     n = 24
     pts = [
@@ -151,6 +148,27 @@ def oval_points(
     ]
 
 
+def open_arc_points(
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    *,
+    start_deg: float,
+    end_deg: float,
+    n: int = 36,
+) -> list[tuple[float, float]]:
+    a0 = math.radians(start_deg)
+    a1 = math.radians(end_deg)
+    return [
+        (
+            cx + rx * math.cos(a0 + (a1 - a0) * i / (n - 1)),
+            cy + ry * math.sin(a0 + (a1 - a0) * i / (n - 1)),
+        )
+        for i in range(n)
+    ]
+
+
 def bowl(
     system: System,
     *,
@@ -162,3 +180,92 @@ def bowl(
 ) -> Drawing:
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
     return stroke(system, oval_points(cx, cy, rx, ry), closed=True, thickness=st)
+
+
+def open_bowl(
+    system: System,
+    *,
+    cx: float,
+    cy: float,
+    rx: float,
+    ry: float,
+    thickness: float | None = None,
+    open_side: str = "right",
+    aperture_deg: float = 80.0,
+    n: int = 36,
+) -> Drawing:
+    if open_side not in ("right", "left"):
+        raise ValueError(f"open_side must be 'right' or 'left', got {open_side!r}")
+    st = float(system.stem["lc"]) if thickness is None else float(thickness)
+    half = float(aperture_deg) / 2.0
+    if open_side == "right":
+        start_deg, end_deg = half, 360.0 - half
+    else:
+        start_deg, end_deg = 180.0 + half, 180.0 - half + 360.0
+    return stroke(
+        system,
+        open_arc_points(cx, cy, rx, ry, start_deg=start_deg, end_deg=end_deg, n=n),
+        thickness=st,
+    )
+
+
+def nest_bowl(
+    system: System,
+    *,
+    stem_x: float,
+    side: str,
+    width: float,
+    xh: float,
+    lsb: float,
+    thickness: float | None = None,
+    cy: float | None = None,
+    rx: float | None = None,
+    ry: float | None = None,
+    pull: float = 0.78,
+) -> Drawing:
+    """Oval bowl nestled against a stem (``side`` left/right of stem)."""
+    st = float(system.stem["lc"]) if thickness is None else float(thickness)
+    ov = float(system.overshoot.round)
+    rx_v = width * 0.36 if rx is None else float(rx)
+    ry_v = (xh / 2.0 + ov * 0.45) if ry is None else float(ry)
+    cy_v = (xh / 2.0) if cy is None else float(cy)
+    if side == "right":
+        cx = stem_x + rx_v * float(pull)
+    elif side == "left":
+        cx = stem_x - rx_v * float(pull)
+    else:
+        raise ValueError(f"side must be left/right, got {side!r}")
+    return bowl(system, cx=cx, cy=cy_v, rx=rx_v, ry=ry_v, thickness=st)
+
+
+def n_arch_points(
+    x0: float, x1: float, y0: float, y1: float, *, rise: float
+) -> list[tuple[float, float]]:
+    """n-style arch from (x0,y0) up to y1 then down to (x1,y0)."""
+    mid = (x0 + x1) / 2.0
+    span = x1 - x0
+    return [
+        (x0, y0),
+        (x0, y1 - rise),
+        (x0 + span * 0.18, y1),
+        (mid, y1 + rise * 0.2),
+        (x1 - span * 0.18, y1),
+        (x1, y1 - rise),
+        (x1, y0),
+    ]
+
+
+def u_arch_points(
+    x0: float, x1: float, y_top: float, *, rise: float
+) -> list[tuple[float, float]]:
+    mid = (x0 + x1) / 2.0
+    span = x1 - x0
+    return [
+        (x0, y_top),
+        (x0, rise),
+        (x0 + span * 0.15, 0.0),
+        (mid, -rise * 0.15),
+        (x1 - span * 0.15, 0.0),
+        (x1, rise),
+        (x1, y_top),
+    ]

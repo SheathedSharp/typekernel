@@ -1,12 +1,8 @@
 """Control glyph H — two slanted stems + bar."""
-
 from __future__ import annotations
-
 from elements import stroke
-
 from typekernel.project import glyph
 from typekernel.system import System
-
 
 @glyph("H", group="control")
 def H(system: System):
@@ -19,9 +15,5 @@ def H(system: System):
     left = stroke(system, [(x0, 0.0), (x0, cap)], thickness=st)
     right = stroke(system, [(x1, 0.0), (x1, cap)], thickness=st)
     bar_y = cap * 0.48
-    bar = stroke(
-        system,
-        [(x0, bar_y), (x1, bar_y)],
-        thickness=float(system.stem["uc_h"]),
-    )
+    bar = stroke(system, [(x0, bar_y), (x1, bar_y)], thickness=float(system.stem["uc_h"]))
     return left + right + bar

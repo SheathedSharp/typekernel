@@ -1,12 +1,8 @@
-"""Lowercase i — stem + pen_dot tittle (demo of shared dot helper)."""
-
+"""Lowercase i — stem + pen_dot tittle."""
 from __future__ import annotations
-
 from elements import pen_dot, stroke
-
 from typekernel.project import glyph
 from typekernel.system import System
-
 
 @glyph("i", group="lc.straight")
 def i(system: System):
