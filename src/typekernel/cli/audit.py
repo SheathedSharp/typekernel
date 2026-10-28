@@ -120,18 +120,34 @@ def _audit_stem(
 
     if not measured and (len(name) == 1 or name in {"zero", "one", "four", "seven"}):
         # Optical fallback only for simple letter/figure shapes; skip dashes etc.
+        # Sample several y bands and keep the band whose near-stem spans sit
+        # closest to System.stem — mid crossbars (E/F/H) + even-odd overlap
+        # otherwise thin the reading at 0.5× zone.
         outline = drawing.outline()
-        try:
-            y = float(system.zones.cap if is_uc else system.zones.x) * 0.5
-            spans = list_vertical_stems(outline, y=y)
-        except Exception:
-            spans = []
-        for span in spans:
-            if span.width <= 0:
+        zone = float(system.zones.cap if is_uc else system.zones.x)
+        best: list = []
+        best_score = float("inf")
+        for frac in (0.32, 0.5, 0.68):
+            try:
+                spans = list_vertical_stems(outline, y=zone * frac)
+            except Exception:
                 continue
-            # Ignore counter gaps and full-width bars far from stem target.
-            if abs(span.width - stem_target) / stem_target > 0.6:
+            near = []
+            for span in spans:
+                if span.width <= 0:
+                    continue
+                # Ignore counter gaps, full-width bars, and contrast-thin cuts
+                # from elliptical broad nibs (often ~0.5× stem).
+                if abs(span.width - stem_target) / stem_target > 0.25:
+                    continue
+                near.append(span)
+            if not near:
                 continue
+            score = sum(abs(s.width - stem_target) for s in near) / len(near)
+            if score < best_score:
+                best_score = score
+                best = near
+        for span in best:
             measured.append(("optical", span.width, stem_target))
 
     for label, got, expected in measured:
