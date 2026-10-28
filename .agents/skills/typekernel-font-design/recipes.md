@@ -23,3 +23,12 @@ Edit `METRICS_KEYS` / `KERN_PAIRS` in `spacing.py`. `tk proof spacing` / `tk pro
 ## Audit follow-ups
 
 `tk audit` warnings (stem vs System, zone overshoot) → change the named construction in the glyph, then re-audit. Direction / compat errors are hard failures.
+
+## Look closer
+
+```bash
+tk proof --text "nnonoo HHOHOO"
+tk proof --glyph n --size 320
+tk pen --contrast 0.26 --angle 30 --out /tmp/pen.png
+tk audit --overlap   # only when hunting cavities
+```

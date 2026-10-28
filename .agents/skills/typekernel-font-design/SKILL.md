@@ -31,7 +31,7 @@ tk new myfont --starter latin-sans
 1. brief.md                         # intent in prose
 2. system.py                        # every number needs a reason
 3. control glyphs n o H O           → tk proof control  → look, change, repeat
-4. elements.py + expand groups      → tk proof lc.n / lc.o / diag / …
+4. elements.py + expand groups      → tk proof --glyph n / --text "…"
 5. tk audit                         → stem / zone / direction / compat; fix in glyph code
 6. corners / ends in font.py        → tk proof all
 7. spacing.py                       → tk proof spacing / kern
@@ -40,6 +40,19 @@ tk new myfont --starter latin-sans
 ```
 
 Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/Bold).
+
+## See before you ship (perception)
+
+Designers' loop is driven by **looking**. Do not invent private PIL croppers:
+
+| Need | Command |
+| --- | --- |
+| Arbitrary string | `tk proof --text "the quick brown fox"` |
+| Zoom one character | `tk proof --glyph n` (or `tk proof --glyph æ`) |
+| Control / spacing / kern / charset | `tk proof control` / `spacing` / `kern` / `charset` |
+| Weight ladder (VF if present) | `tk proof ladder` |
+| Pen contrast×angle preview | `tk pen --contrast 0.26 --angle 30` |
+| Even-odd cavity hunt (opt-in) | `tk audit --overlap` |
 
 ## Hard rules
 
@@ -50,13 +63,23 @@ Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/
 - Advances / LSB / RSB: declare metrics keys in `spacing.py`; do not rely on bbox-only advances.
 - Conventional commits; local review against ARCHITECTURE.md 交接规格 / 设计禁令与边界 after each commit.
 
+## Constructors & optics (do not rediscover)
+
+Read **[reference.md](reference.md)** before hand-rolling primitives. Especially:
+
+- `typekernel.draw.construct`: `hook`, `tensioned_arc`, `spring`, `diagonal_band`, `superellipse_quarter`
+- `typekernel.plugins.construct.skeleton_pen`: `broad_nib`, `pointed_pen`, `expand_skeleton`
+- `typekernel.optics.stem`: `measure_oriented_stem`, `diagonal_compensation`, `vertical_equiv_from_diagonal`
+
+Cold-start agents: open `reference.md` in the same pass as this skill (see `docs/AGENT_TRIALS.md` 终验清单).
+
 ## Companion docs
 
 | File | Content |
 | --- | --- |
-| [reference.md](reference.md) | CLI, System, @glyph, plugins cheat-sheet |
+| [reference.md](reference.md) | CLI, System, construct, optics, @glyph, plugins |
 | [recipes.md](recipes.md) | Common edits: heavier stems, tighter spacing, corner plugins |
-| [anti-patterns.md](anti-patterns.md) | Stroke-expand weight, heal/blend/seal, resurrecting parts |
+| [anti-patterns.md](anti-patterns.md) | Stroke-expand weight, heal/blend/seal, self_union policy |
 
 Elements live **in the project**, not in a library catalog. Copy patterns from
 `src/typekernel/starters/latin_sans/elements.py` and sibling glyph files.
@@ -70,6 +93,8 @@ cd trial
 # edit system.py tokens / stem
 tk build .
 tk proof control .
+tk proof --text "hamburgefonstiv" .
+tk proof --glyph n .
 tk audit .
 ```
 
