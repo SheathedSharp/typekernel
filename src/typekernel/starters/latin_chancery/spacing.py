@@ -18,11 +18,16 @@ from typekernel.geo.point import Point
 from typekernel.system import System
 
 __all__ = [
+    "ITALIC_PACK_YS",
     "KERN_PAIRS",
     "METRICS_KEYS",
     "apply_spacing",
     "resolve_sidebearings",
 ]
+
+# Fractions of x-height used for italic silhouette packing. This is project
+# spacing policy, not a numeric System token (``System.tokens`` is float-only).
+ITALIC_PACK_YS = (0.28, 0.5, 0.72)
 
 METRICS_KEYS: dict[str, dict[str, Any]] = {
     # controls / bases
@@ -244,10 +249,9 @@ def _italic_silhouette_span(
     from typekernel.optics.space import silhouette_edge
 
     xh = float(system.zones.x)
-    fracs = system.tokens.get("italic_pack_ys", (0.28, 0.5, 0.72))
     lefts: list[float] = []
     rights: list[float] = []
-    for frac in fracs:
+    for frac in ITALIC_PACK_YS:
         y = xh * float(frac)
         left = silhouette_edge([outline], y, "left")
         right = silhouette_edge([outline], y, "right")
@@ -261,19 +265,28 @@ def _italic_silhouette_span(
 
 
 def _pack_glyph(glyph: Glyph, lsb: float, rsb: float, system: System | None = None) -> Glyph:
+    """Shift ink by the italic x-height silhouette; advance uses the full bbox.
+
+    Using the silhouette span for the advance was the bug: a ``T`` only has its
+    stem at x-height, so its advance collapsed to the stem width and the next
+    glyph landed on the crossbar. The bbox guarantees the advance contains all
+    ink; the silhouette only chooses where the x-height ink sits.
+    """
     if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
         return replace(glyph, advance=max(glyph.advance, lsb + rsb))
-    if system is not None and system.is_italic:
-        span = _italic_silhouette_span(glyph.outline, system)
-        if span is not None:
-            left, right = span
-            ink = float(right - left)
-            dx = lsb - float(left)
-            shifted = _translate_outline(glyph.outline, dx)
-            return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
-    min_x, _miny, max_x, _maxy = bounds(glyph.outline)
+
+    min_x, min_y, max_x, max_y = bounds(glyph.outline)
     ink = float(max_x - min_x)
     dx = lsb - float(min_x)
+
+    if system is not None and system.is_italic:
+        xh = float(system.zones.x)
+        ov = float(system.overshoot.round)
+        if min_y >= -ov and max_y <= xh + ov:
+            span = _italic_silhouette_span(glyph.outline, system)
+            if span is not None:
+                dx = lsb - float(span[0])
+
     shifted = _translate_outline(glyph.outline, dx)
     return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
 
