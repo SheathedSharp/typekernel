@@ -1,8 +1,11 @@
 """Uppercase A — diagonals + bar."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("A", group="uc.diag")
 def A(system: System):

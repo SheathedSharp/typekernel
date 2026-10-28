@@ -1,8 +1,11 @@
 """Lowercase h — ascender with exit flourish + arch."""
 from __future__ import annotations
+
 from elements import flourish_exit, n_arch_points, stroke, stroke_fragment
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("h", group="lc.straight")
 def h(system: System):

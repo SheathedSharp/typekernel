@@ -1,8 +1,11 @@
 """Lowercase x — crossing diagonals."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("x", group="lc.diag")
 def x(system: System):

@@ -1,8 +1,11 @@
 """Uppercase I — single stem with serifs as short bars."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("I", group="uc.straight")
 def I(system: System):

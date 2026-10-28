@@ -1,8 +1,11 @@
 """Figure 5 — flag + open bowl."""
 from __future__ import annotations
+
 from elements import open_bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("five", group="figs")
 def five(system: System):

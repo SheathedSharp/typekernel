@@ -1,8 +1,11 @@
 """Lowercase k — stem + diagonal arms."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("k", group="lc.diag")
 def k(system: System):

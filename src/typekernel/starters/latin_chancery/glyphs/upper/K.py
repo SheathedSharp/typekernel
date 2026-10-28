@@ -1,8 +1,11 @@
 """Uppercase K — stem + arms."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("K", group="uc.diag")
 def K(system: System):

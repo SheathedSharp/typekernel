@@ -1,8 +1,11 @@
 """endash — longer mid-height bar (skeleton+pen)."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("endash", group="punct")
 def endash(system: System):

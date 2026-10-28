@@ -1,8 +1,11 @@
 """hyphen — mid bar."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("hyphen", group="punct")
 def hyphen(system: System):

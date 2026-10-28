@@ -1,8 +1,11 @@
 """Lowercase m — double arch."""
 from __future__ import annotations
+
 from elements import n_arch_points, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("m", group="lc.straight")
 def m(system: System):

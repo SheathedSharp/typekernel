@@ -1,8 +1,11 @@
 """Lowercase y — v body into descender."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("y", group="lc.diag")
 def y(system: System):

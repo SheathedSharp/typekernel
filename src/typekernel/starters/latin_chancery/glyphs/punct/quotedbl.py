@@ -1,8 +1,11 @@
 """quotedbl — two short verticals."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("quotedbl", group="punct")
 def quotedbl(system: System):

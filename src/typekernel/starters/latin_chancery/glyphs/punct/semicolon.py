@@ -1,8 +1,11 @@
 """semicolon — colon with comma tail on lower."""
 from __future__ import annotations
+
 from elements import flourish_exit, pen_dot, stroke_fragment
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("semicolon", group="punct")
 def semicolon(system: System):

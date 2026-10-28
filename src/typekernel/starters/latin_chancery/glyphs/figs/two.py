@@ -1,8 +1,11 @@
 """Figure 2 — open top + diagonal + base."""
 from __future__ import annotations
+
 from elements import open_bowl, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("two", group="figs")
 def two(system: System):

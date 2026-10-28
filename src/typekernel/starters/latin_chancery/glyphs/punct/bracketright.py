@@ -1,8 +1,11 @@
 """bracketright — vertical with top/bottom bars (skeleton+pen)."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("bracketright", group="punct")
 def bracketright(system: System):

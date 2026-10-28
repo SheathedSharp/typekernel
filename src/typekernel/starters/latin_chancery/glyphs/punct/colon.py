@@ -1,8 +1,11 @@
 """colon — two pen_dots."""
 from __future__ import annotations
+
 from elements import pen_dot
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("colon", group="punct")
 def colon(system: System):

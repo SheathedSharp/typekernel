@@ -1,9 +1,13 @@
 """Lowercase e — open bowl + crossbar (chancery aperture)."""
 from __future__ import annotations
+
 import math
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("e", group="lc.round")
 def e(system: System):

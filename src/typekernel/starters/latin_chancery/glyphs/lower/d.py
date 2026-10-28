@@ -1,8 +1,11 @@
 """Lowercase d — nestled bowl + right ascender."""
 from __future__ import annotations
+
 from elements import flourish_exit, nest_bowl, stroke, stroke_fragment
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("d", group="lc.bowl")
 def d(system: System):

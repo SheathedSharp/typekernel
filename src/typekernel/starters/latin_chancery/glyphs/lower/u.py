@@ -1,8 +1,11 @@
 """Lowercase u — mirrored arch."""
 from __future__ import annotations
+
 from elements import stroke, u_arch_points
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("u", group="lc.straight")
 def u(system: System):

@@ -1,8 +1,11 @@
 """Uppercase U — u-arch at cap height."""
 from __future__ import annotations
+
 from elements import stroke, u_arch_points
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("U", group="uc.straight")
 def U(system: System):

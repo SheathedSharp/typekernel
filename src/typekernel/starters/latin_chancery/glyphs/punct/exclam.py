@@ -1,8 +1,11 @@
 """exclam — stem + pen_dot."""
 from __future__ import annotations
+
 from elements import pen_dot, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("exclam", group="punct")
 def exclam(system: System):

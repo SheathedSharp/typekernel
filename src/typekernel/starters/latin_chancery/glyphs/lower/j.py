@@ -1,8 +1,11 @@
 """Lowercase j — descender stem + pen_dot + fixed arc hook."""
 from __future__ import annotations
+
 from elements import open_arc_points, pen_dot, stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("j", group="lc.straight")
 def j(system: System):

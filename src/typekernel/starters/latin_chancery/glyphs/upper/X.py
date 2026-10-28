@@ -1,8 +1,11 @@
 """Uppercase X — crossing diagonals."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("X", group="uc.diag")
 def X(system: System):

@@ -1,8 +1,11 @@
 """Lowercase t — short stem + crossbar."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("t", group="lc.straight")
 def t(system: System):

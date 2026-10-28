@@ -1,8 +1,11 @@
 """Figure 7 — top bar + diagonal."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("seven", group="figs")
 def seven(system: System):

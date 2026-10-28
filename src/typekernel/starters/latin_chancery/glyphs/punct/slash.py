@@ -1,8 +1,11 @@
 """slash — diagonal."""
 from __future__ import annotations
+
 from elements import stroke
+
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("slash", group="punct")
 def slash(system: System):
