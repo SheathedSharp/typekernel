@@ -141,9 +141,14 @@ def oval_points(
     rx: float,
     ry: float,
     *,
-    n: int = 28,
+    n: int = 64,
 ) -> list[tuple[float, float]]:
-    """Unslanted oval sample points (closed centerline)."""
+    """Unslanted oval sample points (closed centerline).
+
+    Default ``n=64`` is dense enough for broad-nib expand; keep it **fixed**
+    across masters (do not derive from rx/ry) so VF signatures stay stable.
+    For a budget-based count at design time, see ``ellipse_point_count``.
+    """
     return [
         (
             cx + rx * math.cos(2.0 * math.pi * i / n),
@@ -161,9 +166,12 @@ def open_arc_points(
     *,
     start_deg: float,
     end_deg: float,
-    n: int = 20,
+    n: int = 48,
 ) -> list[tuple[float, float]]:
-    """Unslanted elliptical arc samples (open centerline), degrees CCW from +x."""
+    """Unslanted elliptical arc samples (open centerline), degrees CCW from +x.
+
+    Fixed default ``n`` (not rx-derived) keeps Light/Bold topology aligned.
+    """
     a0 = math.radians(start_deg)
     a1 = math.radians(end_deg)
     # Go the short/long way as given (end may be < start for clockwise).
@@ -200,7 +208,7 @@ def open_bowl(
     thickness: float | None = None,
     open_side: str = "right",
     aperture_deg: float = 80.0,
-    n: int = 24,
+    n: int = 48,
 ) -> Drawing:
     """Open elliptical bowl; aperture centered on +x (right) or 180° (left).
 

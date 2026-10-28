@@ -10,6 +10,8 @@ from typekernel.geo.contour import signed_area
 from typekernel.geo.stroke import Centerline, CubicBezier, CubicCenterline
 from typekernel.plugins.construct import (
     broad_nib,
+    densify_polyline,
+    ellipse_point_count,
     expand_skeleton,
     expand_skeleton_cubic,
     pointed_pen,
@@ -108,3 +110,37 @@ def test_expand_signature_stable_across_thickness() -> None:
         assert all(seg.kind == "cubic" for c in drawing.contours for seg in c.segments)
         sigs.append(drawing.signature())
     assert sigs[0] == sigs[1] == sigs[2]
+
+
+
+def test_ellipse_point_count_grows_with_radius() -> None:
+    small = ellipse_point_count(40, 40, chord_budget=0.5)
+    big = ellipse_point_count(400, 400, chord_budget=0.5)
+    assert big > small
+    assert small >= 24
+
+
+def test_densify_polyline_shortens_chords() -> None:
+    pts = [
+        (100.0 + 80.0 * math.cos(2.0 * math.pi * i / 12.0), 100.0 + 80.0 * math.sin(2.0 * math.pi * i / 12.0))
+        for i in range(12)
+    ]
+    dense = densify_polyline(pts, closed=True, chord_budget=2.0)
+    assert len(dense) > len(pts)
+
+
+def test_expand_skeleton_densify_opt_in_stable_on_fixed_path() -> None:
+    """Same centerline + same chord_budget → same signature across weights."""
+    pts = [
+        (250.0 + 150.0 * math.cos(2.0 * math.pi * i / 16.0), 260.0 + 200.0 * math.sin(2.0 * math.pi * i / 16.0))
+        for i in range(16)
+    ]
+    cl = Centerline.from_points(pts, closed=True)
+    sigs = []
+    for thickness in (44.0, 100.0):
+        pen = broad_nib(thickness, contrast=0.52, angle_deg=28.0)
+        drawing = expand_skeleton(
+            cl, pen, join="round", cap="round", chord_budget=2.0
+        )
+        sigs.append(drawing.signature())
+    assert sigs[0] == sigs[1]

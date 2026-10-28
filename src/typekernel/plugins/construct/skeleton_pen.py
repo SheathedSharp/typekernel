@@ -26,6 +26,8 @@ from typekernel.geo.stroke import (
 __all__ = [
     "broad_nib",
     "pointed_pen",
+    "ellipse_point_count",
+    "densify_polyline",
     "expand_skeleton",
     "expand_skeleton_cubic",
 ]
@@ -49,6 +51,101 @@ def pointed_pen(
 ) -> Pen:
     """Near-circular pointed pen (default contrast 1)."""
     return Pen(thickness=float(thickness), contrast=float(contrast), angle_deg=float(angle_deg))
+
+
+
+
+def ellipse_point_count(
+    rx: float,
+    ry: float,
+    *,
+    chord_budget: float = 0.5,
+    minimum: int = 24,
+    maximum: int = 256,
+) -> int:
+    """Choose oval/arc sample count so polygon chord error stays under budget.
+
+    Agents should not guess ``n=`` for ``oval_points`` — pass this count (or
+    rely on :func:`expand_skeleton` densify). ``chord_budget`` is design units.
+    """
+    import math
+
+    if chord_budget <= 0:
+        raise ValueError(f"chord_budget must be positive, got {chord_budget!r}")
+    r = max(abs(float(rx)), abs(float(ry)), 1e-6)
+    # For a circle, chord length c ≈ 2 r sin(π/n); sagitta ≈ r - r cos(π/n).
+    # Require sagitta <= chord_budget → n >= π / acos(1 - budget/r).
+    ratio = min(1.0, float(chord_budget) / r)
+    # acos domain: 1 - ratio in [-1,1]; when budget >= r, one half is enough.
+    n_f = math.pi / max(math.acos(1.0 - ratio), 1e-6)
+    n = int(math.ceil(n_f))
+    return max(minimum, min(maximum, n))
+
+
+def densify_polyline(
+    points: Sequence[tuple[float, float]],
+    *,
+    closed: bool,
+    chord_budget: float = 0.5,
+) -> list[tuple[float, float]]:
+    """Catmull–Rom upsample so consecutive samples are within ``chord_budget``.
+
+    Straight stems with two endpoints stay untouched when the single segment
+    is already short enough; curved polylines (ovals, bowls) gain midpoints
+    without the project picking ``n``.
+    """
+    import math
+
+    pts = [(float(p[0]), float(p[1])) for p in points]
+    if len(pts) < 2 or chord_budget <= 0:
+        return pts
+
+    def _dist(a: tuple[float, float], b: tuple[float, float]) -> float:
+        return math.hypot(b[0] - a[0], b[1] - a[1])
+
+    def _at(i: int) -> tuple[float, float]:
+        n = len(pts)
+        if closed:
+            return pts[i % n]
+        return pts[max(0, min(n - 1, i))]
+
+    def _cr(p0, p1, p2, p3, t: float) -> tuple[float, float]:
+        t2 = t * t
+        t3 = t2 * t
+        return (
+            0.5
+            * (
+                (2 * p1[0])
+                + (-p0[0] + p2[0]) * t
+                + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2
+                + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
+            ),
+            0.5
+            * (
+                (2 * p1[1])
+                + (-p0[1] + p2[1]) * t
+                + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2
+                + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
+            ),
+        )
+
+    out: list[tuple[float, float]] = []
+    n = len(pts)
+    seg_count = n if closed else n - 1
+    for i in range(seg_count):
+        a = _at(i)
+        b = _at(i + 1)
+        out.append(a)
+        length = _dist(a, b)
+        if length <= chord_budget:
+            continue
+        steps = max(1, int(math.ceil(length / chord_budget)))
+        p0, p1, p2, p3 = _at(i - 1), a, b, _at(i + 2)
+        for s in range(1, steps):
+            out.append(_cr(p0, p1, p2, p3, s / steps))
+    if not closed:
+        out.append(pts[-1])
+    return out
 
 
 
@@ -202,12 +299,27 @@ def expand_skeleton(
     join: JoinStyle = "round",
     cap: CapStyle = "round",
     miter_limit: float = 4.0,
+    chord_budget: float | None = None,
 ) -> Drawing:
     """Expand a polyline skeleton with ``pen`` into a :class:`Drawing`.
 
     Closed centerlines that yield a ring get ``ink`` + ``counter`` roles from
     winding. Open strokes become a single ``ink`` contour.
+
+    ``chord_budget`` is opt-in Catmull–Rom densify (design units). Default
+    ``None`` keeps the given samples — required for VF when master geometry
+    scales with stem (absolute budgets would change point counts). Prefer
+    :func:`ellipse_point_count` for a stable oval ``n`` shared across masters.
     """
+    if isinstance(centerline, Centerline):
+        pts = [(p[0], p[1]) for p in centerline.points]
+        closed = bool(centerline.closed)
+    else:
+        pts = [(float(p[0]), float(p[1])) for p in centerline]
+        closed = False
+    if chord_budget is not None:
+        pts = densify_polyline(pts, closed=closed, chord_budget=float(chord_budget))
+        centerline = Centerline.from_points(pts, closed=closed)
     outline = expand(
         centerline,
         pen,
