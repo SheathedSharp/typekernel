@@ -61,6 +61,34 @@ optical probes. Bowl letters (`s e o c …`) stay silent. Override with
 
 No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations go in project `elements.py`.
 
+
+## Intent / Brief (prose → System)
+
+Honest typed intent — **not** aesthetics AI. Declared in project `system.py`:
+
+```python
+from typekernel.system import Brief, Intent
+
+BRIEF = Brief(
+    prose="Humanist italic, broad nib, medium contrast…",
+    intent=Intent(
+        contrast="medium",   # low|medium|high → tokens["pen_contrast"]
+        slant="italic",      # upright|italic|steep → System.slant
+        openness="normal",   # tight|normal|open → n_width/lc band
+        weight="regular",    # light|regular|bold → stem["lc"] band
+        pen_angle_deg=28.0,  # optional; else derived from slant feel
+    ),
+)
+INTENT = BRIEF.intent
+```
+
+Published maps live in `typekernel.system.intent` (`CONTRAST_TO_PEN`,
+`SLANT_TO_VALUE`, …). Helpers: `system_from_intent`, `apply_intent`,
+`check_intent`. `tk audit` loads `BRIEF`/`INTENT` once and emits
+`[warn] intent *: …` when System drifts outside bands. Prose twin: `brief.md`.
+
+Example starter: `latin-humanist-italic` ships `BRIEF` + `brief.md`.
+
 ## draw.construct (letter-free)
 
 ```python

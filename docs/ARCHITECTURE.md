@@ -233,7 +233,9 @@ src/typekernel/
     construct.py       # 不含字母语义的几何构造器
     slots.py           # CornerSite / EndSite / 填充协议 / 槽位应用
   system/
-    __init__.py        # 公开：System, Zones, Overshoot
+    __init__.py        # 公开：System, Zones, Overshoot, Intent/Brief
+    table.py           # System / Zones / Overshoot
+    intent.py          # Brief → System 映射与 check_intent
   project/
     __init__.py        # 公开：Project, glyph, Master
     registry.py        # @glyph 发现与注册
@@ -471,6 +473,9 @@ class System:
 不得有 `aperture` / `roundness` 这类“一个数影响多处几何”的旋钮。
 ``slant`` 是几何事实（整副字的倾角），不是多处扇出的风格旋钮；斜体项目应设 ``System.slant``，不要只把倾角藏进 ``tokens["slant"]``。
 
+Typed intent（``Intent`` / ``Brief``，``typekernel.system.intent``）把散文 brief 接到数值表：封闭词表映射到 ``slant`` / ``stem`` / ``pen_*`` / 宽比 token；``tk audit`` 在越界时告警。**不是**美学打分，也不生成字形。
+
+
 ### 6.8 `Project` / `@glyph` / `Master`
 
 ```python
@@ -580,4 +585,5 @@ class Project:
 - 不做 GUI 编辑器；agent 的“编辑器”就是字形文件 + 样张。
 - 不在内核里放“能自动生成全套字”的工厂（包括“方便起见”的 `build_all`）。
 - 不用数值门禁冒充美学判断；美学由视觉审阅决定。
+- 不做 `style_consistency` / `originality` 一类美学 AI 分；`Intent` 只做 brief→System 的显式映射与越界告警。
 - 不为兼容旧 API 长期维持双轨：旧路径直接删除，git 历史即存档。

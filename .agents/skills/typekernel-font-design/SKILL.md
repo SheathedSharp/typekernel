@@ -28,8 +28,8 @@ Write a font project that:
 
 ```
 tk new myfont --starter latin-sans
-1. brief.md                         # intent in prose
-2. system.py                        # every number needs a reason
+1. brief.md + system.py BRIEF/INTENT # prose + typed Intent (see reference.md)
+2. system.py numbers                 # must stay inside Intent bands; tk audit checks
 3. control glyphs n o H O           → tk proof control  → look, change, repeat
 4. elements.py + expand groups      → tk proof --glyph n / --text "…"
 5. tk audit                         → stem / zone / direction / compat; fix in glyph code
@@ -56,6 +56,7 @@ Designers' loop is driven by **looking**. Do not invent private PIL croppers:
 | Pen contrast×angle preview | `tk pen --contrast 0.26 --angle 30` |
 | Even-odd cavity hunt (opt-in) | `tk audit --overlap` |
 | Static ship without overlap cavities | `tk build --resolve-overlaps` (not with `--variable`) |
+| Intent vs System drift | `tk audit` (`BRIEF`/`INTENT` in system.py → `[warn] intent`) |
 
 ## Hard rules
 

@@ -9,7 +9,7 @@ cubics so ``Drawing.signature()`` stays thickness-stable for VF.
 from __future__ import annotations
 
 from typekernel.project import Master
-from typekernel.system import Overshoot, System, Zones
+from typekernel.system import Brief, Intent, Overshoot, System, Zones
 
 system = System(
     upm=1000,
@@ -73,6 +73,25 @@ system = System(
         "slash_width": 280.0,
     },
 )
+
+
+# Typed intent (checked by ``tk audit``). Prose twin: brief.md.
+# Mapping tables: typekernel.system.intent — not an aesthetics score.
+BRIEF = Brief(
+    prose=(
+        "Humanist true italic: broad nib at ~28°, medium calligraphic contrast, "
+        "normal counters, Regular weight. Construction is skeleton + pen; "
+        "no heal/blend/seal."
+    ),
+    intent=Intent(
+        contrast="medium",
+        slant="italic",
+        openness="normal",
+        weight="regular",
+        pen_angle_deg=28.0,
+    ),
+)
+INTENT = BRIEF.intent  # alias for agents / EXTRA tooling
 
 
 def _weight_system(base: System, stem_scale: float) -> System:
