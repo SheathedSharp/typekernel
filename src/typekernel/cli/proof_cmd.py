@@ -40,8 +40,18 @@ def _find_binary(root: Path, build_dir: Path) -> Path:
 
 
 def _find_variable_binary(build_dir: Path) -> Path | None:
-    """Prefer a variable font when present (``*VF*.ttf`` / ``*.ttf`` with fvar)."""
-    candidates = sorted(build_dir.glob("*VF*.ttf")) + sorted(build_dir.glob("*.ttf"))
+    """Prefer a variable font when present (``*VF*`` then any binary with fvar).
+
+    ``tk build --variable`` defaults to OTF, so both extensions must be
+    considered; checking only ``*.ttf`` silently fell back to a static
+    single-weight ladder.
+    """
+    candidates = (
+        sorted(build_dir.glob("*VF*.ttf"))
+        + sorted(build_dir.glob("*VF*.otf"))
+        + sorted(build_dir.glob("*.ttf"))
+        + sorted(build_dir.glob("*.otf"))
+    )
     for path in candidates:
         try:
             from fontTools.ttLib import TTFont
@@ -51,7 +61,7 @@ def _find_variable_binary(build_dir: Path) -> Path | None:
                 tt.close()
                 return path
             tt.close()
-        except Exception:
+        except Exception:  # noqa: BLE001, S112 - skip non-fonts in the build dir
             continue
     return None
 
