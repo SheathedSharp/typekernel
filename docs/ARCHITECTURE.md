@@ -458,11 +458,16 @@ class System:
     zones: Zones
     overshoot: Overshoot
     stem: Mapping[str, float]           # 自由键，如 "lc" / "lc_h" / "uc"
-    tokens: Mapping[str, float] = {}    # 项目自定义
+    tokens: Mapping[str, float] = {}    # 项目自定义（含 space_stem_mul 等）
+    slant: float = 0.0                  # Δx/Δy 斜体倾角比；0=正体；供 audit/spacing/kern
     def tuned(self, **kw) -> System
+    def slant_dx(self, y, *, y0=0.0) -> float
+    def map_xy(self, x, y, *, y0=0.0) -> tuple[float, float]
+    def stem_direction_deg(self) -> float   # 斜体“竖笔”走向（正体=90°）
 ```
 
 不得有 `aperture` / `roundness` 这类“一个数影响多处几何”的旋钮。
+``slant`` 是几何事实（整副字的倾角），不是多处扇出的风格旋钮；斜体项目应设 ``System.slant``，不要只把倾角藏进 ``tokens["slant"]``。
 
 ### 6.8 `Project` / `@glyph` / `Master`
 

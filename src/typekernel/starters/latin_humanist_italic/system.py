@@ -16,9 +16,9 @@ system = System(
     zones=Zones(base=0, x=500, cap=700, asc=750, desc=-200),
     overshoot=Overshoot(round=14, pointed=10),
     stem={"lc": 72, "lc_h": 58, "uc": 80, "uc_h": 64},
+    # Italic lean: Δx = slant * Δy (System field — not a token).
+    slant=0.18,
     tokens={
-        # Italic lean: Δx = slant * Δy (design units per unit rise).
-        "slant": 0.18,
         "pen_contrast": 0.52,
         "pen_angle_deg": 28.0,
         "n_width": 400.0,
@@ -28,6 +28,9 @@ system = System(
         "O_width": 620.0,
         "lsb_lc": 36.0,
         "lsb_uc": 44.0,
+        # space advance = stem[lc]*space_stem_mul + n_lsb*space_lsb_mul
+        "space_stem_mul": 2.5,
+        "space_lsb_mul": 0.5,
         "arch_rise": 0.12,
         # Remaining ASCII widths (skeleton extents before spacing pack).
         "f_width": 260.0,

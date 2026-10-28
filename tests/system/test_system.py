@@ -43,3 +43,23 @@ def test_no_aperture_or_roundness_attributes() -> None:
     s = _regular()
     assert not hasattr(s, "aperture")
     assert not hasattr(s, "roundness")
+
+
+def test_system_slant_defaults_upright() -> None:
+    s = _regular()
+    assert s.slant == 0.0
+    assert not s.is_italic
+    assert s.stem_direction_deg() == 90.0
+    assert s.slant_dx(100.0) == 0.0
+    assert s.map_xy(10.0, 100.0) == (10.0, 100.0)
+
+
+def test_system_slant_helpers() -> None:
+    s = _regular().tuned(slant=0.2)
+    assert s.is_italic
+    assert abs(s.slant_dx(100.0) - 20.0) < 1e-9
+    assert s.map_xy(10.0, 100.0) == (30.0, 100.0)
+    # atan2(1, 0.2) degrees
+    import math
+
+    assert abs(s.stem_direction_deg() - math.degrees(math.atan2(1.0, 0.2))) < 1e-9

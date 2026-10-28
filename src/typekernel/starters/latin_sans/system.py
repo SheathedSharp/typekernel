@@ -20,6 +20,8 @@ system = System(
         "bowl_aperture": 0.42,
         "lsb_lc": 40,
         "rsb_lc": 40,
+        "space_stem_mul": 2.5,
+        "space_lsb_mul": 0.5,
         "lsb_uc": 50,
         "rsb_uc": 50,
         "h_width": 430,

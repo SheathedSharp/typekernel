@@ -25,14 +25,14 @@ def slanted_vertical_optical_ratio(system: System) -> float:
     """Horizontal stem width per unit pen thickness for a slanted vertical.
 
     ``tk audit`` measures filled horizontal spans (``list_vertical_stems``).
-    An elliptical broad nib at ``pen_angle_deg`` on a stem leaned by ``slant``
+    An elliptical broad nib at ``pen_angle_deg`` on a stem leaned by ``System.slant``
     yields optical width ``ratio * thickness``, not ``thickness`` itself.
     Calibrating pens by this ratio keeps System.stem aligned with audit.
     """
     from typekernel.optics.stem import list_vertical_stems
 
     contrast, angle = _pen_params(system)
-    slant = float(system.tokens.get("slant", 0.0))
+    slant = float(system.slant)
     # Unit thickness probe — expand is linear in thickness for this pen model.
     probe_th = 40.0
     cl = slanted_polyline([(200.0, 0.0), (200.0, 500.0)], slant, closed=False)
@@ -84,7 +84,7 @@ def stroke(
     not raw ``Pen.thickness`` — elliptical angle + italic slant are calibrated
     out so ``tk audit`` stem checks match the numeric table.
     """
-    slant = float(system.tokens.get("slant", 0.0))
+    slant = float(system.slant)
     cl = slanted_polyline(points, slant, closed=closed)
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
     pen = pen_for_optical_stem(system, optical)

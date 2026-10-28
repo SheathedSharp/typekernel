@@ -232,16 +232,34 @@ def _translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
     )
 
 
-def _pack_glyph(glyph: Glyph, lsb: float, rsb: float) -> Glyph:
-    """Shift ink so xmin == lsb; advance = lsb + ink_width + rsb."""
+def _pack_glyph(glyph: Glyph, lsb: float, rsb: float, system: System | None = None) -> Glyph:
+    """Shift ink so sidebearing target matches; advance = lsb + ink + rsb.
+
+    Upright (``system is None`` or ``not system.is_italic``): bbox xmin → lsb.
+    Italic: silhouette left/right at mid x-height → lsb/rsb so kern/spacing
+    follow the lean instead of the sheared bounding box.
+    """
     if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
-        # empty (space): keep advance or use lsb+rsb as width hint
         return replace(glyph, advance=max(glyph.advance, lsb + rsb))
+
+    if system is not None and system.is_italic:
+        from typekernel.optics.space import silhouette_edge
+
+        y = float(system.zones.x) * 0.5
+        left = silhouette_edge([glyph.outline], y, "left")
+        right = silhouette_edge([glyph.outline], y, "right")
+        if left is not None and right is not None:
+            ink = float(right - left)
+            dx = lsb - float(left)
+            shifted = _translate_outline(glyph.outline, dx)
+            return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
+
     min_x, _miny, max_x, _maxy = bounds(glyph.outline)
     ink = float(max_x - min_x)
     dx = lsb - float(min_x)
     shifted = _translate_outline(glyph.outline, dx)
     return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
+
 
 
 def apply_spacing(font: Font, system: System) -> dict[str, tuple[float, float]]:
@@ -254,14 +272,24 @@ def apply_spacing(font: Font, system: System) -> dict[str, tuple[float, float]]:
     for name, (lsb, rsb) in resolved.items():
         if name not in font:
             continue
-        font.add_glyph(_pack_glyph(font[name], lsb, rsb), replace=True)
+        font.add_glyph(_pack_glyph(font[name], lsb, rsb, system), replace=True)
 
-    # Default space width from n rhythm when present.
-    if "space" in font and "n" in resolved:
-        n_lsb, _n_rsb = resolved["n"]
-        space_adv = float(system.stem["lc"]) * 2.5 + n_lsb * 0.5
-        g = font["space"]
-        font.add_glyph(replace(g, advance=space_adv), replace=True)
+    # Space width from project tokens (not library letter formulas).
+    # Prefer absolute ``space_advance``; else stem[lc]*space_stem_mul + n_lsb*space_lsb_mul.
+    if "space" in font:
+        tokens = system.tokens
+        if "space_advance" in tokens:
+            space_adv = float(tokens["space_advance"])
+        elif "n" in resolved:
+            n_lsb, _n_rsb = resolved["n"]
+            stem_mul = float(tokens.get("space_stem_mul", 2.5))
+            lsb_mul = float(tokens.get("space_lsb_mul", 0.5))
+            space_adv = float(system.stem["lc"]) * stem_mul + n_lsb * lsb_mul
+        else:
+            space_adv = None
+        if space_adv is not None:
+            g = font["space"]
+            font.add_glyph(replace(g, advance=space_adv), replace=True)
 
     for left, right, value in KERN_PAIRS:
         left_n = font.resolve(left)

@@ -72,6 +72,21 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
         outline = drawing.outline()
         zone = float(system.zones.cap if is_uc else system.zones.x)
         if "vertical" in kinds:
+            # Italic: constructed "verticals" lean — probe along System.stem_direction.
+            if system.is_italic:
+                try:
+                    min_x, min_y, max_x, max_y = bounds(outline)
+                except ValueError:
+                    min_x = min_y = max_x = max_y = 0.0
+                origin = ((min_x + max_x) * 0.5, (min_y + max_y) * 0.5)
+                deg = float(system.stem_direction_deg())
+                try:
+                    w = measure_oriented_stem(outline, origin, deg)
+                except Exception:
+                    w = None
+                if w is not None and w > 0:
+                    if abs(w - stem_target) / stem_target <= 0.25:
+                        measured.append(("optical.slanted_vertical", w, stem_target))
             best: list = []
             best_score = float("inf")
             agreeing_bands = 0
