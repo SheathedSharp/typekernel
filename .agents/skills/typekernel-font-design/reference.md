@@ -11,7 +11,7 @@
 | `tk proof --text "…" [PATH]` | Arbitrary string → `proofs/text.png` (set optional) |
 | `tk proof --glyph n [PATH]` | Zoomed crop → `proofs/glyph-n.png` |
 | `tk audit [PATH]` | stem / zone / direction / master-compat diagnostics |
-| `tk audit --overlap` | Opt-in: ink∩ink even-odd cavity warnings (noisy on intentional VF overlaps) |
+| `tk audit --overlap` | Opt-in: ink∩ink cancel **next to a counter** (字腔 notch); quiet on pure multi-ink VF overlaps |
 | `tk pen --contrast C --angle A` | Broad-nib effective-width preview by stroke direction |
 | `tk diff [PATH]` | changed glyphs via `outline_hash` (`--snapshot` / `--against`) |
 
@@ -55,9 +55,9 @@ AUDIT_STEMS = {
 }
 ```
 
-Letters without upright stems (`v w x y z s e o …`) skip optical **vertical**
-probes by default (avoids false noise). Declare `"diagonal"` only when you want
-oriented optical checks.
+Diagonal letters (`v w x y z` + caps) default to oriented **diagonal**
+optical probes. Bowl letters (`s e o c …`) stay silent. Override with
+`AUDIT_STEMS` when needed. Vertical probes never run on the non-vertical set.
 
 No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations go in project `elements.py`.
 
@@ -82,10 +82,15 @@ Signatures also live in ARCHITECTURE.md「几何构造器」.
 from typekernel.plugins.construct.skeleton_pen import broad_nib, pointed_pen, expand_skeleton
 
 pen = broad_nib(stem, contrast=0.26, angle_deg=30)
-drawing = expand_skeleton(centerline, pen, join="miter")  # closed + round join → compat risk
+drawing = expand_skeleton(centerline, pen, join="bevel")  # closed MUST NOT use join="round" (tool error)
 ```
 
 Preview what a pen does: `tk pen --contrast 0.26 --angle 30 --thickness 100`.
+
+Closed rails: `join="bevel"` (required — `join="round"` raises). Sampling: keep a
+**fixed** `n` from `ellipse_point_count(rx, ry)` across masters, or
+`expand_skeleton(..., chord_budget="auto")` when masters share the same
+centerline samples (densify is centerline-only → VF-stable).
 
 ## optics.stem
 

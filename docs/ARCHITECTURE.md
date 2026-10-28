@@ -406,14 +406,16 @@ def apply_slots(
 ```python
 def broad_nib(thickness: float, *, contrast: float = 0.55, angle_deg: float = 30.0) -> Pen
 def pointed_pen(thickness: float, *, contrast: float = 1.0, angle_deg: float = 0.0) -> Pen
-def expand_skeleton(centerline, pen, *, join="round", cap="round", miter_limit=4.0) -> Drawing
+def expand_skeleton(centerline, pen, *, join="round", cap="round", miter_limit=4.0, chord_budget=None) -> Drawing
+    # closed + join="round" → ValueError (VF signature flip); use bevel/miter
+    # chord_budget=None validates closed sampling; "auto"|float densifies (centerline-stable)
 def expand_skeleton_cubic(centerline, pen, *, join="round", cap="round", ...) -> tuple[Drawing, CenterlineExpandReport]
 ```
 
 规则：
 
 - 复用 `geo.stroke.Pen` / `Centerline` / `CubicCenterline` / `expand` / `expand_cubic`；不 import starter，不出现字母名。
-- 展开结果去掉近零长线段，并把剩余 `line` 提升为共线 handle 的 `cubic`（椭圆 round join 会随笔宽在 line/cubic 间翻转；统一成 cubic 后 `Drawing.signature()` 跨字重稳定，可开 Light/Bold/VF）；单轮廓一律 `ink`（必要时翻成 CCW）；环：最大 |area| → `ink`，其余 → `counter`。
+- 展开结果去掉近零长线段，并把剩余 `line` 提升为共线 handle 的 `cubic`（闭骨架禁止 `join="round"`（工具直接报错）；开骨架 round join 的 line/cubic 翻转仍经统一成 cubic 后保持 `Drawing.signature()` 跨字重稳定）；单轮廓一律 `ink`（必要时翻成 CCW）；环：最大 |area| → `ink`，其余 → `counter`。
 - 无角点/端点槽的 skeleton 字形：`Project` 可不配置 `corners`/`ends`，从而跳过 `apply_slots`（笔迹接合不是 Writer G1 链）。
 - `blend_corners` / heal / seal **不是**本插件路径。
 
