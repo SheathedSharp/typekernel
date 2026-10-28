@@ -38,7 +38,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
-  "ruff>=0.6",
+  "ruff>=0.17,<0.18",
   "mypy>=1.11",
 ]
 boolean = [
@@ -70,6 +70,9 @@ typekernel = ["py.typed", "starters/**/*"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# No ``select``: this project enforces ruff's curated default set. That set
+# grows between releases, so ``ruff`` is version-pinned in the ``dev`` extra
+# above — bumping it is a deliberate commit that may surface new rules.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -91,3 +94,11 @@ module = [
   "ufo2ft.*",
 ]
 ignore_missing_imports = true
+
+# Starter templates are *project* code: ``tk new`` copies them into a user's
+# font project, where ``elements`` / ``system`` resolve because the project
+# directory is put on ``sys.path`` at runtime. They are written the way user
+# project code is written (no annotations), so ``strict`` does not apply.
+[[tool.mypy.overrides]]
+module = "typekernel.starters.*"
+ignore_errors = true
