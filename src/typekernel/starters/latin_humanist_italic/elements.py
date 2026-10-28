@@ -88,8 +88,8 @@ def stroke(
     cl = slanted_polyline(points, slant, closed=closed)
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
     pen = pen_for_optical_stem(system, optical)
-    # Closed rails: bevel keeps offset point order thickness-stable for VF
-    # (elliptical round joins reverse the counter under Bold). Open strokes keep
+    # Closed rails: bevel required — expand_skeleton rejects join="round" on
+    # closed centerlines (VF signature / ink↔counter flip). Open strokes keep
     # round caps/joins for terminal shape.
     join = "bevel" if closed else "round"
     return expand_skeleton(cl, pen, join=join, cap="round")

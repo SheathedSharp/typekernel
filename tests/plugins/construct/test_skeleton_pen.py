@@ -44,7 +44,7 @@ def test_expand_closed_ring_ink_and_counter() -> None:
         (250.0 + 180.0 * math.cos(2.0 * math.pi * i / 24.0), 260.0 + 200.0 * math.sin(2.0 * math.pi * i / 24.0))
         for i in range(24)
     ]
-    drawing = expand_skeleton(Centerline.from_points(pts, closed=True), pen, join="round")
+    drawing = expand_skeleton(Centerline.from_points(pts, closed=True), pen, join="bevel")
     assert len(drawing.contours) == 2
     assert set(drawing.roles) == {"ink", "counter"}
     ink = drawing.contours[drawing.roles.index("ink")]
@@ -105,7 +105,7 @@ def test_expand_signature_stable_across_thickness() -> None:
     sigs = []
     for thickness in (44.0, 72.0, 100.0):
         pen = broad_nib(thickness, contrast=0.52, angle_deg=28.0)
-        drawing = expand_skeleton(cl, pen, join="round", cap="round")
+        drawing = expand_skeleton(cl, pen, join="bevel", cap="round")
         # All segments promoted to cubics for master-compat.
         assert all(seg.kind == "cubic" for c in drawing.contours for seg in c.segments)
         sigs.append(drawing.signature())
@@ -140,7 +140,54 @@ def test_expand_skeleton_densify_opt_in_stable_on_fixed_path() -> None:
     for thickness in (44.0, 100.0):
         pen = broad_nib(thickness, contrast=0.52, angle_deg=28.0)
         drawing = expand_skeleton(
-            cl, pen, join="round", cap="round", chord_budget=2.0
+            cl, pen, join="bevel", cap="round", chord_budget=2.0
         )
         sigs.append(drawing.signature())
     assert sigs[0] == sigs[1]
+
+
+def test_expand_closed_round_join_fails_loud() -> None:
+    """Closed + round must raise (VF signature flip); do not rely on comments."""
+    pen = broad_nib(70.0, contrast=0.55, angle_deg=25.0)
+    pts = [
+        (250.0 + 180.0 * math.cos(2.0 * math.pi * i / 24.0), 260.0 + 200.0 * math.sin(2.0 * math.pi * i / 24.0))
+        for i in range(24)
+    ]
+    with pytest.raises(ValueError, match="join='round'"):
+        expand_skeleton(Centerline.from_points(pts, closed=True), pen, join="round")
+
+
+def test_expand_closed_undersampled_raises_without_densify() -> None:
+    pen = broad_nib(60.0, contrast=0.5, angle_deg=20.0)
+    # 8-gon around a *large* oval — below ellipse_point_count(..., chord_budget=2).
+    # Small dots / diamonds (n<8 or radius<60) are intentional polygons and pass.
+    pts = [
+        (250.0 + 200.0 * math.cos(2.0 * math.pi * i / 8.0), 260.0 + 220.0 * math.sin(2.0 * math.pi * i / 8.0))
+        for i in range(8)
+    ]
+    with pytest.raises(ValueError, match="samples"):
+        expand_skeleton(Centerline.from_points(pts, closed=True), pen, join="bevel")
+
+
+def test_expand_closed_small_diamond_allowed() -> None:
+    """i/j-style diamond dots must not trip the large-bowl sampling gate."""
+    pen = broad_nib(40.0, contrast=0.5, angle_deg=20.0)
+    pts = [(100.0, 80.0), (120.0, 100.0), (100.0, 120.0), (80.0, 100.0)]
+    drawing = expand_skeleton(Centerline.from_points(pts, closed=True), pen, join="bevel")
+    assert drawing.contours
+
+
+def test_expand_chord_budget_auto_stable_across_thickness() -> None:
+    """auto densify is centerline-only → same signature across pen weights."""
+    pts = [
+        (250.0 + 150.0 * math.cos(2.0 * math.pi * i / 16.0), 260.0 + 200.0 * math.sin(2.0 * math.pi * i / 16.0))
+        for i in range(16)
+    ]
+    cl = Centerline.from_points(pts, closed=True)
+    sigs = []
+    for thickness in (44.0, 72.0, 100.0):
+        pen = broad_nib(thickness, contrast=0.52, angle_deg=28.0)
+        drawing = expand_skeleton(cl, pen, join="bevel", chord_budget="auto")
+        sigs.append(drawing.signature())
+    assert sigs[0] == sigs[1] == sigs[2]
+

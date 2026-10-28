@@ -292,6 +292,45 @@ def _drawing_from_contours(contours: tuple[Contour, ...]) -> Drawing:
     return Drawing(tuple(ordered), tuple(roles), nodes, slots=())
 
 
+def _closed_sampling_minimum(pts: Sequence[tuple[float, float]]) -> tuple[int, float]:
+    """Return ``(min_samples, radius)`` for a closed polyline's bounding oval."""
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    rx = (max(xs) - min(xs)) * 0.5
+    ry = (max(ys) - min(ys)) * 0.5
+    r = max(rx, ry)
+    # chord_budget=2.0u catches faceted large bowls; small dots use coarser n.
+    return ellipse_point_count(rx, ry, chord_budget=2.0, minimum=16), r
+
+
+def _require_closed_sampling(
+    pts: Sequence[tuple[float, float]],
+    *,
+    closed: bool,
+) -> None:
+    """Fail loud on undersampled *large* closed curves.
+
+    Intentional polygons (diamonds, n<8) and small punctuation dots (radius
+    under 60) are left alone — agents densify those with chord_budget='auto'
+    or pick n via ellipse_point_count when they care. Large bowls with too few
+    samples facet under a broad nib and must be fixed at the call site.
+    """
+    if not closed or len(pts) < 8:
+        return
+    need, radius = _closed_sampling_minimum(pts)
+    if radius < 60.0:
+        return
+    if len(pts) >= need:
+        return
+    raise ValueError(
+        f"closed centerline has {len(pts)} samples; need ≥ {need} for radius "
+        f"~{radius:.0f}. Use ellipse_point_count(rx, ry) for a fixed n shared "
+        "across masters, or pass chord_budget=2.0 / chord_budget='auto' to "
+        "densify the given polyline (VF-safe only when masters share the same "
+        "centerline samples)."
+    )
+
+
 def expand_skeleton(
     centerline: Centerline | Sequence[tuple[float, float]],
     pen: Pen,
@@ -299,17 +338,24 @@ def expand_skeleton(
     join: JoinStyle = "round",
     cap: CapStyle = "round",
     miter_limit: float = 4.0,
-    chord_budget: float | None = None,
+    chord_budget: float | str | None = None,
 ) -> Drawing:
     """Expand a polyline skeleton with ``pen`` into a :class:`Drawing`.
 
     Closed centerlines that yield a ring get ``ink`` + ``counter`` roles from
     winding. Open strokes become a single ``ink`` contour.
 
-    ``chord_budget`` is opt-in Catmull–Rom densify (design units). Default
-    ``None`` keeps the given samples — required for VF when master geometry
-    scales with stem (absolute budgets would change point counts). Prefer
-    :func:`ellipse_point_count` for a stable oval ``n`` shared across masters.
+    **Closed + ``join='round'`` raises.** Elliptical round joins flip outer/inner
+    segment counts across pen weight (ink/counter swap in ``Drawing.signature``),
+    which breaks VF. Use ``join='bevel'`` or ``'miter'`` on closed rails; keep
+    ``round`` for open strokes/caps.
+
+    ``chord_budget`` densifies the polyline (Catmull–Rom, design units). Default
+    ``None`` keeps the given samples and, for closed paths, raises if sampling is
+    far below :func:`ellipse_point_count` for the bounding radius. Pass
+    ``chord_budget='auto'`` (alias ``2.0``) to densify — VF-safe when masters
+    share identical centerline samples; prefer a fixed ``ellipse_point_count``
+    ``n`` when master geometry itself scales with stem.
     """
     if isinstance(centerline, Centerline):
         pts = [(p[0], p[1]) for p in centerline.points]
@@ -317,9 +363,41 @@ def expand_skeleton(
     else:
         pts = [(float(p[0]), float(p[1])) for p in centerline]
         closed = False
-    if chord_budget is not None:
-        pts = densify_polyline(pts, closed=closed, chord_budget=float(chord_budget))
+
+    if closed and join == "round":
+        raise ValueError(
+            "expand_skeleton: join='round' is not allowed on closed centerlines. "
+            "Round elliptical joins change segment counts / winding assignment "
+            "across pen weight and break Drawing.signature (VF incompat). "
+            "Use join='bevel' (preferred) or join='miter' for closed rails; "
+            "keep join='round' for open strokes."
+        )
+
+    budget: float | None
+    if chord_budget is None:
+        budget = None
+    elif isinstance(chord_budget, str):
+        if chord_budget.strip().lower() != "auto":
+            raise ValueError(
+                f"chord_budget must be None, a positive float, or 'auto'; "
+                f"got {chord_budget!r}"
+            )
+        budget = 2.0
+    else:
+        budget = float(chord_budget)
+        if budget <= 0:
+            raise ValueError(f"chord_budget must be positive, got {chord_budget!r}")
+
+    if budget is not None:
+        pts = densify_polyline(pts, closed=closed, chord_budget=budget)
         centerline = Centerline.from_points(pts, closed=closed)
+    else:
+        _require_closed_sampling(pts, closed=closed)
+        if isinstance(centerline, Centerline):
+            pass
+        else:
+            centerline = Centerline.from_points(pts, closed=closed)
+
     outline = expand(
         centerline,
         pen,

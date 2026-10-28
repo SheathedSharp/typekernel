@@ -91,6 +91,7 @@ def stroke(
     cl = slanted_polyline(points, system, closed=closed)
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
     pen = pen_for_optical_stem(system, optical)
+    # closed → bevel: expand_skeleton rejects join="round" on closed rails (VF).
     join = "bevel" if closed else "round"
     return expand_skeleton(cl, pen, join=join, cap="round")
 
