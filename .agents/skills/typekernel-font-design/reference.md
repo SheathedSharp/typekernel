@@ -4,7 +4,7 @@
 
 | Command | Role |
 | --- | --- |
-| `tk new NAME --starter latin-sans` | Copy starter (system, elements, glyphs, spacing, font) |
+| `tk new NAME --starter latin-sans` | Copy starter (also `latin-humanist-italic`, `latin-chancery`) |
 | `tk build [PATH]` | Project → Font → UFO/OTF (default) |
 | `tk build --variable` | Light / Regular / Bold → designspace + VF |
 | `tk proof SET [PATH]` | `control` \| `spacing` \| `kern` \| `charset` \| `ladder` \| `all` |
@@ -27,10 +27,22 @@ system = System(
     zones=Zones(base=0, x=520, cap=700, asc=740, desc=-200),
     overshoot=Overshoot(round=12, pointed=10),
     stem={"lc": 84, "lc_h": 70, "uc": 92, "uc_h": 76},
-    tokens={"n_width": 430, "lsb_lc": 40, "n_advance": 510, ...},
+    slant=0.0,  # first-class italic lean (Δx/Δy); NOT tokens["slant"]
+    tokens={
+        "n_width": 430, "lsb_lc": 40, "n_advance": 510, ...,
+        "space_stem_mul": 2.5, "space_lsb_mul": 0.5,  # or "space_advance": 280
+    },
 )
 light = system.tuned(stem={k: v * 0.62 for k, v in dict(system.stem).items()})
+# italic helpers: system.slant_dx(y), system.map_xy(x, y), system.stem_direction_deg()
 ```
+
+Italic faces set ``System.slant`` (e.g. ``0.18``) so ``tk audit`` probes slanted
+verticals and project ``apply_spacing`` packs sidebearings at mid x-height.
+Do **not** hide lean only in ``tokens["slant"]`` — kern/audit/spacing read the field.
+
+Space width is a **project token**: ``space_advance`` absolute, or
+``stem[lc] * space_stem_mul + n_lsb * space_lsb_mul`` (defaults 2.5 / 0.5).
 
 Optional in the same `system.py` module — stroke kinds for `tk audit` optical probes:
 

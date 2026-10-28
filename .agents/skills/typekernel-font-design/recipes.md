@@ -32,3 +32,23 @@ tk proof --glyph n --size 320
 tk pen --contrast 0.26 --angle 30 --out /tmp/pen.png
 tk audit --overlap   # only when hunting cavities
 ```
+
+## Italic slant (System field)
+
+```python
+system = System(..., slant=0.18, tokens={...})  # not tokens["slant"]
+x, y = system.map_xy(100, 500)
+bearing = system.stem_direction_deg()  # for oriented stem probes
+```
+
+`tk audit` and project `apply_spacing` read ``System.slant`` for italic-aware
+vertical probes and mid-x-height sidebearing packing.
+
+## Chancery flourishes
+
+```bash
+tk new mychancery --starter latin-chancery
+```
+
+Use `pen_dot`, `flourish_exit` / `flourish_entry` / `stroke_fragment` from the
+copied `elements.py` — do not reimplement hook curls by hand.

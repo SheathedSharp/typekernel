@@ -40,6 +40,8 @@ tk new myfont --starter latin-sans
 ```
 
 Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/Bold).
+Also: **latin-humanist-italic** (skeleton+pen, `System.slant`), **latin-chancery**
+(minimal + `pen_dot` / flourish helpers — do not reinvent curls).
 
 ## See before you ship (perception)
 

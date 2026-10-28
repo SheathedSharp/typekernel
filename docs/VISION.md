@@ -34,6 +34,7 @@ typekernel 补的是那一层：**可编程的光学与结构内核**，不是�
 `geo` / `draw` / `system` / `project` / `plugins` / `cli` 已落地，字母几何全部在 starter 项目里，内核不含任何字母名。两套 starter 证明内核零修改即可承载不同构造方式：
 
 - **`latin-sans`** — `contour` / `overlap` 构造，a–z A–Z 0–9 + 标点 + spacing + Light/Bold VF。
-- **`latin-humanist-italic`** — `skeleton + pen` 构造，宽头笔斜体，A–Z a–z 0–9 + 基础标点 + Light/Bold VF。
+- **`latin-humanist-italic`** — `skeleton + pen` 构造（`System.slant`）
+- **`latin-chancery`** — 最小控制字 + `pen_dot` / flourish helpers，宽头笔斜体，A–Z a–z 0–9 + 基础标点 + Light/Bold VF。
 
 斜体是另一套设计，不用机械 oblique 冒充。版本仍是 `0.0.0`。

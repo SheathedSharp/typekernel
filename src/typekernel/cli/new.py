@@ -11,6 +11,7 @@ __all__ = ["STARTERS", "create_project"]
 STARTERS: dict[str, str] = {
     "latin-sans": "latin_sans",
     "latin-humanist-italic": "latin_humanist_italic",
+    "latin-chancery": "latin_chancery",
 }
 
 _SYSTEM_PY = '''\
@@ -90,7 +91,7 @@ def create_project(
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
-    ``latin-sans`` or ``latin-humanist-italic`` to copy the matching starter
+    ``latin-sans``, ``latin-humanist-italic``, or ``latin-chancery`` to copy the matching starter
     (system, elements, control glyphs).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
