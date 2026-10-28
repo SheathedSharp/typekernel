@@ -1,4 +1,4 @@
-"""Decoupling litmus — same synthetic glyphs × three corner configs (§9.10 #28).
+"""Decoupling litmus — same synthetic glyphs × three corner configs (落地顺序 #28).
 
 Glyph sources must not change when only the Project corner wiring changes.
 Uses synthetic names only (no single-letter glyph strings).
@@ -162,7 +162,7 @@ def test_three_corner_configs_leave_glyph_sources_unchanged(tmp_path: Path) -> N
 
     assert results["plain"]["syn.stem1"] != results["slab"]["syn.stem1"]
     assert results["slab"]["syn.stem1"] != results["bracketed"]["syn.stem1"]
-    # §9.5: explicit plain() wiring ≡ unmatched empty map on segment kinds.
+    # 槽位与填充协议: explicit plain() wiring ≡ unmatched empty map on segment kinds.
     empty = Project(_system(), glyphs, corners={}, ends={})
     empty.discover()
     for name in names:

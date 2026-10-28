@@ -1,4 +1,4 @@
-"""Contract tests for ``plugins.construct.skeleton_pen`` (ARCHITECTURE M6)."""
+"""Contract tests for ``plugins.construct.skeleton_pen`` (ARCHITECTURE.md「构造插件」)."""
 
 from __future__ import annotations
 

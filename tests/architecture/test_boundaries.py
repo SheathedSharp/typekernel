@@ -1,7 +1,7 @@
-"""Architecture boundary guards (ARCHITECTURE.md §9.8).
+"""Architecture boundary guards (ARCHITECTURE.md 架构守卫).
 
 Scan new-kernel packages with ``ast`` only — no extra dependencies.
-When the packages are empty (pre-M1), every rule still passes.
+When the packages are empty, every rule still passes.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src" / "typekernel"
 
-# M4 exit: rule 1 covers the whole package tree (no typekernel.parts anywhere).
+# rule 1 covers the whole package tree (no typekernel.parts anywhere).
 # Rules 2–4 still scope to the new-kernel packages below.
 KERNEL_PACKAGES = ("draw", "system", "project", "cli", "plugins")
 KERNEL_TEST_DIRS = ("draw", "system", "project")
@@ -96,7 +96,7 @@ def all_src_files() -> list[Path]:
 
 
 def test_no_parts_import_anywhere(all_src_files: list[Path]) -> None:
-    """Rule 1 (M4): no ``typekernel.parts`` imports anywhere under src/typekernel."""
+    """Rule 1: no ``typekernel.parts`` imports anywhere under src/typekernel."""
     violations: list[str] = []
     for path in all_src_files:
         tree = _parse(path)
@@ -267,7 +267,7 @@ def test_kernel_tests_avoid_letter_glyph_names() -> None:
 
 
 def test_guards_are_runnable_when_packages_empty() -> None:
-    """M0 exit: guards pass even before draw/system/project/cli/plugins exist."""
+    """Guards pass even before draw/system/project/cli/plugins exist."""
     # Smoke: collecting files does not raise; emptiness is fine.
     files = []
     for root in _kernel_roots():
@@ -276,7 +276,7 @@ def test_guards_are_runnable_when_packages_empty() -> None:
 
 
 # Default-path heal/blend/seal is forbidden in draw / plugins / cli / starters
-# (ARCHITECTURE §3.3 / §5: blend_corners is optional L0 tool, not default).
+# (ARCHITECTURE 验收方式 / 代码去留: blend_corners is optional L0 tool, not default).
 _DEFAULT_PATH_ROOTS = ("draw", "plugins", "cli", "starters")
 _HEAL_IMPORT_NAMES = {
     "blend_corners",

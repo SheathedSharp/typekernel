@@ -1,4 +1,4 @@
-"""Construct plugins beyond ``draw.construct`` (ARCHITECTURE.md M6).
+"""Construct plugins beyond ``draw.construct`` (ARCHITECTURE.md「构造插件」).
 
 ``skeleton + pen`` reuses :mod:`typekernel.geo.stroke` so a second starter can
 prove the kernel needs zero changes for a different construction mode.

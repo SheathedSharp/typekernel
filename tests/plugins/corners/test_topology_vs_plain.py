@@ -1,4 +1,4 @@
-"""Real serifs must change topology vs plain (DRIFT §4.1 / ARCHITECTURE §9.5)."""
+"""Real serifs must change topology vs plain (DRIFT 标准工作流.1 / ARCHITECTURE 槽位与填充协议)."""
 
 from __future__ import annotations
 

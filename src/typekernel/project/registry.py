@@ -1,4 +1,4 @@
-"""@glyph registration and discovery collector (ARCHITECTURE.md §9.7a)."""
+"""@glyph registration and discovery collector (ARCHITECTURE.md Project / @glyph / Master)."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def glyph(name: str, *, group: str = "") -> Callable[[F], F]:
 
     Attach master overrides with ``@fn.master("Black")`` on a second function
     of the same shape. Glyph ``name`` is a production name (may be a letter in
-    *projects*); kernel tests must still use synthetic names (§9.8 rule 5).
+    *projects*); kernel tests must still use synthetic names (架构守卫 rule 5).
     """
     if not name:
         raise ValueError("glyph name must be non-empty")

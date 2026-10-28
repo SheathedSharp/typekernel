@@ -1,4 +1,4 @@
-"""M4 task 29: latin-sans starter control glyphs n o H O."""
+"""latin-sans starter control glyphs n o H O."""
 
 from __future__ import annotations
 

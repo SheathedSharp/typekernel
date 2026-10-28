@@ -10,7 +10,7 @@ from typekernel.system import System
 
 
 def test_flat_identity_keeps_topology(system: System) -> None:
-    """inset=0 is §9.5 noop ≡ unmatched (geometry + tip slot kept)."""
+    """inset=0 is 槽位与填充协议 noop ≡ unmatched (geometry + tip slot kept)."""
     drawing = stem_with_tip_end()
     before = contour_area_sign(drawing)
     n_before = len(drawing.contours[0].segments)

@@ -1,4 +1,4 @@
-"""Synthetic CornerSite contracts for every corner filler (ARCHITECTURE §9.5)."""
+"""Synthetic CornerSite contracts for every corner filler (ARCHITECTURE 槽位与填充协议)."""
 
 from __future__ import annotations
 

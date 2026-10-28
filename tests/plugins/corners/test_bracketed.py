@@ -1,4 +1,4 @@
-"""Contract tests for ``plugins.corners.bracketed`` (ARCHITECTURE.md §9.5)."""
+"""Contract tests for ``plugins.corners.bracketed`` (ARCHITECTURE.md 槽位与填充协议)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Synthetic EndSite contracts for every end filler (ARCHITECTURE §9.5)."""
+"""Synthetic EndSite contracts for every end filler (ARCHITECTURE 槽位与填充协议)."""
 
 from __future__ import annotations
 

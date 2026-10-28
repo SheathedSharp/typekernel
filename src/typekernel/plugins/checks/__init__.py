@@ -1,1 +1,1 @@
-"""Reserved for audit/check plugins (cli.audit is the M4 path)."""
+"""Reserved for audit/check plugins (现行路径是 cli.audit)."""

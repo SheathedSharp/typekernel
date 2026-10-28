@@ -1,4 +1,4 @@
-"""Fragment / Node tests (ARCHITECTURE.md §9.9 — synthetic shapes only)."""
+"""Fragment / Node tests (ARCHITECTURE.md 测试清单 — synthetic shapes only)."""
 
 from __future__ import annotations
 

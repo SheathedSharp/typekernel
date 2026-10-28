@@ -1,4 +1,4 @@
-"""Font / Glyph accept System and Drawing (ARCHITECTURE.md §5 / M2 task 12)."""
+"""Font / Glyph accept System and Drawing (ARCHITECTURE.md「代码去留」)."""
 
 from __future__ import annotations
 

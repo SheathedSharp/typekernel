@@ -51,7 +51,7 @@ def clamp_trim(distance: float, limit: float) -> float:
 
 
 def noop_corner_fill(site: CornerSite) -> CornerFill:
-    """Canonical §9.5 geometry no-op (plain / radius·size → 0).
+    """Canonical 槽位与填充协议 geometry no-op (plain / radius·size → 0).
 
     Zero trim and ``path=None`` so ``apply_slots`` skips ``_apply_corner``,
     leaves contour segments unchanged, and keeps the corner slot — same as

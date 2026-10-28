@@ -1,4 +1,4 @@
-"""apply_slots with fake fillers (§9.9)."""
+"""apply_slots with fake fillers (测试清单)."""
 
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ def test_trim_out_of_range_raises() -> None:
 
 
 def test_zero_length_fill_segment_raises_continuity_error() -> None:
-    """Post-fill must not silently skip zero-length segments (§9.5 / slots G1).
+    """Post-fill must not silently skip zero-length segments (槽位与填充协议 / slots G1).
 
     Intentional skips are only: remaining corner-slot nodes, and line–line joins.
     A filler that inserts ``Line(p, p)`` must fail loudly.

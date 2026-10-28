@@ -92,7 +92,7 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
     italic = load_approval(root / "italic-vf-construct.json")
     assert "proof.png" in italic["notes"]
     assert "proof_vf.png" in italic["notes"]
-    # M4 deleted parts-era evidence paths; pending human-review JSONs still load
+    # parts 时期的证据路径已删除；待人工评审的 JSON 仍可加载
     # and remain unapproved. Live evidence paths are checked only when present.
     repo = root.parent
     for name in (
@@ -104,7 +104,7 @@ def test_repo_pending_human_review_templates_load_but_block_require() -> None:
         for rel in evidence:
             path = repo / rel
             if not path.is_file():
-                continue  # M4 removed parts-era evidence paths
+                continue  # parts 时期的证据路径已移除
             assert path.is_file(), f"{name} missing test_evidence {rel!r}"
 
 

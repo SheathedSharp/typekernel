@@ -1,4 +1,4 @@
-"""Skeleton + pen construct plugin (ARCHITECTURE.md M6 / §3 construct table).
+"""Skeleton + pen construct plugin (ARCHITECTURE.md「目标架构」构造表).
 
 Wraps :mod:`typekernel.geo.stroke` into a :class:`~typekernel.draw.Drawing`.
 No letter names — projects supply centerlines; this module only expands pens.
@@ -63,7 +63,7 @@ def _seg_len(seg: LineSegment | CubicSegment) -> float:
 def _drop_degenerate_segments(contour: Contour) -> Contour:
     """Remove near-zero line segments left by elliptical pen joins/caps.
 
-    Project ``apply_slots`` rejects zero-length lines (ARCHITECTURE §9.5);
+    Project ``apply_slots`` rejects zero-length lines (ARCHITECTURE 槽位与填充协议);
     skeleton expand can emit them at round joins. Dropping them keeps the
     Drawing usable without heal/blend passes.
     """

@@ -1,4 +1,4 @@
-"""``tk diff`` — which glyphs changed (ARCHITECTURE.md §3.3 / outline_hash).
+"""``tk diff`` — which glyphs changed (ARCHITECTURE.md 验收方式 / outline_hash).
 
 Compares live project glyph hashes to a JSON snapshot or another project.
 Not a golden gate: hashes exist only for change detection.

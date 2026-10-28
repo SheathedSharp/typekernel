@@ -78,7 +78,7 @@ def load_project(root: str | Path) -> Project:
 def apply_project_spacing(font: Font, project: Project, project_root: Path) -> None:
     """If ``project_root/spacing.py`` defines ``apply_spacing``, run it.
 
-    Starter / user spacing is project code (ARCHITECTURE.md §3.2) — not kernel
+    Starter / user spacing is project code (ARCHITECTURE.md「核心概念」) — not kernel
     letter builders. Missing file is a no-op so empty scaffolds still build.
     """
     apply_project_spacing_with_system(font, project.system, project_root)

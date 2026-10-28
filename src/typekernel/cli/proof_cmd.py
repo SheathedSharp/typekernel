@@ -15,7 +15,7 @@ from typekernel.qa.proof import (
 
 __all__ = ["PROOF_SETS", "proof_project"]
 
-# Default control string from ARCHITECTURE.md §3.3 (user projects may override).
+# Default control string from ARCHITECTURE.md 验收方式 (user projects may override).
 _CONTROL_TEXT = "nnonoo nnhnnhnn oobobboo HHOHOO HOHHOO"
 
 PROOF_SETS = ("control", "spacing", "kern", "charset", "all")

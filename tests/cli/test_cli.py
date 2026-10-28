@@ -1,4 +1,4 @@
-"""CLI scaffold / build / proof (ARCHITECTURE.md M2)."""
+"""CLI scaffold / build / proof (ARCHITECTURE.md「交接规格」)."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def test_tk_proof_control_writes_png(tmp_path: Path) -> None:
 
 
 def test_tk_diff_snapshot_and_change_detection(tmp_path: Path) -> None:
-    """tk diff uses outline_hash; not a golden gate (ARCHITECTURE.md §3.3)."""
+    """tk diff uses outline_hash; not a golden gate (ARCHITECTURE.md 验收方式)."""
     root = create_project("diff_proj", parent=tmp_path)
     _write_synthetic_glyphs(root / "glyphs")
     snap = root / "build" / "glyph_hashes.json"

@@ -1,4 +1,4 @@
-"""Helpers: Drawing → font.Glyph (ARCHITECTURE.md §9.7a)."""
+"""Helpers: Drawing → font.Glyph (ARCHITECTURE.md Project / @glyph / Master)."""
 
 from __future__ import annotations
 

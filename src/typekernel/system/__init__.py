@@ -1,4 +1,4 @@
-"""System — designer numeric table (ARCHITECTURE.md §9.7)."""
+"""System — designer numeric table (ARCHITECTURE.md System)."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def _freeze_map(m: Mapping[str, float] | None) -> Mapping[str, float]:
 class System:
     """Designer numeric table — data only, no multi-site knobs.
 
-    Forbidden by §9.7: ``aperture`` / ``roundness`` and any single number that
+    Forbidden by System: ``aperture`` / ``roundness`` and any single number that
     silently fans out into many geometries. Put derived relations in the
     project's own ``elements.py``.
     """

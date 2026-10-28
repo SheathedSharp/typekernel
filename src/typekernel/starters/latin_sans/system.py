@@ -1,4 +1,4 @@
-"""Designer numeric table for the latin-sans starter (ARCHITECTURE.md §3.2)."""
+"""Designer numeric table for the latin-sans starter (ARCHITECTURE.md「核心概念」)."""
 
 from __future__ import annotations
 

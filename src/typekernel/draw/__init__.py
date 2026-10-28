@@ -1,4 +1,4 @@
-"""draw — Fragment / Writer / Drawing kernel (ARCHITECTURE.md §9)."""
+"""draw — Fragment / Writer / Drawing kernel (ARCHITECTURE.md「交接规格」)."""
 
 from __future__ import annotations
 

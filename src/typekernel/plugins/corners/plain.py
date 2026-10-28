@@ -1,4 +1,4 @@
-"""Plain (sharp) corner filler — geometry no-op (§9.5)."""
+"""Plain (sharp) corner filler — geometry no-op (槽位与填充协议)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ def plain() -> CornerFiller:
     Unmatched slots already leave geometry as-is (plain-equivalent). This filler
     is for explicit ``corners={...: plain()}`` / ``fill="plain"`` wiring: it
     returns the shared noop fill so ``apply_slots`` skips apply and keeps the
-    corner slot (§9.5 ≡ unmatched).
+    corner slot (槽位与填充协议 ≡ unmatched).
     """
 
     def fill(site: CornerSite, system: System) -> CornerFill:

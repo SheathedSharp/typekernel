@@ -1,4 +1,4 @@
-"""construct builders — synthetic geometry only (§9.9)."""
+"""construct builders — synthetic geometry only (测试清单)."""
 
 from __future__ import annotations
 

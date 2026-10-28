@@ -1,4 +1,4 @@
-"""End fillers (ARCHITECTURE.md §9.5 / §9.10)."""
+"""End fillers (ARCHITECTURE.md 槽位与填充协议 / 落地顺序)."""
 
 from __future__ import annotations
 

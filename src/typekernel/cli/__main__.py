@@ -100,7 +100,7 @@ def _cmd_diff(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
-        description="typekernel project tools (ARCHITECTURE.md §4 / M2)",
+        description="typekernel project tools (ARCHITECTURE.md「标准工作流」)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

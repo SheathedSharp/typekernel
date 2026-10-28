@@ -42,7 +42,7 @@ def stem_ref(site: EndSite, system: System) -> float:
 
 
 def noop_end_fill(site: EndSite) -> EndFill:
-    """Canonical §9.5 geometry no-op for ends (inset/radius/amount → 0).
+    """Canonical 槽位与填充协议 geometry no-op for ends (inset/radius/amount → 0).
 
     Zero trim and ``path=None`` so ``apply_slots`` skips ``_apply_end``,
     leaves the cut unchanged, and keeps the end slot — same as unmatched.

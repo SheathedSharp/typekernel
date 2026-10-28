@@ -1,4 +1,4 @@
-"""Degenerate corner parameters must follow the plain/unmatched noop path (§9.5)."""
+"""Degenerate corner parameters must follow the plain/unmatched noop path (槽位与填充协议)."""
 
 from __future__ import annotations
 

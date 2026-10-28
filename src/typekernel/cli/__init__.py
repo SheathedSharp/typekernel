@@ -1,4 +1,4 @@
-"""CLI — ``tk new`` / ``tk build`` / ``tk proof`` (ARCHITECTURE.md M2)."""
+"""CLI — ``tk new`` / ``tk build`` / ``tk proof`` (ARCHITECTURE.md「交接规格」)."""
 
 from __future__ import annotations
 

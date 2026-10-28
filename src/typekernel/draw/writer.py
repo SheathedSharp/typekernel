@@ -1,4 +1,4 @@
-"""Writer — build a Drawing by walking contours (ARCHITECTURE.md §9.3)."""
+"""Writer — build a Drawing by walking contours (ARCHITECTURE.md Writer)."""
 
 from __future__ import annotations
 

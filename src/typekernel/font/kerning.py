@@ -1,4 +1,4 @@
-"""Pair and class kerning tables (ARCHITECTURE.md M4 — moved out of parts)."""
+"""Pair and class kerning tables (从 parts 迁出)."""
 
 from __future__ import annotations
 

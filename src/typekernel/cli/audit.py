@@ -1,4 +1,4 @@
-"""``tk audit`` — stem / zone / direction / master-compat diagnostics (ARCH §3.3).
+"""``tk audit`` — stem / zone / direction / master-compat diagnostics (ARCH 验收方式).
 
 Reports are diagnostic by default. Structural errors (wrong contour direction,
 master signature mismatch) raise the process exit code. Stem / zone deviations

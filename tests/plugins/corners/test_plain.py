@@ -1,4 +1,4 @@
-"""Contract tests for ``plugins.corners.plain`` (ARCHITECTURE.md §9.5)."""
+"""Contract tests for ``plugins.corners.plain`` (ARCHITECTURE.md 槽位与填充协议)."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def _plain_vs_unmatched(drawing, system: System):
 
 @pytest.mark.parametrize("fixture", [square_with_knee, line_curve_knee], ids=["line_line", "line_curve"])
 def test_plain_equals_unmatched_geometry_and_slots(system: System, fixture) -> None:
-    """§9.5: ``apply_slots(..., plain())`` ≡ ``apply_slots(..., {})``.
+    """槽位与填充协议: ``apply_slots(..., plain())`` ≡ ``apply_slots(..., {})``.
 
     Same segment count, same segment-kind sequence, same remaining corner tags.
     Covers curve-adjacent knees so a zero-length insert cannot hide behind the

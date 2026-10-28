@@ -1,4 +1,4 @@
-"""project — @glyph registry, directory discovery, master evaluation (§9.7a)."""
+"""project — @glyph registry, directory discovery, master evaluation (Project / @glyph / Master)."""
 
 from __future__ import annotations
 

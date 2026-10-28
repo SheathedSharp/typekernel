@@ -1,4 +1,4 @@
-"""M6: latin-humanist-italic starter control glyphs via skeleton+pen."""
+"""latin-humanist-italic starter control glyphs via skeleton+pen."""
 
 from __future__ import annotations
 

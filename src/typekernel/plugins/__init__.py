@@ -1,4 +1,4 @@
-"""Fill and pass plugins (ARCHITECTURE.md §9.5 / §9.10 M3).
+"""Fill and pass plugins (ARCHITECTURE.md「槽位与填充协议」).
 
 Kernel packages must not import this package; projects wire plugins into
 ``apply_slots`` and related entry points.

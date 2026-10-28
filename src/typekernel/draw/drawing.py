@@ -1,4 +1,4 @@
-"""Drawing — multi-contour result of Writer (ARCHITECTURE.md §9.4)."""
+"""Drawing — multi-contour result of Writer (ARCHITECTURE.md Drawing)."""
 
 from __future__ import annotations
 
@@ -71,8 +71,7 @@ class Drawing:
     def signature(self) -> tuple[tuple[ContourRole, tuple[str, ...], tuple[str, ...]], ...]:
         """Compatibility signature: per contour (role, segment kinds, tags).
 
-        Equal signatures mean masters are structurally interpolatable (M1 only
-        builds the signature; axes.interpolatable hooks up in M2).
+        Equal signatures mean masters are structurally interpolatable (``signature`` 只做结构比较；插值检查由 ``axes.interpolatable`` 负责).
         """
         parts: list[tuple[ContourRole, tuple[str, ...], tuple[str, ...]]] = []
         for role, contour, cnodes in zip(self.roles, self.contours, self.nodes, strict=True):

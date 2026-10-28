@@ -1,4 +1,4 @@
-"""Optical pass plugins (ARCHITECTURE.md §9.10 M3)."""
+"""Optical pass plugins (ARCHITECTURE.md「落地顺序」)."""
 
 from __future__ import annotations
 

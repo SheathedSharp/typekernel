@@ -1,4 +1,4 @@
-"""Writer / Drawing continuity and winding tests (§9.9)."""
+"""Writer / Drawing continuity and winding tests (测试清单)."""
 
 from __future__ import annotations
 

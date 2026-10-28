@@ -1,4 +1,4 @@
-"""System / Zones / Overshoot (§9.7)."""
+"""System / Zones / Overshoot (System)."""
 
 from __future__ import annotations
 

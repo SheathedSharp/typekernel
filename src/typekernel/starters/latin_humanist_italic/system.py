@@ -1,4 +1,4 @@
-"""Designer numeric table for latin-humanist-italic (ARCHITECTURE.md M6).
+"""Designer numeric table for latin-humanist-italic (ARCHITECTURE.md「构造插件」).
 
 Construction is skeleton + broad nib — not contour Writer outlines.
 

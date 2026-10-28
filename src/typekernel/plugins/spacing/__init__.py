@@ -1,1 +1,1 @@
-"""Reserved for spacing plugins (project spacing.py is the M4 path)."""
+"""Reserved for spacing plugins (现行路径是项目里的 spacing.py)."""

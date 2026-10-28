@@ -1,4 +1,4 @@
-"""Slot sites, fill protocol, and apply_slots (ARCHITECTURE.md §9.5)."""
+"""Slot sites, fill protocol, and apply_slots (ARCHITECTURE.md 槽位与填充协议)."""
 
 from __future__ import annotations
 
@@ -148,7 +148,7 @@ class CornerSite:
 class CornerFill:
     trim_in: float
     trim_out: float
-    path: Fragment | None = None  # None + zero trim → geometry no-op (§9.5)
+    path: Fragment | None = None  # None + zero trim → geometry no-op (槽位与填充协议)
 
 
 class CornerFiller(Protocol):
@@ -173,7 +173,7 @@ class EndSite:
 class EndFill:
     trim_a: float
     trim_b: float
-    path: Fragment | None = None  # None + zero trim → geometry no-op (§9.5)
+    path: Fragment | None = None  # None + zero trim → geometry no-op (槽位与填充协议)
 
 
 class EndFiller(Protocol):
@@ -213,7 +213,7 @@ def _is_degenerate_line(seg: Segment) -> bool:
 
 
 def _is_noop_corner_fill(fill: CornerFill) -> bool:
-    """§9.5: plain ≡ unmatched — zero trim and no real path is a no-op.
+    """槽位与填充协议: plain ≡ unmatched — zero trim and no real path is a no-op.
 
     Preferred signal: ``path is None`` (see ``plugins.corners.geom.noop_corner_fill``).
     Legacy zero-length-only paths are still treated as no-op so old fillers do not
@@ -230,7 +230,7 @@ def _is_noop_corner_fill(fill: CornerFill) -> bool:
 
 
 def _is_noop_end_fill(fill: EndFill) -> bool:
-    """§9.5: degenerate end params ≡ unmatched — zero trim and no real path.
+    """槽位与填充协议: degenerate end params ≡ unmatched — zero trim and no real path.
 
     Preferred signal: ``path is None`` (see ``plugins.ends.geom.noop_end_fill``).
     """
@@ -251,7 +251,7 @@ def _check_contour_g1(
 ) -> None:
     """Post-fill G1 check; ``exempt_nodes`` are on-curve indices still marked corner.
 
-    Intentional skips (ARCHITECTURE.md §9.3 / §9.5):
+    Intentional skips (ARCHITECTURE.md Writer / 槽位与填充协议):
     - ``exempt_nodes``: sharp corners left unmatched or filled with plain/noop.
     - line–line joins: G1 is not required (sharp corners between straights).
 
@@ -451,7 +451,7 @@ def apply_slots(
                 raise SlotFillError(
                     f"corner filler for {slot.tag!r} returned {type(fill)}"
                 )
-            # plain / zero-radius: leave geometry + corner slot (§9.5 ≡ unmatched).
+            # plain / zero-radius: leave geometry + corner slot (槽位与填充协议 ≡ unmatched).
             if _is_noop_corner_fill(fill):
                 remaining_slots.append(slot)
                 continue
@@ -480,7 +480,7 @@ def apply_slots(
                 raise SlotFillError(
                     f"end filler for {slot.tag!r} returned {type(fill_e)}"
                 )
-            # Degenerate end params: leave geometry + end slot (§9.5 ≡ unmatched).
+            # Degenerate end params: leave geometry + end slot (槽位与填充协议 ≡ unmatched).
             if _is_noop_end_fill(fill_e):
                 remaining_slots.append(slot)
                 continue

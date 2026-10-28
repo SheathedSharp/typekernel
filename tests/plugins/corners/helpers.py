@@ -32,7 +32,7 @@ def line_curve_knee(*, meta: dict[str, float] | None = None):
     Curve-adjacent corner: a zero-length insert next to the cubic would be a
     line–curve join and would need the defensive G1 skip to pass. Contract
     fillers (plain / unmatched / radius→0) must leave geometry unchanged
-    without relying on that skip (§9.5).
+    without relying on that skip (槽位与填充协议).
 
     ``top.r`` is a separate sharp corner so Writer write-time G1 stays valid
     at the cubic→horizontal join; only ``knee`` is under test.

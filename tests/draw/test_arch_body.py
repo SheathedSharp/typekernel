@@ -1,4 +1,4 @@
-"""M1 exit sample: synthetic stem + arch + stem (ARCHITECTURE.md §9.9 / §9.10 #9)."""
+"""Synthetic stem + arch + stem sample (ARCHITECTURE.md「测试清单」)."""
 
 from __future__ import annotations
 

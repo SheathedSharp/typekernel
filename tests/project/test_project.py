@@ -1,4 +1,4 @@
-"""Project / @glyph / Master (§9.7a) — synthetic glyph names only."""
+"""Project / @glyph / Master (Project / @glyph / Master) — synthetic glyph names only."""
 
 from __future__ import annotations
 

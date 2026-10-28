@@ -1,4 +1,4 @@
-"""Letter-free geometric constructors (ARCHITECTURE.md §9.6)."""
+"""Letter-free geometric constructors (ARCHITECTURE.md 几何构造器)."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def tensioned_arc(
 ) -> Fragment:
     """Single cubic from ``p0`` along ``t0`` arriving along ``t1`` at ``p1``.
 
-    ``tension`` is handle-length / chord-length (ARCHITECTURE.md §9.6).
+    ``tension`` is handle-length / chord-length (ARCHITECTURE.md 几何构造器).
     """
     a = _as_point(p0)
     b = _as_point(p1)
@@ -111,7 +111,7 @@ def hook(
     tension: float = 0.55,
     tip_tangent: PointLike | None = None,
 ) -> Fragment:
-    """G1 hook from a vertical stem edge to ``tip`` (ARCHITECTURE.md §9.6).
+    """G1 hook from a vertical stem edge to ``tip`` (ARCHITECTURE.md 几何构造器).
 
     Leaves ``(stem_edge_x, y_join)`` with a vertical tangent toward ``tip.y``,
     passes through a belly at horizontal offset ``depth`` (same side as the tip),

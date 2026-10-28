@@ -1,4 +1,4 @@
-"""Drawing.signature and overlay tests (§9.9)."""
+"""Drawing.signature and overlay tests (测试清单)."""
 
 from __future__ import annotations
 

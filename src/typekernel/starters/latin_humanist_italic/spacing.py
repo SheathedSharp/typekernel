@@ -1,4 +1,4 @@
-"""Metrics keys + sidebearings + kern pairs for latin-humanist-italic (ARCHITECTURE.md §3.2 / M6).
+"""Metrics keys + sidebearings + kern pairs for latin-humanist-italic (ARCHITECTURE.md「核心概念」).
 
 Project-side only — no letter builders. ``apply_spacing`` packs each glyph so
 ink starts at the resolved LSB and advance = LSB + ink + RSB, then writes
@@ -122,7 +122,7 @@ METRICS_KEYS: dict[str, dict[str, Any]] = {
 }
 
 
-# Proof kern strings from ARCH §3.3: AV Ta To Yo LT P. F,
+# Proof kern strings from ARCH 验收方式: AV Ta To Yo LT P. F,
 KERN_PAIRS: tuple[tuple[str, str, float], ...] = (
     # Diagonal caps — continuous apex/crotch reads slightly more open; pull in.
     ("A", "V", -56.0),
