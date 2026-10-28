@@ -1,4 +1,4 @@
-"""Optical pass plugins (ARCHITECTURE.md「落地顺序」)."""
+"""Optical pass plugins (ARCHITECTURE.md「槽位与填充协议」)."""
 
 from __future__ import annotations
 

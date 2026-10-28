@@ -48,7 +48,7 @@ Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/
 - Prefer **overlap construction** (stem + trough) over boolean unions for interpolatable masters.
 - Name nodes (`stem.l`, `arch.…`) so `tk audit` can measure them.
 - Advances / LSB / RSB: declare metrics keys in `spacing.py`; do not rely on bbox-only advances.
-- Conventional commits; local review against ARCHITECTURE.md 交接规格 / 硬约束 after each commit.
+- Conventional commits; local review against ARCHITECTURE.md 交接规格 / 设计禁令与边界 after each commit.
 
 ## Companion docs
 

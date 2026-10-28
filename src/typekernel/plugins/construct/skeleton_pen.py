@@ -1,4 +1,4 @@
-"""Skeleton + pen construct plugin (ARCHITECTURE.md「目标架构」构造表).
+"""Skeleton + pen construct plugin (ARCHITECTURE.md「构造插件」).
 
 Wraps :mod:`typekernel.geo.stroke` into a :class:`~typekernel.draw.Drawing`.
 No letter names — projects supply centerlines; this module only expands pens.

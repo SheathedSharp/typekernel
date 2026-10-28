@@ -53,7 +53,7 @@ def arch(system: System, *, left: float, counter: float) -> Arch:
     ``left`` is the x of the left stem's inner face (and usually the stem
     thickness when the outer face sits at 0). ``counter`` is the inner gap.
     Outer runs left→right at x-height; inner runs right→left at the same
-    join y with a lower crown (ARCHITECTURE.md「目标架构」示例).
+    join y with a lower crown (ARCHITECTURE.md「核心概念」示例).
     """
     xh = float(system.zones.x)
     stem = float(left)
