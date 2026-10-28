@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 
 import pytest
+
+HAS_PATHOPS = importlib.util.find_spec("pathops") is not None
 
 from typekernel.geo.boolean import boolean_op
 from typekernel.geo.fixtures import load_synthetic_outline
@@ -51,6 +54,7 @@ def test_equalize_synthetic_h_to_target() -> None:
     assert spans[0].right == pytest.approx(190.0, abs=0.05)
 
 
+@pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for boolean_op fixtures")
 def test_equalize_uneven_stems_both_hit_target() -> None:
     multi = boolean_op(_rect(0, 0, 60, 200), _rect(200, 0, 300, 200), "union")
     before = [s.width for s in list_vertical_stems(multi)]
@@ -83,6 +87,7 @@ def test_equalize_rejects_non_positive_target() -> None:
         equalize_vertical_stems(_rect(0, 0, 10, 10), 0.0)
 
 
+@pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for boolean_op fixtures")
 def test_connected_h_uses_probe_y_below_crossbar() -> None:
     glyph = boolean_op(
         boolean_op(_rect(0, 0, 80, 200), _rect(220, 0, 300, 200), "union"),
@@ -97,6 +102,7 @@ def test_connected_h_uses_probe_y_below_crossbar() -> None:
     assert all(s.width == pytest.approx(70.0, abs=0.1) for s in spans)
 
 
+@pytest.mark.skipif(not HAS_PATHOPS, reason="pathops required for boolean_op fixtures")
 def test_apply_designed_contrast_vertical_and_horizontal() -> None:
     glyph = boolean_op(
         boolean_op(_rect(0, 0, 80, 200), _rect(220, 0, 300, 200), "union"),

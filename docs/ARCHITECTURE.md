@@ -373,7 +373,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 重写 `.agents/skills/typekernel-font-design/`：教第 4 节的工作流，教如何读样张和审计报告，教“改片段而不是加补丁”。
 - 用一个**全新 agent 会话**做试字：只给 brief 和 skill，看它能不能做出一副风格不同的字（例如窄体 slab）。
 
-**出口**：新会话的 agent 不读库源码，只读 skill + starter，就能完成控制字 → 字组 → 构建，并且做出的形状和 starter 有明显区别（证明它在设计，而不是在调参）。
+**出口（降级，诚实，2026-10-27）**：skill 已按 §4 重写；`tk proof` / `tk audit` / `tk diff` 与 starter 试字工作流可跑。**未达成**原文「对实现零上下文的全新会话冷启动」——已记入 `docs/AGENT_TRIALS.md` 的均为同会话 assisted smoke，或父会话曾参与 M4/M5 的 executor 半冷启动（均有诚实声明）。真正独立冷启动仍按 `AGENT_TRIALS` 终验清单另开**未参与本库实现**的会话重做；在补上之前，M5 不宣称「冷启动出口已关」。
 
 ### M6 扩展构造方式与第二个 starter（之后）
 
@@ -381,7 +381,7 @@ agent 的每一步都在**改自己项目里的代码**，看**自己生成的�
 - 第二个 starter 证明：内核和插件**零修改**就能承载不同的字体类型。
 - 再往后：非拉丁文字（只需新 starter 和新插件，内核不改）。
 
-**出口已达成（2026-10-27）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改——证明第二 starter 零改内核/插件即可承载不同构造。光学收口：共用 `bowl`/`open_bowl`/`nest_bowl`/`uc_stem`；小写碗组与 B/P/R/D 嵌碗；大写 A/E/F/K/M/N/R/V/W/X/Y（及 L/T/H）连续骨架接合；间距/kern 按对角与 LT 微调。Light/Bold/VF 绿；`tk audit` 0 errors。**M6 关闭**。再往后（非本里程碑）：更多字重/斜度轴、非拉丁 starter——仅新 starter/新插件，内核不改。
+**出口已达成（2026-10-27）**：`plugins.construct.skeleton_pen`（`broad_nib` / `pointed_pen` / `expand_skeleton` / `expand_skeleton_cubic`；expand 将 line 提升为 cubic 并强制闭合端点；starter 闭骨架用 bevel join，保证 `Drawing.signature()` 与 fontTools 插值跨粗细稳定）+ starter `latin_humanist_italic`（A–Z / a–z / 0–9 / 基础标点，skeleton+pen + 项目 `elements`；`spacing.py` metrics keys + kern；Light/Bold masters + `MASTER_LOCATIONS` wght VF）+ `tk new --starter latin-humanist-italic`。内核不改——证明第二 starter 零改内核/插件即可承载不同构造。光学收口：共用 `bowl`/`open_bowl`/`nest_bowl`/`uc_stem`；小写碗组与 B/P/R/D 嵌碗；大写 A/E/F/K/M/N/R/V/W/X/Y（及 L/T/H）连续骨架接合；间距/kern 按对角与 LT 微调。Light/Bold/VF 绿；`tk audit` 0 errors / 0 warnings（2026-10-27 光学校准后）。**M6 关闭**。再往后（非本里程碑）：更多字重/斜度轴、非拉丁 starter——仅新 starter/新插件，内核不改。
 
 ---
 
