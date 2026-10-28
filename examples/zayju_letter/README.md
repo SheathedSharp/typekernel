@@ -10,13 +10,13 @@ pip install -e ".[dev,specimen,compile]"
 python examples/zayju_letter/design_n.py
 ```
 
-产物在 `out/`：
+产物都在 `out/`，都是本地生成的构建产物，不进 git：
 
 | 文件 | 说明 |
 | --- | --- |
 | `n_designed.png` | 设计稿大图 |
 | `n_overshoot_pair.png` | 光学 overshoot 前后对比 |
-| `ZayJuInspired-Regular.ufo` / `.ttf` | 导出（本地生成，默认不进 git） |
+| `ZayJuInspired-Regular.ufo` / `.ttf` | 导出 |
 
 ## 用了哪些 API
 
