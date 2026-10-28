@@ -53,6 +53,7 @@ Designers' loop is driven by **looking**. Do not invent private PIL croppers:
 | Weight ladder (VF if present) | `tk proof ladder` |
 | Pen contrast×angle preview | `tk pen --contrast 0.26 --angle 30` |
 | Even-odd cavity hunt (opt-in) | `tk audit --overlap` |
+| Static ship without overlap cavities | `tk build --resolve-overlaps` (not with `--variable`) |
 
 ## Hard rules
 

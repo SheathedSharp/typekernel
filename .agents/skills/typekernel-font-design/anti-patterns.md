@@ -4,7 +4,8 @@
 | --- | --- |
 | Hunting for a letter builder inside `typekernel.*` | Use `System` + project glyphs (`tk new --starter latin-sans`) |
 | Add heal / blend / seal after boolean mess | Change the fragment / overlap construction |
-| Call `self_union` / boolean to hide a bad join in glyph code | Fix the fragment; `self_union` is export hygiene, not a design pass |
+| Call `self_union` / boolean to hide a bad join in glyph code | Fix the fragment; use `tk build --resolve-overlaps` only for static ship |
+| `tk build --resolve-overlaps` with `--variable` | Keep VF masters overlapping; resolve static instances only |
 | Stroke-expand to fake weight | Scale `system.stem` (and masters via `tuned`) |
 | Letter builders inside `typekernel.*` kernel packages | Keep letters in the project starter only |
 | Bbox-only advances forever | `spacing.py` metrics keys + `apply_spacing` |

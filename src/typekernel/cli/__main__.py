@@ -19,7 +19,16 @@ def _cmd_build(args: argparse.Namespace) -> int:
     from typekernel.cli.build import build_project, build_variable_project
 
     root = Path(args.path).resolve()
+    resolve = bool(getattr(args, "resolve_overlaps", False))
     if getattr(args, "variable", False):
+        if resolve:
+            print(
+                "error: --resolve-overlaps is static-export only; "
+                "variable fonts must keep overlapping masters "
+                "(ARCHITECTURE overlap construction)",
+                file=sys.stderr,
+            )
+            return 2
         masters, result = build_variable_project(
             root, out_dir=args.out, formats=tuple(args.format) or ("ttf",)
         )
@@ -32,11 +41,18 @@ def _cmd_build(args: argparse.Namespace) -> int:
         if result.warnings:
             print(f"warnings: {len(result.warnings)}")
         return 0
-    font, result = build_project(root, out_dir=args.out, formats=tuple(args.format))
+    font, result = build_project(
+        root,
+        out_dir=args.out,
+        formats=tuple(args.format),
+        resolve_overlaps=resolve,
+    )
     print(f"glyphs: {len(font)}")
     print(f"ufo: {result.ufo}")
     for fmt, path in result.binaries.items():
         print(f"{fmt}: {path}")
+    if resolve:
+        print("resolve-overlaps: on (static packaging; not a design seal)")
     return 0
 
 
@@ -188,6 +204,15 @@ def main(argv: list[str] | None = None) -> int:
         "--variable",
         action="store_true",
         help="build Light/Regular/Bold masters and a variable font (wght)",
+    )
+    p_build.add_argument(
+        "--resolve-overlaps",
+        action="store_true",
+        dest="resolve_overlaps",
+        help=(
+            "static ship only: ufo2ft removeOverlaps at compile time "
+            "(packaging; not a design-time seal). Incompatible with --variable"
+        ),
     )
     p_build.set_defaults(func=_cmd_build)
 

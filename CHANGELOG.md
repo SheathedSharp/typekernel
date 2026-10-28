@@ -8,6 +8,9 @@ cut a versioned release yet, so everything below is unreleased.
 
 ### Added
 
+- `tk build --resolve-overlaps` (static ufo2ft removeOverlaps; refused with `--variable`).
+- Real `plugins/checks` (`direction`/`stem`/`zone`/`compat`/`overlap`) + project `EXTRA_CHECKS`.
+- `ellipse_point_count` + opt-in `expand_skeleton(..., chord_budget=)` densify (default off for VF safety).
 - `tk proof --text` / `--glyph` / `--size` and proof set `ladder` (arbitrary phrase + zoomed glyph + VF weight ladder).
 - `tk pen --contrast --angle` broad-nib effective-width preview.
 - `tk audit --overlap` (opt-in even-odd cavity report) and optional `AUDIT_STEMS` in `system.py` for vertical/diagonal optical probes; default skips vertical probes on non-upright letters.

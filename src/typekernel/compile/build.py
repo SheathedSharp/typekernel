@@ -74,13 +74,16 @@ def _build_woff2_from_ttf(
     out_path: str | Path,
     *,
     manifest_path: str | Path | None = None,
+    resolve_overlaps: bool = False,
 ) -> BuildManifest:
     """Compile UFO to TTF in memory, then write WOFF2."""
     import tempfile
 
     with tempfile.TemporaryDirectory() as tmp:
         ttf = Path(tmp) / "tmp.ttf"
-        manifest = build_binary_from_ufo(ufo_path, ttf, "ttf")
+        manifest = build_binary_from_ufo(
+            ufo_path, ttf, "ttf", resolve_overlaps=resolve_overlaps
+        )
     from fontTools.ttLib import TTFont
 
     out = Path(out_path)
@@ -99,12 +102,17 @@ def build_ttf_from_ufo(
     out_path: str | Path,
     *,
     manifest_path: str | Path | None = None,
+    resolve_overlaps: bool = False,
 ) -> BuildManifest:
     """Compile ``ufo_path`` to a TTF at ``out_path`` via ufo2ft.
 
-    Uses ``ufo2ft.compileTTF`` with ``removeOverlaps=False`` so the bridge does
-    not secretly rewrite contours. Cubic→quadratic conversion for TrueType is
-    the normal compile boundary (fontTools cu2qu), not a design beautify.
+    Default keeps overlapping contours (``removeOverlaps=False``) so VF-style
+    overlap construction is not rewritten. Pass ``resolve_overlaps=True`` for
+    **static** ship binaries only — ufo2ft unions ink at the compile boundary
+    (packaging, not a design-time seal / heal).
+
+    Cubic→quadratic conversion for TrueType is the normal compile boundary
+    (fontTools cu2qu), not a design beautify.
 
     Requires the optional ``compile`` extra (``ufoLib2`` + ``ufo2ft``).
     ``fontmake`` may also be installed; its version is recorded when present.
@@ -113,7 +121,13 @@ def build_ttf_from_ufo(
         A :class:`BuildManifest` describing the tools used. When
         ``manifest_path`` is set, the same record is also written as JSON.
     """
-    return build_binary_from_ufo(ufo_path, out_path, "ttf", manifest_path=manifest_path)
+    return build_binary_from_ufo(
+        ufo_path,
+        out_path,
+        "ttf",
+        manifest_path=manifest_path,
+        resolve_overlaps=resolve_overlaps,
+    )
 
 
 def build_binary_from_ufo(
@@ -122,18 +136,24 @@ def build_binary_from_ufo(
     output_format: OutputFormat,
     *,
     manifest_path: str | Path | None = None,
+    resolve_overlaps: bool = False,
 ) -> BuildManifest:
     """Compile ``ufo_path`` to ``output_format`` (``"ttf"`` or ``"otf"``).
 
     OTF keeps cubic outlines (CFF); TTF converts to quadratics at the compile
-    boundary. Both use ``removeOverlaps=False``. Kerning, groups, anchors and
-    ``features.fea`` in the UFO become GPOS/GSUB through ufo2ft's feature
-    writers.
+    boundary. Overlaps stay unless ``resolve_overlaps`` (static ship only).
+    Kerning, groups, anchors and ``features.fea`` in the UFO become GPOS/GSUB
+    through ufo2ft's feature writers.
     """
     if output_format not in ("ttf", "otf", "woff2"):
         raise ValueError(f"output_format must be 'ttf', 'otf', or 'woff2', got {output_format!r}")
     if output_format == "woff2":
-        return _build_woff2_from_ttf(ufo_path, out_path, manifest_path=manifest_path)
+        return _build_woff2_from_ttf(
+            ufo_path,
+            out_path,
+            manifest_path=manifest_path,
+            resolve_overlaps=resolve_overlaps,
+        )
     ufo = Path(ufo_path)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -155,11 +175,12 @@ def build_binary_from_ufo(
         ) from exc
 
     font = ufoLib2.Font.open(ufo)
-    # Explicit thin defaults: no overlap removal, no extra filters.
+    # Default: keep overlaps (VF-friendly). Opt-in resolve is static packaging.
     compiler = ufo2ft.compileTTF if output_format == "ttf" else ufo2ft.compileOTF
-    tt_font = compiler(font, removeOverlaps=False)
+    tt_font = compiler(font, removeOverlaps=bool(resolve_overlaps))
     tt_font.save(out)
 
+    filters: tuple[str, ...] = ("resolve_overlaps",) if resolve_overlaps else ()
     manifest = BuildManifest(
         fonttools_version=_pkg_version("fonttools"),
         fontmake_version=_pkg_version("fontmake"),
@@ -169,7 +190,7 @@ def build_binary_from_ufo(
             "ufo": str(ufo),
             "output": str(out),
         },
-        filters=(),
+        filters=filters,
         output_format=output_format,
     )
     if manifest_path is not None:
@@ -197,11 +218,15 @@ def build_font(
     *,
     formats: Sequence[OutputFormat] = ("otf", "ttf"),
     file_stem: str | None = None,
+    resolve_overlaps: bool = False,
 ) -> FontBuild:
     """Validate, write ``<stem>.ufo``, then compile each format into ``out_dir``.
 
     Rebuilding replaces previous outputs with the same stem. Each binary gets
     a ``<stem>.<format>.manifest.json`` next to it.
+
+    ``resolve_overlaps`` is for **static** binaries only (ufo2ft removeOverlaps).
+    Do not use it when keeping overlapping masters for a variable font.
     """
     from typekernel.compile.ufo_export import write_font_to_ufo
 
@@ -213,7 +238,11 @@ def build_font(
     for fmt in formats:
         binary = out / f"{stem}.{fmt}"
         manifests[fmt] = build_binary_from_ufo(
-            ufo_path, binary, fmt, manifest_path=out / f"{stem}.{fmt}.manifest.json"
+            ufo_path,
+            binary,
+            fmt,
+            manifest_path=out / f"{stem}.{fmt}.manifest.json",
+            resolve_overlaps=resolve_overlaps,
         )
         binaries[fmt] = binary
     return FontBuild(ufo=ufo_path, binaries=binaries, manifests=manifests)

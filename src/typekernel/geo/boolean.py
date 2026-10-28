@@ -212,11 +212,11 @@ def _path_to_outline(path: object) -> Outline:
 
 
 def self_union(outline: Outline) -> Outline:
-    """Heal self-intersections by unioning an outline with itself.
+    """Union an outline with itself (export / analysis hygiene).
 
-    Expand of dense or looping centerlines can leave overlapping rails that
-    render hollow under even-odd fill. A self-union dissolves those crossings
-    into a simple solid (requires ``typekernel[boolean]``).
+    Not a design-time seal: glyph code must not call this to hide bad joins.
+    Prefer ``tk build --resolve-overlaps`` for static ship binaries, or reshape
+    fragments. Requires ``typekernel[boolean]``.
     """
     return boolean_op(outline, outline, "union")
 

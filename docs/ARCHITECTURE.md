@@ -25,7 +25,7 @@
 │           compensated_weight                                     │
 │  construct: skeleton_pen（broad_nib / pointed_pen）              │
 │  spacing: 预留（现行路径是项目里的 spacing.py）                  │
-│  checks:  预留（现行路径是 tk audit）                            │
+│  checks:  direction/stem/zone/compat/overlap + EXTRA_CHECKS   │
 └───────────────────────────────▲─────────────────────────────────┘
                                 │ 只依赖内核
 ┌───────────────────────────────┴─────────────────────────────────┐

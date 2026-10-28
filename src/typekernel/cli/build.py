@@ -60,8 +60,13 @@ def build_project(
     *,
     out_dir: str | Path | None = None,
     formats: tuple[OutputFormat, ...] = ("otf",),
+    resolve_overlaps: bool = False,
 ) -> tuple[Font, FontBuild]:
-    """Load ``root``, assemble glyphs, write binaries under ``out_dir``."""
+    """Load ``root``, assemble glyphs, write binaries under ``out_dir``.
+
+    ``resolve_overlaps`` unions ink at the static compile step (ufo2ft). Keep
+    False for design/VF masters — overlaps are intentional there.
+    """
     root_path = Path(root).resolve()
     project = load_project(root_path)
     family, style = _family_and_style(root_path)
@@ -69,7 +74,7 @@ def build_project(
         project, family_name=family, style_name=style, project_root=root_path
     )
     dest = Path(out_dir) if out_dir is not None else root_path / "build"
-    result = build_font(font, dest, formats=formats)
+    result = build_font(font, dest, formats=formats, resolve_overlaps=resolve_overlaps)
     return font, result
 
 

@@ -133,7 +133,7 @@ so ink is packed to LSB and `advance = lsb + ink + rsb`.
 - `typekernel.plugins.ends` — `flat`, `angled`, `ball`, …
 - `typekernel.plugins.passes` — `overshoot`, `diagonal_comp`, `crotch_thin` (call from glyph code when needed; still not heal/blend/seal)
 - `typekernel.plugins.construct` — `skeleton_pen` (`broad_nib` / `expand_skeleton`)
-- `typekernel.plugins.checks` — reserved; default path is `tk audit` (+ `--overlap`)
+- `typekernel.plugins.checks` — `direction` / `stem` / `zone` / `compat` / `overlap`; append project rules via `EXTRA_CHECKS` in `system.py`
 
 ## Proof strings (starter defaults)
 
@@ -148,6 +148,15 @@ kern:     AV Ta To Yo LT P. F,
 - **Design-time:** `Drawing.__add__` overlap is the recommended VF construction. Do **not**
   call `geo.boolean.self_union` to paper over bad joins (that is seal).
 - **Perception:** `tk audit --overlap` reports ink∩ink pairs that cancel under even-odd
-  preview. Noisy on intentional overlaps — use when hunting cavities, not as a default gate.
-- **Static export:** resolving overlaps at ship time (fontmake / a future explicit build
-  flag) is packaging, not a design-time heal. Keep masters overlapping for interpolation.
+  preview (actionable: `tk proof --glyph`, reshape fragments). Noisy on intentional
+  overlaps — use when hunting cavities, not as a default gate.
+- **Static export:** `tk build --resolve-overlaps` turns on ufo2ft `removeOverlaps` for
+  static OTF/TTF/WOFF2 only (packaging, recorded in the build manifest). **Forbidden**
+  with `tk build --variable` — VF must keep overlapping masters. Not a design-time heal.
+
+## Skeleton densify
+
+- `ellipse_point_count(rx, ry, chord_budget=0.5)` picks a stable oval `n` — prefer this
+  over guessing. Use Regular metrics and reuse the same `n` on Light/Bold.
+- `expand_skeleton(..., chord_budget=…)` opt-in Catmull–Rom densify. Default is off
+  (`None`) so weight-scaled centerlines do not change point counts under VF.
