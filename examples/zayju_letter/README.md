@@ -22,7 +22,7 @@ python examples/zayju_letter/design_n.py
 
 - `typekernel.geo.PathBuilder` — `moveTo` / `lineTo` / `curveTo` / `closePath`
 - `typekernel.optics.apply_overshoot` + `OpticalContext`
-- `typekernel.qa.render_outline_png`
+- `typekernel.qa.specimen_png.render_outline_png`（需 `pip install -e ".[specimen]"`）
 - `typekernel.compile.write_outline_to_ufo` / `build_ttf_from_ufo`
 
 ## 设计说明（白话）

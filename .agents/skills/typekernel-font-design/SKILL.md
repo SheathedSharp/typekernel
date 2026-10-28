@@ -10,8 +10,8 @@ description: >-
 
 **This is the active workflow** ([docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) 标准工作流).
 
-Letter geometry lives in the **project** (starter). The kernel has no letter builders.
-Do **not** import `typekernel.parts` or `DesignContext` — they were removed.
+Letter geometry lives in the **project** (starter). The kernel packages contain no
+letter builders — do not go looking for one there.
 
 ## Product goal
 

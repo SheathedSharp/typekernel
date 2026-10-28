@@ -8,7 +8,7 @@ Agent-facing entry points:
 
 - :class:`Pen` — circular (``contrast=1``) or elliptical contrast pen
 - :class:`Centerline` — open or closed polyline skeleton
-- :class:`CubicCenterline` — cubic Bézier midline (TK-308 spike)
+- :class:`CubicCenterline` — cubic Bézier midline
 - :func:`expand` — offset the centerline by the pen with join/cap options
 - :func:`expand_cubic` — cubic-rail offset (preferred; avoids bristly LINE facets)
 - :func:`polyline_to_cubic_centerline` — fit a polyline skeleton to cubics before expand

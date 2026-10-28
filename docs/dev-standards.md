@@ -67,10 +67,9 @@ mypy -p typekernel
 
 All three should be green on the commits you intend to publish.
 
-After intentional outline changes, list affected glyphs in the commit message and refresh
-`tests/golden/outline_hashes.json` with
-`PYTHONPATH=src python examples/regenerate_outline_hashes.py --write` (or run without
-`--write` to print drift only).
+Outline changes are not tracked by a golden hash file: `typekernel.qa.outline_hash`
+exists so `tk diff` can tell you *which* glyphs a change touched, not to gate
+them. List the affected glyphs in the commit message instead.
 
 ## Approvals / gates
 
