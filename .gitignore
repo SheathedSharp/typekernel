@@ -58,8 +58,14 @@ Thumbs.db
 *.woff2
 !tests/fixtures/**/*.otf
 !tests/fixtures/**/*.ttf
-!artifacts/skill-validate/**/*.otf
-!artifacts/skill-validate/**/*.ttf
+
+# Local process notes: kept on this machine, never distributed with the repo
+docs/AGENT_TRIALS.md
+docs/DRIFT_RETROSPECTIVE.md
+docs/DEVELOPMENT_PLAN.md
+docs/AGENT_GOAL.md
+tests/docs/test_agent_trials_doc.py
+tests/docs/test_development_plan_section8.py
 
 # Local agent notes (skills are tracked)
 .agents/*
@@ -67,31 +73,11 @@ Thumbs.db
 !.agents/skills/
 !.agents/skills/**
 
-# Local specimen dumps (keep the folder via .gitkeep; PNGs stay local)
-artifacts/specimens/**
-!artifacts/specimens/.gitkeep
+# Local build / proof / specimen dumps: never tracked, never distributed
+artifacts/
 
-# Local compile dogfood outputs (keep the folder via .gitkeep)
-artifacts/build/**
-!artifacts/build/.gitkeep
-
-# Agent trial dumps (summaries live in docs/AGENT_TRIALS.md)
-artifacts/trials/**
-!artifacts/trials/.gitkeep
-
-# Local ticket / one-off specimen dumps (do not publish TK-* scratch)
-artifacts/tk-*/
-artifacts/tk-*.png
-artifacts/tk-*.ttf
-artifacts/tk-*.otf
-
-# Human review PNG/TTF bundles (see examples/human_review_bundle.py)
-artifacts/human-review/**
-
-# weight_ladder_sheet UFO scratch (see tests/qa/test_sheet.py)
-artifacts/_ladder_tmp/
-artifacts/_test_ladder.png
-
+# Starter build dumps (tk build output inside a starter; regenerate locally)
+src/typekernel/starters/*/build/
 
 # Example compile dumps (keep showcase PNGs)
 examples/zayju_letter/out/**
