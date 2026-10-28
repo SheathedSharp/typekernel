@@ -21,6 +21,9 @@ Required fields:
 | `notes` | string | What was judged and any caveats |
 
 Optional extras such as `scope` or `test_evidence` are allowed.
+`test_evidence` is either a list of repo-relative test paths — CI checks that
+each one exists — or an object recording observed command results
+(`{"pytest": "473 passed", …}`).
 
 Helpers live in `typekernel.qa.gates`:
 
@@ -28,89 +31,30 @@ Helpers live in `typekernel.qa.gates`:
 - `load_approval(path)` — read and validate
 - `require_approval(path)` — raise if missing or not approved
 
+`tests/qa/test_gates.py` loads every JSON in this directory, so a record that
+does not validate fails CI.
+
+## Current gates
+
+| File | Decision |
+| --- | --- |
+| `geo-public-api.json` | `typekernel.geo` public API surface and the cubic-first story |
+| `optical-overshoot.json` | `optics.overshoot.apply_overshoot` v0 for round glyphs |
+| `font-model.json` | `typekernel.font` public API (Font / Glyph / Master / Component / kerning) |
+| `compile-bridge.json` | `typekernel.compile` build bridge (UFO → ttf / otf / woff2, VF, round-trip) |
+
 ## Naming
 
-Prefer plain names that describe the decision, for example:
+Prefer plain names that describe the decision, for example
+`geo-public-api.json` or `optical-overshoot.json`. Avoid internal planner
+ticket codes in file names or field values.
 
-- `geo-public-api.json`
-- `optical-overshoot.json`
-- `specimen-synthetic-o.json`
-- `serif-slab-voice.json` / `serif-bracketed-voice.json` — after reviewing proofs from `examples/human_review_bundle.py` (see `docs/agent-recipes.md`)
-- `italic-vf-construct.json` — after reviewing `examples/italic_family` VF from the same bundle (`--only italic`)
+## Adding a gate
 
-Avoid internal planner ticket codes in file names or field values.
+1. Write the JSON with `approved: false` and the evidence you expect to cite
+   (`test_evidence` lists repo-relative test paths).
+2. Have a human review the artifact and the evidence.
+3. Only then set `approved: true` and fill `approver` / `date` / `notes`.
 
-## Pending templates (not approved)
-
-These ship with ``approved: false`` until a human updates them after review:
-
-- `serif-slab-voice.json` / `serif-bracketed-voice.json` — `--only serif` (slab/bracketed `proof.png`, VF `proof_vf.png`, weight ladder PNGs)
-- `italic-vf-construct.json` — `--only italic` (review `proof.png`, `proof_vf.png`, VF `.ttf` under `italic_family/`)
-
-**Appendix B-13–B-15** (`3` / `G` / `s` opening) have no JSON gate: review
-`appendix_b_three_g_humanist.png` and `appendix_b_s_opening_humanist.png` from
-`human_review_bundle.py --only appendix-b` (or `contact_sheet.py --chars 3G` / `sS`). Record acceptance in
-notes or a design log only; changing outline builders or `S_OPENING_REACH_RELIEF` requires golden
-refresh per `docs/agent-recipes.md`.
-
-Generate local proofs (does not write this folder):
-
-```bash
-PYTHONPATH=src python examples/human_review_bundle.py --out artifacts/human-review
-```
-
-Before signing, run the `test_evidence` paths listed on each JSON file.
-
-### Copy-paste program checks (pending gates)
-
-From repo root, after opening `artifacts/human-review/` (or your `--out` path):
-
-**`serif-slab-voice.json`**
-
-```bash
-pytest -q \
-  tests/examples/test_slab_serif.py \
-  tests/examples/test_human_review_bundle.py \
-  tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance \
-  tests/qa/test_multi_voice_exit.py \
-  tests/qa/test_originality.py \
-  tests/qa/test_sentence_gate.py \
-  tests/docs/test_development_plan_section8.py
-```
-
-**`serif-bracketed-voice.json`**
-
-```bash
-pytest -q \
-  tests/examples/test_bracketed_serif.py \
-  tests/examples/test_human_review_bundle.py \
-  tests/parts/test_serifs.py::test_serif_voice_meets_program_acceptance \
-  tests/qa/test_multi_voice_exit.py \
-  tests/qa/test_originality.py \
-  tests/qa/test_sentence_gate.py \
-  tests/docs/test_development_plan_section8.py
-```
-
-**`italic-vf-construct.json`**
-
-```bash
-pytest -q \
-  tests/examples/test_human_review_bundle.py \
-  tests/examples/test_italic_family.py \
-  tests/parts/test_italic_program_acceptance.py \
-  tests/parts/test_italic_controls.py \
-  tests/parts/test_italic_topology.py \
-  tests/parts/test_oblique_compat.py \
-  tests/docs/test_development_plan_section8.py
-```
-
-Then update the JSON (`approved`, `approver`, `date`, `notes`) or use `write_approval` as in `examples/human_review_bundle.py` → `REVIEW_CHECKLIST.md`.
-
-### After you approve a gate (maintainer)
-
-1. Re-run that gate’s program checks (above) so evidence matches the commit you are on.
-2. Set `approved: true`, fill `approver` / `date` / `notes` (keep `test_evidence` paths accurate).
-3. Update `tests/docs/test_development_plan_section8.py`: remove the signed gate from `_PENDING_HUMAN_GATES` (and mirror any `_PENDING_GATE_JSON` lists in `tests/qa/test_gates.py`) so CI no longer expects `approved: false` for that file. When **all three** visual gates are signed, `test_section8_human_gates_remain_pending_until_review` should be removed or rewritten to assert the approved records instead.
-4. Run `PYTHONPATH=src python examples/run_program_exit.py --full-suite --with-linters` (or `pytest -q` + ruff + mypy) before pushing — do not relax `AGENT_SENTENCE` or L3 thresholds.
-
-Agents must not flip ``approved`` to ``true`` without explicit human instruction.
+Keep `test_evidence` paths real — they are what a later reader re-runs to check
+the decision still holds.

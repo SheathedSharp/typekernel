@@ -10,8 +10,8 @@ description: >-
 
 **This is the active workflow** ([docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) 标准工作流).
 
-Letter geometry lives in the **project** (starter). The kernel has no letter builders.
-Do **not** import `typekernel.parts` or `DesignContext` — they were removed.
+Letter geometry lives in the **project** (starter). The kernel packages contain no
+letter builders — do not go looking for one there.
 
 ## Product goal
 
@@ -48,7 +48,7 @@ Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/
 - Prefer **overlap construction** (stem + trough) over boolean unions for interpolatable masters.
 - Name nodes (`stem.l`, `arch.…`) so `tk audit` can measure them.
 - Advances / LSB / RSB: declare metrics keys in `spacing.py`; do not rely on bbox-only advances.
-- Conventional commits; local review against ARCHITECTURE.md 交接规格 / 硬约束 after each commit.
+- Conventional commits; local review against ARCHITECTURE.md 交接规格 / 设计禁令与边界 after each commit.
 
 ## Companion docs
 

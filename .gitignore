@@ -64,6 +64,7 @@ docs/AGENT_TRIALS.md
 docs/DRIFT_RETROSPECTIVE.md
 docs/DEVELOPMENT_PLAN.md
 docs/AGENT_GOAL.md
+docs/MIGRATION_HISTORY.md
 tests/docs/test_agent_trials_doc.py
 tests/docs/test_development_plan_section8.py
 
@@ -79,66 +80,11 @@ artifacts/
 # Starter build dumps (tk build output inside a starter; regenerate locally)
 src/typekernel/starters/*/build/
 
-# Example compile dumps (keep showcase PNGs)
-examples/zayju_letter/out/**
+# Example build outputs: every example's out/ is ignored by default;
+# un-ignore only the showcase proofs worth showing in a README.
+examples/*/out/**
 !examples/zayju_letter/out/.gitkeep
 !examples/zayju_letter/out/n_designed.png
 !examples/zayju_letter/out/n_overshoot_pair.png
 
-# anthropic_zayju example outputs (keep compare + key specimens)
-examples/anthropic_zayju/out/**
-!examples/anthropic_zayju/out/.gitkeep
-!examples/anthropic_zayju/out/compare.png
-!examples/anthropic_zayju/out/zayju_typekernel.png
-
-# paper_code_zayju example outputs (keep triad specimen)
-examples/paper_code_zayju/out/**
-!examples/paper_code_zayju/out/.gitkeep
-!examples/paper_code_zayju/out/triad.png
-
-# optical_spacing example outputs
-examples/optical_spacing/out/**
-!examples/optical_spacing/out/.gitkeep
-!examples/optical_spacing/out/compare.png
-
-# smooth_joins example outputs
-examples/smooth_joins/out/**
-!examples/smooth_joins/out/.gitkeep
-!examples/smooth_joins/out/compare.png
-
-# ease_curvature example outputs
-examples/ease_curvature/out/**
-!examples/ease_curvature/out/.gitkeep
-!examples/ease_curvature/out/stadium-before-after.png
-examples/skeleton_specimen/out/
-
-# first_font example outputs (keep the proof)
-examples/first_font/out/**
-!examples/first_font/out/proof.png
-
-# variable_family example outputs (keep the proof)
-examples/variable_family/out/**
-!examples/variable_family/out/proof.png
-
-# italic / width VF examples (build scripts only)
-examples/slab_serif/out/**
-examples/bracketed_serif/out/**
-examples/italic_family/out/**
-examples/variable_width/out/**
-examples/correspondence_script/out/**
-examples/agent_studio/out/**
-examples/agent_family/out/**
-examples/agent_glyph_preview/out/**
-
 uploads/
-
-# zayju florid letter-writing script (key proofs)
-examples/zayju_script/out/**
-!examples/zayju_script/out/.gitkeep
-!examples/zayju_script/out/sentence_brief.png
-!examples/zayju_script/out/sentence_brief_display.png
-!examples/zayju_script/out/grid.png
-!examples/zayju_script/out/glyph_D.png
-
-# example build outputs
-examples/**/out/

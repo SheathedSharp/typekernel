@@ -1,4 +1,4 @@
-"""Compile path for Font built from System (no DesignContext)."""
+"""Compile path for a Font built from a System."""
 
 from __future__ import annotations
 

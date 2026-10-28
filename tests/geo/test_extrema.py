@@ -1,4 +1,4 @@
-"""TK-402: cubic axis-extrema splitting (draw-time rebalance helper)."""
+"""Cubic axis-extrema splitting (draw-time rebalance helper)."""
 
 from __future__ import annotations
 

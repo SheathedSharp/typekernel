@@ -1,5 +1,15 @@
 # Test fixtures
 
+## `synthetic_H.json`
+
+Two vertical bars (no crossbar), used by the stem-measurement tests. Left stem
+`x = 100…180`, right stem `x = 420…500`, both `y = 0…700`; `stem_width` records
+the expected 80 units. Also synthetic — not traced from any real typeface.
+Cubics are degenerate (collinear controls) so the fixture loader can load them.
+
+Loaded by `typekernel.geo.fixtures.load_synthetic_outline`; used by
+`tests/optics/test_stem.py` and `tests/optics/test_stem_equalize.py`.
+
 ## `synthetic_O.json`
 
 A **synthetic** ring-like `O`, built from four-cubic Bézier approximations of

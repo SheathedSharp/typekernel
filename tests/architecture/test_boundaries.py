@@ -276,7 +276,7 @@ def test_guards_are_runnable_when_packages_empty() -> None:
 
 
 # Default-path heal/blend/seal is forbidden in draw / plugins / cli / starters
-# (ARCHITECTURE 验收方式 / 代码去留: blend_corners is optional L0 tool, not default).
+# (ARCHITECTURE 验收方式: blend_corners is optional L0 tool, not default).
 _DEFAULT_PATH_ROOTS = ("draw", "plugins", "cli", "starters")
 _HEAL_IMPORT_NAMES = {
     "blend_corners",

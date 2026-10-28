@@ -1,4 +1,4 @@
-"""Axis-aligned extrema on cubics (TK-402 italic curve rebalance)."""
+"""Axis-aligned extrema on cubics, used for draw-time curve rebalancing."""
 
 from __future__ import annotations
 
@@ -124,7 +124,7 @@ def _contour_oblique_compat_splits(contour: Contour, shear: float) -> Contour:
 
 
 def outline_oblique_compat_splits(outline: Outline, shear: float) -> Outline:
-    """Split cubics for a later horizontal shear (TK-402, VF-safe)."""
+    """Split cubics for a later horizontal shear, keeping masters interpolatable."""
     if abs(shear) < 1e-12:
         return outline
     return Outline(tuple(_contour_oblique_compat_splits(ct, shear) for ct in outline.contours))
@@ -146,7 +146,7 @@ def _e_eye_oblique_segment_parity(eye: Contour) -> Contour:
 
 
 def outline_e_oblique_splits(outline: Outline, shear: float) -> Outline:
-    """Oblique pre-splits for ``e``; normalises eye contour segment counts (TK-402)."""
+    """Oblique pre-splits for ``e``; normalises eye contour segment counts."""
     split = outline_oblique_compat_splits(outline, shear)
     if len(split.contours) < 2:
         return split

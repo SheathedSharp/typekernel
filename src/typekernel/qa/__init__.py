@@ -1,7 +1,4 @@
-"""QA helpers: outline hashes, PNG specimens, approval gates, proofs.
-
-Frozen parts-era score / lint / sentence_gate modules were removed.
-"""
+"""QA helpers: outline hashes, PNG specimens, approval gates, proofs."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Corner fillers (ARCHITECTURE.md 槽位与填充协议 / 落地顺序)."""
+"""Corner fillers (ARCHITECTURE.md 槽位与填充协议)."""
 
 from __future__ import annotations
 

@@ -8,15 +8,11 @@
 > [anti-patterns](../.agents/skills/typekernel-font-design/anti-patterns.md),
 > [reference](../.agents/skills/typekernel-font-design/reference.md)).
 
-`typekernel.parts` / `DesignContext` / `FormSources` / Usage B aggregates
-(`Controls` / `DesignSequence` / `unlock_*` / `build_all`) are **deleted**. Do not
-resurrect them.
-
 ## Product rule
 
 | Do | Don't |
 | --- | --- |
-| Draw with `typekernel.draw` + `@glyph` in the project | Import `typekernel.parts` / `DesignContext` |
+| Draw with `typekernel.draw` + `@glyph` in the project | Look for letter builders inside `typekernel.*` kernel packages |
 | Space via project `spacing.py` (metrics keys + kern) | Rely on bbox-only advances as the design |
 | Compile with `tk build` / `tk build --variable` and proof | Add heal / blend / seal passes for bad joins |
 

@@ -1,4 +1,4 @@
-"""End-to-end: synthetic-only temp project → OTF (ARCHITECTURE.md 落地顺序 #14)."""
+"""End-to-end: synthetic-only temp project → OTF (ARCHITECTURE.md「验收方式」)."""
 
 from __future__ import annotations
 

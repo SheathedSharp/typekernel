@@ -1,11 +1,15 @@
 {
   "gate": "compile-bridge",
-  "approved_by": "maintainer",
-  "approved_at": "2026-10-13",
-  "evidence": [
-    "tests/compile/test_font_build.py",
-    "tests/compile/test_variable_build.py",
-    "tests/compile/test_font_export.py"
+  "approved": true,
+  "approver": "maintainer",
+  "date": "2026-10-13",
+  "scope": "typekernel.compile build bridge: UFO → ttf / otf / woff2, variable fonts, UFO round-trip",
+  "test_evidence": [
+    "tests/compile/test_build_manifest.py",
+    "tests/compile/test_system_font_export.py",
+    "tests/compile/test_ufo_export.py",
+    "tests/compile/test_ufo_overwrite.py",
+    "tests/compile/test_no_beautify.py"
   ],
-  "notes": "build_font, build_variable_font, woff2 output, UFO import, and OpenType feature text path approved."
+  "notes": "build_font, build_variable_font, woff2 output, UFO import, and OpenType feature text path approved. The evidence paths were remapped to the tests covering the same surface after the parts-era suite was deleted (originally tests/compile/test_font_build.py, test_variable_build.py, test_font_export.py)."
 }

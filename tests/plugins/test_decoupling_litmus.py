@@ -1,4 +1,4 @@
-"""Decoupling litmus — same synthetic glyphs × three corner configs (落地顺序 #28).
+"""Decoupling litmus — same synthetic glyphs × three corner configs (ARCHITECTURE.md「槽位与填充协议」解耦试金石).
 
 Glyph sources must not change when only the Project corner wiring changes.
 Uses synthetic names only (no single-letter glyph strings).

@@ -17,7 +17,7 @@ Use **conventional commits**. Subjects describe the human change, never internal
 
 ```
 feat(geo): refit pathops outlines to cubics after union
-fix(parts): heal self-intersections in trace_letter
+fix(draw): keep writer tangents stable across mirrored fragments
 docs: document OSS commit vs ignore policy
 chore: ignore local ticket specimen dumps
 test(geo): lock polyline-to-cubic expand path
@@ -70,6 +70,6 @@ When creating or extending faces in this repo:
 
 1. Follow `.agents/skills/typekernel-font-design/` (ARCHITECTURE.md 标准工作流: tk new → system →
    control proofs → elements → audit → plugins → spacing → masters → build).
-2. Letter geometry stays in the project starter; never resurrect `parts` / DesignContext.
+2. Letter geometry stays in the project starter; kernel packages stay letter-free.
 3. Change fragments/elements — never heal / blend / seal.
 4. Prefer examples under `examples/latin_sans_quickstart/` or `examples/zayju_letter/`.
