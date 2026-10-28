@@ -9,7 +9,7 @@ from typekernel.system import System
 
 
 @glyph("i", group="lc.straight")
-def i(system: System):  # noqa: E743
+def i(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     width = float(system.tokens["i_width"])

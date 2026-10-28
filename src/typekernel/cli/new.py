@@ -139,7 +139,7 @@ def create_project(
             f'FAMILY_NAME = "{family}"',
             text,
             count=1,
-            flags=re.M,
+            flags=re.MULTILINE,
         )
         if n:
             system_py.write_text(text, encoding="utf-8")

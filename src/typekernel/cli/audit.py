@@ -14,7 +14,7 @@ from typekernel.cli.load import load_project
 from typekernel.draw import Drawing
 from typekernel.geo.contour import signed_area
 from typekernel.geo.outline import bounds
-from typekernel.optics.stem import list_vertical_stems
+from typekernel.optics.stem import VerticalStemSpan, list_vertical_stems
 from typekernel.project import Project
 from typekernel.system import System
 
@@ -125,12 +125,12 @@ def _audit_stem(
         # otherwise thin the reading at 0.5× zone.
         outline = drawing.outline()
         zone = float(system.zones.cap if is_uc else system.zones.x)
-        best: list = []
+        best: list[VerticalStemSpan] = []
         best_score = float("inf")
         for frac in (0.32, 0.5, 0.68):
             try:
                 spans = list_vertical_stems(outline, y=zone * frac)
-            except Exception:
+            except Exception:  # noqa: BLE001, S112 - best-effort optical probe
                 continue
             near = []
             for span in spans:
@@ -268,8 +268,10 @@ def audit_project(
 
 def format_report(report: AuditReport) -> str:
     lines = [
-        f"tk audit: {report.glyphs} glyphs, "
-        f"{len(report.errors)} errors, {len(report.warnings)} warnings"
+        (
+            f"tk audit: {report.glyphs} glyphs, "
+            f"{len(report.errors)} errors, {len(report.warnings)} warnings"
+        )
     ]
     for f in report.findings:
         lines.append(f"  [{f.level}] {f.kind} {f.glyph}: {f.message}")

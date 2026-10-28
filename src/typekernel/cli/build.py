@@ -7,7 +7,13 @@ import sys
 from pathlib import Path
 
 from typekernel.cli.load import build_font_from_project, load_project
-from typekernel.compile.build import FontBuild, OutputFormat, build_font, build_variable_font
+from typekernel.compile.build import (
+    FontBuild,
+    OutputFormat,
+    VariableFontBuild,
+    build_font,
+    build_variable_font,
+)
 from typekernel.font.font import Font
 from typekernel.font.masters import Master as FontMaster
 
@@ -77,8 +83,8 @@ def build_variable_project(
     root: str | Path,
     *,
     out_dir: str | Path | None = None,
-    formats: tuple[str, ...] = ("ttf",),
-) -> tuple[list[FontMaster], object]:
+    formats: tuple[OutputFormat, ...] = ("ttf",),
+) -> tuple[list[FontMaster], VariableFontBuild]:
     """Build Light / Regular / Bold (etc.) masters and compile a variable font.
 
     Uses Project masters plus the base Regular system. Axis locations come from

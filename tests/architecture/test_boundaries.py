@@ -310,8 +310,7 @@ def test_no_heal_blend_seal_on_default_path(default_path_files: list[Path]) -> N
                             f"{_rel(path)}:{node.lineno}: from {mod} import {alias.name}"
                         )
                     if alias.name == "joins" and (
-                        mod.endswith(".geo.joins")
-                        or mod.endswith(".optics.joins")
+                        mod.endswith((".geo.joins", ".optics.joins"))
                         or mod in {"typekernel.geo.joins", "typekernel.optics.joins"}
                     ):
                         # Importing the joins module wholesale on the default path

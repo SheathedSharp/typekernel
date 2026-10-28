@@ -59,7 +59,7 @@ def _load_snapshot(path: Path) -> dict[str, str]:
     else:
         raise ValueError(f"snapshot must be a JSON object: {path}")
     if not isinstance(glyphs, dict):
-        raise ValueError(f"snapshot glyphs must be an object: {path}")
+        raise TypeError(f"snapshot glyphs must be an object: {path}")
     return {str(k): str(v) for k, v in glyphs.items()}
 
 
@@ -105,8 +105,10 @@ def diff_project(
 def format_diff(result: dict[str, list[str]]) -> str:
     """Human-readable summary for CLI stdout."""
     lines = [
-        f"tk diff: {len(result['changed'])} changed, "
-        f"{len(result['added'])} added, {len(result['removed'])} removed"
+        (
+            f"tk diff: {len(result['changed'])} changed, "
+            f"{len(result['added'])} added, {len(result['removed'])} removed"
+        )
     ]
     for label in ("changed", "added", "removed"):
         names = result[label]

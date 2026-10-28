@@ -6,6 +6,7 @@ No letter names — projects supply centerlines; this module only expands pens.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 
 from typekernel.draw.drawing import ContourRole, Drawing
@@ -25,9 +26,9 @@ from typekernel.geo.stroke import (
 
 __all__ = [
     "broad_nib",
-    "pointed_pen",
     "expand_skeleton",
     "expand_skeleton_cubic",
+    "pointed_pen",
 ]
 
 
@@ -56,8 +57,8 @@ _DEGEN_LEN = 1e-9
 
 
 def _seg_len(seg: LineSegment | CubicSegment) -> float:
-    a, b = seg.points[0], seg.points[-1]
-    return ((b.x - a.x) ** 2 + (b.y - a.y) ** 2) ** 0.5
+    a, b = (seg.p0, seg.p1) if isinstance(seg, LineSegment) else (seg.p0, seg.p3)
+    return math.hypot(b.x - a.x, b.y - a.y)
 
 
 def _drop_degenerate_segments(contour: Contour) -> Contour:

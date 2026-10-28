@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typekernel.draw import Writer
-from typekernel.font import Font, Glyph
+from typekernel.font import Font
 from typekernel.font.kerning import KernPair, KernTable
 from typekernel.system import Overshoot, System, Zones
 

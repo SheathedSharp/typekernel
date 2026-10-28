@@ -28,5 +28,5 @@ def test_from_system_copies_zones() -> None:
 
 
 def test_alignment_zones_from_system() -> None:
-    blues, others = alignment_zones_from_system(_system())
+    blues, _ = alignment_zones_from_system(_system())
     assert blues

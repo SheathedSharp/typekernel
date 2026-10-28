@@ -10,8 +10,8 @@ from tests.plugins.corners.helpers import (
     segment_kind_sequence,
     square_with_knee,
 )
-from typekernel.draw.geomutil import segment_end, segment_start
 from typekernel.draw import apply_slots
+from typekernel.draw.geomutil import segment_end, segment_start
 from typekernel.plugins.corners import bracketed, ink_trap, rounded, slab, wedge
 from typekernel.system import System
 

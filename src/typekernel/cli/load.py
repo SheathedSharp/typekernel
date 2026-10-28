@@ -8,6 +8,7 @@ from pathlib import Path
 
 from typekernel.font.font import Font
 from typekernel.project import Project
+from typekernel.system import System
 
 __all__ = ["apply_project_spacing", "apply_project_spacing_with_system", "build_font_from_project", "load_project"]
 
@@ -120,7 +121,7 @@ def build_font_from_project(
     return font
 
 
-def apply_project_spacing_with_system(font: Font, system, project_root: Path) -> None:
+def apply_project_spacing_with_system(font: Font, system: System, project_root: Path) -> None:
     """Like :func:`apply_project_spacing` but with an explicit System (masters)."""
     spacing_py = project_root / "spacing.py"
     if not spacing_py.is_file():

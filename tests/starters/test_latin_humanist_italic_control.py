@@ -133,7 +133,7 @@ def test_masters_signature_compatible() -> None:
     }
     for name in names:
         sigs = []
-        for label, scale in scales.items():
+        for scale in scales.values():
             sys_w = system if scale == 1.0 else _weight_system(system, scale)
             from typekernel.project import Project
 
