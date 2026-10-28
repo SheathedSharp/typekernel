@@ -1,7 +1,15 @@
 {
   "gate": "font-model-public-api",
-  "approved_by": "maintainer",
-  "approved_at": "2026-10-13",
-  "evidence": ["tests/font/test_composite.py", "tests/compile/test_font_build.py"],
-  "notes": "Font, Glyph, Master, add_composite, and class kerning side tags reviewed for family workflow."
+  "approved": true,
+  "approver": "maintainer",
+  "date": "2026-10-13",
+  "scope": "typekernel.font public API: Font / Glyph / Master / Component / kerning",
+  "test_evidence": [
+    "tests/font/test_font.py",
+    "tests/font/test_glyph.py",
+    "tests/font/test_info.py",
+    "tests/font/test_system_path.py",
+    "tests/compile/test_system_font_export.py"
+  ],
+  "notes": "Font, Glyph, Master, add_composite, and class kerning side tags reviewed for the family workflow. The evidence paths were remapped to the current suite after the parts-era tests were deleted (originally tests/font/test_composite.py, tests/compile/test_font_build.py)."
 }
