@@ -1,0 +1,9 @@
+{
+  "group": "lc.straight",
+  "round": 3,
+  "glyphs": ["n", "h", "m", "u", "r", "i", "l", "j", "dotlessi", "dotlessj"],
+  "agent_pass": true,
+  "approved": false,
+  "checks": {"audit_errors": 0},
+  "notes": "P4-2 added dotlessi/dotlessj as composite bases; lc.straight re-pass after new glyphs."
+}
