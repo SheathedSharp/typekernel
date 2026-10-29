@@ -12,7 +12,6 @@ from typekernel.draw import (
     Fragment,
     Writer,
 )
-from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
 from typekernel.project import GlyphSpec, Master, Project, glyph
 from typekernel.system import Overshoot, System, Zones
