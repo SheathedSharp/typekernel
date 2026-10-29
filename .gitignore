@@ -65,6 +65,7 @@ docs/DRIFT_RETROSPECTIVE.md
 docs/DEVELOPMENT_PLAN.md
 docs/AGENT_GOAL.md
 docs/MIGRATION_HISTORY.md
+docs/design/roadmap.md
 tests/docs/test_agent_trials_doc.py
 tests/docs/test_development_plan_section8.py
 
