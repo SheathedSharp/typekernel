@@ -1,0 +1,12 @@
+{
+  "group": "features",
+  "round": 1,
+  "glyphs": ["a.ss01", "zero.tf", "zero.osf", "period.case"],
+  "agent_pass": true,
+  "approved": false,
+  "checks": {
+    "audit_errors": 0,
+    "features": ["ss01", "tnum", "onum", "case"]
+  },
+  "notes": "P4-3 naming-suffix features + latin-sans variants. HarfBuzz specimen proof still optional; human visual of substitutions pending."
+}
