@@ -653,3 +653,4 @@ class Project:
 | 标签语法 | `typekernel.anatomy.tags` · `tags.grammar` info |
 | 解剖构件（直线） | `stem` `crossbar` `dot` `drop` |
 | 解剖构件（曲线） | `arch` `bowl` `bowl_join` `open_bowl`/`BarSpec` `spine` |
+| 解剖构件（斜笔） | `diagonal_pair` `crossing` |

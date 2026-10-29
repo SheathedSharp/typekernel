@@ -52,7 +52,7 @@ def _ccw_unit(dx: float, dy: float) -> tuple[float, float]:
 
 def _superellipse_x_at_y_frac(rx: float, y_frac: float, exp: float) -> float:
     t = min(abs(y_frac), 1.0)
-    return float(rx) * (max(1.0 - t**exp, 0.0)) ** (1.0 / exp)
+    return float(float(rx) * (max(1.0 - t**float(exp), 0.0)) ** (1.0 / float(exp)))
 
 
 def _arch_span(
