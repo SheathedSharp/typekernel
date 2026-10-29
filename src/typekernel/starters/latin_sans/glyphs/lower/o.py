@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from elements import zone_anchors
+
 from typekernel.anatomy import bowl
 from typekernel.project import glyph
 from typekernel.system import System
@@ -20,13 +22,17 @@ def o(system: System):
     cy = xh / 2.0
     rx = width / 2.0
     ry = xh / 2.0
-    return bowl(
-        (cx, cy),
-        rx,
-        ry,
-        thick=st,
-        thin=thin,
-        exponent=exp,
-        overshoot=ov,
-        name="bowl",
+    return zone_anchors(
+        bowl(
+                (cx, cy),
+                rx,
+                ry,
+                thick=st,
+                thin=thin,
+                exponent=exp,
+                overshoot=ov,
+                name="bowl",
+            ),
+        system,
+        top='x', ogonek=True,
     )

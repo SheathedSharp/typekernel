@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import diagonal_pair
 from typekernel.draw import Writer, diagonal_band
@@ -43,4 +43,4 @@ def y(system: System):
         .close()
         .build()
     )
-    return top + descender
+    return zone_anchors(top + descender, system, top='x')

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS, arch_span
+from elements import WIDTHS, arch_span, zone_anchors
 
 from typekernel.anatomy import stem
 from typekernel.draw import Writer
@@ -39,4 +39,4 @@ def glyph_J(system: System):
         .close()
         .build()
     )
-    return body + curl
+    return zone_anchors(body + curl, system, top='cap')

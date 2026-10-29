@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import diagonal_pair
 from typekernel.project import glyph
@@ -16,10 +16,14 @@ def glyph_V(system: System):
     width = float(WIDTHS["V"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     cx = lsb + width / 2.0
-    return diagonal_pair(
-        (cx, 0.0),
-        (lsb + st * 0.3, cap),
-        (lsb + width - st * 0.3, cap),
-        weight=st,
-        name="diag",
+    return zone_anchors(
+        diagonal_pair(
+                (cx, 0.0),
+                (lsb + st * 0.3, cap),
+                (lsb + width - st * 0.3, cap),
+                weight=st,
+                name="diag",
+            ),
+        system,
+        top='cap',
     )

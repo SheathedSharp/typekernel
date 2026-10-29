@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import diagonal_pair, stem
 from typekernel.project import glyph
@@ -25,4 +25,4 @@ def glyph_Y(system: System):
         name="diag",
     )
     body = stem(cx - st / 2.0, cx + st / 2.0, 0.0, join_y + st * 0.35, name="stem")
-    return arms + body
+    return zone_anchors(arms + body, system, top='cap')

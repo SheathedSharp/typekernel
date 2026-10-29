@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import stem
 from typekernel.draw import Writer, diagonal_band
@@ -40,4 +40,4 @@ def glyph_K(system: System):
     tip_x = lsb + width - st * 0.2
     upper = _arm((tip_x, cap), (join_x, join_y), weight=st, name="diag.t")
     lower = _arm((join_x, join_y), (tip_x, 0.0), weight=st, name="diag.b")
-    return body + upper + lower
+    return zone_anchors(body + upper + lower, system, top='cap')

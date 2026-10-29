@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import stem
 from typekernel.draw import Writer, diagonal_band
@@ -38,4 +38,4 @@ def glyph_N(system: System):
         .close()
         .build()
     )
-    return left + right + diag
+    return zone_anchors(left + right + diag, system, top='cap')

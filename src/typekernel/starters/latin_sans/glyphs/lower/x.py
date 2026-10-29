@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import crossing
 from typekernel.project import glyph
@@ -16,11 +16,15 @@ def x(system: System):
     width = float(WIDTHS["x"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     pad = st * 0.25
-    return crossing(
-        (lsb + pad, xh),
-        (lsb + width - pad, 0.0),
-        (lsb + width - pad, xh),
-        (lsb + pad, 0.0),
-        weight=st,
-        name="cross",
+    return zone_anchors(
+        crossing(
+                (lsb + pad, xh),
+                (lsb + width - pad, 0.0),
+                (lsb + width - pad, xh),
+                (lsb + pad, 0.0),
+                weight=st,
+                name="cross",
+            ),
+        system,
+        top='x',
     )

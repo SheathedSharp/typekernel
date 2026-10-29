@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from elements import zone_anchors
+
 from typekernel.anatomy import bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
@@ -30,4 +32,4 @@ def b(system: System):
         overshoot=ov,
         name="bowl",
     )
-    return left + ring
+    return zone_anchors(left + ring, system, top='x')

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import dot, stem
 from typekernel.project import glyph
@@ -21,4 +21,4 @@ def i(system: System):
     cy = xh + float(system.overshoot.round) + diameter * 0.65
     cx = x0 + st / 2.0
     tittle = dot((cx, cy), diameter, shape="round", name="dot")
-    return body + tittle
+    return zone_anchors(body + tittle, system, top='x', ogonek=True)

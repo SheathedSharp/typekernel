@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from elements import zone_anchors
+
 from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
@@ -27,4 +29,4 @@ def H(system: System):
         name="bar",
         ends="none",
     )
-    return left + right + bar
+    return zone_anchors(left + right + bar, system, top='cap')

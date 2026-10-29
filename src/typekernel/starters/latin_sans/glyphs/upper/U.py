@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS, arch_span
+from elements import WIDTHS, arch_span, zone_anchors
 
 from typekernel.anatomy import stem
 from typekernel.draw import Writer
@@ -38,4 +38,4 @@ def glyph_U(system: System):
         .close()
         .build()
     )
-    return left + right + cup
+    return zone_anchors(left + right + cup, system, top='cap', ogonek=True)

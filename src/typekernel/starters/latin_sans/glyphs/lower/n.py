@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from elements import zone_anchors
+
 from typekernel.anatomy import arch, stem
 from typekernel.project import glyph
 from typekernel.system import System
@@ -32,4 +34,4 @@ def n(system: System):
         overshoot=ov * 0.35,
         name="arch",
     )
-    return left + right + shoulder
+    return zone_anchors(left + right + shoulder, system, top='x')

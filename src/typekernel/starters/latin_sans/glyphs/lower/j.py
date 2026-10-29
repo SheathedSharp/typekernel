@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS, arch_span
+from elements import WIDTHS, arch_span, zone_anchors
 
 from typekernel.anatomy import dot, stem
 from typekernel.draw import Writer
@@ -49,4 +49,4 @@ def j(system: System):
     cy = xh + float(system.overshoot.round) + diameter * 0.65
     cx = x0 + st / 2.0
     tittle = dot((cx, cy), diameter, shape="round", name="dot")
-    return body + curl + tittle
+    return zone_anchors(body + curl + tittle, system, top='x')

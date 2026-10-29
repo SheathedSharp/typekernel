@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import crossbar, diagonal_pair
 from typekernel.project import glyph
@@ -32,4 +32,4 @@ def glyph_A(system: System):
         name="bar",
         ends="none",
     )
-    return legs + bar
+    return zone_anchors(legs + bar, system, top='cap', ogonek=True)

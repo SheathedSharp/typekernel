@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import arch, stem
 from typekernel.project import glyph
@@ -30,4 +30,4 @@ def r(system: System):
         overshoot=ov * 0.25,
         name="arch",
     )
-    return body + shoulder
+    return zone_anchors(body + shoulder, system, top='x')

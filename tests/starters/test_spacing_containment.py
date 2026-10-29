@@ -30,6 +30,10 @@ def test_packed_advance_contains_ink(tmp_path: Path, starter: str) -> None:
     for glyph in font:
         if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
             continue
+        # Combining marks are zero-advance by design; ink around the attachment
+        # point is expected to extend past both sides of the origin.
+        if float(glyph.advance) == 0.0:
+            continue
         _min_x, _min_y, max_x, _max_y = bounds(glyph.outline)
         if max_x > float(glyph.advance) + 1e-6:
             overhangs.append((glyph.name, float(max_x), float(glyph.advance)))

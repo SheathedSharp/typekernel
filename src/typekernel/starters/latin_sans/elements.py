@@ -14,6 +14,8 @@ from typekernel.draw import (
     superellipse_quarter,
     tensioned_arc,
 )
+from typekernel.geo.outline import bounds
+from typekernel.project import GlyphDraft
 from typekernel.system import System
 
 __all__ = [
@@ -28,6 +30,7 @@ __all__ = [
     "open_bowl",
     "shoulder_trough",
     "stem_rect",
+    "zone_anchors",
 ]
 
 # Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
@@ -423,3 +426,42 @@ def diagonal_stroke(
         .close()
         .build()
     )
+
+
+def zone_anchors(
+    drawing: Drawing,
+    system: System,
+    *,
+    top: str = "x",
+    bottom: bool = True,
+    ogonek: bool = False,
+) -> GlyphDraft:
+    """Attach standard Latin anchors from ink bbox + zone lines.
+
+    ``top`` is ``"x"`` (x-height) or ``"cap"``. Attachment x is the ink
+    horizontal center. ``ogonek`` adds a bottom-rightish ``ogonek`` anchor.
+    """
+    try:
+        x0, _y0, x1, _y1 = bounds(drawing.outline())
+        cx = (x0 + x1) / 2.0
+    except ValueError:
+        cx = 0.0
+    if top == "cap":
+        top_y = float(system.zones.cap)
+    elif top == "x":
+        top_y = float(system.zones.x)
+    else:
+        raise ValueError(f"top must be 'x' or 'cap', got {top!r}")
+    base_y = float(system.zones.base)
+    anchors: dict[str, tuple[float, float]] = {"top": (cx, top_y)}
+    if bottom:
+        anchors["bottom"] = (cx, base_y)
+    if ogonek:
+        # Slightly right of center — typical ogonek sit under the right stem.
+        try:
+            x0, _y0, x1, _y1 = bounds(drawing.outline())
+            ox = x0 + (x1 - x0) * 0.72
+        except ValueError:
+            ox = cx
+        anchors["ogonek"] = (ox, base_y)
+    return GlyphDraft(drawing=drawing, anchors=anchors)

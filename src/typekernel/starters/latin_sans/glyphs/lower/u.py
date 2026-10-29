@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import arch, stem
 from typekernel.project import glyph
@@ -38,4 +38,4 @@ def u(system: System):
     # Drawing has no mirrored_y; approximate by translating after reflecting via
     # tagged reuse of top arch pattern used by n (overlap at bottom).
     # For structural v2: keep the arch near baseline (crown below join).
-    return left + right + cup
+    return zone_anchors(left + right + cup, system, top='x', ogonek=True)

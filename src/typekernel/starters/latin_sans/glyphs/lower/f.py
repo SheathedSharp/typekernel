@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS, arch_span
+from elements import WIDTHS, arch_span, zone_anchors
 
 from typekernel.anatomy import crossbar, stem
 from typekernel.draw import Writer
@@ -58,4 +58,4 @@ def f(system: System):
         .close()
         .build()
     )
-    return body + bar + curl
+    return zone_anchors(body + bar + curl, system, top='x')

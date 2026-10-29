@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import crossbar, open_bowl
 from typekernel.project import glyph
@@ -43,4 +43,4 @@ def glyph_G(system: System):
         name="spur",
         ends="none",
     )
-    return body + spur
+    return zone_anchors(body + spur, system, top='cap')

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import bowl, stem
 from typekernel.project import glyph
@@ -40,4 +40,4 @@ def glyph_B(system: System):
         overshoot=ov,
         name="bowl.b",
     )
-    return left + top + bot
+    return zone_anchors(left + top + bot, system, top='cap')

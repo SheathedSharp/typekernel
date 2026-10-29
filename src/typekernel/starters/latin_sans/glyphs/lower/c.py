@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import open_bowl
 from typekernel.project import glyph
@@ -22,15 +22,19 @@ def c(system: System):
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     cx = lsb + width / 2.0
     cy = xh / 2.0
-    return open_bowl(
-        (cx, cy),
-        width / 2.0,
-        xh / 2.0,
-        thick=st,
-        thin=thin,
-        aperture=aperture,
-        open_side="right",
-        exponent=exp,
-        overshoot=ov,
-        tension=tension,
+    return zone_anchors(
+        open_bowl(
+                (cx, cy),
+                width / 2.0,
+                xh / 2.0,
+                thick=st,
+                thin=thin,
+                aperture=aperture,
+                open_side="right",
+                exponent=exp,
+                overshoot=ov,
+                tension=tension,
+            ),
+        system,
+        top='x',
     )

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import diagonal_pair, stem
 from typekernel.project import glyph
@@ -25,4 +25,4 @@ def glyph_M(system: System):
         weight=st,
         name="diag",
     )
-    return left + right + inner
+    return zone_anchors(left + right + inner, system, top='cap')

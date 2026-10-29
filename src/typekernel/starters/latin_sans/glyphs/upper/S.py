@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import open_bowl
 from typekernel.project import glyph
@@ -52,4 +52,4 @@ def glyph_S(system: System):
         name="bowl.b",
         aperture_index=1,
     )
-    return upper + lower
+    return zone_anchors(upper + lower, system, top='cap')

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import bowl
 from typekernel.draw import Writer, diagonal_band
@@ -52,4 +52,4 @@ def glyph_Q(system: System):
         .close()
         .build()
     )
-    return ring + tail
+    return zone_anchors(ring + tail, system, top='cap')

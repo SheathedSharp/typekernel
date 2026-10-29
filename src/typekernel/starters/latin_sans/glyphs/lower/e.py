@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import BarSpec, open_bowl
 from typekernel.project import glyph
@@ -29,16 +29,20 @@ def e(system: System):
     inner_ry = max(outer_ry - thin, 1.0)
     lip_y = cy - aperture * inner_ry
     bar_y = min(lip_y + bar_t * 0.15, cy - thin * 0.35)
-    return open_bowl(
-        (cx, cy),
-        width / 2.0,
-        xh / 2.0,
-        thick=st,
-        thin=thin,
-        aperture=aperture,
-        bar=BarSpec(y=bar_y, thick=bar_t, inset=st * 0.2),
-        open_side="right",
-        exponent=exp,
-        overshoot=ov,
-        tension=tension,
+    return zone_anchors(
+        open_bowl(
+                (cx, cy),
+                width / 2.0,
+                xh / 2.0,
+                thick=st,
+                thin=thin,
+                aperture=aperture,
+                bar=BarSpec(y=bar_y, thick=bar_t, inset=st * 0.2),
+                open_side="right",
+                exponent=exp,
+                overshoot=ov,
+                tension=tension,
+            ),
+        system,
+        top='x', ogonek=True,
     )

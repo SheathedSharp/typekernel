@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
+from elements import WIDTHS, zone_anchors
 
 from typekernel.anatomy import stem
 from typekernel.project import glyph
@@ -16,4 +16,4 @@ def glyph_l(system: System):
     width = float(WIDTHS["l"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     x0 = lsb + (width - st) / 2.0
-    return stem(x0, x0 + st, 0.0, asc, name="stem")
+    return zone_anchors(stem(x0, x0 + st, 0.0, asc, name="stem"), system, top='x')

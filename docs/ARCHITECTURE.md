@@ -660,3 +660,14 @@ class Project:
 | 三 starter 标签语法 | **已合法**（`tags.grammar` 0；latin-sans / humanist-italic / chancery） |
 | 插件语义 / slab litmus | **已落地**（slab/bracketed/rounded） |
 | designed masters | **已落地**（Light/Bold 宽/开口/张力）；阶梯人工批准待定（`approvals/latin-sans-ladder.json`） |
+
+
+## P4 落地摘要（整族）— 进行中
+
+| 能力 | 入口 |
+| --- | --- |
+| `marks/` 发现 + mark advance 0 | `ProjectSession`（trait `mark`）；槽位填充跳过 mark |
+| 锚点检查（A 类） | `diagnose.checks.anchors.AnchorsCheck` |
+| latin-sans 组合附加符 | `starters/latin_sans/marks/`（12 comb + `.case`）；基字 `zone_anchors` |
+| `compose` / charset / 特性 / VF | **未做**（P4-2…） |
+
