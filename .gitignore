@@ -51,7 +51,7 @@ Thumbs.db
 # Jupyter
 .ipynb_checkpoints/
 
-# Font build artifacts (when dogfooding later)
+# Font build artifacts
 *.otf
 *.ttf
 *.woff
@@ -75,6 +75,9 @@ tests/docs/test_development_plan_section8.py
 !.agents/skills/
 !.agents/skills/**
 
+# Local acceptance protocol: kept on this machine, never distributed
+.agents/skills/typekernel-font-design/trials.md
+
 # Local build / proof / specimen dumps: never tracked, never distributed
 artifacts/
 
@@ -86,7 +89,7 @@ src/typekernel/starters/*/build/
 examples/*/out/**
 
 uploads/
-dogfood/**/build/
+transplants/**/build/
 
 # Local trial output: kept on this machine, never distributed
-dogfood/trials/
+transplants/trials/

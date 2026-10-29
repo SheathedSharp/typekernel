@@ -91,15 +91,3 @@ def test_tracked_markdown_internal_links_exist_and_are_not_ignored(
         violations
     )
 
-
-def test_skill_points_at_tracked_trials_checklist() -> None:
-    skill = ROOT / ".agents/skills/typekernel-font-design/SKILL.md"
-    trials = ROOT / ".agents/skills/typekernel-font-design/trials.md"
-    assert trials.is_file(), "trials.md must be tracked next to the skill"
-    skill_text = skill.read_text(encoding="utf-8")
-    assert "trials.md" in skill_text
-    assert "docs/AGENT_TRIALS.md" not in skill_text
-    trials_text = trials.read_text(encoding="utf-8")
-    assert "cold" in trials_text.lower() or "冷启动" in trials_text
-    assert "tk new" in trials_text
-    assert "heal" in trials_text.lower() or "blend" in trials_text.lower()
