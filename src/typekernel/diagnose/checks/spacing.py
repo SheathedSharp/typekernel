@@ -99,13 +99,32 @@ class PairCollisionCheck:
         session = ctx.session
         pairs: list[tuple[str, str, float]] = []
         if project.kerning is not None:
+            from typekernel.font.kerning import ClassKernPair, KernClass, KernPair
+
+            class_map: dict[str, KernClass] = {
+                c.name: c for c in project.kerning.classes
+            }
             for pair in project.kerning.pairs:
-                # KernPair has left/right/value; ClassKernPair similar.
+                if isinstance(pair, ClassKernPair):
+                    lc = class_map.get(pair.left_class)
+                    rc = class_map.get(pair.right_class)
+                    if lc is None or rc is None:
+                        continue
+                    for left in lc.members:
+                        for right in rc.members:
+                            pairs.append((left, right, float(pair.value)))
+                    continue
+                if isinstance(pair, KernPair):
+                    pairs.append((pair.left, pair.right, float(pair.value)))
+                    continue
+                # Legacy duck-typing fallback.
                 left = getattr(pair, "left", None) or getattr(pair, "first", None)
                 right = getattr(pair, "right", None) or getattr(pair, "second", None)
                 value = float(getattr(pair, "value", 0.0))
                 if isinstance(left, str) and isinstance(right, str):
                     pairs.append((left, right, value))
+            for pair in project.kerning.exceptions:
+                pairs.append((pair.left, pair.right, float(pair.value)))
         # Specimen / control string adjacent pairs.
         control = project.proofs.control if project.proofs else ""
         if control:

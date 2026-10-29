@@ -251,6 +251,23 @@ def _cmd_status(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_kern(args: argparse.Namespace) -> int:
+    from typekernel.cli.kern_cmd import kern_suggest
+
+    if args.kern_command == "suggest":
+        path = kern_suggest(
+            args.path,
+            out=args.out,
+            master=args.master,
+            target_gap=args.target_gap,
+        )
+        print(f"wrote {path}")
+        return 0
+    print(f"error: unknown kern command {args.kern_command!r}", file=sys.stderr)
+    return 2
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
@@ -491,6 +508,29 @@ def main(argv: list[str] | None = None) -> int:
     p_rec.add_argument("--note", default="")
     p_rec.add_argument("--reviewer", default="agent:unknown")
     p_rec.set_defaults(func=_cmd_review)
+
+
+    p_kern = sub.add_parser("kern", help="kerning tools (suggest pairs; never auto-apply)")
+    kern_sub = p_kern.add_subparsers(dest="kern_command", required=True)
+    p_ks = kern_sub.add_parser(
+        "suggest",
+        help="write kerning-suggestions.json from collision / optical gaps",
+    )
+    p_ks.add_argument("path", nargs="?", default=".")
+    p_ks.add_argument(
+        "--out",
+        default=None,
+        help="output JSON path (default: <project>/kerning-suggestions.json)",
+    )
+    p_ks.add_argument("--master", default=None, help="master name for evaluation")
+    p_ks.add_argument(
+        "--target-gap",
+        type=float,
+        default=24.0,
+        dest="target_gap",
+        help="optical gap target in design units (default: 24)",
+    )
+    p_ks.set_defaults(func=_cmd_kern)
 
     p_status = sub.add_parser("status", help="designer task board")
     p_status.add_argument("path", nargs="?", default=".")
