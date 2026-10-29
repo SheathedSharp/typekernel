@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "O": "9cfee130dbbcab26f6f435838f098e120b00fe84fec980026f5bd6cef6a884a1",
+    "C": "ffe88aeeea84e9523e3122702992fbfe2f50a5655d5f355d3bdf71c9f07a738f",
+    "G": "2ab1095f81954f71e7a9cb36830c9e8e8f10a88e99ceba331396444caf20a811",
+    "D": "6568dda5333114945226c9aa59fa4a2e212b7fe6963eb9427ce4ba1d1f3465e2",
+    "Q": "1f6d434a4bcbd7d3cd1048ed0e920697e631901798646342dd5997a594148ef0"
+  },
+  "group": "uc.round",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-7 uc.round anatomy rewrite C/G/D/Q (O already control); audit 0 error.",
+  "proofs": [],
+  "reviewer": "agent:p3-7",
+  "round": 2,
+  "verdict": "pass"
+}
