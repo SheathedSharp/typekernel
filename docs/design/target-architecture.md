@@ -251,20 +251,7 @@ starter 自带 `charset/latin-core.txt`、`latin-1.txt`、`latin-ext-a.txt`（�
 
 ### 4.2 标签语法（规范性）
 
-```
-tag      := part ( "." qualifier )*
-part     := stem | arch | bowl | join | bar | diag | spine | hook | tail | ear | dot | drop | aperture | serif | mark
-qualifier:= side | position | face | index
-side     := l | r | t | b
-position := foot | top | crown | apex | vertex | crotch | entry | exit | stress
-face     := o | i            # 外侧 / 内侧
-index    := [0-9]+
-```
-
-例：`stem.l.foot.o`、`arch.crown.o`、`join.crotch.r`、`aperture.0.a`。
-
-诊断能看懂这套语法：`stem.*.foot.o` 与 `stem.*.foot.i` 之间是竖干宽度，`join.crotch.*` 是削薄点，
-`aperture.N.a` 与 `aperture.N.b` 之间是开口宽度。新增 part 名必须先进本节。
+> **已落地** → [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md) §6.3.1；解析器 `typekernel.anatomy.tags`；诊断 `tags.grammar`。
 
 ### 4.3 构件清单与几何语义契约
 

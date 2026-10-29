@@ -15,6 +15,7 @@
 | `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
+| 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；不合规清单见 P3-1 测试 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
@@ -361,6 +362,29 @@ class Drawing:
 
 两个母版的 `signature()` 相等，就说明它们**结构可插值**（`signature()` 只做结构比较；插值检查由 `axes.interpolatable` 负责）。
 
+
+### 6.3.1 标签语法（规范性）
+
+解剖构件与诊断共用同一套节点 / 槽位标签语法（由 `typekernel.anatomy.tags` 解析；
+诊断 `tags.grammar` 以 **info** 报告不合规标签）：
+
+```
+tag      := part ( "." qualifier )*
+part     := stem | arch | bowl | join | bar | diag | spine | hook | tail | ear
+          | spur | cross | dot | drop | aperture | serif | mark
+qualifier:= side | position | face | endpoint | index
+side     := l | r | t | b
+position := foot | top | crown | apex | vertex | crotch | entry | exit | stress
+face     := o | i             # 外侧 / 内侧
+endpoint:= a | b             # 开口端点（仅 aperture）
+index    := [0-9]+
+```
+
+例：`stem.l.foot.o`、`arch.crown.o`、`join.crotch.r`、`aperture.0.a`。
+
+诊断约定：`stem.*.foot.o` 与 `stem.*.foot.i` 之间是竖干宽度；`join.crotch.*` 是削薄点；
+`aperture.N.a` 与 `aperture.N.b` 之间是开口宽度。新增 part 名必须先写入本节并更新解析器。
+
 ### 6.4 槽位与填充协议（`draw.slots`）
 
 ```python
@@ -555,7 +579,8 @@ class Project:
 3. 源码不得出现 `style.serif`、`italic_slant_deg`、`vf_compat`。
 4. `plugins/<x>/` 不得 import `plugins/<y>/`；任何新包不得 import 其他模块的 `_` 私有名。
 5. 内核测试（`tests/draw`、`tests/system`、`tests/project`）里不得出现字母字形名字符串（用一个小正则：单字母 glyph 名或 `uniXXXX`）；需要形状时用合成夹具。
-6. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由项目 `AUDIT_STEMS` 声明，内核不再按字母名猜测。
+6. **构件不组字**：`anatomy` 公开函数只返回 `Drawing` 或构件 dataclass；函数名不得含字形名，也不得以 `glyph_` / `build_` 开头。
+7. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由项目 `AUDIT_STEMS` 声明，内核不再按字母名猜测。
 
 用 `ast` 扫描实现，不额外引入依赖。
 
@@ -619,3 +644,10 @@ class Project:
 | shipped 样张 | `tk proof`（`perceive.specimen`；`qa.proof` 为兼容 shim） |
 
 冻结令（P0-5）在 P2 出口后解除：可新增 starter / 风格插件。
+
+## P3 落地摘要（手艺）
+
+| 能力 | 入口 |
+| --- | --- |
+| 标签语法 | `typekernel.anatomy.tags` · `tags.grammar` info |
+| 解剖构件 | `typekernel.anatomy`（P3-2… 推进中） |

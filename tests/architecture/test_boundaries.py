@@ -17,7 +17,7 @@ SRC = ROOT / "src" / "typekernel"
 
 # rule 1 covers the whole package tree (no typekernel.parts anywhere).
 # Rules 2–4 still scope to the new-kernel packages below.
-KERNEL_PACKAGES = ("draw", "system", "project", "cli", "plugins")
+KERNEL_PACKAGES = ("draw", "system", "project", "cli", "plugins", "anatomy")
 KERNEL_TEST_DIRS = ("draw", "system", "project")
 
 LETTER_FN = re.compile(
@@ -383,6 +383,16 @@ _GLYPH_LITERAL_ALLOW = frozenset(
         "second",  # ClassKernPair attribute name
         "E",  # status column header
         "W",  # status column header
+        # anatomy tag grammar tokens (ARCHITECTURE §6.3.1) — not glyph refs
+        "l",
+        "r",
+        "t",
+        "b",
+        "o",
+        "i",
+        "a",
+        "bar",
+        "mark",
     }
 )
 
@@ -473,3 +483,31 @@ def test_no_glyph_name_literals_in_kernel(glyph_literal_files: list[Path]) -> No
                     f"glyph name literal {node.value!r}"
                 )
     assert not violations, "glyph-name literals in kernel:\n" + "\n".join(violations)
+
+
+# ---------------------------------------------------------------------------
+# Rule (target-architecture §14 #3): anatomy parts never assemble whole letters.
+# ---------------------------------------------------------------------------
+
+
+def test_anatomy_functions_do_not_assemble_letters() -> None:
+    """Public anatomy callables must not look like letter builders."""
+    base = SRC / "anatomy"
+    if not base.is_dir():
+        return
+    violations: list[str] = []
+    for path in _py_files(base):
+        tree = _parse(path)
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            name = node.name
+            if name.startswith("_"):
+                continue
+            if name.startswith(("glyph_", "build_")):
+                violations.append(f"{_rel(path)}:{node.lineno}: {name}")
+            elif len(name) == 1 and name.isalpha():
+                violations.append(f"{_rel(path)}:{node.lineno}: single-letter fn {name}")
+            elif LETTER_FN.match(name):
+                violations.append(f"{_rel(path)}:{node.lineno}: {name}")
+    assert not violations, "anatomy letter-assembly names:\n" + "\n".join(violations)

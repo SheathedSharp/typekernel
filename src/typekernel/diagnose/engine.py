@@ -157,6 +157,7 @@ def _builtin_v2(
         RefConsistencyCheck,
         SpacingCheck,
     )
+    from typekernel.diagnose.checks.tags import TagsGrammarCheck
     from typekernel.diagnose.checks.topology import TopologyCheck
     from typekernel.diagnose.checks.vertical import VerticalCheck
     from typekernel.plugins.checks import compat, direction, overlap, stem, zone
@@ -184,6 +185,8 @@ def _builtin_v2(
         out.append(GrayCheck())
     if check_interpolation:
         out.append(InterpolationCheck())
+    # Tag grammar is always on (info); cheap and letter-free.
+    out.append(TagsGrammarCheck())
     return out
 
 
