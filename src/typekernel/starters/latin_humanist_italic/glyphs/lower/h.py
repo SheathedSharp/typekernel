@@ -1,4 +1,4 @@
-"""n-group glyph h — slanted ascender stem + arch (broad nib)."""
+"""n-group glyph h — n-body + ascender tip (gap join; G-class clean)."""
 
 from __future__ import annotations
 
@@ -19,14 +19,20 @@ def h(system: System):
     x0 = lsb + st * 0.5
     x1 = lsb + width - st * 0.5
     mid = (x0 + x1) / 2.0
-    # Left stem from ascender; arch at x-height; right stem to baseline.
-    points = [
-        (x0, asc),
-        (x0, xh - rise),
-        (x0 + (x1 - x0) * 0.15, xh),
-        (mid, xh + rise * 0.15),
-        (x1 - (x1 - x0) * 0.15, xh),
-        (x1, xh - rise),
-        (x1, 0.0),
-    ]
-    return stroke(system, points, thickness=st)
+    # n-like body (known G-clean). Tip starts above x-height so expanded
+    # ink does not mid-lerp self-intersect at the arch join.
+    body = stroke(
+        system,
+        [
+            (x0, 0.0),
+            (x0, xh - rise),
+            (x0 + (x1 - x0) * 0.15, xh),
+            (mid, xh + rise * 0.15),
+            (x1 - (x1 - x0) * 0.15, xh),
+            (x1, xh - rise),
+            (x1, 0.0),
+        ],
+        thickness=st,
+    )
+    tip = stroke(system, [(x0, xh + 40.0), (x0, asc)], thickness=st)
+    return body + tip

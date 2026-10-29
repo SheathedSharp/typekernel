@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -18,4 +18,4 @@ def T(system: System):
     # Left bar → stem is one rail; right bar meets at mid/cap.
     left = stroke(system, [(lsb, cap), (mid, cap), (mid, 0.0)], thickness=uc)
     right = stroke(system, [(mid, cap), (lsb + width, cap)], thickness=uc)
-    return left + right
+    return fuse(left + right)

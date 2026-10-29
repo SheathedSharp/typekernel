@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -18,4 +18,4 @@ def x(system: System):
     x1 = lsb + width - st * 0.25
     a = stroke(system, [(x0, xh), (x1, 0.0)], thickness=st)
     b = stroke(system, [(x1, xh), (x0, 0.0)], thickness=st)
-    return a + b
+    return fuse(a + b)

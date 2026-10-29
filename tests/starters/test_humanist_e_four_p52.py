@@ -11,17 +11,13 @@ STARTER = Path(__file__).resolve().parents[2] / "src/typekernel/starters/latin_h
 
 def test_e_has_aperture_not_closed_theta() -> None:
     with open_project(STARTER) as session:
-        draft = session.evaluate("e")
-        # open_bowl construction → at least one open contour path (ink without full ring seal)
-        # Topology: expect apertures declared or 2 contours (bowl + bar).
         g = session.glyph("e")
-        assert len(g.outline.contours) >= 2
-        expect = session.project.expect.get("e") if session.project.expect else None
-        # Soft: e should not be a single annulus (θ). Contour count 2+ from bowl+bar.
+        # open_bowl + bar → at least two contours (not a single annulus θ).
         assert len(g.outline.contours) >= 2
 
 
-def test_four_has_three_strokes() -> None:
+def test_four_has_open_spine_and_bar() -> None:
     with open_project(STARTER) as session:
         g = session.glyph("four")
-        assert len(g.outline.contours) >= 3
+        # Spine (diag+stem) + gapped crossbar — two contours after expand.
+        assert len(g.outline.contours) >= 2

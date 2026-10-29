@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import diagonal_stroke, uc_stem
+from elements import fuse, diagonal_stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -23,4 +23,4 @@ def M(system: System):
         diagonal_stroke(system, [(x0, cap), (mid, 0.0)], thickness=uc)
         + diagonal_stroke(system, [(mid, 0.0), (x3, cap)], thickness=uc)
     )
-    return left + valley + right
+    return fuse(left + valley + right)

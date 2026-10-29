@@ -30,7 +30,6 @@ def e(system: System):
         open_side="right",
         aperture_deg=72.0,
     )
-    # Crossbar sits on the lower aperture lip; stop short of the opening.
     bar_y = cy - ry * 0.08
     bar = stroke(
         system,

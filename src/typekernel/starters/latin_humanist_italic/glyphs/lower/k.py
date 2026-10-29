@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -21,4 +21,4 @@ def k(system: System):
     stem = stroke(system, [(x0, 0.0), (x0, asc)], thickness=st)
     upper = stroke(system, [(x0 + st * 0.2, join_y), (x1, xh)], thickness=st)
     lower = stroke(system, [(x0 + st * 0.2, join_y), (x1, 0.0)], thickness=st)
-    return stem + upper + lower
+    return fuse(stem + upper + lower)

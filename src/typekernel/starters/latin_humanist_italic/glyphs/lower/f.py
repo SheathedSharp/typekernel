@@ -16,7 +16,6 @@ def f(system: System):
     width = float(system.tokens.get("f_width", 260.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     x = lsb + st * 0.55
-    # Stem with slight top curl to the right.
     stem = stroke(
         system,
         [

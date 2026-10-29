@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import diagonal_stroke
+from elements import fuse, diagonal_stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -24,4 +24,4 @@ def y(system: System):
         [(x1, xh), (mid, xh * 0.15), (mid - st * 0.4, desc)],
         thickness=st,
     )
-    return left + right
+    return fuse(left + right)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke, uc_stem
+from elements import fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,4 +19,4 @@ def K(system: System):
     join = cap * 0.45
     # Arms meet exactly on the stem so overlays share ink (no gap spur).
     arms = stroke(system, [(x1, cap), (x0, join), (x1, 0.0)], thickness=uc)
-    return uc_stem(system, x0, thickness=uc) + arms
+    return fuse(uc_stem(system, x0, thickness=uc) + arms)

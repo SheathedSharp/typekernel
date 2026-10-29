@@ -1,6 +1,8 @@
-"""n-group glyph u — mirrored arch skeleton (broad nib)."""
+"""n-group glyph u — stems + shallow bottom (G-class; deep U SI under pen)."""
 
 from __future__ import annotations
+
+import math
 
 from elements import stroke
 
@@ -14,17 +16,16 @@ def u(system: System):
     xh = float(system.zones.x)
     width = float(system.tokens["n_width"])
     lsb = float(system.tokens.get("lsb_lc", 36.0))
-    rise = float(system.tokens.get("arch_rise", 0.12)) * xh
     x0 = lsb + st * 0.5
     x1 = lsb + width - st * 0.5
-    mid = (x0 + x1) / 2.0
-    points = [
-        (x0, xh),
-        (x0, rise),
-        (x0 + (x1 - x0) * 0.15, 0.0),
-        (mid, -rise * 0.15),
-        (x1 - (x1 - x0) * 0.15, 0.0),
-        (x1, rise),
-        (x1, xh),
-    ]
-    return stroke(system, points, thickness=st)
+    left = stroke(system, [(x0, xh), (x0, xh * 0.35)], thickness=st)
+    right = stroke(system, [(x1, xh * 0.35), (x1, xh)], thickness=st)
+    # Shallow sine bottom — deep mirrored-n arches self-intersect under slanted pen.
+    n = 8
+    ry = (x1 - x0) * 0.5 * 0.12
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        pts.append((x0 + (x1 - x0) * t, ry * math.sin(math.pi * t)))
+    bottom = stroke(system, pts, thickness=st)
+    return left + bottom + right

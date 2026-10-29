@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,7 +19,7 @@ def X(system: System):
     cx = (x0 + x1) / 2.0
     cy = cap / 2.0
     # Two rails that both pass through the shared center (ink merges at cross).
-    return (
+    return fuse(
         stroke(system, [(x0, cap), (cx, cy), (x1, 0.0)], thickness=uc)
         + stroke(system, [(x1, cap), (cx, cy), (x0, 0.0)], thickness=uc)
     )

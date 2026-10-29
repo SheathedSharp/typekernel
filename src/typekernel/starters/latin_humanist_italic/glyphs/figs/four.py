@@ -1,4 +1,4 @@
-"""Figure 4 — open triangle: diagonal + crossbar + stem (P5-2; closes A-14)."""
+"""Figure 4 — spine + gapped crossbar (P5-2 G-class)."""
 
 from __future__ import annotations
 
@@ -16,15 +16,15 @@ def four(system: System):
     h = float(system.zones.cap) * 0.72
     x_stem = lsb + width * 0.72
     y_bar = h * 0.38
-    stem = stroke(system, [(x_stem, 0.0), (x_stem, h)], thickness=st)
-    cross = stroke(
+    # Continuous open spine (diag into stem); bar stops short of stem join.
+    spine = stroke(
         system,
-        [(lsb + width * 0.08, y_bar), (x_stem + st * 0.35, y_bar)],
+        [(lsb + width * 0.12, h), (x_stem, y_bar), (x_stem, 0.0)],
         thickness=st,
     )
-    diag = stroke(
+    bar = stroke(
         system,
-        [(lsb + width * 0.12, h), (x_stem, y_bar)],
+        [(lsb + width * 0.08, y_bar), (x_stem - st * 1.2, y_bar)],
         thickness=st,
     )
-    return stem + cross + diag
+    return spine + bar

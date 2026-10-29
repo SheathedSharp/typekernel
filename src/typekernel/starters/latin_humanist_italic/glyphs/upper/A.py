@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import diagonal_stroke, stroke
+from elements import fuse, diagonal_stroke, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -25,4 +25,4 @@ def A(system: System):
     xl = x0 + (apex - x0) * t
     xr = x1 + (apex - x1) * t
     bar = stroke(system, [(xl, bar_y), (xr, bar_y)], thickness=uc * 0.85)
-    return left + right + bar
+    return fuse(left + right + bar)

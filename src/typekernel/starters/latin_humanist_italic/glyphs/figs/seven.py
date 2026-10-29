@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import diagonal_stroke, stroke
+from elements import fuse, diagonal_stroke, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -24,4 +24,4 @@ def seven(system: System):
         [(lsb + width * 0.9, h), (lsb + width * 0.35, 0.0)],
         thickness=st,
     )
-    return top + leg
+    return fuse(top + leg)

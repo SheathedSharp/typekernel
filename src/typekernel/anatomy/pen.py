@@ -33,7 +33,9 @@ __all__ = [
     "bowl",
     "expand_slanted_centerline",
     "flourish_entry",
+    "assemble",
     "flourish_exit",
+    "fuse",
     "fragment_to_cubic_centerline",
     "nest_bowl",
     "open_arc_cubic",
@@ -406,3 +408,38 @@ def stroke_fragment(
 ) -> Drawing:
     """Expand a flourish :class:`Fragment` with the project pen (cubic path)."""
     return stroke(system, fragment, thickness=thickness)
+
+def fuse(drawing: Drawing) -> Drawing:
+    """Boolean-simplify overlapping / self-intersecting pen ink into clean contours.
+
+    Multi-stroke constructions (stem + bar, bowl + crossbar) leave intentional
+    overlaps; single continuous skeletons can also self-overlap after cubic
+    expand (arch joins, tight turns). Mid-master lerp treats both as G-class
+    self-intersects. Always pathops-simplify so Light/Bold topology is stable.
+    """
+    from typekernel.perceive.render import simplify_outline
+    from typekernel.plugins.construct.skeleton_pen import _drawing_from_contours
+
+    simplified = simplify_outline(drawing.outline())
+    fused = _drawing_from_contours(simplified.contours)
+    # Preserve slots/measures from the pre-fuse drawing when present.
+    if drawing.slots or drawing.measures:
+        return Drawing(
+            fused.contours,
+            fused.roles,
+            fused.nodes,
+            slots=drawing.slots,
+            measures=drawing.measures,
+        )
+    return fused
+
+
+def assemble(*parts: Drawing) -> Drawing:
+    """Concatenate drawings then :func:`fuse` (preferred multi-stroke return)."""
+    if not parts:
+        raise ValueError("assemble needs at least one drawing")
+    combined = parts[0]
+    for part in parts[1:]:
+        combined = combined + part
+    return fuse(combined)
+

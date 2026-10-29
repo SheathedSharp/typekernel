@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,4 +19,4 @@ def z(system: System):
     top = stroke(system, [(x0, xh), (x1, xh)], thickness=st)
     diag = stroke(system, [(x1, xh), (x0, 0.0)], thickness=st)
     bot = stroke(system, [(x0, 0.0), (x1, 0.0)], thickness=st)
-    return top + diag + bot
+    return fuse(top + diag + bot)

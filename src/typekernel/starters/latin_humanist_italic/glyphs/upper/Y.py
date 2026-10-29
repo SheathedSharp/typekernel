@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -20,4 +20,4 @@ def Y(system: System):
     join = cap * 0.42
     left = stroke(system, [(x0, cap), (mid, join), (mid, 0.0)], thickness=uc)
     right = stroke(system, [(x1, cap), (mid, join)], thickness=uc)
-    return left + right
+    return fuse(left + right)

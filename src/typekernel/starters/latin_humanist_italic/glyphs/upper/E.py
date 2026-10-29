@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -27,4 +27,4 @@ def E(system: System):
         [(x, cap * 0.5), (lsb + width * 0.85, cap * 0.5)],
         thickness=uc * 0.85,
     )
-    return rail + mid
+    return fuse(rail + mid)

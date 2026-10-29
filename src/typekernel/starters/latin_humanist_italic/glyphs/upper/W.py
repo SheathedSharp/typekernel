@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import diagonal_stroke
+from elements import fuse, diagonal_stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,7 +19,7 @@ def W(system: System):
     x1 = lsb + width * 0.35
     x2 = lsb + width * 0.65
     mid = (x1 + x2) / 2.0
-    return (
+    return fuse(
         diagonal_stroke(system, [(x0, cap), (x1, 0.0)], thickness=uc)
         + diagonal_stroke(system, [(x1, 0.0), (mid, cap * 0.55)], thickness=uc)
         + diagonal_stroke(system, [(mid, cap * 0.55), (x2, 0.0)], thickness=uc)

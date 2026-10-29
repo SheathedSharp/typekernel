@@ -1,4 +1,4 @@
-"""n-group glyph m — three stems, two arches (overlaid skeletons)."""
+"""n-group glyph m — two n-arches with mid gap (G-class clean)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ def m(system: System):
     x0 = lsb + st * 0.5
     x2 = lsb + width - st * 0.5
     x1 = (x0 + x2) / 2.0
+    # Keep arches from overlapping at mid — fused mid stems mid-lerp SI.
+    sep = 60.0
 
     def arch(xa: float, xb: float):
         mid = (xa + xb) / 2.0
@@ -35,5 +37,4 @@ def m(system: System):
             thickness=st,
         )
 
-    # Left arch covers left+mid; right arch mid+right — mid stem overlaps.
-    return arch(x0, x1) + arch(x1, x2)
+    return arch(x0, x1 - sep) + arch(x1 + sep, x2)

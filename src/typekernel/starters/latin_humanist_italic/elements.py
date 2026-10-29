@@ -9,7 +9,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from typekernel.anatomy.pen import (
+    assemble,
     expand_slanted_centerline,
+    fuse,
     open_arc_points,
     oval_points,
     pen_for_optical_stem,
@@ -22,7 +24,9 @@ from typekernel.geo.stroke import Centerline
 from typekernel.system import System
 
 __all__ = [
+    "assemble",
     "bowl",
+    "fuse",
     "diagonal_stroke",
     "nest_bowl",
     "open_arc_points",

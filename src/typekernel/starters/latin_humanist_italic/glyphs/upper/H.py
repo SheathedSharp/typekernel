@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke, uc_stem
+from elements import fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -20,4 +20,4 @@ def H(system: System):
     left = uc_stem(system, x_l, thickness=uc)
     right = uc_stem(system, x_r, thickness=uc)
     bar = stroke(system, [(x_l, bar_y), (x_r, bar_y)], thickness=uc * 0.85)
-    return left + right + bar
+    return fuse(left + right + bar)
