@@ -1,0 +1,30 @@
+"""semicolon — colon top + comma head/tail (G-class)."""
+
+from __future__ import annotations
+
+from elements import oval_points, stroke
+
+from typekernel.project import glyph
+from typekernel.system import System
+
+_DOT_N = 16
+
+
+@glyph("semicolon", group="punct")
+def semicolon(system: System):
+    st = float(system.stem["lc"])
+    xh = float(system.zones.x)
+    r = st * 0.55
+    lsb = float(system.tokens["lsb_lc"]) * 0.5
+    cx = lsb + r
+    top = stroke(
+        system, oval_points(cx, xh * 0.62, r, r, n=_DOT_N), closed=True, thickness=st * 0.4
+    )
+    head = stroke(
+        system, oval_points(cx, r * 1.1, r, r, n=_DOT_N), closed=True, thickness=st * 0.4
+    )
+    y0 = r * 1.1 - r - 35.0
+    tail = stroke(
+        system, [(cx + r * 0.1, y0), (cx - r * 0.5, y0 - st * 0.9)], thickness=st * 0.55
+    )
+    return top + head + tail

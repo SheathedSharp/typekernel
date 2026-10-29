@@ -83,3 +83,31 @@ def test_masters_signature_compatible_controls() -> None:
                 session.evaluate(name, master="Bold").drawing.signature(),
             ]
             assert sigs[0] == sigs[1] == sigs[2], name
+
+
+def test_figs_punct_and_remaining_lc() -> None:
+    """P5-3: remaining lc + figs 0–9 + core punct evaluate."""
+    names = [
+        "f", "g", "j", "t",
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+        "period", "comma", "colon", "semicolon", "hyphen", "exclam", "question",
+        "parenleft", "parenright", "slash", "backslash", "quotesingle", "quotedbl",
+        "bracketleft", "bracketright", "endash", "emdash",
+    ]
+    with open_project(STARTER) as session:
+        for name in names:
+            assert name in session.specs(), name
+            g = session.glyph(name)
+            assert g.outline.contours, name
+            assert g.advance > 0, name
+
+
+def test_full_lc_alphabet() -> None:
+    import string
+
+    with open_project(STARTER) as session:
+        for name in string.ascii_lowercase:
+            assert name in session.specs(), name
+            g = session.glyph(name)
+            assert g.outline.contours, name
+            assert g.advance > 0, name
