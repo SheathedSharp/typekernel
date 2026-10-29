@@ -29,16 +29,64 @@ system = System(
     },
 )
 
-def _weight_system(base: System, stem_scale: float) -> System:
-    """Scale stem thicknesses; overlap construction stays topology-compatible."""
+def _designed_master(
+    base: System,
+    *,
+    stem_scale: float,
+    width_scale: float,
+    aperture_delta: float = 0.0,
+    tension_delta: float = 0.0,
+    bar_scale: float = 1.0,
+) -> System:
+    """Designed weight master — not stem×factor alone (P3-9).
+
+    Control widths, bowl aperture, shoulder tension, and bar thickness are
+    authored per weight so Light/Bold interpolate cleanly on G-class checks.
+    """
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
-    return base.tuned(stem=stem)
+    tokens = dict(base.tokens)
+    for key in ("n_width", "o_width", "H_width", "O_width"):
+        if key in tokens:
+            tokens[key] = float(tokens[key]) * width_scale
+    if "bowl_aperture" in tokens:
+        tokens["bowl_aperture"] = min(
+            0.9, max(0.1, float(tokens["bowl_aperture"]) + aperture_delta)
+        )
+    if "shoulder_tension" in tokens:
+        tokens["shoulder_tension"] = min(
+            0.9, max(0.35, float(tokens["shoulder_tension"]) + tension_delta)
+        )
+    if "bar_thickness" in tokens:
+        tokens["bar_thickness"] = max(40.0, float(tokens["bar_thickness"]) * bar_scale)
+    return base.tuned(stem=stem, tokens=tokens)
 
 
 # Project evaluation masters (Regular is the default ``system``).
+# Light: lighter stems, slightly wider counters, opener aperture, softer join.
+# Bold: heavier stems, slightly narrower counters, tighter aperture, firmer join.
 masters = (
-    Master("Light", _weight_system(system, 0.62)),
-    Master("Bold", _weight_system(system, 1.38)),
+    Master(
+        "Light",
+        _designed_master(
+            system,
+            stem_scale=0.62,
+            width_scale=1.04,
+            aperture_delta=0.04,
+            tension_delta=-0.04,
+            bar_scale=0.72,
+        ),
+    ),
+    Master(
+        "Bold",
+        _designed_master(
+            system,
+            stem_scale=1.38,
+            width_scale=0.96,
+            aperture_delta=-0.04,
+            tension_delta=0.04,
+            bar_scale=1.28,
+        ),
+    ),
 )
 
 # Designspace locations for ``tk build --variable`` (wght user coords).
