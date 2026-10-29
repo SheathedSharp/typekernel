@@ -14,10 +14,8 @@ system = System(
     tokens={
         "n_width": 644,
         "o_width": 644,
-        "m_width": 884,
         "H_width": 738,
         "O_width": 700,
-        "fig_width": 658,
         "lsb_lc": 57,
         "rsb_lc": 57,
         "lsb_uc": 57,

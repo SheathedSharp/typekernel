@@ -75,7 +75,7 @@ Side = Abs | Stem | Token | Ref | Mirror | Optical
 class Metrics:
     keys: Mapping[str, tuple[Side, Side]] = field(default_factory=dict)
     space: Side = field(default_factory=lambda: Token("space_advance"))
-    pack: Literal["bbox", "slant-mid-x"] | None = None
+    pack: Literal["bbox", "slant-mid-x", "absolute"] | None = None
     # Fractions of x-height for italic silhouette packing (chancery-style).
     italic_pack_ys: tuple[float, ...] = ()
 

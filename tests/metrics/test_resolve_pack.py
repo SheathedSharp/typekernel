@@ -89,3 +89,13 @@ def test_apply_metrics_writes_space_and_sidebearings() -> None:
     assert min_x == 50.0
     assert font["n"].advance == 50 + 100 + 50
     assert font["space"].advance == 250.0
+
+
+def test_pack_absolute_preserves_origin_and_uses_rsb() -> None:
+    """Absolute mode keeps baked-in LSB; advance = max_x + rsb (P6-3 transplants)."""
+    g = _rect_glyph("n", 57, 587)  # LihuiT-like: LSB already in outline
+    packed = pack(g, 999, 57, _system(), policy="absolute")  # lsb ignored for shift
+    min_x, _, max_x, _ = bounds(packed.outline)
+    assert min_x == 57.0
+    assert max_x == 587.0
+    assert packed.advance == 587 + 57

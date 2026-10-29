@@ -20,3 +20,7 @@ Single Regular master (Bold static topology ≠ Regular). See `BACKLOG.md`.
 ```
 
 Override refs with `LIHUIT_REGULAR` / `LIHUIT_BOLD`.
+
+## Spacing
+
+`METRICS.pack="absolute"` — transplanted outlines already include OFL LSB; packing must not re-shift ink.

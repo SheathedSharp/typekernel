@@ -21,6 +21,7 @@
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
+| P6-3 LihuiT Hausdorff 指标 | **程序侧已达标** | `dogfood/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `dogfood/lihuit/BACKLOG.md`） |
 
 ---
 

@@ -9,6 +9,7 @@ __all__ = ["KERNING", "METRICS"]
 
 
 METRICS = Metrics(
+    pack="absolute",  # P6-3 transplants: keep baked-in LSB
     keys={
         'n': (Stem('lc', 0.9), Stem('lc', 0.9)),
         'o': (Stem('lc', 0.55), Stem('lc', 0.55)),
@@ -197,8 +198,6 @@ METRICS = Metrics(
         'hyphen.case': (Ref('hyphen', 'lsb'), Ref('hyphen', 'rsb')),
     },
     space=Token("space_advance"),
-    pack=None,
-    italic_pack_ys=(),
 )
 
 KERNING = Kerning(

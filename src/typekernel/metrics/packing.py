@@ -1,4 +1,7 @@
-"""Pack glyph outlines to target LSB/RSB (target-architecture §5.3)."""
+"""Pack glyph outlines to target LSB/RSB (target-architecture §5.3).
+
+Policies: ``bbox``, ``slant-mid-x`` (shift ink), ``absolute`` (keep x-origin).
+"""
 
 from __future__ import annotations
 
@@ -15,7 +18,7 @@ from typekernel.system import System
 
 __all__ = ["pack", "translate_outline"]
 
-PackPolicy = Literal["bbox", "slant-mid-x"]
+PackPolicy = Literal["bbox", "slant-mid-x", "absolute"]
 
 
 def translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
@@ -56,7 +59,13 @@ def pack(
     policy: PackPolicy | None = None,
     italic_pack_ys: Sequence[float] = (),
 ) -> Glyph:
-    """Shift ink so sidebearing target matches; advance = lsb + bbox_ink + rsb."""
+    """Pack sidebearings onto ``glyph``.
+
+    * ``bbox`` / ``slant-mid-x`` — shift ink so left edge matches ``lsb``;
+      advance = lsb + ink_width + rsb.
+    * ``absolute`` — do **not** translate (drawing x-origin trusted, e.g. OFL
+      transplants with baked-in LSB); advance = max_x + rsb.
+    """
     if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
         return replace(glyph, advance=max(glyph.advance, lsb + rsb))
 
@@ -67,6 +76,11 @@ def pack(
         chosen = policy
 
     min_x, min_y, max_x, max_y = bounds(glyph.outline)
+
+    if chosen == "absolute":
+        # Trust absolute ink placement; only extend advance by target RSB.
+        return replace(glyph, advance=float(max_x) + float(rsb))
+
     ink = float(max_x - min_x)
     dx = lsb - float(min_x)
 

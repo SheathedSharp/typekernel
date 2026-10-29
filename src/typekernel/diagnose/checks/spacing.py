@@ -27,6 +27,23 @@ class SpacingCheck:
         if "mark" in traits:
             return out
         g = ctx.session.glyph(ctx.name, master=ctx.master)
+        # Audit uses session.glyph (pre-pack). Apply Metrics.pack so absolute
+        # transplants and bbox sidebearings match what ``tk build`` emits.
+        metrics = ctx.project.metrics
+        if metrics is not None and ctx.name in metrics.keys:
+            from typekernel.metrics.packing import pack
+            from typekernel.metrics.resolving import resolve
+
+            resolved = resolve(metrics, ctx.system)
+            lsb, rsb = resolved[ctx.name]
+            g = pack(
+                g,
+                lsb,
+                rsb,
+                ctx.system,
+                policy=metrics.pack,
+                italic_pack_ys=metrics.italic_pack_ys,
+            )
         try:
             bx0, _by0, bx1, _by1 = bounds(g.outline)
         except ValueError:
