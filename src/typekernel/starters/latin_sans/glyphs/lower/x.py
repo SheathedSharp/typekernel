@@ -1,12 +1,10 @@
-"""Diagonal glyph x — crossing pair of compensated diagonals."""
+"""Diagonal glyph x — anatomy crossing (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import crossing
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -18,13 +16,11 @@ def x(system: System):
     width = float(WIDTHS["x"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     pad = st * 0.25
-    dx = width - 2 * pad
-    ang = math.degrees(math.atan2(dx, xh))
-    wt = compensated_weight(st, ang)
-    a = diagonal_stroke(
-        (lsb + pad, xh), (lsb + width - pad, 0.0), weight=wt, tag_prefix="x.nw"
+    return crossing(
+        (lsb + pad, xh),
+        (lsb + width - pad, 0.0),
+        (lsb + width - pad, xh),
+        (lsb + pad, 0.0),
+        weight=st,
+        name="cross",
     )
-    b = diagonal_stroke(
-        (lsb + width - pad, xh), (lsb + pad, 0.0), weight=wt, tag_prefix="x.ne"
-    )
-    return a + b

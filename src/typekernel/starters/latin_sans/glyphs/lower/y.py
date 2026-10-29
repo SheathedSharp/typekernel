@@ -1,12 +1,11 @@
-"""Diagonal glyph y — v-like top + descender diagonal."""
+"""Diagonal glyph y — anatomy diagonal_pair + descender band (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import diagonal_pair
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -19,25 +18,29 @@ def y(system: System):
     width = float(WIDTHS["y"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     cx = lsb + width / 2.0
-    # Join slightly above baseline so the descender continues the right leg.
     join_y = xh * 0.38
-    dx = width / 2.0 - st * 0.2
-    ang = math.degrees(math.atan2(dx, xh - join_y))
-    wt = compensated_weight(st, ang)
-    left = diagonal_stroke(
-        (lsb + st * 0.35, xh), (cx, join_y), weight=wt, tag_prefix="y.l"
-    )
-    right = diagonal_stroke(
-        (lsb + width - st * 0.35, xh), (cx, join_y), weight=wt, tag_prefix="y.r"
-    )
-    # Descender continues from join toward bottom-leftish (classic italic-ish y
-    # would go left; geometric sans often continues the right diagonal down).
-    ang_d = math.degrees(math.atan2(dx * 0.55, join_y - desc))
-    wt_d = compensated_weight(st, ang_d)
-    descender = diagonal_stroke(
+    top = diagonal_pair(
         (cx, join_y),
-        (lsb + width * 0.22, desc),
-        weight=wt_d,
-        tag_prefix="y.desc",
+        (lsb + st * 0.35, xh),
+        (lsb + width - st * 0.35, xh),
+        weight=st,
+        name="diag",
     )
-    return left + right + descender
+    left, right = diagonal_band(
+        (cx, join_y), (lsb + width * 0.22, desc), weight=st, compensate=True
+    )
+    descender = (
+        Writer()
+        .start(left.start)
+        .corner("tail.top.l")
+        .fragment(left)
+        .corner("tail.foot.l")
+        .line(right.start)
+        .corner("tail.foot.r")
+        .fragment(right)
+        .corner("tail.top.r")
+        .line(left.start)
+        .close()
+        .build()
+    )
+    return top + descender

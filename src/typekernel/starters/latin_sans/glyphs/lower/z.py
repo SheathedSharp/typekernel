@@ -1,12 +1,11 @@
-"""Diagonal glyph z — top/bottom bars + compensated diagonal."""
+"""Diagonal glyph z — anatomy crossbars + diagonal band (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke, stem_rect
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import crossbar
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -14,21 +13,30 @@ from typekernel.system import System
 @glyph("z", group="lc.diagonal")
 def z(system: System):
     st = float(system.stem["lc"])
+    thin = float(system.stem.get("lc_h", st * 0.85))
     xh = float(system.zones.x)
     width = float(WIDTHS["z"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
-    bar = float(system.stem.get("lc_h", st * 0.85))
-    top = stem_rect(lsb, lsb + width, xh - bar, xh, prefix="z.top")
-    bot = stem_rect(lsb, lsb + width, 0.0, bar, prefix="z.bot")
-    # Diagonal from top-right inner to bottom-left inner.
-    dx = width - st
-    dy = xh - 2 * bar
-    ang = math.degrees(math.atan2(dx, dy))
-    wt = compensated_weight(st, ang)
-    diag = diagonal_stroke(
-        (lsb + width - bar * 0.5, xh - bar),
-        (lsb + bar * 0.5, bar),
-        weight=wt,
-        tag_prefix="z.diag",
+    top = crossbar(lsb, lsb + width, xh - thin / 2.0, thick=thin, name="bar.t", ends="none")
+    bot = crossbar(lsb, lsb + width, thin / 2.0, thick=thin, name="bar.b", ends="none")
+    left, right = diagonal_band(
+        (lsb + width - thin * 0.5, xh - thin),
+        (lsb + thin * 0.5, thin),
+        weight=st,
+        compensate=True,
+    )
+    diag = (
+        Writer()
+        .start(left.start)
+        .corner("diag.top.l")
+        .fragment(left)
+        .corner("diag.foot.l")
+        .line(right.start)
+        .corner("diag.foot.r")
+        .fragment(right)
+        .corner("diag.top.r")
+        .line(left.start)
+        .close()
+        .build()
     )
     return top + bot + diag
