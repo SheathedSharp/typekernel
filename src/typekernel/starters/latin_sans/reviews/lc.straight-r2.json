@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "f": "b3f0e5fb061e4fd4f586971fbff63d8bbb20337eeea5c15426112d5881509073",
+    "h": "9c0e5fae00cf47484b53f1a89f6aae94147a513c72af165df185c8371f847414",
+    "i": "5b48e10a3d18aef587fab0dff5f76faaac92458842976dd73e5249d8af070978",
+    "j": "a545dc4d5a29109c4ec2f251ac404b21c3f6e0fd6ff71caf8ec201898cc4180e",
+    "l": "825da405745abbd190edb7b94a60ab4ef4333f7851249d382063363551aa9f21",
+    "m": "5b3a74a2d92d4f4a86ebccf4af19bfe8696c26b53b367ca91ae0139dece70fed",
+    "n": "8959eeaaa3c32fad1cc100c8b062209d7983b78ba3bd13ea4e6a327b3bbbf1b0",
+    "r": "7dd274f9f3fc05b70c7be2207dcf2aedb1c6ca2a5298355256ca1d58b88d3cdb",
+    "t": "fad5bc208fbbea0ae58cc3b241780da2ee0034508453c5b3148dbe6429555aa2",
+    "u": "65aacbfe07e74eaa9c9bb689dccfc9c08294420f28cf70be53c20215f825e8b7"
+  },
+  "group": "lc.straight",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-7 lc.straight anatomy rewrite complete; audit 0 error.",
+  "proofs": [],
+  "reviewer": "agent:p3-7",
+  "round": 2,
+  "verdict": "pass"
+}

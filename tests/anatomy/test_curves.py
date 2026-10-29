@@ -21,7 +21,7 @@ def test_arch_join_depth_crown_and_thin() -> None:
         overshoot=12.0,
         crown_shift=8.0,
     )
-    join = d.point("join.crotch.l")
+    join = d.point("arch.crotch.l")
     entry = d.point("arch.entry")
     assert abs(join.y - (520.0 - 40.0)) < 1e-9
     assert abs(abs(join.y - entry.y) - 55.0) < 1.0  # thin ± 1

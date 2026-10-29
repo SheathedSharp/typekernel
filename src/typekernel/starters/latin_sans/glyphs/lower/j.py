@@ -1,9 +1,10 @@
-"""Straight glyph j — descender stem with hook + tittle."""
+"""Straight glyph j — anatomy stem/dot + shoulder hook trough (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, arch_span, stem_rect
+from elements import WIDTHS, arch_span
 
+from typekernel.anatomy import dot, stem
 from typekernel.draw import Writer
 from typekernel.project import glyph
 from typekernel.system import System
@@ -18,10 +19,8 @@ def j(system: System):
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     x0 = lsb + (width - st) / 2.0
-    # Main stem from descender hook join up to x-height.
     hook_y = desc + st * 1.1
-    stem = stem_rect(x0, x0 + st, hook_y, xh, prefix="stem")
-    # Hook trough at bottom curling left.
+    body = stem(x0, x0 + st, hook_y, xh, name="stem")
     x_l = x0 + st - width * 0.85
     outer = arch_span(x0 + st, hook_y, x_l, desc + st * 0.2, desc - 4.0, tension=tension)
     inner = arch_span(
@@ -32,23 +31,22 @@ def j(system: System):
         desc + st * 1.35,
         tension=tension,
     )
-    hook = (
+    curl = (
         Writer()
         .start((x0, hook_y))
-        .corner("hook.stem.l")
+        .corner("hook.entry")
         .line((x0 + st, hook_y))
-        .corner("hook.stem.r")
+        .corner("hook.exit")
         .fragment(outer)
-        .corner("hook.tip.o")
+        .corner("hook.apex")
         .line((x_l + st * 0.7, desc + st * 0.85))
-        .corner("hook.tip.i")
+        .corner("hook.stress")
         .fragment(inner)
         .close()
         .build()
     )
-    # Tittle
-    dot_r = st * 0.55
-    cy = xh + float(system.overshoot.round) + dot_r * 1.15
+    diameter = st * 1.1
+    cy = xh + float(system.overshoot.round) + diameter * 0.65
     cx = x0 + st / 2.0
-    tittle = stem_rect(cx - dot_r, cx + dot_r, cy - dot_r, cy + dot_r, prefix="tittle")
-    return stem + hook + tittle
+    tittle = dot((cx, cy), diameter, shape="round", name="dot")
+    return body + curl + tittle

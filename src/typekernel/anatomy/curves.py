@@ -123,9 +123,9 @@ def arch(
         .start((x_left, y_bot))
         .corner(f"{name}.entry")
         .line((x_left, y_top))
-        .corner("join.crotch.l")
+        .corner(f"{name}.crotch.l")
         .fragment(outer)
-        .corner("join.crotch.r")
+        .corner(f"{name}.crotch.r")
         .line((x_right, y_bot))
         .corner(f"{name}.exit")
         .fragment(inner)
@@ -137,13 +137,13 @@ def arch(
     measures = (
         Measure(
             kind="thin",
-            a="join.crotch.l",
+            a=f"{name}.crotch.l",
             b=f"{name}.entry",
             expected=float(thin),
             direction_deg=90.0,
         ),
-        Measure(kind="height", a="join.crotch.l", expected=float(outer_crown)),
-        Measure(kind="crotch", a="join.crotch.l", expected=float(join_depth)),
+        Measure(kind="height", a=f"{name}.crotch.l", expected=float(outer_crown)),
+        Measure(kind="crotch", a=f"{name}.crotch.l", expected=float(join_depth)),
     )
     return _with_measures(drawing, *measures)
 
