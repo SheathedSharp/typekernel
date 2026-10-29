@@ -2,6 +2,20 @@
 
 from __future__ import annotations
 
+from typekernel.diagnose.checks.gray import GrayCheck
+from typekernel.diagnose.checks.spacing import (
+    PairCollisionCheck,
+    RefConsistencyCheck,
+    SpacingCheck,
+)
 from typekernel.diagnose.checks.topology import TopologyCheck
+from typekernel.diagnose.checks.vertical import VerticalCheck
 
-__all__ = ["TopologyCheck"]
+__all__ = [
+    "GrayCheck",
+    "PairCollisionCheck",
+    "RefConsistencyCheck",
+    "SpacingCheck",
+    "TopologyCheck",
+    "VerticalCheck",
+]

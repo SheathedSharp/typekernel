@@ -40,7 +40,8 @@ EXPECT: dict[str, Expect] = {
     "colon": Expect(counters=0, islands=2),
     "semicolon": Expect(counters=0, islands=2),
     "exclam": Expect(counters=0, islands=2),
-    "question": Expect(counters=0, islands=2),
+    "question": Expect(counters=0, islands=2, reach=("base", "cap")),
+    "J": Expect(reach=("desc", "cap")),
 }
 
 STARTER_EXPECT = EXPECT

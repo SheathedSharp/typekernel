@@ -145,8 +145,18 @@ def _builtin_v2(
     check_compat: bool,
     check_overlap: bool,
     check_topology: bool = True,
+    check_vertical: bool = True,
+    check_spacing: bool = True,
+    check_gray: bool = True,
 ) -> list[Check]:
+    from typekernel.diagnose.checks.gray import GrayCheck
+    from typekernel.diagnose.checks.spacing import (
+        PairCollisionCheck,
+        RefConsistencyCheck,
+        SpacingCheck,
+    )
     from typekernel.diagnose.checks.topology import TopologyCheck
+    from typekernel.diagnose.checks.vertical import VerticalCheck
     from typekernel.plugins.checks import compat, direction, overlap, stem, zone
 
     out: list[Check] = []
@@ -162,6 +172,14 @@ def _builtin_v2(
         out.append(wrap_check_fn(overlap.check, check_id="overlap"))
     if check_topology:
         out.append(TopologyCheck())
+    if check_vertical:
+        out.append(VerticalCheck())
+    if check_spacing:
+        out.append(SpacingCheck())
+        out.append(PairCollisionCheck())
+        out.append(RefConsistencyCheck())
+    if check_gray:
+        out.append(GrayCheck())
     return out
 
 
@@ -175,6 +193,9 @@ def audit_project(
     check_compat: bool = True,
     check_overlap: bool = False,
     check_topology: bool = True,
+    check_vertical: bool = True,
+    check_spacing: bool = True,
+    check_gray: bool = True,
     masters: Sequence[str] | None = None,
     baseline: Path | str | Baseline | None = None,
     extra_checks: Sequence[Check] | None = None,
@@ -263,6 +284,9 @@ def audit_project(
             check_compat=check_compat,
             check_overlap=check_overlap,
             check_topology=check_topology,
+            check_vertical=check_vertical,
+            check_spacing=check_spacing,
+            check_gray=check_gray,
         )
         # Project EXTRA_CHECKS (legacy CheckFn) + diagnose Check objects.
         legacy_extras = (

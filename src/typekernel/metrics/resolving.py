@@ -17,6 +17,8 @@ def resolve_side(
     resolved: Mapping[str, tuple[float, float]],
     *,
     self_lsb: float | None = None,
+    glyphs: Mapping[str, Glyph] | None = None,
+    current: str | None = None,
 ) -> float:
     """Evaluate one side expression against System / already-resolved keys."""
     if isinstance(side, Abs):
@@ -36,7 +38,30 @@ def resolve_side(
             raise ValueError("Mirror requires the sibling LSB to be resolved first")
         return float(self_lsb)
     if isinstance(side, Optical):
-        raise NotImplementedError("Optical sidebearings land in P2-7")
+        if glyphs is None or current is None:
+            raise ValueError("Optical sidebearings require glyphs and current name")
+        if side.ref not in resolved:
+            raise KeyError(f"metrics optical ref {side.ref!r} not resolved yet")
+        if side.ref not in glyphs or current not in glyphs:
+            raise KeyError(
+                f"Optical needs glyph outlines for {side.ref!r} and {current!r}"
+            )
+        from typekernel.optics.space import measure_side_whitespace
+
+        ref_lsb, ref_rsb = resolved[side.ref]
+        base = float(ref_lsb if side.side == "lsb" else ref_rsb)
+        side_key = "left" if side.side == "lsb" else "right"
+        y0, y1 = float(system.zones.base), float(system.zones.x)
+        if side.band is not None:
+            y0, y1 = float(side.band[0]), float(side.band[1])
+        ref_air = measure_side_whitespace(
+            glyphs[side.ref].outline, side_key, y0=y0, y1=y1
+        )
+        cur_air = measure_side_whitespace(
+            glyphs[current].outline, side_key, y0=y0, y1=y1
+        )
+        # Match ref's optical air: shift SB by the inset difference.
+        return base + (ref_air - cur_air)
     raise TypeError(f"unknown Side type: {type(side)!r}")
 
 
@@ -47,9 +72,8 @@ def resolve(
 ) -> dict[str, tuple[float, float]]:
     """Resolve ``metrics.keys`` in dependency order; detect cycles.
 
-    ``glyphs`` is accepted for API completeness (Optical will need it in P2-7).
+    ``glyphs`` is required when any side uses :class:`Optical`.
     """
-    del glyphs  # reserved for Optical
     resolved: dict[str, tuple[float, float]] = {}
     pending = dict(metrics.keys)
     for _ in range(len(pending) + 2):
@@ -58,11 +82,22 @@ def resolve(
         progressed = False
         for name, (lsb_side, rsb_side) in list(pending.items()):
             try:
-                lsb = resolve_side(lsb_side, system, resolved)
+                lsb = resolve_side(
+                    lsb_side, system, resolved, glyphs=glyphs, current=name
+                )
                 if isinstance(rsb_side, Mirror):
-                    rsb = resolve_side(rsb_side, system, resolved, self_lsb=lsb)
+                    rsb = resolve_side(
+                        rsb_side,
+                        system,
+                        resolved,
+                        self_lsb=lsb,
+                        glyphs=glyphs,
+                        current=name,
+                    )
                 else:
-                    rsb = resolve_side(rsb_side, system, resolved)
+                    rsb = resolve_side(
+                        rsb_side, system, resolved, glyphs=glyphs, current=name
+                    )
             except KeyError:
                 continue
             resolved[name] = (lsb, rsb)
