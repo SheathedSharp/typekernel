@@ -92,14 +92,15 @@ def _cmd_proof(args: argparse.Namespace) -> int:
         )
         return 2
     if getattr(args, "features", None):
-        from typekernel.perceive.specimen import proof_features
-        from typekernel.cli.proof_cmd import _find_binary
         from pathlib import Path as _P
+
+        from typekernel.cli.proof_cmd import find_binary
+        from typekernel.perceive.specimen import proof_features
 
         root = _P(path).resolve()
         bdir = _P(args.build_dir) if args.build_dir else root / "build"
         odir = _P(args.out) if args.out else root / "proofs"
-        binary = _find_binary(root, bdir)
+        binary = find_binary(root, bdir)
         feat = [f.strip() for f in args.features.split(",") if f.strip()]
         try:
             out = proof_features(

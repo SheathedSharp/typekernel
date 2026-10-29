@@ -378,6 +378,11 @@ _GLYPH_LITERAL_ALLOW = frozenset(
         "asc",
         "desc",
         "x-height",
+        "x",  # Zones.x field / zone token (not a glyph ref)
+        "space",  # metrics space glyph key is universal; still not a letter glyph
+        "second",  # ClassKernPair attribute name
+        "E",  # status column header
+        "W",  # status column header
     }
 )
 

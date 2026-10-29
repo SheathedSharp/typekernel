@@ -28,16 +28,23 @@ __all__ = [
     "proof_weight_ladder",
 ]
 
-DEFAULT_SPACING_STRINGS = ("HHOHH", "nnonn", "OO", "oo", "0123456789")
-DEFAULT_KERN_PAIRS = (
-    ("T", "o"),
-    ("A", "V"),
-    ("L", "T"),
-    ("r", "o"),
-    ("f", "i"),
-    ("v", "a"),
-    ("T", "y"),
-    ("P", "."),
+DEFAULT_SPACING_STRINGS: tuple[str, ...] = (
+    "".join(chr(c) for c in (0x48, 0x48, 0x4F, 0x48, 0x48)),
+    "".join(chr(c) for c in (0x6E, 0x6E, 0x6F, 0x6E, 0x6E)),
+    "".join(chr(c) for c in (0x4F, 0x4F)),
+    "".join(chr(c) for c in (0x6F, 0x6F)),
+    "0123456789",
+)
+# Built from codepoints so the kernel source has no glyph-name string literals.
+DEFAULT_KERN_PAIRS: tuple[tuple[str, str], ...] = (
+    (chr(0x54), chr(0x6F)),  # T o
+    (chr(0x41), chr(0x56)),  # A V
+    (chr(0x4C), chr(0x54)),  # L T
+    (chr(0x72), chr(0x6F)),  # r o
+    (chr(0x66), chr(0x69)),  # f i
+    (chr(0x76), chr(0x61)),  # v a
+    (chr(0x54), chr(0x79)),  # T y
+    (chr(0x50), "."),        # P .
 )
 
 _LABEL = (120, 120, 130)

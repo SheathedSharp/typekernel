@@ -89,3 +89,7 @@ Read **[reference.md](reference.md)** before hand-rolling primitives:
 ## Anti-patterns
 
 See **[anti-patterns.md](anti-patterns.md)** — especially「用基本形拼字」and「改期望表过检查」.
+
+## Cold-start checklist
+
+See [trials.md](trials.md) for the zero-context acceptance script.

@@ -122,7 +122,7 @@ def format_status(board: StatusBoard) -> str:
             f"{board.family}          charset {board.charset_done}/{board.charset_total}  "
             f"masters {board.masters}"
         ),
-        f"{'group':12} {'glyphs':8} {'E':3} {'W':3} {'review':18} masters",
+        f"{'group':12} {'glyphs':8} {'err':3} {'wrn':3} {'review':18} masters",
     ]
     for g in board.groups:
         lines.append(

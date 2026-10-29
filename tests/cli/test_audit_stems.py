@@ -18,7 +18,7 @@ def test_latin_sans_default_audit_quiet(tmp_path: Path) -> None:
     report = audit_project(root)
     assert report.errors == []
     # Structural starter: B/C/E/F-class warnings are expected after P2 diagnose.
-    expected = ("topology.", "vertical.", "spacing.", "gray.")
+    expected = ("topology.", "vertical.", "spacing.", "gray.", "interpolation.")
     unexpected = [
         f for f in report.warnings if not f.check.startswith(expected)
     ]
@@ -82,6 +82,7 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
         check_vertical=False,
         check_spacing=False,
         check_gray=False,
+        check_interpolation=False,
     )
     noisy = audit_project(
         root,
@@ -90,6 +91,7 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
         check_vertical=False,
         check_spacing=False,
         check_gray=False,
+        check_interpolation=False,
     )
     assert quiet.warnings == []
     assert any(f.kind == "overlap" for f in noisy.warnings)

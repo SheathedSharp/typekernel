@@ -148,6 +148,7 @@ def _builtin_v2(
     check_vertical: bool = True,
     check_spacing: bool = True,
     check_gray: bool = True,
+    check_interpolation: bool = True,
 ) -> list[Check]:
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
@@ -181,7 +182,8 @@ def _builtin_v2(
         out.append(RefConsistencyCheck())
     if check_gray:
         out.append(GrayCheck())
-    out.append(InterpolationCheck())
+    if check_interpolation:
+        out.append(InterpolationCheck())
     return out
 
 
@@ -198,6 +200,7 @@ def audit_project(
     check_vertical: bool = True,
     check_spacing: bool = True,
     check_gray: bool = True,
+    check_interpolation: bool = True,
     masters: Sequence[str] | None = None,
     baseline: Path | str | Baseline | None = None,
     extra_checks: Sequence[Check] | None = None,
@@ -289,6 +292,7 @@ def audit_project(
             check_vertical=check_vertical,
             check_spacing=check_spacing,
             check_gray=check_gray,
+            check_interpolation=check_interpolation,
         )
         # Project EXTRA_CHECKS (legacy CheckFn) + diagnose Check objects.
         legacy_extras = (

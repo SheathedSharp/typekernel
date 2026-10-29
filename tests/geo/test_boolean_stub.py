@@ -99,14 +99,14 @@ def test_strip_tiny_contours_drops_speck_keeps_body() -> None:
 
 
 def test_boolean_extra_is_declared_but_not_required() -> None:
-    """pathops must stay optional; the core install must not need it."""
+    """boolean extra remains for back-compat; pathops is also a hard dep (P2 live)."""
     import tomllib
 
     root = Path(__file__).resolve().parents[2]
     config = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
     extras = config["project"]["optional-dependencies"]
     assert any("skia-pathops" in dep for dep in extras["boolean"])
-    assert not any(
+    assert any(
         "skia-pathops" in dep for dep in config["project"]["dependencies"]
     )
 

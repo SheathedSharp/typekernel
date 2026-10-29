@@ -28,7 +28,7 @@ _LADDER_TEXT = "nnonoo HHOHOO hamburgefonstiv"
 PROOF_SETS = ("control", "spacing", "kern", "charset", "ladder", "all")
 
 
-def _find_binary(root: Path, build_dir: Path) -> Path:
+def find_binary(root: Path, build_dir: Path) -> Path:
     for pattern in ("*.otf", "*.ttf"):
         found = sorted(build_dir.glob(pattern))
         if found:
@@ -100,7 +100,7 @@ def proof_project(
     bdir = Path(build_dir) if build_dir is not None else root_path / "build"
     odir = Path(out_dir) if out_dir is not None else root_path / "proofs"
     odir.mkdir(parents=True, exist_ok=True)
-    binary = _find_binary(root_path, bdir)
+    binary = find_binary(root_path, bdir)
     ctrl = control_text if control_text is not None else _CONTROL_TEXT
 
     written: list[Path] = []
