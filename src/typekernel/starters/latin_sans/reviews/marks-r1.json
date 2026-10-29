@@ -7,13 +7,11 @@
     "brevecomb", "dotaccentcomb", "cedillacomb", "ogonekcomb",
     "acutecomb.case", "gravecomb.case", "circumflexcomb.case", "caroncomb.case",
     "dieresiscomb.case", "ringcomb.case", "tildecomb.case", "macroncomb.case",
-    "brevecomb.case", "dotaccentcomb.case", "cedillacomb.case", "ogonekcomb.case"
-  ],
+    "brevecomb.case", "dotaccentcomb.case", "cedillacomb.case", "ogonekcomb.case"],
   "agent_pass": true,
   "approved": false,
   "checks": {
     "audit_errors": 0,
     "anchors": 0
   },
-  "notes": "P4-1 combining marks + .case variants via anatomy dot/drop/bowl/diagonal_pair/crossbar; bases a–z/A–Z get zone_anchors top/bottom/(ogonek). Human visual review of mark samples still pending."
-}
+  "notes": "combining marks + .case variants via anatomy dot/drop/bowl/diagonal_pair/crossbar; bases a–z/A–Z get zone_anchors top/bottom/(ogonek). Human visual review of mark samples still pending."}

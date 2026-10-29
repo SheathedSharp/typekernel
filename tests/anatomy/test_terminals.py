@@ -1,4 +1,4 @@
-"""Semantic contracts for hook / tail / ear / spur (target §4.3 / P3-5)."""
+"""Semantic contracts for hook / tail / ear / spur (target §4.3)."""
 
 from __future__ import annotations
 

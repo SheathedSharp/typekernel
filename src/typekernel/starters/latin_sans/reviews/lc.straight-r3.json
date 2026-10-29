@@ -5,5 +5,4 @@
   "agent_pass": true,
   "approved": false,
   "checks": {"audit_errors": 0},
-  "notes": "P4-2 added dotlessi/dotlessj as composite bases; lc.straight re-pass after new glyphs."
-}
+  "notes": "added dotlessi/dotlessj as composite bases; lc.straight re-pass after new glyphs."}

@@ -1,4 +1,4 @@
-"""Z — fused bars + diagonal (P5-3)."""
+"""Z — fused bars + diagonal ."""
 
 from __future__ import annotations
 

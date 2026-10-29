@@ -1,4 +1,4 @@
-"""Composite glyph declarations for latin-sans (P4-2).
+"""Composite glyph declarations for latin-sans.
 
 Data only: base + mark@anchor. Uppercase uses `.case` mark variants.
 """

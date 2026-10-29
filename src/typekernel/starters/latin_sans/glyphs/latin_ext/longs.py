@@ -1,4 +1,4 @@
-"""longs — tall s without baseline finish (P4-2). Signature-stable."""
+"""longs — tall s without baseline finish . Signature-stable."""
 
 from __future__ import annotations
 

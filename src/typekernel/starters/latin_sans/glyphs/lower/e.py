@@ -1,4 +1,4 @@
-"""Round glyph e — anatomy open_bowl + BarSpec (P3-7; closes A-2 θ)."""
+"""Round glyph e — anatomy open_bowl + BarSpec (θ-shaped counter closed)."""
 
 from __future__ import annotations
 

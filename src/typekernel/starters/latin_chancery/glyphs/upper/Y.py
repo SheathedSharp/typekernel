@@ -1,4 +1,4 @@
-"""Y — arms into stem with gap (G-class)."""
+"""Y — arms into stem with gap (interpolation-safe)."""
 
 from __future__ import annotations
 

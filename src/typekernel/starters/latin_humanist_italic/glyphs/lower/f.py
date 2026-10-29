@@ -22,7 +22,7 @@ def f(system: System):
         [(x, 0.0), (x, asc - st * 0.25), (x + width * 0.55, asc)],
         thickness=st,
     )
-    # Crossbar only to the right of the stem (gap avoids overlap SI).
+    # Crossbar only to the right of the stem (gap avoids overlap self-intersection).
     by = xh * 0.55
     bar = stroke(
         system,

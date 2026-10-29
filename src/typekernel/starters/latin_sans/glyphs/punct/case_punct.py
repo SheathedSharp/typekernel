@@ -1,4 +1,4 @@
-"""Case-sensitive punctuation (.case) for P4-3 case feature."""
+"""Case-sensitive punctuation (.case) for the case feature."""
 
 from __future__ import annotations
 

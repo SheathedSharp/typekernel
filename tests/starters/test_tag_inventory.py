@@ -1,6 +1,6 @@
-"""Inventory noncompliant anatomy tags on the three starters (P3-1).
+"""Inventory noncompliant anatomy tags on the three starters.
 
-Does not fail the build for debt — documents the list so P3-6+ can burn it down.
+Does not fail the build for debt — documents the list so it can be burned down.
 Info-level ``tags.grammar`` findings surface the same issues at audit time.
 """
 
@@ -49,7 +49,7 @@ def test_inventory_noncompliant_tags(starter: str) -> None:
     report = "\n".join(report_lines)
     # Smoke: collection succeeded (starters have glyphs).
     assert by_glyph, f"{starter} produced no glyphs"
-    # Debt is expected until P3-6+; assert the inventory is well-formed.
+    # Debt is expected; assert the inventory is well-formed.
     for glyph, tag in bad:
         assert isinstance(glyph, str) and glyph
         assert isinstance(tag, str) and tag

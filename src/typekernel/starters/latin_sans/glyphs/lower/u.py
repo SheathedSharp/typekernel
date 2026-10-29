@@ -1,4 +1,4 @@
-"""n-group glyph u — stems + mirrored anatomy arch as cup (P3-7)."""
+"""n-group glyph u — stems + mirrored anatomy arch as cup ."""
 
 from __future__ import annotations
 

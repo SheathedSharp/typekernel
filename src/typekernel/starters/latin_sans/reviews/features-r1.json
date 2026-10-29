@@ -8,5 +8,4 @@
     "audit_errors": 0,
     "features": ["ss01", "tnum", "onum", "case"]
   },
-  "notes": "P4-3 naming-suffix features + latin-sans variants. HarfBuzz specimen proof still optional; human visual of substitutions pending."
-}
+  "notes": "naming-suffix features + latin-sans variants. HarfBuzz specimen proof still optional; human visual of substitutions pending."}

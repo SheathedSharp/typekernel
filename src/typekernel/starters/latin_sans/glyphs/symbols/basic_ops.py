@@ -1,4 +1,4 @@
-"""Basic ASCII operators and braces (P4-2)."""
+"""Basic ASCII operators and braces ."""
 from __future__ import annotations
 from elements import WIDTHS
 from typekernel.anatomy import crossbar, stem

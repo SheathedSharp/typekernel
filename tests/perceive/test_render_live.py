@@ -1,4 +1,4 @@
-"""P2-1: live renderer fill-rule contrast, layout, and budget."""
+"""live renderer fill-rule contrast, layout, and budget."""
 
 from __future__ import annotations
 

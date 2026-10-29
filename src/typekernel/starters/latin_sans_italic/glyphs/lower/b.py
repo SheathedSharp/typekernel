@@ -1,4 +1,4 @@
-"""o-group b — stem + gapped oval (P5-3)."""
+"""o-group b — stem + gapped oval ."""
 
 from __future__ import annotations
 

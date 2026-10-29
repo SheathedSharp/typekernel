@@ -1,4 +1,4 @@
-"""GlyphSpec v2 / GlyphDraft (roadmap P1-3)."""
+"""GlyphSpec v2 / GlyphDraft."""
 
 from __future__ import annotations
 

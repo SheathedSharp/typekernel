@@ -36,7 +36,7 @@ vertical pen calibration. Reuse them instead of hand-rolling curls.
 - No aperture / roundness mega-knobs.
 - Intent is not a glyph factory; letters stay in `glyphs/` + `elements.py`.
 
-## G-class / VF honesty (P5-4)
+## Interpolation and VF safety
 
 Interpolation mid-masters must keep topology and avoid self-intersections
 under the slanted broad-nib expand. Several glyphs therefore use **intentional

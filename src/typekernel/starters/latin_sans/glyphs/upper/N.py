@@ -1,4 +1,4 @@
-"""Diagonal glyph N — anatomy stems + diagonal band (P3-7)."""
+"""Diagonal glyph N — anatomy stems + diagonal band ."""
 
 from __future__ import annotations
 

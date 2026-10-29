@@ -1,4 +1,4 @@
-"""Figure 4 — spine + gapped crossbar (G-class)."""
+"""Figure 4 — spine + gapped crossbar (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""E — continuous rail + mid bar (G-class)."""
+"""E — continuous rail + mid bar (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Control glyph H — anatomy stems + crossbar (P3-6)."""
+"""Control glyph H — anatomy stems + crossbar ."""
 
 from __future__ import annotations
 

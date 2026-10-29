@@ -1,4 +1,4 @@
-"""H-class release checks + optional FontBakery (P4-7 / ``tk check --release``)."""
+"""Release checks + optional FontBakery (``tk check --release``)."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def _finding(
 
 
 def check_release_binary(path: str | Path) -> list[Finding]:
-    """H-class checks against a compiled font binary."""
+    """Release checks against a compiled font binary."""
     from fontTools.ttLib import TTFont
 
     tt = TTFont(Path(path))
@@ -229,7 +229,7 @@ def run_fontbakery_opentype(path: str | Path) -> dict | None:
     return counts
 
 def check_release(path: str | Path, *, fontbakery: bool = True) -> ReleaseReport:
-    """Run H-class checks (and optional FontBakery) on ``path``."""
+    """Run release checks (and optional FontBakery) on ``path``."""
     findings = check_release_binary(path)
     fb = run_fontbakery_opentype(path) if fontbakery else None
     return ReleaseReport(

@@ -1,4 +1,4 @@
-"""A-class AnchorsCheck for mark attachment and composite refs."""
+"""AnchorsCheck for mark attachment and composite refs."""
 
 from __future__ import annotations
 

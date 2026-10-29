@@ -15,7 +15,7 @@ Grammar (normative)::
 ``a`` / ``b`` mark aperture endpoints (see ``aperture.N.a`` / ``aperture.N.b``).
 When ``b`` appears under part ``aperture`` (or after an index) it is an endpoint,
 not the side ``b`` (bottom).
-``spur`` and ``cross`` are part names for P3-4 / P3-5 components.
+``spur`` and ``cross`` are part names for the corresponding components.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""m — two n-arches with mid gap (G-class)."""
+"""m — two n-arches with mid gap (interpolation-safe)."""
 
 from __future__ import annotations
 

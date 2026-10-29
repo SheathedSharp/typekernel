@@ -1,4 +1,4 @@
-"""dotlessi — i without tittle (P4-2 composite base)."""
+"""dotlessi — i without tittle (composite base)."""
 
 from __future__ import annotations
 

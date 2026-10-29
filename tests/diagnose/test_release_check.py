@@ -1,4 +1,4 @@
-"""P4-7: H-class release checks and tk check --release."""
+"""Release checks and tk check --release."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def test_tk_check_release_writes_manifest(tmp_path: Path) -> None:
         root, out_dir=tmp_path, fontbakery=False, build_if_missing=True
     )
     assert manifest is not None and manifest.is_file()
-    # H-class alone should pass; FontBakery skipped.
+    # Release checks alone should pass; FontBakery skipped.
     assert code == 0
 
 

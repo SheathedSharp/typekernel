@@ -274,7 +274,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
     from typekernel.cli.check_cmd import check_release_project
 
     if not getattr(args, "release", False):
-        print("error: only --release is supported for now (H-class + FontBakery)", file=sys.stderr)
+        print("error: only --release is supported for now (release checks + FontBakery)", file=sys.stderr)
         return 2
     code, _manifest = check_release_project(
         args.path,
@@ -556,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
     p_check.add_argument(
         "--release",
         action="store_true",
-        help="H-class name/OS/2/metrics/STAT/glyph-names + optional FontBakery",
+        help="Release checks: name/OS/2/metrics/STAT/glyph-names + optional FontBakery",
     )
     p_check.add_argument("--binary", default=None, help="font binary to check (default: build/*)")
     p_check.add_argument("--out", default=None, help="build dir when binary is missing")

@@ -1,4 +1,4 @@
-"""emdash — anatomy crossbar (P3-7)."""
+"""emdash — anatomy crossbar ."""
 
 from __future__ import annotations
 

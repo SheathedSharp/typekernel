@@ -1,4 +1,4 @@
-"""P2-11: features require uharfbuzz; clear ImportError."""
+"""features require uharfbuzz; clear ImportError."""
 
 from __future__ import annotations
 

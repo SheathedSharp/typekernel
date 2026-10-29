@@ -2,16 +2,13 @@
   "date": "2026-10-29",
   "expect_changes": [],
   "glyphs": {
-    "H": "53041565c6ebfebbcf705a77e114b63fe99982ca96df42c0a638ac1d22076a94"
-  },
+    "H": "53041565c6ebfebbcf705a77e114b63fe99982ca96df42c0a638ac1d22076a94"},
   "group": "H",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-6 anatomy rewrite: audit 0 error on control set; agent visual pass on see PNG.",
+    "Bold"],
+  "notes": "anatomy rewrite: audit 0 error on control set; visual pass on see PNG.",
   "proofs": [],
   "reviewer": "agent:p3-6",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

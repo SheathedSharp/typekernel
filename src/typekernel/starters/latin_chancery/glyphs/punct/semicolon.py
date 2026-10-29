@@ -1,4 +1,4 @@
-"""semicolon — colon top + comma head/tail (G-class)."""
+"""semicolon — colon top + comma head/tail (interpolation-safe)."""
 
 from __future__ import annotations
 

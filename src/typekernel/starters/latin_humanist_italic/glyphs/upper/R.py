@@ -1,4 +1,4 @@
-"""R — stem + gapped bowl + leg (G-class)."""
+"""R — stem + gapped bowl + leg (interpolation-safe)."""
 
 from __future__ import annotations
 

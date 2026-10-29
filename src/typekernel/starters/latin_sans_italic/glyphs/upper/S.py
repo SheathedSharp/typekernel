@@ -1,4 +1,4 @@
-"""S — gapped top/diag/base (P5-3)."""
+"""S — gapped top/diag/base ."""
 
 from __future__ import annotations
 

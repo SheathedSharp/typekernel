@@ -1,4 +1,4 @@
-"""Straight glyph T — anatomy centered stem + top bar (P3-7)."""
+"""Straight glyph T — anatomy centered stem + top bar ."""
 
 from __future__ import annotations
 

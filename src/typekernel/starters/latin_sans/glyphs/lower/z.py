@@ -1,4 +1,4 @@
-"""Diagonal glyph z — anatomy crossbars + diagonal band (P3-7)."""
+"""Diagonal glyph z — anatomy crossbars + diagonal band ."""
 
 from __future__ import annotations
 

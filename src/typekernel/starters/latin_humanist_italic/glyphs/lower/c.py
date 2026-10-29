@@ -1,4 +1,4 @@
-"""Round glyph c — open bracket strokes with corner gaps (G-class)."""
+"""Round glyph c — open bracket strokes with corner gaps (interpolation-safe)."""
 
 from __future__ import annotations
 

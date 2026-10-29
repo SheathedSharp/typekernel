@@ -1,4 +1,4 @@
-"""x — separated mild diags (G-class)."""
+"""x — separated mild diags (interpolation-safe)."""
 
 from __future__ import annotations
 

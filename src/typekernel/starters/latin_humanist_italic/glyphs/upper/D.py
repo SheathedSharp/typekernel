@@ -1,4 +1,4 @@
-"""D — stem + gapped oval (G-class)."""
+"""D — stem + gapped oval (interpolation-safe)."""
 
 from __future__ import annotations
 

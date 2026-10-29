@@ -1,4 +1,4 @@
-"""g — upper oval + gapped descender (G-class; dual bowl SI)."""
+"""g — upper oval + gapped descender (interpolation-safe; dual bowl self-intersection)."""
 
 from __future__ import annotations
 

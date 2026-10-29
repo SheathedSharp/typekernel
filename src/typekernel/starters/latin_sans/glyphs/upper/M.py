@@ -1,4 +1,4 @@
-"""Diagonal glyph M — anatomy stems + inner diagonal_pair (P3-7)."""
+"""Diagonal glyph M — anatomy stems + inner diagonal_pair ."""
 
 from __future__ import annotations
 

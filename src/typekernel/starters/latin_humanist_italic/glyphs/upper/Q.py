@@ -1,4 +1,4 @@
-"""Q — O + gapped tail (G-class)."""
+"""Q — O + gapped tail (interpolation-safe)."""
 
 from __future__ import annotations
 

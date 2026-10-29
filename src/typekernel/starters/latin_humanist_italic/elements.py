@@ -1,7 +1,7 @@
 """Humanist-italic project helpers — thin shim over :mod:`typekernel.anatomy.pen`.
 
 Glyph polyline ``stroke`` / bowls keep the hash-stable expand path. Kernel
-:func:`~typekernel.anatomy.pen.stroke` accepts cubics only (P5-1).
+:func:`~typekernel.anatomy.pen.stroke` accepts cubics only.
 """
 
 from __future__ import annotations

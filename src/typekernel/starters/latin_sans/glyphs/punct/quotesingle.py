@@ -1,4 +1,4 @@
-"""quotesingle — anatomy stem quote (P3-7)."""
+"""quotesingle — anatomy stem quote ."""
 
 from __future__ import annotations
 

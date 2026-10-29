@@ -1,4 +1,4 @@
-"""Z — fused bars + diagonal (G-class)."""
+"""Z — fused bars + diagonal (interpolation-safe)."""
 
 from __future__ import annotations
 

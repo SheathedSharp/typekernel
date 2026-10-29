@@ -1,4 +1,4 @@
-"""parenright — vertical stem (G-class; curved arc SI under slant)."""
+"""parenright — vertical stem (interpolation-safe; curved arc self-intersection under slant)."""
 
 from __future__ import annotations
 

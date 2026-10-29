@@ -1,4 +1,4 @@
-"""question — anatomy bars/stem/dot (P3-7)."""
+"""question — anatomy bars/stem/dot ."""
 
 from __future__ import annotations
 

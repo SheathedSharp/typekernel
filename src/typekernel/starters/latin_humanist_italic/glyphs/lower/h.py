@@ -1,4 +1,4 @@
-"""n-group glyph h — n-body + ascender tip (gap join; G-class clean)."""
+"""n-group glyph h — n-body + ascender tip (gap join; interpolation-safe)."""
 
 from __future__ import annotations
 

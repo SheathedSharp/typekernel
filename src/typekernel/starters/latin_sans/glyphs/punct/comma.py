@@ -1,4 +1,4 @@
-"""comma — anatomy dot + diagonal tail (P3-7)."""
+"""comma — anatomy dot + diagonal tail ."""
 
 from __future__ import annotations
 

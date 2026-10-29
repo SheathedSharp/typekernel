@@ -1,4 +1,4 @@
-"""P4-6: roman + synthetic italic share typographic family / STAT ital."""
+"""roman + synthetic italic share typographic family / STAT ital."""
 
 from __future__ import annotations
 

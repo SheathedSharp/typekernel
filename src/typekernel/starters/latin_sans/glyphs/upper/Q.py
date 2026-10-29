@@ -1,4 +1,4 @@
-"""Round glyph Q — anatomy bowl + diagonal tail (P3-7)."""
+"""Round glyph Q — anatomy bowl + diagonal tail ."""
 
 from __future__ import annotations
 

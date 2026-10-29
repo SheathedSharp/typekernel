@@ -1,4 +1,4 @@
-"""n-group glyph m — two n-arches with mid gap (G-class clean)."""
+"""n-group glyph m — two n-arches with mid gap (interpolation-safe)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def m(system: System):
     x0 = lsb + st * 0.5
     x2 = lsb + width - st * 0.5
     x1 = (x0 + x2) / 2.0
-    # Keep arches from overlapping at mid — fused mid stems mid-lerp SI.
+    # Keep arches from overlapping at mid — fused mid stems mid-lerp self-intersection.
     sep = 60.0
 
     def arch(xa: float, xb: float):

@@ -1,4 +1,4 @@
-"""Control n — continuous stem+arch skeleton (G-class)."""
+"""Control n — continuous stem+arch skeleton (interpolation-safe)."""
 
 from __future__ import annotations
 

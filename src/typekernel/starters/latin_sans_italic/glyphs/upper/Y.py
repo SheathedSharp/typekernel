@@ -1,4 +1,4 @@
-"""Y — fused arms into stem (P5-3)."""
+"""Y — fused arms into stem ."""
 
 from __future__ import annotations
 

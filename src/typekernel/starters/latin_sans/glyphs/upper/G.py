@@ -1,4 +1,4 @@
-"""Round glyph G — anatomy open_bowl + spur bar (P3-7)."""
+"""Round glyph G — anatomy open_bowl + spur bar ."""
 
 from __future__ import annotations
 

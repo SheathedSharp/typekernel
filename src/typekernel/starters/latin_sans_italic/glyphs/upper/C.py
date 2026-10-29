@@ -1,4 +1,4 @@
-"""C — open bracket with corner gaps (P5-3)."""
+"""C — open bracket with corner gaps ."""
 
 from __future__ import annotations
 

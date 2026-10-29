@@ -1,4 +1,4 @@
-"""B — stem + far gapped bowls (G-class)."""
+"""B — stem + far gapped bowls (interpolation-safe)."""
 
 from __future__ import annotations
 

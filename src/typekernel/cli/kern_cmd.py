@@ -1,4 +1,4 @@
-"""``tk kern suggest`` — propose kern pairs without applying them (P4-4)."""
+"""``tk kern suggest`` — propose kern pairs without applying them."""
 
 from __future__ import annotations
 

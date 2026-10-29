@@ -1,4 +1,4 @@
-"""K — stem + mild arm/leg (G-class; acute join SI)."""
+"""K — stem + mild arm/leg (interpolation-safe; acute join self-intersection)."""
 
 from __future__ import annotations
 

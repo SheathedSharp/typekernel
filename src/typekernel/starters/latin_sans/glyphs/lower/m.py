@@ -1,4 +1,4 @@
-"""n-group glyph m — three stems + two anatomy arches (P3-7)."""
+"""n-group glyph m — three stems + two anatomy arches ."""
 
 from __future__ import annotations
 

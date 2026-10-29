@@ -1,7 +1,7 @@
-"""Latin Sans family declaration (P5-3) — roman + true italic partner.
+"""Latin Sans family declaration — roman + true italic partner.
 
-DQ5: italic partner is ``latin_sans_italic`` (matched proportions), not
-humanist-italic. Linking uses :mod:`typekernel.axes.family` (P4-6).
+The italic partner is ``latin_sans_italic`` (matched proportions), not
+humanist-italic. Linking uses :mod:`typekernel.axes.family`.
 """
 
 from __future__ import annotations

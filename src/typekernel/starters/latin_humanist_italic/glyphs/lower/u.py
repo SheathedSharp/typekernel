@@ -1,4 +1,4 @@
-"""n-group glyph u — stems + shallow bottom (G-class; deep U SI under pen)."""
+"""n-group glyph u — stems + shallow bottom (interpolation-safe; deep U self-intersection under pen)."""
 
 from __future__ import annotations
 

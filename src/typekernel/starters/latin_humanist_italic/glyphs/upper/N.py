@@ -1,4 +1,4 @@
-"""N — continuous left stem + diagonal + right stem (fused for G-class)."""
+"""N — continuous left stem + diagonal + right stem (fused for interpolation)."""
 
 from __future__ import annotations
 

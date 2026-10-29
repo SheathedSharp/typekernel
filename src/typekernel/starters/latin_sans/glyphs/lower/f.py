@@ -1,4 +1,4 @@
-"""Mixed glyph f — anatomy stem + crossbar + arch hook (P3-7)."""
+"""Mixed glyph f — anatomy stem + crossbar + arch hook ."""
 
 from __future__ import annotations
 

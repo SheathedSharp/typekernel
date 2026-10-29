@@ -1,4 +1,4 @@
-"""J — stem + shallow gapped hook (P5-3)."""
+"""J — stem + shallow gapped hook ."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def J(system: System):
     width = float(system.tokens.get("J_width", 480.0))
     lsb = float(system.tokens["lsb_uc"])
     x = lsb + width - uc * 0.5
-    # Straight stem; shallow hook as separate stroke with gap (deep hooks SI).
+    # Straight stem; shallow hook as separate stroke with gap (deep hooks self-intersection).
     stem = stroke(system, [(x, cap), (x, uc * 1.5)], thickness=uc)
     n = 7
     pts = []

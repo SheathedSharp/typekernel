@@ -1,4 +1,4 @@
-"""s — three horizontal bars (G-class)."""
+"""s — three horizontal bars (interpolation-safe)."""
 
 from __future__ import annotations
 

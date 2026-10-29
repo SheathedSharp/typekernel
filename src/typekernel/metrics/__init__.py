@@ -1,7 +1,7 @@
 """Metrics keys engine (target-architecture §5.3).
 
 Declarative ``Metrics`` / ``Kerning`` types plus ``resolve`` / ``pack`` /
-``apply_metrics`` (extracted from starter ``spacing.py`` engines in P1-4).
+``apply_metrics`` (extracted from starter ``spacing.py`` engines).
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class Mirror:
 
 @dataclass(frozen=True, slots=True)
 class Optical:
-    """Optical sidebearing match (implemented in P2-7)."""
+    """Optical sidebearing match."""
 
     ref: str
     side: Literal["lsb", "rsb"]

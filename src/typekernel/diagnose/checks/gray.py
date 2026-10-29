@@ -1,4 +1,4 @@
-"""F-class gray: ink density robust z-score vs height-band cohort (target §7.2)."""
+"""Gray checks: ink density robust z-score vs height-band cohort (target §7.2)."""
 
 from __future__ import annotations
 

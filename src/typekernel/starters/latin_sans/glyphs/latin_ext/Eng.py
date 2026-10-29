@@ -1,4 +1,4 @@
-"""Eng / eng — N/n with descender (P4-2). Slot/signature-stable."""
+"""Eng / eng — N/n with descender . Slot/signature-stable."""
 
 from __future__ import annotations
 

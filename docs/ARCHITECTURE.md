@@ -15,13 +15,13 @@
 | `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
-| 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；不合规清单见 P3-1 测试 |
-| `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 仍属 P5 |
+| 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；不合规清单见 `tests/anatomy` 用例 |
+| `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
-| P6-3 LihuiT Hausdorff 指标 | **程序侧已达标** | `dogfood/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `dogfood/lihuit/BACKLOG.md`） |
+| LihuiT 移植 Hausdorff 指标 | **程序侧已达标** | `transplants/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `transplants/lihuit/BACKLOG.md`） |
 
 ---
 
@@ -189,7 +189,7 @@ def b(s):
 
 ### 间距
 
-- `metrics keys`（`Abs`/`Stem`/`Token`/`Ref`/`Mirror`；`Optical` 签名预留至 P2）：声明在 `Project.metrics`，引擎在 `typekernel.metrics`。
+- `metrics keys`（`Abs`/`Stem`/`Token`/`Ref`/`Mirror`；`Optical` 签名预留）：声明在 `Project.metrics`，引擎在 `typekernel.metrics`。
 - Tracy 法、光学测量做成插件，可选。（**尚未接入工作流**——见上表；`plugins.spacing` 仍为空包。）
 - 项目 `spacing.py` 只放 `METRICS` / `KERNING` 数据，agent 可以手调。
 
@@ -633,7 +633,7 @@ class Project:
 - 不为兼容旧 API 长期维持双轨：旧路径直接删除，git 历史即存档。
 
 
-## P2 落地摘要（眼睛与判断）
+## 感知与诊断（已实现）
 
 已实现（细节以源码与 `tk --help` 为准；目标契约见 `docs/design/target-architecture.md`，落地后迁入本节）：
 
@@ -645,9 +645,9 @@ class Project:
 | 评审与任务板 | `tk review` · `tk status` |
 | shipped 样张 | `tk proof`（`perceive.specimen`；`qa.proof` 为兼容 shim） |
 
-冻结令（P0-5）在 P2 出口后解除：可新增 starter / 风格插件。
+新增 starter 与风格插件的限制已解除。
 
-## P3 落地摘要（手艺）
+## 构件与手艺（已实现）
 
 | 能力 | 入口 |
 | --- | --- |
@@ -656,23 +656,23 @@ class Project:
 | 解剖构件（曲线） | `arch` `bowl` `bowl_join` `open_bowl`/`BarSpec` `spine` |
 | 解剖构件（斜笔） | `diagonal_pair` `crossing` |
 | 解剖构件（钩尾） | `hook` `tail` `ear` `spur` |
-| latin-sans 控制字 anatomy 化 | **agent pass**；人工批准待定（`approvals/latin-sans-control.json`） |
-| latin-sans v2 字组（P3-7） | **agent pass**（lc/uc/figs/punct 全组 + reviews）；全字符集样张人工批准待定 |
+| latin-sans 控制字 anatomy 化 | **程序侧通过**；人工批准待定（`approvals/latin-sans-control.json`） |
+| latin-sans 字组 v2 | **程序侧通过**（lc/uc/figs/punct 全组 + reviews）；全字符集样张人工批准待定 |
 | 三 starter 标签语法 | **已合法**（`tags.grammar` 0；latin-sans / humanist-italic / chancery） |
 | 插件语义 / slab litmus | **已落地**（slab/bracketed/rounded） |
 | designed masters | **已落地**（Light/Bold 宽/开口/张力）；阶梯人工批准待定（`approvals/latin-sans-ladder.json`） |
 
 
-## P4 落地摘要（整族）— 进行中
+## 整族与发布（进行中）
 
 | 能力 | 入口 |
 | --- | --- |
 | `marks/` 发现 + mark advance 0 | `ProjectSession`（trait `mark`）；槽位填充跳过 mark |
-| 锚点检查（A 类） | `diagnose.checks.anchors.AnchorsCheck` |
+| 锚点检查 | `diagnose.checks.anchors.AnchorsCheck` |
 | latin-sans 组合附加符 | `starters/latin_sans/marks/`（12 comb + `.case`）；基字 `zone_anchors` |
 | `compose` / composites | **已落地**（`project.compose`；latin-sans ~160 composites） |
 | charset + `tk status` 区块覆盖率 | **已落地**（latin-1 + ext-a **319/319**） |
 | 特性后缀生成 + fea 汇编 | **已落地**（`generate_features` / `assemble_features` / `features.syntax`） |
 | latin-sans ss01 / tnum / onum / case | **已落地**（`a.ss01`、`*.tf`/`*.osf`、`*.case` punct） |
-| kern / VF / FontBakery | **未做**（P4-4…） |
+| kern / VF / FontBakery | **已落地**（`tk kern suggest`、wght 100–900 可变字体、`tk check --release`） |
 

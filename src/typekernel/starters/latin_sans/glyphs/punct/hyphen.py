@@ -1,4 +1,4 @@
-"""hyphen — anatomy crossbar (P3-7)."""
+"""hyphen — anatomy crossbar ."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""n-group glyph m — two n-arches with mid gap (G-class)."""
+"""n-group glyph m — two n-arches with mid gap (interpolation-safe)."""
 
 from __future__ import annotations
 

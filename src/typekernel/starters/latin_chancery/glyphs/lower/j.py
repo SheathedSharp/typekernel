@@ -1,4 +1,4 @@
-"""j — descender stem + pen_dot tittle (G-class; oval tittle SI)."""
+"""j — descender stem + pen_dot tittle (interpolation-safe; oval tittle self-intersection)."""
 
 from __future__ import annotations
 

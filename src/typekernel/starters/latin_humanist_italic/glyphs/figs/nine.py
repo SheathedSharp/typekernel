@@ -1,4 +1,4 @@
-"""Figure 9 — upper oval + gapped descender (G-class)."""
+"""Figure 9 — upper oval + gapped descender (interpolation-safe)."""
 
 from __future__ import annotations
 

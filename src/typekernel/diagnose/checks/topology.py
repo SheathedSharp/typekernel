@@ -1,4 +1,4 @@
-"""B-class topology: counters, islands, slits, apertures (target §7.2)."""
+"""Topology checks: counters, islands, slits, apertures (target §7.2)."""
 
 from __future__ import annotations
 

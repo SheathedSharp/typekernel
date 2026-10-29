@@ -1,4 +1,4 @@
-"""y — shallow cup + mid descender (G-class; v-join SI under slant)."""
+"""y — shallow cup + mid descender (interpolation-safe; v-join self-intersection under slant)."""
 
 from __future__ import annotations
 

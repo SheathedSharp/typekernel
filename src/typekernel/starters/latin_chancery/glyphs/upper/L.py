@@ -1,4 +1,4 @@
-"""L — continuous stem + baseline bar (G-class)."""
+"""L — continuous stem + baseline bar (interpolation-safe)."""
 
 from __future__ import annotations
 

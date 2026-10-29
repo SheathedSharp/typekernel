@@ -1,4 +1,4 @@
-"""Lslash / lslash — L/l with diagonal slash (P4-2)."""
+"""Lslash / lslash — L/l with diagonal slash ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import crossbar, stem

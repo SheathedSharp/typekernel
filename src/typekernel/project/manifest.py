@@ -92,7 +92,7 @@ class AuditConfig:
 
 @dataclass(frozen=True, slots=True)
 class ProofConfig:
-    """Project proof strings / sets (perceive §6). Placeholder until P2."""
+    """Project proof strings / sets (perceive §6). Placeholder."""
 
     control: str = ""
     spacing: tuple[str, ...] = ()
@@ -101,7 +101,7 @@ class ProofConfig:
 
 @dataclass(frozen=True, slots=True)
 class ReviewPolicy:
-    """Review / task-board policy (review §8). Placeholder until P2."""
+    """Review / task-board policy (review §8). Placeholder."""
 
     groups: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
 

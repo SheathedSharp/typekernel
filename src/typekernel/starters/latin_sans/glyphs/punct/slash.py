@@ -1,4 +1,4 @@
-"""slash — anatomy compensated diagonal (P3-7)."""
+"""slash — anatomy compensated diagonal ."""
 
 from __future__ import annotations
 

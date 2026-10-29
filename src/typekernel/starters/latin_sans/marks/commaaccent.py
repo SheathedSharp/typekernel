@@ -1,4 +1,4 @@
-"""commaaccent combining mark (P4-2 Ext-A comma accents)."""
+"""commaaccent combining mark (Ext-A comma accents)."""
 
 from __future__ import annotations
 

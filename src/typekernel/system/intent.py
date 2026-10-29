@@ -170,7 +170,7 @@ def system_from_intent(
     overshoot: Overshoot | None = None,
     extra_tokens: Mapping[str, float] | None = None,
 ) -> System:
-    """Build a starting ``System`` from *intent* (cold-start seed, not a final face)."""
+    """Build a starting ``System`` from *intent* (initial seed, not a final face)."""
     stem = _stem_for_weight(intent.weight)
     contrast, angle = pen_defaults_for(intent)
     tokens: dict[str, float] = {

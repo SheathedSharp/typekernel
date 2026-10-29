@@ -1,4 +1,4 @@
-"""Straight glyph i — anatomy stem + dot (P3-7)."""
+"""Straight glyph i — anatomy stem + dot ."""
 
 from __future__ import annotations
 

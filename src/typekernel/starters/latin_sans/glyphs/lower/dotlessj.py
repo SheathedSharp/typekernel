@@ -1,4 +1,4 @@
-"""dotlessj — j without tittle (P4-2 composite base)."""
+"""dotlessj — j without tittle (composite base)."""
 
 from __future__ import annotations
 

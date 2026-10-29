@@ -9,16 +9,13 @@
     "J": "b28c9d22da0007ce8c8717a5b56a5882f48e5fc5874da7d74d300519f864be58",
     "L": "0c10619e9f6fd99c07eb7c564c0525d7696f7f56ddda6c0ee9d147896dfa1728",
     "T": "e9a43ec6be08f8c1a129bc5bd9a2ab055df56998881193894f6493092da4d261",
-    "U": "c7f80ac57fc677988e1171aa364a0a83eea1b2a05e70d49d44f5f222bb7e67b5"
-  },
+    "U": "c7f80ac57fc677988e1171aa364a0a83eea1b2a05e70d49d44f5f222bb7e67b5"},
   "group": "uc.straight",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-6 anatomy rewrite: audit 0 error on control set; agent visual pass on see PNG.",
+    "Bold"],
+  "notes": "anatomy rewrite: audit 0 error on control set; visual pass on see PNG.",
   "proofs": [],
   "reviewer": "agent:p3-6",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

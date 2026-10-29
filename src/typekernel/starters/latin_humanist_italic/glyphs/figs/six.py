@@ -1,4 +1,4 @@
-"""Figure 6 — lower oval + gapped upright (G-class)."""
+"""Figure 6 — lower oval + gapped upright (interpolation-safe)."""
 
 from __future__ import annotations
 

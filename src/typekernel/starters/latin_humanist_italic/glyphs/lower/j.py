@@ -1,4 +1,4 @@
-"""j — descender stem + shallow hook + oval tittle (G-class)."""
+"""j — descender stem + shallow hook + oval tittle (interpolation-safe)."""
 
 from __future__ import annotations
 

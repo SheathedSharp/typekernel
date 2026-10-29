@@ -1,4 +1,4 @@
-"""Control / n-group glyph n — anatomy stem + arch (P3-6)."""
+"""Control / n-group glyph n — anatomy stem + arch ."""
 
 from __future__ import annotations
 

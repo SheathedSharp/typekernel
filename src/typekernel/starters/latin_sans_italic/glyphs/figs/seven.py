@@ -1,4 +1,4 @@
-"""Figure 7 — top bar + diagonal (G-class)."""
+"""Figure 7 — top bar + diagonal (interpolation-safe)."""
 
 from __future__ import annotations
 

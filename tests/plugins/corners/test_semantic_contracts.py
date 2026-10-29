@@ -1,4 +1,4 @@
-"""Semantic contracts for corner fillers (target-architecture §9.2 / P3-8)."""
+"""Semantic contracts for corner fillers (target-architecture §9.2)."""
 
 from __future__ import annotations
 

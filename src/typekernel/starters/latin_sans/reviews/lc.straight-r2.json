@@ -11,16 +11,13 @@
     "n": "8959eeaaa3c32fad1cc100c8b062209d7983b78ba3bd13ea4e6a327b3bbbf1b0",
     "r": "7dd274f9f3fc05b70c7be2207dcf2aedb1c6ca2a5298355256ca1d58b88d3cdb",
     "t": "fad5bc208fbbea0ae58cc3b241780da2ee0034508453c5b3148dbe6429555aa2",
-    "u": "65aacbfe07e74eaa9c9bb689dccfc9c08294420f28cf70be53c20215f825e8b7"
-  },
+    "u": "65aacbfe07e74eaa9c9bb689dccfc9c08294420f28cf70be53c20215f825e8b7"},
   "group": "lc.straight",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-7 lc.straight anatomy rewrite complete; audit 0 error.",
+    "Bold"],
+  "notes": "lc.straight anatomy rewrite complete; audit 0 error.",
   "proofs": [],
   "reviewer": "agent:p3-7",
   "round": 2,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

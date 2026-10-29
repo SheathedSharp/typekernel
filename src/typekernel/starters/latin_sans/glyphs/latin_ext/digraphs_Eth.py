@@ -1,4 +1,4 @@
-"""Eth / eth (P4-2)."""
+"""Eth / eth ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import bowl, bowl_join, crossbar, stem

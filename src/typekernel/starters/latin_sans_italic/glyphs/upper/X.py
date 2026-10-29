@@ -1,4 +1,4 @@
-"""X — fused crossing diagonals (P5-3)."""
+"""X — fused crossing diagonals ."""
 
 from __future__ import annotations
 

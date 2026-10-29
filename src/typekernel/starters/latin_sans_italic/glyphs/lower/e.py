@@ -1,4 +1,4 @@
-"""Control e — open C + floating crossbar (G-class; keeps aperture)."""
+"""Control e — open C + floating crossbar (interpolation-safe; keeps aperture)."""
 
 from __future__ import annotations
 

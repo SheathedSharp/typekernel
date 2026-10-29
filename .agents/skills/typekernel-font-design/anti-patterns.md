@@ -4,7 +4,7 @@
 
 Do not assemble letters from bare rectangles + rings (θ-shaped `e`, figure-8 `three`,
 crossed-arc parentheses). Use anatomy constructors / tensioned arcs / open bowls once
-P3 ships; until then, prefer starter fragments and fix joins in project code — never
+Until the anatomy parts ship, prefer starter fragments and fix joins in project code — never
 heal/blend/seal.
 
 Appendix A counterexamples (unmodified latin-sans): `e` (2 counters), `three` (≥2),

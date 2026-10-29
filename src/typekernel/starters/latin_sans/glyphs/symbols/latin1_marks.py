@@ -1,4 +1,4 @@
-"""Latin-1 spacing accents, guillemets, ordinals, etc. (P4-2)."""
+"""Latin-1 spacing accents, guillemets, ordinals, etc. ."""
 from __future__ import annotations
 from elements import WIDTHS
 from typekernel.anatomy import bowl, crossbar, diagonal_pair, dot, drop, stem

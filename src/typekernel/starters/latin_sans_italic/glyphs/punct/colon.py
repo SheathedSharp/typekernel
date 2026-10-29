@@ -1,4 +1,4 @@
-"""colon — two stacked thin dots (G-class)."""
+"""colon — two stacked thin dots (interpolation-safe)."""
 
 from __future__ import annotations
 

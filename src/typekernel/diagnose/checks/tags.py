@@ -1,4 +1,4 @@
-"""Info-level tag grammar check (ARCHITECTURE.md 标签语法 / P3-1)."""
+"""Info-level tag grammar check (ARCHITECTURE.md 标签语法)."""
 
 from __future__ import annotations
 

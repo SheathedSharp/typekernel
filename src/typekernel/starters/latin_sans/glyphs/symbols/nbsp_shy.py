@@ -1,4 +1,4 @@
-"""nbsp and soft hyphen (P4-2)."""
+"""nbsp and soft hyphen ."""
 from __future__ import annotations
 from typekernel.anatomy import crossbar
 from typekernel.draw import Writer

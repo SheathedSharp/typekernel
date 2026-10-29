@@ -1,4 +1,4 @@
-"""period — baseline dot (G-class: thin oval, fixed n)."""
+"""period — baseline dot (interpolation-safe: thin oval, fixed n)."""
 
 from __future__ import annotations
 

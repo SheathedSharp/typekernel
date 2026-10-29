@@ -18,16 +18,13 @@
     "bracketleft": "b5e61cf3a6df9641c4e62f4520bf1578600fde85c534e2c3ac30f3b1ae07fbdf",
     "bracketright": "121e15c708da2ad2bcb7476522312d786ebda6d490bafd9eb0f0818f71075513",
     "slash": "9cf039fdba21028ed91777cf34c537f8ad79c64e531e5a0cbc3532e7ba289e19",
-    "backslash": "c1b5553c9017f5ebdfb0c261c9ba36739a6442d89a97471eee995123f9356cbc"
-  },
+    "backslash": "c1b5553c9017f5ebdfb0c261c9ba36739a6442d89a97471eee995123f9356cbc"},
   "group": "punct",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-7 punct anatomy rewrite (17 glyphs); audit 0 error.",
+    "Bold"],
+  "notes": "punct anatomy rewrite (17 glyphs); audit 0 error.",
   "proofs": [],
   "reviewer": "agent:p3-7",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

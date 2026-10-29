@@ -1,4 +1,4 @@
-"""Drawing.measures — merge / tagged / mirrored_x / signature (P1-5)."""
+"""Drawing.measures — merge / tagged / mirrored_x / signature."""
 
 from __future__ import annotations
 

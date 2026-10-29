@@ -1,4 +1,4 @@
-"""Hbar / hbar — H/h with stroke (P4-2)."""
+"""Hbar / hbar — H/h with stroke ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import arch, crossbar, stem

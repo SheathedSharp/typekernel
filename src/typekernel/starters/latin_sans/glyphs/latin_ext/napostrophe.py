@@ -1,4 +1,4 @@
-"""napostrophe — n + apostrophe (P4-2)."""
+"""napostrophe — n + apostrophe ."""
 
 from __future__ import annotations
 

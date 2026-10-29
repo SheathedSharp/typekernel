@@ -1,4 +1,4 @@
-"""latin-sans litmus: slab / bracketed / rounded corners all build (P3-8)."""
+"""latin-sans litmus: slab / bracketed / rounded corners all build."""
 
 from __future__ import annotations
 

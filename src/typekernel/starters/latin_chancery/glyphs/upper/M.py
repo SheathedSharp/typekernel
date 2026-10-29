@@ -1,4 +1,4 @@
-"""M — continuous W-like through apexes (G-class)."""
+"""M — continuous W-like through apexes (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""period — anatomy dot (P3-7)."""
+"""period — anatomy dot ."""
 
 from __future__ import annotations
 

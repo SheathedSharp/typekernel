@@ -1,4 +1,4 @@
-"""w — twin open cups with mid gap (G-class; continuous double-v SI)."""
+"""w — twin open cups with mid gap (interpolation-safe; continuous double-v self-intersection)."""
 
 from __future__ import annotations
 

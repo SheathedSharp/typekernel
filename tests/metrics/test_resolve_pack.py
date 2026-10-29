@@ -1,4 +1,4 @@
-"""Metrics resolve / pack (P1-4)."""
+"""Metrics resolve / pack."""
 
 from __future__ import annotations
 
@@ -92,7 +92,7 @@ def test_apply_metrics_writes_space_and_sidebearings() -> None:
 
 
 def test_pack_absolute_preserves_origin_and_uses_rsb() -> None:
-    """Absolute mode keeps baked-in LSB; advance = max_x + rsb (P6-3 transplants)."""
+    """Absolute mode keeps baked-in LSB; advance = max_x + rsb (transplant outlines)."""
     g = _rect_glyph("n", 57, 587)  # LihuiT-like: LSB already in outline
     packed = pack(g, 999, 57, _system(), policy="absolute")  # lsb ignored for shift
     min_x, _, max_x, _ = bounds(packed.outline)

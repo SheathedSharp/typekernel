@@ -101,7 +101,7 @@ def _designed_master(
     width_scale: float,
     aperture_delta: float = 0.0,
 ) -> System:
-    """Designed weight master — stem + control widths (P5-2 / P3-9 style)."""
+    """Designed weight master — stem + control widths (designed-master style)."""
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
     tokens = dict(base.tokens)
     for key in ("n_width", "m_width", "o_width", "H_width", "O_width", "fig_width"):

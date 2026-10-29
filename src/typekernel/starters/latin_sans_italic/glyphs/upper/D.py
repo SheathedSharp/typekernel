@@ -1,4 +1,4 @@
-"""D — stem + gapped oval (P5-3)."""
+"""D — stem + gapped oval ."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""parenleft — arch_span cup (P3-7; signature-stable)."""
+"""parenleft — arch_span cup (signature-stable)."""
 
 from __future__ import annotations
 

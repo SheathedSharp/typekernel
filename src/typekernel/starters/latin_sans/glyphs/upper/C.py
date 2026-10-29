@@ -1,4 +1,4 @@
-"""Round glyph C — anatomy open_bowl at cap height (P3-7)."""
+"""Round glyph C — anatomy open_bowl at cap height ."""
 
 from __future__ import annotations
 

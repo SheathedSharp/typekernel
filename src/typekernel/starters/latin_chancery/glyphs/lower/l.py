@@ -1,4 +1,4 @@
-"""l — plain ascender stem (G-class; flourish SI)."""
+"""l — plain ascender stem (interpolation-safe; flourish self-intersection)."""
 
 from __future__ import annotations
 

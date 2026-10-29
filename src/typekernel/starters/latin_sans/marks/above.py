@@ -1,4 +1,4 @@
-"""Combining above marks for latin-sans (P4-1) — anatomy dots / drops / bowls."""
+"""Combining above marks for latin-sans — anatomy dots / drops / bowls."""
 
 from __future__ import annotations
 

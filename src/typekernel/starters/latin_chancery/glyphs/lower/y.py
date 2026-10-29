@@ -1,4 +1,4 @@
-"""y — shallow cup + mid descender (G-class)."""
+"""y — shallow cup + mid descender (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -7,16 +7,13 @@
     "e": "009d9a4f236249832b3910cadaed09bddfdeb8a62f70264c64ffb1d228a318f4",
     "g": "cd6cfa256e445af47b16a2b5b399a200ff3dee41406589762aaf2f2b88b11f0d",
     "o": "0b1169901a42d586a329aa297c286c3da8838a8cd1b08c403165acb166407589",
-    "s": "9261fc160de07fc0696f72fe5a6b289d12c2feea478618607df7593ad0fc2c3f"
-  },
+    "s": "9261fc160de07fc0696f72fe5a6b289d12c2feea478618607df7593ad0fc2c3f"},
   "group": "lc.round",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-6 control o in lc.round; agent pass.",
+    "Bold"],
+  "notes": "control o in lc.round; programmatic pass.",
   "proofs": [],
   "reviewer": "agent:p3-6",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

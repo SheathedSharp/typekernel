@@ -1,4 +1,4 @@
-"""t — short stem + crossbar (G-class)."""
+"""t — short stem + crossbar (interpolation-safe)."""
 
 from __future__ import annotations
 

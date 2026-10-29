@@ -1,4 +1,4 @@
-"""U — stems + shallow cup (G-class; deep U SI under slant)."""
+"""U — stems + shallow cup (interpolation-safe; deep U self-intersection under slant)."""
 
 from __future__ import annotations
 

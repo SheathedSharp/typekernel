@@ -1,4 +1,4 @@
-"""Pen construction helpers for italic / script starters (P5-1 / target §4.5).
+"""Pen construction helpers for italic / script starters (target §4.5).
 
 Duplicated tools from ``latin_humanist_italic`` and ``latin_chancery`` live here.
 The public stroke API takes a **cubic** skeleton (:class:`~typekernel.geo.stroke.CubicCenterline`
@@ -166,7 +166,7 @@ def stroke(
     """Expand a **cubic** skeleton with the project broad nib (curve-aware).
 
     Accepts :class:`CubicCenterline` or :class:`Fragment` only — not polyline
-    point lists (P5-1).
+    point lists.
     """
     if isinstance(skeleton, (list, tuple)):
         raise TypeError(
@@ -414,8 +414,8 @@ def fuse(drawing: Drawing) -> Drawing:
 
     Multi-stroke constructions (stem + bar, bowl + crossbar) leave intentional
     overlaps; single continuous skeletons can also self-overlap after cubic
-    expand (arch joins, tight turns). Mid-master lerp treats both as G-class
-    self-intersects. Always pathops-simplify so Light/Bold topology is stable.
+    expand (arch joins, tight turns). Mid-master interpolation treats both as
+    self-intersection risks. Always pathops-simplify so Light/Bold topology is stable.
     """
     from typekernel.perceive.render import simplify_outline
     from typekernel.plugins.construct.skeleton_pen import _drawing_from_contours

@@ -1,4 +1,4 @@
-"""P4-5: varLib.instancer static cuts + outline consistency vs VF."""
+"""varLib.instancer static cuts + outline consistency vs VF."""
 
 from __future__ import annotations
 

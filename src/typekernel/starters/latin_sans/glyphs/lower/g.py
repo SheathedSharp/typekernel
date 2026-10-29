@@ -1,4 +1,4 @@
-"""Mixed glyph g — binocular bowls + ear stem (P3-7)."""
+"""Mixed glyph g — binocular bowls + ear stem ."""
 
 from __future__ import annotations
 

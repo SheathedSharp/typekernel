@@ -1,4 +1,4 @@
-"""exclam — stem + thin period (G-class)."""
+"""exclam — stem + thin period (interpolation-safe)."""
 
 from __future__ import annotations
 

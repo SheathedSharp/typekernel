@@ -197,7 +197,7 @@ class RefConsistencyCheck:
     scope: Scope = "font"
 
     def run(self, ctx: CheckContext) -> Iterable[Finding]:
-        """Warn when Ref-linked sidebearings diverge optically (appendix A-12)."""
+        """Warn when Ref-linked sidebearings diverge optically."""
         from typekernel.optics.space import measure_side_whitespace
 
         metrics = ctx.project.metrics

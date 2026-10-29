@@ -1,4 +1,4 @@
-"""R — stem + bars + gapped leg (G-class)."""
+"""R — stem + bars + gapped leg (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""S — gapped top/diag/base (G-class; mirrors lc s)."""
+"""S — gapped top/diag/base (interpolation-safe; mirrors lc s)."""
 
 from __future__ import annotations
 

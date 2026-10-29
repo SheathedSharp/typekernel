@@ -1,4 +1,4 @@
-"""W — fused double-V (G-class)."""
+"""W — fused double-V (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""exclam — anatomy stem + dot (P3-7)."""
+"""exclam — anatomy stem + dot ."""
 
 from __future__ import annotations
 

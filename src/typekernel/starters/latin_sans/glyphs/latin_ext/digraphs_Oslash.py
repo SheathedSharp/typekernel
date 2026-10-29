@@ -1,4 +1,4 @@
-"""Oslash / oslash (P4-2)."""
+"""Oslash / oslash ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import bowl

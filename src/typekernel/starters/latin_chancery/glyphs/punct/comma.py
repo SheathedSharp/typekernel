@@ -1,4 +1,4 @@
-"""comma — period head + gapped tail (G-class; flourish SI)."""
+"""comma — period head + gapped tail (interpolation-safe; flourish self-intersection)."""
 
 from __future__ import annotations
 

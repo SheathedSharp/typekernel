@@ -1,4 +1,4 @@
-"""o-group a — stem + gapped oval (G-class)."""
+"""o-group a — stem + gapped oval (interpolation-safe)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""n-group glyph r — continuous stem + shoulder stub (G-class)."""
+"""n-group glyph r — continuous stem + shoulder stub (interpolation-safe)."""
 
 from __future__ import annotations
 

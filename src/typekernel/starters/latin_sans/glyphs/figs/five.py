@@ -1,4 +1,4 @@
-"""Figure five — anatomy bar + stub + open_bowl (P3-7; opens A-8)."""
+"""Figure five — anatomy bar + stub + open_bowl (open counter)."""
 
 from __future__ import annotations
 

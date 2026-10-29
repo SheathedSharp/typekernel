@@ -1,4 +1,4 @@
-"""P2-9: interpolation fixtures — start mismatch, mid self-intersect."""
+"""interpolation fixtures — start mismatch, mid self-intersect."""
 
 from __future__ import annotations
 

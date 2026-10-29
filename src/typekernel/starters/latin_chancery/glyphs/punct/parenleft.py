@@ -1,4 +1,4 @@
-"""parenleft — vertical stem (G-class; curved arc SI)."""
+"""parenleft — vertical stem (interpolation-safe; curved arc self-intersection)."""
 
 from __future__ import annotations
 

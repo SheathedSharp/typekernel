@@ -1,4 +1,4 @@
-"""backslash — anatomy compensated diagonal (P3-7)."""
+"""backslash — anatomy compensated diagonal ."""
 
 from __future__ import annotations
 

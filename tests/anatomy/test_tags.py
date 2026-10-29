@@ -1,4 +1,4 @@
-"""Tag grammar parser tests (ARCHITECTURE.md 标签语法 / P3-1)."""
+"""Tag grammar parser tests (ARCHITECTURE.md 标签语法)."""
 
 from __future__ import annotations
 

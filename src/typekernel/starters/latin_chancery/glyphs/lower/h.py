@@ -1,4 +1,4 @@
-"""h — n-body + ascender tip gap (G-class; flourish SI)."""
+"""h — n-body + ascender tip gap (interpolation-safe; flourish self-intersection)."""
 
 from __future__ import annotations
 

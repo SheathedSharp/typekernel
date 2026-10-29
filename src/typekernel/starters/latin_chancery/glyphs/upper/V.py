@@ -1,4 +1,4 @@
-"""V — continuous chevron (G-class)."""
+"""V — continuous chevron (interpolation-safe)."""
 
 from __future__ import annotations
 
@@ -17,5 +17,5 @@ def V(system: System):
     x0 = lsb + uc * 0.3
     x1 = lsb + width - uc * 0.3
     mid = (x0 + x1) / 2.0
-    # Shallow apex (not baseline) reduces SI under slant expand.
+    # Shallow apex (not baseline) reduces self-intersection under slant expand.
     return fuse(stroke(system, [(x0, cap), (mid, cap * 0.12), (x1, cap)], thickness=uc))

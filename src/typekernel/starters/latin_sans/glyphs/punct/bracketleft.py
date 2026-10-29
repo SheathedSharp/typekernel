@@ -1,4 +1,4 @@
-"""bracketleft — anatomy stems (P3-7)."""
+"""bracketleft — anatomy stems ."""
 
 from __future__ import annotations
 

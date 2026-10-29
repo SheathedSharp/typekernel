@@ -1,4 +1,4 @@
-"""UC E — continuous top/stem/bottom rail + mid bar (G-class)."""
+"""UC E — continuous top/stem/bottom rail + mid bar (interpolation-safe)."""
 
 from __future__ import annotations
 

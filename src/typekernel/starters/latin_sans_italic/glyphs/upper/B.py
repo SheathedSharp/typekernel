@@ -1,4 +1,4 @@
-"""B — stem + far gapped bowls (P5-3)."""
+"""B — stem + far gapped bowls ."""
 
 from __future__ import annotations
 

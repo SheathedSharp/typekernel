@@ -1,4 +1,4 @@
-"""P2-6/7/8: vertical reach, gray outliers, spacing fixtures."""
+"""vertical reach, gray outliers, spacing fixtures."""
 
 from __future__ import annotations
 

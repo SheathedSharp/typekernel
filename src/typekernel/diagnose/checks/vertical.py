@@ -1,4 +1,4 @@
-"""C-class vertical metrics: zone reach, trait overshoot bands (target §7.2)."""
+"""Vertical metric checks: zone reach, trait overshoot bands (target §7.2)."""
 
 from __future__ import annotations
 

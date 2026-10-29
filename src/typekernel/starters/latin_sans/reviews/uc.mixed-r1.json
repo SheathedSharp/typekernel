@@ -8,16 +8,13 @@
     "S": "e77dec4b6f0884849e535ba6fbea1cc8b7e5b9b037b64ed50f94f212057e34f4",
     "J": "b28c9d22da0007ce8c8717a5b56a5882f48e5fc5874da7d74d300519f864be58",
     "U": "c7f80ac57fc677988e1171aa364a0a83eea1b2a05e70d49d44f5f222bb7e67b5",
-    "K": "151e374ee2b4852716550c9e54bba7e483d268364eb820a6ce794129107c4810"
-  },
+    "K": "151e374ee2b4852716550c9e54bba7e483d268364eb820a6ce794129107c4810"},
   "group": "uc.mixed",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-7 uc.mixed anatomy rewrite B/P/R/S/J/U/K; audit 0 error.",
+    "Bold"],
+  "notes": "uc.mixed anatomy rewrite B/P/R/S/J/U/K; audit 0 error.",
   "proofs": [],
   "reviewer": "agent:p3-7",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

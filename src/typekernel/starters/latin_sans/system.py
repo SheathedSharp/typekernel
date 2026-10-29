@@ -39,10 +39,10 @@ def _designed_master(
     tension_delta: float = 0.0,
     bar_scale: float = 1.0,
 ) -> System:
-    """Designed weight master — not stem×factor alone (P3-9).
+    """Designed weight master — not stem×factor alone.
 
     Control widths, bowl aperture, shoulder tension, and bar thickness are
-    authored per weight so Light/Bold interpolate cleanly on G-class checks.
+    authored per weight so Light/Bold interpolate cleanly on interpolation checks.
     """
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
     tokens = dict(base.tokens)

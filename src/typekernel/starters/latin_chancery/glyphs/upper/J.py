@@ -1,4 +1,4 @@
-"""J — stem + shallow hook (G-class)."""
+"""J — stem + shallow hook (interpolation-safe)."""
 
 from __future__ import annotations
 

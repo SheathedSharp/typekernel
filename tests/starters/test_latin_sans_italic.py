@@ -1,4 +1,4 @@
-"""P5-3: latin-sans italic partner + family link."""
+"""latin-sans italic partner + family link."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def test_family_link_roman_italic(tmp_path: Path) -> None:
 
 
 def test_n_group_and_uc_straight_expand() -> None:
-    """P5-3: beyond control set toward roman group progression."""
+    """Beyond the control set toward roman group progression."""
     with open_project(STARTER) as session:
         names = ("h", "m", "u", "l", "r", "v", "w", "x", "y", "z", "k", "a", "b", "c", "d", "p", "q", "s", "I", "L", "T", "E", "F", "A", "V", "N", "M", "K")
         assert set(names) <= set(session.specs())
@@ -63,7 +63,7 @@ def test_n_group_and_uc_straight_expand() -> None:
 
 
 def test_full_uc_alphabet() -> None:
-    """P5-3: A–Z present and evaluate."""
+    """A–Z present and evaluate."""
     import string
 
     with open_project(STARTER) as session:
@@ -86,7 +86,7 @@ def test_masters_signature_compatible_controls() -> None:
 
 
 def test_figs_punct_and_remaining_lc() -> None:
-    """P5-3: remaining lc + figs 0–9 + core punct evaluate."""
+    """Remaining lc + figs 0–9 + core punct evaluate."""
     names = [
         "f", "g", "j", "t",
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",

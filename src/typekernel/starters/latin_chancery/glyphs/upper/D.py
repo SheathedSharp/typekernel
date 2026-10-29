@@ -1,4 +1,4 @@
-"""D — stem + continuous outer rail (G-class; nest oval SI)."""
+"""D — stem + continuous outer rail (interpolation-safe; nest oval self-intersection)."""
 
 from __future__ import annotations
 

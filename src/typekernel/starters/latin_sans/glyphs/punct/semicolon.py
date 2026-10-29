@@ -1,4 +1,4 @@
-"""semicolon — anatomy dots + tail (P3-7)."""
+"""semicolon — anatomy dots + tail ."""
 
 from __future__ import annotations
 

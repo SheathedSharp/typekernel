@@ -8,5 +8,4 @@
     "charset_coverage": "319/319",
     "audit_errors": 0
   },
-  "notes": "P4-2 full Latin-1 + Ext-A coverage: digraphs, eth/thorn/oslash, symbols, spacing accents, fractions. Structural quality is starter-grade; human visual review pending."
-}
+  "notes": "full Latin-1 + Ext-A coverage: digraphs, eth/thorn/oslash, symbols, spacing accents, fractions. Structural quality is starter-grade; human visual review pending."}

@@ -1,4 +1,4 @@
-"""Figure 3 — open E with mid bar, gapped joins (G-class)."""
+"""Figure 3 — open E with mid bar, gapped joins (interpolation-safe)."""
 
 from __future__ import annotations
 

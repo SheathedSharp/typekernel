@@ -1,4 +1,4 @@
-"""IJ / ij — side-by-side I+J / i+j (P4-2)."""
+"""IJ / ij — side-by-side I+J / i+j ."""
 from __future__ import annotations
 from elements import WIDTHS, arch_span, zone_anchors
 from typekernel.anatomy import stem

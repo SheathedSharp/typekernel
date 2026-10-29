@@ -1,4 +1,4 @@
-"""P4-5: latin-sans wght 100–900 VF, STAT, nine named instances."""
+"""latin-sans wght 100–900 VF, STAT, nine named instances."""
 
 from __future__ import annotations
 

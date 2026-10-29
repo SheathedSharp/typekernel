@@ -1,4 +1,4 @@
-"""Mixed glyph s — stacked anatomy open_bowl pair (P3-7)."""
+"""Mixed glyph s — stacked anatomy open_bowl pair ."""
 
 from __future__ import annotations
 

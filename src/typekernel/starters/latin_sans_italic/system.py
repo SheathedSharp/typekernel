@@ -1,4 +1,4 @@
-"""Numeric table for latin-sans italic partner (P5-3 / DQ5).
+"""Numeric table for the latin-sans italic partner.
 
 Zones and stems match latin-sans Regular; slant + pen tokens author the italic.
 """

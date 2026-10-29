@@ -1,4 +1,4 @@
-"""tags.grammar info check (P3-1)."""
+"""tags.grammar info check."""
 
 from __future__ import annotations
 

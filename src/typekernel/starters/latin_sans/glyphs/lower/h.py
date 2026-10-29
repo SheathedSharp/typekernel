@@ -1,4 +1,4 @@
-"""n-group glyph h — ascender stem + anatomy arch (P3-7)."""
+"""n-group glyph h — ascender stem + anatomy arch ."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Figure feature variants .tf / .osf (P4-3 tnum / onum)."""
+"""Figure feature variants .tf / .osf (tnum / onum)."""
 
 from __future__ import annotations
 

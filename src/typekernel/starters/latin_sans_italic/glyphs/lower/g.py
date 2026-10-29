@@ -1,4 +1,4 @@
-"""g — upper oval + continuous ear into lower open bowl (G-class)."""
+"""g — upper oval + continuous ear into lower open bowl (interpolation-safe)."""
 
 from __future__ import annotations
 

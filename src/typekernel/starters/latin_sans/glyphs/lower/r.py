@@ -1,4 +1,4 @@
-"""n-group glyph r — stem + short anatomy arch stub (P3-7)."""
+"""n-group glyph r — stem + short anatomy arch stub ."""
 
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 """Topology / reach expectations for latin-sans (diagnose §7.3).
 
 These encode *correct* topology so defects on the current structural starter
-surface as findings (appendix A B-class). Projects may diverge; ``tk audit``
+surface as findings (for example, a θ-shaped e). Projects may diverge; ``tk audit``
 lists diffs against this starter table.
 """
 
@@ -15,7 +15,7 @@ EXPECT: dict[str, Expect] = {
     "a": Expect(counters=1, islands=1),
     "b": Expect(counters=1, islands=1),
     "d": Expect(counters=1, islands=1),
-    "e": Expect(counters=1, islands=1, apertures=1),  # A-2
+    "e": Expect(counters=1, islands=1, apertures=1),  # one counter, one aperture
     "g": Expect(counters=2, islands=1),
     "o": Expect(counters=1, islands=1),
     "p": Expect(counters=1, islands=1),
@@ -29,7 +29,7 @@ EXPECT: dict[str, Expect] = {
     "R": Expect(counters=1, islands=1),
     "zero": Expect(counters=1, islands=1),
     "two": Expect(counters=0, islands=1),
-    "three": Expect(counters=0, islands=1),  # A-3
+    "three": Expect(counters=0, islands=1),  # open counters
     "four": Expect(counters=0, islands=1),
     "five": Expect(counters=0, islands=1),
     "six": Expect(counters=1, islands=1),

@@ -1,4 +1,4 @@
-"""System per-glyph width/advance token lint (P1-6)."""
+"""System per-glyph width/advance token lint."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Figure 1 — stem with top flag (G-class)."""
+"""Figure 1 — stem with top flag (interpolation-safe)."""
 
 from __future__ import annotations
 

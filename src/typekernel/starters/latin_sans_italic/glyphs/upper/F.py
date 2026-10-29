@@ -1,4 +1,4 @@
-"""UC F — continuous top+stem rail + mid bar (G-class)."""
+"""UC F — continuous top+stem rail + mid bar (interpolation-safe)."""
 
 from __future__ import annotations
 

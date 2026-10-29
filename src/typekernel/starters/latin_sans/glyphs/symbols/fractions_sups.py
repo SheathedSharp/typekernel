@@ -1,4 +1,4 @@
-"""Superscripts and vulgar fractions (P4-2 structural, slot-free)."""
+"""Superscripts and vulgar fractions (structural, slot-free)."""
 
 from __future__ import annotations
 

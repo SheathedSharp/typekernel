@@ -11,16 +11,13 @@
     "six": "957c3e99313af622768caaaa7ac0596850c00837fb11142a4bc082203b72bed1",
     "seven": "4c7c36797f689ddb6632751eaad83d1812553bc9464a3f5beb492e0dbd770938",
     "eight": "c0a83e3193478f121f69285741f7b4abf5a80d69f947e2d620a94f819c5913af",
-    "nine": "c06ee7fd07829de24c1487f17c6b33e9c2d83a9ba5b8890e561e83ec444b8ef5"
-  },
+    "nine": "c06ee7fd07829de24c1487f17c6b33e9c2d83a9ba5b8890e561e83ec444b8ef5"},
   "group": "figs",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-7 figs anatomy rewrite zero\u2013nine; three/five use open_bowl (closes A-3/A-8 topology); audit 0 error.",
+    "Bold"],
+  "notes": "Figures zero\u2013nine rebuilt on anatomy parts; three/five use open_bowl (open counters); audit 0 error.",
   "proofs": [],
   "reviewer": "agent:p3-7",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

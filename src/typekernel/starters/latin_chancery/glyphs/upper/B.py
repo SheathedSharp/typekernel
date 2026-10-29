@@ -1,4 +1,4 @@
-"""B — stem + three bars (G-class; dual bowls SI under chancery pen)."""
+"""B — stem + three bars (interpolation-safe; dual bowls self-intersection under chancery pen)."""
 
 from __future__ import annotations
 

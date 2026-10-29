@@ -1,4 +1,4 @@
-"""Control glyph o — anatomy bowl (P3-6)."""
+"""Control glyph o — anatomy bowl ."""
 
 from __future__ import annotations
 

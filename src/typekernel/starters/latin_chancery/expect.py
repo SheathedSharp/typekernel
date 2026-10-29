@@ -1,4 +1,4 @@
-"""Topology expectations (diagnose §7.3). Correct intent so B-class defects fire."""
+"""Topology expectations (diagnose §7.3). Correct intent so topology defects fire."""
 
 from __future__ import annotations
 

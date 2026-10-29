@@ -1,4 +1,4 @@
-"""Semantic contracts for diagonal_pair / crossing (target §4.3 / P3-4)."""
+"""Semantic contracts for diagonal_pair / crossing (target §4.3)."""
 
 from __future__ import annotations
 

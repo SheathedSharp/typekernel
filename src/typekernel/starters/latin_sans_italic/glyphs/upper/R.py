@@ -1,4 +1,4 @@
-"""R — stem + gapped bowl + leg (P5-3)."""
+"""R — stem + gapped bowl + leg ."""
 
 from __future__ import annotations
 

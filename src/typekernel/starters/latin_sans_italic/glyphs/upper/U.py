@@ -1,4 +1,4 @@
-"""U — stems + shallow cup (P5-3)."""
+"""U — stems + shallow cup ."""
 
 from __future__ import annotations
 

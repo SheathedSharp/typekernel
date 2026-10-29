@@ -8,5 +8,4 @@
     "audit_errors": 0,
     "compose_smoke": true
   },
-  "notes": "P4-2 compose engine + ~140 accented composites from marks; charset latin-1 + ext-a declared. Coverage incomplete (~220/319): remaining need drawn glyphs (AE/OE/eth/thorn/currency/…)"
-}
+  "notes": "compose engine + ~140 accented composites from marks; charset latin-1 + ext-a declared. Coverage incomplete (~220/319): remaining need drawn glyphs (AE/OE/eth/thorn/currency/…)"}

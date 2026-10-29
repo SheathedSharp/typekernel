@@ -1,4 +1,4 @@
-"""Terminal anatomy parts: hook, tail, ear, spur (target §4.3 / P3-5)."""
+"""Terminal anatomy parts: hook, tail, ear, spur (target §4.3)."""
 
 from __future__ import annotations
 

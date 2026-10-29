@@ -1,4 +1,4 @@
-"""Diagonal glyph y — anatomy diagonal_pair + descender band (P3-7)."""
+"""Diagonal glyph y — anatomy diagonal_pair + descender band ."""
 
 from __future__ import annotations
 

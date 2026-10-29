@@ -1,4 +1,4 @@
-"""Control glyph H — fused stems + crossbar (G-class)."""
+"""Control glyph H — fused stems + crossbar (interpolation-safe)."""
 
 from __future__ import annotations
 

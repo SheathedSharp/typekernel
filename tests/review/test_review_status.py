@@ -1,4 +1,4 @@
-"""P2-10: review stale detection and approved:true refusal."""
+"""review stale detection and approved:true refusal."""
 
 from __future__ import annotations
 

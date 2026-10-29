@@ -1,4 +1,4 @@
-"""S — three horizontal bars (G-class; z-diag SI under slant)."""
+"""S — three horizontal bars (interpolation-safe; z-diag self-intersection under slant)."""
 
 from __future__ import annotations
 

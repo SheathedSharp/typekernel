@@ -1,4 +1,4 @@
-"""Ldot / ldot — L/l with middot (P4-2)."""
+"""Ldot / ldot — L/l with middot ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import crossbar, dot, stem

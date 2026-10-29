@@ -1,4 +1,4 @@
-"""OE / oe digraphs (P4-2)."""
+"""OE / oe digraphs ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import BarSpec, bowl, crossbar, open_bowl, stem

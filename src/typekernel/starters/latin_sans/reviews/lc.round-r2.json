@@ -8,16 +8,13 @@
     "b": "84b279b9515980c7a07172130c9183ace9e392821c8b147572c712f9681b1474",
     "d": "51b66dfd202c259994f0ea05bb9ec4af6bef444f1e09cd1a03f68cbf50e70355",
     "p": "005d471e3acc75f5688515be73756edd0c09b60b52e8d95c01de511e072f3776",
-    "q": "60e1dbc0e57673887ba2ede1d12e06c46a7d2b687ec457262b5408cb55d02ce0"
-  },
+    "q": "60e1dbc0e57673887ba2ede1d12e06c46a7d2b687ec457262b5408cb55d02ce0"},
   "group": "lc.round",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-7 lc.round anatomy rewrite: c/open_bowl, e/open_bowl+BarSpec (closes A-2), b/d/p/q stem+bowl group=lc.round; topology.apertures counts unique aperture.N; audit 0 error. Remaining warns: spacing.overflow (advance), interpolation.self_intersect on b/d/p/q, e spacing.ref.",
+    "Bold"],
+  "notes": "Lowercase round group rebuilt on anatomy: c/open_bowl, e/open_bowl+BarSpec (one counter plus one aperture), b/d/p/q stem+bowl group=lc.round; topology.apertures counts unique aperture.N; audit 0 error. Remaining warns: spacing.overflow (advance), interpolation.self_intersect on b/d/p/q, e spacing.ref.",
   "proofs": [],
   "reviewer": "agent:p3-7",
   "round": 2,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

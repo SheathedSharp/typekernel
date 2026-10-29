@@ -1,4 +1,4 @@
-"""Straight glyph F — anatomy stem + top/mid bars (P3-7)."""
+"""Straight glyph F — anatomy stem + top/mid bars ."""
 
 from __future__ import annotations
 

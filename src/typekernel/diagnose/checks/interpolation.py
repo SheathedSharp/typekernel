@@ -1,4 +1,4 @@
-"""G-class interpolation: mid-instance topology, self-intersect, stem monotonic."""
+"""Interpolation checks: mid-instance topology, self-intersection, stem monotonicity."""
 
 from __future__ import annotations
 

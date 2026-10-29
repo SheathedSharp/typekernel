@@ -1,4 +1,4 @@
-"""quotedbl — two anatomy stem quotes (P3-7)."""
+"""quotedbl — two anatomy stem quotes ."""
 
 from __future__ import annotations
 

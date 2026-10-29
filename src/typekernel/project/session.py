@@ -46,7 +46,7 @@ _TOP_LEVEL_CANDIDATES = (
     "expect",
     "composites",
     "proofs",
-    "ref_outlines",  # P6 dogfood: published-face outline loader
+    "ref_outlines",  # published-face outline loader for transplant projects
 )
 
 
@@ -124,7 +124,7 @@ class ProjectSession:
     """Isolated view of one project root (target-architecture §3.5)."""
 
     root: Path
-    # Filled during ``open``; typed loosely until P1-2 freezes Project.
+    # Filled during ``open``; typed loosely until the manifest is frozen.
     project: Any = None
     _ns: str = ""
     _active: bool = False
@@ -240,7 +240,7 @@ class ProjectSession:
         )
 
     def _resolve_advance(self, drawing: Drawing, *, name: str = "") -> float:
-        """Bbox / global ``advance`` token. Per-glyph ``*_advance`` removed in P1-4."""
+        """Bbox / global ``advance`` token. Per-glyph ``*_advance`` tokens are no longer supported."""
         del name  # per-glyph token path deleted; metrics pack sets final advances
         system = self.project.system
         token = system.tokens.get("advance")
@@ -393,7 +393,7 @@ class ProjectSession:
             if bare not in self._aliases:
                 self._aliases.append(bare)
 
-        # Obtain Project (P1-1: font.get_project; P1-2 switches to PROJECT).
+        # Obtain the Project manifest.
         self.project = self._load_project_object()
         self._discover_glyphs()
         self._recompute_dep_fingerprint()

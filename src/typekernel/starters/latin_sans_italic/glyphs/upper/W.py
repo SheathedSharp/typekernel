@@ -1,4 +1,4 @@
-"""W — fused double-V diagonals (P5-3)."""
+"""W — fused double-V diagonals ."""
 
 from __future__ import annotations
 

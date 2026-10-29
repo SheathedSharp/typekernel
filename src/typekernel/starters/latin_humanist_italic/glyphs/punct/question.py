@@ -1,4 +1,4 @@
-"""question — open hook + thin period (G-class)."""
+"""question — open hook + thin period (interpolation-safe)."""
 
 from __future__ import annotations
 

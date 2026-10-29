@@ -1,4 +1,4 @@
-"""comma — period head + gapped tail (G-class)."""
+"""comma — period head + gapped tail (interpolation-safe)."""
 
 from __future__ import annotations
 

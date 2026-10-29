@@ -1,4 +1,4 @@
-"""u — fused stem/baseline/stem rail (G-class; shallow cup SI)."""
+"""u — fused stem/baseline/stem rail (interpolation-safe; shallow cup self-intersection)."""
 
 from __future__ import annotations
 

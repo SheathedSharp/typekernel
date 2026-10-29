@@ -2,7 +2,7 @@
 
 > **状态**：设计草案，尚未实现。现行契约仍以 [`ARCHITECTURE.md`](../ARCHITECTURE.md) 为准；
 > 本文某一节落地后，把该节并入 `ARCHITECTURE.md` 并从本文删除，避免两份真相。
-> **执行计划**：维护者本地的 `docs/design/roadmap.md`（不随仓库分发）；阶段与验收以那份为准。
+> **实施状态**：以 `ARCHITECTURE.md` 为准；本文保留目标契约原文。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
 > **不变的前提**：第一性原理仍是「人类字体设计师怎么做，agent 就怎么做」；内核不出现字母名；
 > 不事后修缝；编译全部复用 fontTools；Oblique ≠ Italic；字重是 designed deltas。
@@ -255,7 +255,7 @@ starter 自带 `charset/latin-core.txt`、`latin-1.txt`、`latin-ext-a.txt`（�
 
 ### 4.3 构件清单与几何语义契约
 
-> **轮廓构件已落地** → `typekernel.anatomy`（`stem`…`spur`）；契约测试在 `tests/anatomy/`。下表仍是规范性签名，供对照。`anatomy.pen`（§4.5）仍属 P5。
+> **轮廓构件已落地** → `typekernel.anatomy`（`stem`…`spur`）；契约测试在 `tests/anatomy/`。下表仍是规范性签名，供对照。`anatomy.pen`（§4.5）已补齐。
 
 
 所有构件都满足：轮廓闭合、方向正确、曲线接合 G1（声明的角点除外）、同一组参数在合法范围内
@@ -391,7 +391,7 @@ starter 的期望表和 traits 默认值都是数据（例如 latin-sans 的 `ex
 ---
 
 ## 6. 感知
-> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
  `typekernel.perceive`（新，吸收 `qa.proof` / `qa.specimen_png`）
 
 ### 6.1 两条渲染路径
@@ -429,7 +429,7 @@ def explain(session: ProjectSession, glyph: str, *, master: str | None = None) -
 ---
 
 ## 7. 诊断
-> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
  `typekernel.diagnose`（新，吸收 `cli/audit.py` 的逻辑）
 
 ### 7.1 协议 v2
@@ -499,7 +499,7 @@ class Expect:
 ---
 
 ## 8. 评审
-> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
  `typekernel.review`（新，吸收 `qa.gates`）
 
 ### 8.1 评审记录

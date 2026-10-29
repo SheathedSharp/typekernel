@@ -1,4 +1,4 @@
-"""Figure 5 — top bar + spine + baseline (G-class)."""
+"""Figure 5 — top bar + spine + baseline (interpolation-safe)."""
 
 from __future__ import annotations
 

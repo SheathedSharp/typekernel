@@ -50,7 +50,7 @@ Commit: sources and tests, the docs listed in the README, examples that teach
 the API (plus a few showcase proofs), and durable `approvals/*.json` records.
 
 Do **not** commit: regenerable dumps under `artifacts/`, font binaries built
-while dogfooding, example `out/` output beyond the showcase proofs `.gitignore`
+while developing, example `out/` output beyond the showcase proofs `.gitignore`
 explicitly un-ignores, or private notes. When you add an example, ignore its
 `out/**` and un-ignore only the proofs worth showing in a README.
 
@@ -67,19 +67,6 @@ most reviews:
 
 `tests/architecture/test_boundaries.py` enforces the first rule in CI.
 
-
-## 当前阶段（冻结令）
-
-Until the **P2 exit** (see maintainer roadmap / target architecture — eyes &
-judgment: `tk see` / `explain` / `status` / `review` and diagnosis v2), do **not**
-add:
-
-- new starters
-- new style plugins (corners / ends / passes / construct families beyond fixes)
-- new CLI subcommands (except P2’s own `see` / `explain` / `status` / `review`)
-
-Bug fixes, docs honesty, and the P0–P2 tasks themselves are allowed. Remove this
-section when P2 exits.
 
 ## Human review gates
 

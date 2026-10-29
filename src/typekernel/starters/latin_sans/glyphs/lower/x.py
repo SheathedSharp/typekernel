@@ -1,4 +1,4 @@
-"""Diagonal glyph x — anatomy crossing (P3-7)."""
+"""Diagonal glyph x — anatomy crossing ."""
 
 from __future__ import annotations
 

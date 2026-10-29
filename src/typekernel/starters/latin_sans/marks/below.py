@@ -1,4 +1,4 @@
-"""Combining below marks for latin-sans (P4-1) — cedilla / ogonek."""
+"""Combining below marks for latin-sans — cedilla / ogonek."""
 
 from __future__ import annotations
 

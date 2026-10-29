@@ -1,4 +1,4 @@
-"""f — continuous ascender with top flag + right-only crossbar (G-class)."""
+"""f — continuous ascender with top flag + right-only crossbar (interpolation-safe)."""
 
 from __future__ import annotations
 

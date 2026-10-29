@@ -1,4 +1,4 @@
-"""Currency and related symbols (P4-2)."""
+"""Currency and related symbols ."""
 from __future__ import annotations
 from elements import WIDTHS
 from typekernel.anatomy import bowl, crossbar, open_bowl, stem

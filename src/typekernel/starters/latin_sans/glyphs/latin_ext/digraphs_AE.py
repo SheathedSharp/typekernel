@@ -1,4 +1,4 @@
-"""AE / ae digraphs (P4-2). Paired file — macOS case-insensitive FS."""
+"""AE / ae digraphs . Paired file — macOS case-insensitive FS."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import BarSpec, bowl, crossbar, diagonal_pair, open_bowl, stem

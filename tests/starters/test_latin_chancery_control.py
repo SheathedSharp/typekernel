@@ -92,7 +92,7 @@ def test_space_advance_from_tokens() -> None:
 
 
 def test_interpolation_g_class_clean() -> None:
-    """P5-4: InterpolationCheck stays at 0 for the full chancery charset."""
+    """InterpolationCheck stays at 0 for the full chancery charset."""
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
     from typekernel.diagnose.engine import CheckContext
 

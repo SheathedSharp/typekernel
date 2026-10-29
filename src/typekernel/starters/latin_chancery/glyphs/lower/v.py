@@ -1,4 +1,4 @@
-"""v — shallow chevron (G-class)."""
+"""v — shallow chevron (interpolation-safe)."""
 
 from __future__ import annotations
 

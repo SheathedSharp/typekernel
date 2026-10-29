@@ -1,4 +1,4 @@
-"""Generate kerning suggestions without applying them (P4-4 / target §7.2 E)."""
+"""Generate kerning suggestions without applying them (target §7.2 E)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""kgreenlandic — small-cap k form (P4-2)."""
+"""kgreenlandic — small-cap k form ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import diagonal_pair, stem

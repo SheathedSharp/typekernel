@@ -1,4 +1,4 @@
-"""Mixed glyph R — anatomy stem + bowl + diagonal leg (P3-7)."""
+"""Mixed glyph R — anatomy stem + bowl + diagonal leg ."""
 
 from __future__ import annotations
 

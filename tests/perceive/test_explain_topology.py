@@ -1,4 +1,4 @@
-"""P2-3: explain topology on latin-sans e / three."""
+"""explain topology on latin-sans e / three."""
 
 from __future__ import annotations
 

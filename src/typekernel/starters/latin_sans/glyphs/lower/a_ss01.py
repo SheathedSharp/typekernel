@@ -1,4 +1,4 @@
-"""a.ss01 — single-story a (P4-3 ss01)."""
+"""a.ss01 — single-story a (ss01)."""
 
 from __future__ import annotations
 

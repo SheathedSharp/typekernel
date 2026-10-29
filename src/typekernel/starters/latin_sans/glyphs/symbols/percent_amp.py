@@ -1,4 +1,4 @@
-"""percent and ampersand (P4-2)."""
+"""percent and ampersand ."""
 from __future__ import annotations
 from elements import WIDTHS
 from typekernel.anatomy import bowl

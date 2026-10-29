@@ -1,4 +1,4 @@
-"""Round glyph s — gapped top/diag/base (G-class; open_bowl pair SI)."""
+"""Round glyph s — gapped top/diag/base (interpolation-safe; open_bowl pair self-intersection)."""
 
 from __future__ import annotations
 

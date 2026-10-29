@@ -1,4 +1,4 @@
-"""Thorn / thorn (P4-2)."""
+"""Thorn / thorn ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import bowl, stem

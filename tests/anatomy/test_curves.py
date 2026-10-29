@@ -1,4 +1,4 @@
-"""Semantic contracts for arch / bowl / open_bowl / spine (target §4.3 / P3-3)."""
+"""Semantic contracts for arch / bowl / open_bowl / spine (target §4.3)."""
 
 from __future__ import annotations
 

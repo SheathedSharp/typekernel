@@ -1,4 +1,4 @@
-"""Figure 8 — single oval (interim G-class; dual bowls SI under Bold)."""
+"""Figure 8 — single oval (interim; dual bowls self-intersection under Bold)."""
 
 from __future__ import annotations
 

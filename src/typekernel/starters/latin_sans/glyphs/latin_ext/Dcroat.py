@@ -1,4 +1,4 @@
-"""Dcroat / dcroat — D/d with stroke (P4-2)."""
+"""Dcroat / dcroat — D/d with stroke ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import bowl, crossbar, stem

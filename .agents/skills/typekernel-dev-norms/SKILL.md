@@ -50,7 +50,7 @@ Track these so strangers can use and understand the library:
 | Private planner / agent scratch | `.agents/*` except tracked `skills/` and `.agents/README.md` |
 | Local approval WIP / personal briefs | Keep off-tree or under ignored paths; do not invent ticket folders in-repo |
 | Build / proof / specimen dumps | `artifacts/**` — regenerable, keep local |
-| Font binaries from dogfood | `*.otf` / `*.ttf` / `*.woff*` (fixtures under `tests/fixtures/` may be excepted) |
+| Font binaries from transplant projects | `*.otf` / `*.ttf` / `*.woff*` (fixtures under `tests/fixtures/` may be excepted) |
 | Example `out/` dumps | Ignored except a few named showcase proofs listed in `.gitignore` |
 | Secrets / credentials | Never commit tokens, private keys, or session cookies |
 

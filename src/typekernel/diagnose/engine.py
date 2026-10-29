@@ -187,7 +187,7 @@ def _builtin_v2(
         out.append(GrayCheck())
     if check_interpolation:
         out.append(InterpolationCheck())
-    # Anchors (A-class) + tag grammar always on; letter-free / data-driven.
+    # Anchors + tag grammar always on; letter-free / data-driven.
     out.append(AnchorsCheck())
     out.append(FeaturesSyntaxCheck())
     out.append(TagsGrammarCheck())

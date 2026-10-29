@@ -1,7 +1,7 @@
-# Starter tag noncompliance inventory (P3-1)
+# Starter tag noncompliance inventory 
 
 Generated against the normative grammar in `ARCHITECTURE.md` §6.3.1.
-Burned down from P3-6 onward as glyphs move to `anatomy` parts.
+Burned down as glyphs move to `anatomy` parts.
 Audit surfaces the same issues as info-level `tags.grammar` findings.
 
 ## `latin_sans` (402 noncompliant tags)

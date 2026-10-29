@@ -1,4 +1,4 @@
-"""P2-2: tk see edit/context/masters + sidecar + budget."""
+"""tk see edit/context/masters + sidecar + budget."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def test_see_edit_and_context_under_budget() -> None:
         assert "nodes" in meta
         assert "Measure" in meta or "measures" in meta
         assert "labels" in meta
-        # Shoulder / x-height nodes should be labelled so A-1 is visible in the view.
+        # Shoulder / x-height nodes should be labelled so the shoulder check is visible.
         labels = meta.get("labels") or [n.get("tag") for n in meta.get("nodes", [])]
         assert any(labels), "edit view JSON should list node labels"
     finally:

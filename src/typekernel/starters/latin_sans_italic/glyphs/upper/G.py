@@ -1,4 +1,4 @@
-"""G — open C + right spur (P5-3)."""
+"""G — open C + right spur ."""
 
 from __future__ import annotations
 

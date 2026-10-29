@@ -1,4 +1,4 @@
-"""colon — two anatomy dots (P3-7)."""
+"""colon — two anatomy dots ."""
 
 from __future__ import annotations
 

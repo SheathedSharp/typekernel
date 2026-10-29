@@ -1,4 +1,4 @@
-"""Figure one — anatomy stem + flag band (P3-7)."""
+"""Figure one — anatomy stem + flag band ."""
 
 from __future__ import annotations
 

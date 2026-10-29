@@ -1,4 +1,4 @@
-"""Figure 2 — open E-like with gapped joins (G-class)."""
+"""Figure 2 — open E-like with gapped joins (interpolation-safe)."""
 
 from __future__ import annotations
 

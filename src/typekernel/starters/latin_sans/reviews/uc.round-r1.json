@@ -3,16 +3,13 @@
   "expect_changes": [],
   "glyphs": {
     "O": "9cfee130dbbcab26f6f435838f098e120b00fe84fec980026f5bd6cef6a884a1",
-    "S": "4449f9854536e8b7bde7c641a8a07c8554dd6b146dc611c2f114862a8388a1c7"
-  },
+    "S": "4449f9854536e8b7bde7c641a8a07c8554dd6b146dc611c2f114862a8388a1c7"},
   "group": "uc.round",
   "masters": [
     "Light",
-    "Bold"
-  ],
-  "notes": "P3-6 control O in uc.round; agent pass.",
+    "Bold"],
+  "notes": "control O in uc.round; programmatic pass.",
   "proofs": [],
   "reviewer": "agent:p3-6",
   "round": 1,
-  "verdict": "pass"
-}
+  "verdict": "pass"}

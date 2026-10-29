@@ -1,4 +1,4 @@
-"""A — near-vertical legs + top + crossbar (G-class; acute apex SI)."""
+"""A — near-vertical legs + top + crossbar (interpolation-safe; acute apex self-intersection)."""
 
 from __future__ import annotations
 

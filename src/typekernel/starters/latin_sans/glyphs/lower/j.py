@@ -1,4 +1,4 @@
-"""Straight glyph j — anatomy stem/dot + shoulder hook trough (P3-7)."""
+"""Straight glyph j — anatomy stem/dot + shoulder hook trough ."""
 
 from __future__ import annotations
 

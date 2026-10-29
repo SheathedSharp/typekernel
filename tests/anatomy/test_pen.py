@@ -1,4 +1,4 @@
-"""P5-1: anatomy.pen cubic stroke API; starters keep hash-stable shims."""
+"""anatomy.pen cubic stroke API; starters keep hash-stable shims."""
 
 from __future__ import annotations
 

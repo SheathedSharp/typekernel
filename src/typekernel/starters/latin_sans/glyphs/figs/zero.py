@@ -1,4 +1,4 @@
-"""Figure zero — anatomy bowl (P3-7)."""
+"""Figure zero — anatomy bowl ."""
 
 from __future__ import annotations
 

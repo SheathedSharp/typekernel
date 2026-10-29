@@ -1,4 +1,4 @@
-"""n-group glyph i — stem + oval tittle (G-class clean)."""
+"""n-group glyph i — stem + oval tittle (interpolation-safe)."""
 
 from __future__ import annotations
 

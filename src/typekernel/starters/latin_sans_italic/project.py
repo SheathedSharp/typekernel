@@ -1,4 +1,4 @@
-"""Project manifest — latin-sans italic partner (P5-3)."""
+"""Project manifest — latin-sans italic partner."""
 
 from __future__ import annotations
 

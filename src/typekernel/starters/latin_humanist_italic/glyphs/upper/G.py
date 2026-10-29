@@ -1,4 +1,4 @@
-"""G — open C + right spur (G-class)."""
+"""G — open C + right spur (interpolation-safe)."""
 
 from __future__ import annotations
 

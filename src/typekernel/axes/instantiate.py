@@ -1,4 +1,4 @@
-"""Cut static instances from a variable font (P4-5 / ``varLib.instancer``)."""
+"""Cut static instances from a variable font (``varLib.instancer``)."""
 
 from __future__ import annotations
 

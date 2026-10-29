@@ -1,4 +1,4 @@
-"""P4-4: kern suggest writes suggestions; does not mutate project kerning."""
+"""kern suggest writes suggestions; does not mutate project kerning."""
 
 from __future__ import annotations
 

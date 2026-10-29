@@ -1,4 +1,4 @@
-"""space — advance-only glyph (P4-2 charset)."""
+"""space — advance-only glyph (charset)."""
 
 from __future__ import annotations
 

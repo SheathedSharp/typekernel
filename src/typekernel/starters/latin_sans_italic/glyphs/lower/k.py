@@ -1,4 +1,4 @@
-"""k — stem + two horizontal arms (G-class; acute diags SI under slant)."""
+"""k — stem + two horizontal arms (interpolation-safe; acute diags self-intersection under slant)."""
 
 from __future__ import annotations
 

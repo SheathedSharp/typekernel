@@ -1,4 +1,4 @@
-"""germandbls — long-s + s compound approx (P4-2)."""
+"""germandbls — long-s + s compound approx ."""
 from __future__ import annotations
 from elements import WIDTHS, zone_anchors
 from typekernel.anatomy import open_bowl, stem

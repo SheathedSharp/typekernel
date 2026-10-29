@@ -1,4 +1,4 @@
-"""Mixed glyph U — anatomy stems + bottom cup (P3-7)."""
+"""Mixed glyph U — anatomy stems + bottom cup ."""
 
 from __future__ import annotations
 

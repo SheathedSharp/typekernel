@@ -1,4 +1,4 @@
-"""``tk check --release`` — H-class + optional FontBakery (P4-7)."""
+"""``tk check --release`` — release checks + optional FontBakery."""
 
 from __future__ import annotations
 

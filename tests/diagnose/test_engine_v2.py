@@ -1,4 +1,4 @@
-"""P2-4: diagnose engine JSON schema, baseline, starter parity."""
+"""diagnose engine JSON schema, baseline, starter parity."""
 
 from __future__ import annotations
 

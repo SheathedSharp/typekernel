@@ -1,4 +1,4 @@
-"""X — two mild crossing bars with gap (G-class)."""
+"""X — two mild crossing bars with gap (interpolation-safe)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def X(system: System):
     lsb = float(system.tokens.get("lsb_uc", 40.0))
     x0 = lsb + uc * 0.25
     x1 = lsb + width - uc * 0.25
-    # Separated diags — fused cross SI under slant.
+    # Separated diags — fused cross self-intersection under slant.
     gap = 40.0
     mid = (x0 + x1) / 2.0
     return (

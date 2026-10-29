@@ -1,8 +1,8 @@
-"""Family linking: shared typographic names + STAT ``ital`` (P4-6).
+"""Family linking: shared typographic names + STAT ``ital``.
 
 Roman and italic partners must share a typographic family name (name ID 16)
 and expose a consistent STAT ``ital`` axis so OS / browsers treat them as one
-family. True italic outlines arrive in P5; this module links any pair —
+family. True italic outlines arrive as separate starters; this module links any pair —
 including a synthetic oblique fixture — at the name / STAT layer.
 """
 

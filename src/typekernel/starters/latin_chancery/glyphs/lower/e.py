@@ -1,4 +1,4 @@
-"""e — open C + floating crossbar (G-class)."""
+"""e — open C + floating crossbar (interpolation-safe)."""
 
 from __future__ import annotations
 

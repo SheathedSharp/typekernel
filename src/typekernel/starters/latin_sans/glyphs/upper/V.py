@@ -1,4 +1,4 @@
-"""Diagonal glyph V — anatomy diagonal_pair (P3-7)."""
+"""Diagonal glyph V — anatomy diagonal_pair ."""
 
 from __future__ import annotations
 

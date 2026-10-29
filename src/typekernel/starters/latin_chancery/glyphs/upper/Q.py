@@ -1,4 +1,4 @@
-"""Q — O + far stub tail (G-class; near-tail SI under chancery pen)."""
+"""Q — O + far stub tail (interpolation-safe; near-tail self-intersection under chancery pen)."""
 
 from __future__ import annotations
 

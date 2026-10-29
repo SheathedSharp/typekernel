@@ -1,4 +1,4 @@
-"""P — stem + top/mid bars (G-class; nest bowl SI)."""
+"""P — stem + top/mid bars (interpolation-safe; nest bowl self-intersection)."""
 
 from __future__ import annotations
 

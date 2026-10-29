@@ -1,4 +1,4 @@
-"""bracketright — vertical with top/bottom bars (G-class)."""
+"""bracketright — vertical with top/bottom bars (interpolation-safe)."""
 
 from __future__ import annotations
 
