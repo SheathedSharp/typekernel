@@ -1,9 +1,11 @@
-"""Figure 1 — stem with top flag."""
+"""Figure one — anatomy stem + flag band (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, diagonal_stroke, stem_rect
+from elements import WIDTHS
 
+from typekernel.anatomy import stem
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -15,8 +17,22 @@ def one(system: System):
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     h = float(system.zones.cap) * 0.72
     x0 = lsb + (width - st) / 2.0
-    stem = stem_rect(x0, x0 + st, 0.0, h, prefix="stem")
-    flag = diagonal_stroke(
-        (x0 - st * 0.8, h * 0.72), (x0 + st * 0.5, h), weight=st * 0.85, tag_prefix="flag"
+    body = stem(x0, x0 + st, 0.0, h, name="stem")
+    left, right = diagonal_band(
+        (x0 - st * 0.8, h * 0.72), (x0 + st * 0.5, h), weight=st * 0.85, compensate=True
     )
-    return stem + flag
+    flag = (
+        Writer()
+        .start(left.start)
+        .corner("spur.top.l")
+        .fragment(left)
+        .corner("spur.foot.l")
+        .line(right.start)
+        .corner("spur.foot.r")
+        .fragment(right)
+        .corner("spur.top.r")
+        .line(left.start)
+        .close()
+        .build()
+    )
+    return body + flag

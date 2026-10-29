@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "zero": "300ad27b5005f0c44c897d83336c5627a5d69e8c71020442427d1337f0bb2f9b",
+    "one": "2887e197b02b0244f3300138699c978d6ae97e8d609c823447719ad1e4cef9de",
+    "two": "4d0ccffd960653889782a096a61a4d776fce452d497da09b6b6a7dee5c1139e1",
+    "three": "5541839442076c7bc07f5df5c3af5b2931efd80dd4a8ea9124c1e2b228d1a57a",
+    "four": "e51e3d4d007babdfeb129b3306a515f3f95013087335ed7ed72e4876e0aa7107",
+    "five": "f470ba03e16da1bedba3d5e3979bff6d37e40ca58496746114a05011f159f6c2",
+    "six": "957c3e99313af622768caaaa7ac0596850c00837fb11142a4bc082203b72bed1",
+    "seven": "4c7c36797f689ddb6632751eaad83d1812553bc9464a3f5beb492e0dbd770938",
+    "eight": "c0a83e3193478f121f69285741f7b4abf5a80d69f947e2d620a94f819c5913af",
+    "nine": "c06ee7fd07829de24c1487f17c6b33e9c2d83a9ba5b8890e561e83ec444b8ef5"
+  },
+  "group": "figs",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-7 figs anatomy rewrite zero\u2013nine; three/five use open_bowl (closes A-3/A-8 topology); audit 0 error.",
+  "proofs": [],
+  "reviewer": "agent:p3-7",
+  "round": 1,
+  "verdict": "pass"
+}

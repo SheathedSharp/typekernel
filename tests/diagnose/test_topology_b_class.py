@@ -25,12 +25,11 @@ def test_appendix_a_b_class_on_latin_sans() -> None:
         # A-2 closed in P3-7 (e is open_bowl+BarSpec → 1 counter + 1 aperture).
         assert "topology.counters" not in by_glyph.get("e", []), by_glyph.get("e")
         assert "topology.apertures" not in by_glyph.get("e", []), by_glyph.get("e")
-        # A-3: three has ≥2 counters, expect 0
-        assert "topology.counters" in by_glyph.get("three", []), by_glyph.get("three")
-        # A-6 / B bowl topology: B counters ≠ 2
+        # A-3 / A-8 closed in P3-7 figs (three/five use open_bowl → 0 counters).
+        assert "topology.counters" not in by_glyph.get("three", []), by_glyph.get("three")
+        assert "topology.counters" not in by_glyph.get("five", []), by_glyph.get("five")
+        # A-6 / B bowl topology: B counters ≠ 2 (still open; binocular bowls).
         assert "topology.counters" in by_glyph.get("B", []), by_glyph.get("B")
-        # A-8 partial: five closed when it should be open
-        assert "topology.counters" in by_glyph.get("five", []), by_glyph.get("five")
     finally:
         shutil.rmtree(td)
 
