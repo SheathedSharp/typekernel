@@ -231,12 +231,9 @@ class ProjectSession:
         )
 
     def _resolve_advance(self, drawing: Drawing, *, name: str = "") -> float:
-        """Token / bbox advance. Per-glyph ``*_advance`` removed in P1-4."""
+        """Bbox / global ``advance`` token. Per-glyph ``*_advance`` removed in P1-4."""
+        del name  # per-glyph token path deleted; metrics pack sets final advances
         system = self.project.system
-        if name:
-            keyed = system.tokens.get(f"{name}_advance")
-            if keyed is not None:
-                return float(keyed)
         token = system.tokens.get("advance")
         if token is not None:
             return float(token)
@@ -244,7 +241,7 @@ class ProjectSession:
 
     def font(self, *, master: str | None = None, family_name: str | None = None, style_name: str = "Regular") -> Font:
         """Assemble a Font from every registered glyph (spacing applied when present)."""
-        from typekernel.cli.load import apply_project_spacing_with_system
+        from typekernel.cli.load import apply_project_spacing
 
         project = self.project
         system = project.system
@@ -257,7 +254,7 @@ class ProjectSession:
         font = Font.from_system(system, family, style_name)
         for name in self._specs:
             font.add_glyph(self.glyph(name, master=master), replace=True)
-        apply_project_spacing_with_system(font, system, self.root)
+        apply_project_spacing(font, project, self.root)
         return font
 
     def reload(self) -> set[str]:

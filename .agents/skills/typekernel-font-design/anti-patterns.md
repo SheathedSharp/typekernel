@@ -8,7 +8,7 @@
 | `tk build --resolve-overlaps` with `--variable` | Keep VF masters overlapping; resolve static instances only |
 | Stroke-expand to fake weight | Scale `system.stem` (and masters via `tuned`) |
 | Letter builders inside `typekernel.*` kernel packages | Keep letters in the project starter only |
-| Bbox-only advances forever | `spacing.py` metrics keys + `apply_spacing` |
+| Bbox-only advances forever | `Project.metrics` / `spacing.py` `METRICS` keys + `apply_metrics` |
 | Silent mega-knobs (`aperture`, `roundness`) | Explicit tokens + element functions |
 | Treating `tk audit` warnings as pass/fail cosmetics gate | Treat direction/compat as hard fail; stem/zone as fix list |
 | Ignoring `--overlap` cavities then shipping even-odd proofs | Inspect with `tk proof --glyph`; fix fragments or accept VF overlap + nonzero ship fill |

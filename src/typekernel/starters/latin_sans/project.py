@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from spacing import KERNING, METRICS
 from system import (
     AUDIT_STEMS,
     FAMILY_NAME,
@@ -26,5 +27,7 @@ PROJECT = Project(
     ),
     corners={"*": plain()},
     audit=AuditConfig(stems=AUDIT_STEMS),
+    metrics=METRICS,
+    kerning=KERNING,
     style_name=STYLE_NAME,
 )

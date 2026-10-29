@@ -1,13 +1,14 @@
 """Metrics keys engine (target-architecture §5.3).
 
-P1-2 ships the declarative types so :class:`~typekernel.project.Project` can
-reference them. Resolve / pack land in P1-4.
+Declarative ``Metrics`` / ``Kerning`` types plus ``resolve`` / ``pack`` /
+``apply_metrics`` (extracted from starter ``spacing.py`` engines in P1-4).
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Literal
 
 from typekernel.font.kerning import ClassKernPair, KernClass, KernPair
@@ -22,6 +23,10 @@ __all__ = [
     "Side",
     "Stem",
     "Token",
+    "apply_kerning",
+    "apply_metrics",
+    "pack",
+    "resolve",
 ]
 
 
@@ -71,6 +76,12 @@ class Metrics:
     keys: Mapping[str, tuple[Side, Side]] = field(default_factory=dict)
     space: Side = field(default_factory=lambda: Token("space_advance"))
     pack: Literal["bbox", "slant-mid-x"] | None = None
+    # Fractions of x-height for italic silhouette packing (chancery-style).
+    italic_pack_ys: tuple[float, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "keys", MappingProxyType(dict(self.keys)))
+        object.__setattr__(self, "italic_pack_ys", tuple(self.italic_pack_ys))
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,3 +89,7 @@ class Kerning:
     classes: Sequence[KernClass] = ()
     pairs: Sequence[KernPair | ClassKernPair] = ()
     exceptions: Sequence[KernPair] = ()
+
+from typekernel.metrics.applying import apply_kerning, apply_metrics
+from typekernel.metrics.packing import pack
+from typekernel.metrics.resolving import resolve

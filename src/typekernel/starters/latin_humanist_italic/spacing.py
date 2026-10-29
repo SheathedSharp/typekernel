@@ -1,304 +1,146 @@
-"""Metrics keys + sidebearings + kern pairs for latin-humanist-italic (ARCHITECTURE.md「核心概念」).
-
-Project-side only — no letter builders. ``apply_spacing`` packs each glyph so
-ink starts at the resolved LSB and advance = LSB + ink + RSB, then writes
-pair kerning onto the Font. Wired from ``tk build`` via ``cli.load``.
-"""
+"""Metrics keys + kern pairs — data only (engine lives in ``typekernel.metrics``)."""
 
 from __future__ import annotations
 
-from dataclasses import replace
-from typing import Any
+from typekernel.font.kerning import KernPair
+from typekernel.metrics import Kerning, Metrics, Ref, Stem, Token
 
-from typekernel.draw.geomutil import map_segment
-from typekernel.font.font import Font
-from typekernel.font.glyph import Glyph
-from typekernel.geo.contour import Contour
-from typekernel.geo.outline import Outline, bounds
-from typekernel.geo.point import Point
-from typekernel.system import System
-
-__all__ = [
-    "KERN_PAIRS",
-    "METRICS_KEYS",
-    "apply_spacing",
-    "resolve_sidebearings",
-]
+__all__ = ["KERNING", "METRICS"]
 
 
-# Tracy / Glyphs-style keys. Values:
-#   float                         → absolute design units
-#   ("stem", key, factor)         → system.stem[key] * factor
-#   ("ref", glyph, "lsb"|"rsb")   → copy that side from another glyph's resolved bearing
-# Keys are resolved in dependency order (refs after bases).
-METRICS_KEYS: dict[str, dict[str, Any]] = {
-    # controls
-    "n": {"lsb": ("stem", "lc", 0.9), "rsb": ("stem", "lc", 0.9)},
-    "o": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.55)},
-    "H": {"lsb": ("stem", "uc", 0.85), "rsb": ("stem", "uc", 0.85)},
-    "O": {"lsb": ("stem", "uc", 0.5), "rsb": ("stem", "uc", 0.5)},
-    # n-group
-    "h": {"lsb": ("ref", "n", "lsb"), "rsb": ("ref", "n", "rsb")},
-    "m": {"lsb": ("ref", "n", "lsb"), "rsb": ("ref", "n", "rsb")},
-    "u": {"lsb": ("ref", "n", "lsb"), "rsb": ("ref", "n", "rsb")},
-    "r": {"lsb": ("ref", "n", "lsb"), "rsb": ("stem", "lc", 0.45)},
-    "i": {"lsb": ("stem", "lc", 1.0), "rsb": ("stem", "lc", 1.0)},
-    "l": {"lsb": ("ref", "i", "lsb"), "rsb": ("ref", "i", "rsb")},
-    "j": {"lsb": ("stem", "lc", 0.4), "rsb": ("ref", "i", "rsb")},
-    "f": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.25)},
-    "t": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.45)},
-    # o-group
-    "b": {"lsb": ("ref", "n", "lsb"), "rsb": ("ref", "o", "rsb")},
-    "d": {"lsb": ("ref", "o", "lsb"), "rsb": ("ref", "n", "rsb")},
-    "p": {"lsb": ("ref", "n", "lsb"), "rsb": ("ref", "o", "rsb")},
-    "q": {"lsb": ("ref", "o", "lsb"), "rsb": ("ref", "n", "rsb")},
-    "c": {"lsb": ("ref", "o", "lsb"), "rsb": ("stem", "lc", 0.35)},
-    "e": {"lsb": ("ref", "o", "lsb"), "rsb": ("ref", "o", "rsb")},
-    "a": {"lsb": ("stem", "lc", 0.45), "rsb": ("ref", "n", "rsb")},
-    "g": {"lsb": ("ref", "o", "lsb"), "rsb": ("ref", "o", "rsb")},
-    "s": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    # diagonals
-    "v": {"lsb": ("stem", "lc", 0.2), "rsb": ("stem", "lc", 0.2)},
-    "w": {"lsb": ("stem", "lc", 0.15), "rsb": ("stem", "lc", 0.15)},
-    "x": {"lsb": ("stem", "lc", 0.25), "rsb": ("stem", "lc", 0.25)},
-    "y": {"lsb": ("stem", "lc", 0.2), "rsb": ("stem", "lc", 0.2)},
-    "z": {"lsb": ("stem", "lc", 0.4), "rsb": ("stem", "lc", 0.4)},
-    "k": {"lsb": ("ref", "n", "lsb"), "rsb": ("stem", "lc", 0.25)},
-    # caps H-group
-    "I": {"lsb": ("stem", "uc", 1.0), "rsb": ("stem", "uc", 1.0)},
-    "L": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.28)},
-    "E": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.4)},
-    "F": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.35)},
-    "T": {"lsb": ("stem", "uc", 0.22), "rsb": ("stem", "uc", 0.22)},
-    "N": {"lsb": ("ref", "H", "lsb"), "rsb": ("ref", "H", "rsb")},
-    "M": {"lsb": ("ref", "H", "lsb"), "rsb": ("ref", "H", "rsb")},
-    "U": {"lsb": ("ref", "H", "lsb"), "rsb": ("ref", "H", "rsb")},
-    "B": {"lsb": ("ref", "H", "lsb"), "rsb": ("ref", "O", "rsb")},
-    "P": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.4)},
-    "R": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.25)},
-    "D": {"lsb": ("ref", "H", "lsb"), "rsb": ("ref", "O", "rsb")},
-    "J": {"lsb": ("stem", "uc", 0.35), "rsb": ("ref", "H", "rsb")},
-    # caps O-group / diagonals
-    "C": {"lsb": ("ref", "O", "lsb"), "rsb": ("stem", "uc", 0.3)},
-    "G": {"lsb": ("ref", "O", "lsb"), "rsb": ("ref", "O", "rsb")},
-    "Q": {"lsb": ("ref", "O", "lsb"), "rsb": ("ref", "O", "rsb")},
-    "S": {"lsb": ("stem", "uc", 0.45), "rsb": ("stem", "uc", 0.45)},
-    "A": {"lsb": ("stem", "uc", 0.12), "rsb": ("stem", "uc", 0.12)},
-    "V": {"lsb": ("stem", "uc", 0.12), "rsb": ("stem", "uc", 0.12)},
-    "W": {"lsb": ("stem", "uc", 0.08), "rsb": ("stem", "uc", 0.08)},
-    "X": {"lsb": ("stem", "uc", 0.2), "rsb": ("stem", "uc", 0.2)},
-    "Y": {"lsb": ("stem", "uc", 0.12), "rsb": ("stem", "uc", 0.12)},
-    "Z": {"lsb": ("stem", "uc", 0.35), "rsb": ("stem", "uc", 0.35)},
-    "K": {"lsb": ("ref", "H", "lsb"), "rsb": ("stem", "uc", 0.2)},
-    # figures — tabular-ish
-    "zero": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "one": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "two": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "three": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "four": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "five": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "six": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "seven": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "eight": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "nine": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    # punctuation
-    "period": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.55)},
-    "comma": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.55)},
-    "colon": {"lsb": ("stem", "lc", 0.6), "rsb": ("stem", "lc", 0.6)},
-    "semicolon": {"lsb": ("stem", "lc", 0.6), "rsb": ("stem", "lc", 0.6)},
-    "exclam": {"lsb": ("stem", "lc", 0.7), "rsb": ("stem", "lc", 0.7)},
-    "question": {"lsb": ("stem", "lc", 0.4), "rsb": ("stem", "lc", 0.4)},
-    "quotesingle": {"lsb": ("stem", "lc", 0.7), "rsb": ("stem", "lc", 0.7)},
-    "quotedbl": {"lsb": ("stem", "lc", 0.5), "rsb": ("stem", "lc", 0.5)},
-    "hyphen": {"lsb": ("stem", "lc", 0.45), "rsb": ("stem", "lc", 0.45)},
-    "endash": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.35)},
-    "emdash": {"lsb": ("stem", "lc", 0.25), "rsb": ("stem", "lc", 0.25)},
-    "parenleft": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.35)},
-    "parenright": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.55)},
-    "bracketleft": {"lsb": ("stem", "lc", 0.55), "rsb": ("stem", "lc", 0.35)},
-    "bracketright": {"lsb": ("stem", "lc", 0.35), "rsb": ("stem", "lc", 0.55)},
-    "slash": {"lsb": ("stem", "lc", 0.3), "rsb": ("stem", "lc", 0.3)},
-    "backslash": {"lsb": ("stem", "lc", 0.3), "rsb": ("stem", "lc", 0.3)},
-}
-
-
-# Proof kern strings from ARCH 验收方式: AV Ta To Yo LT P. F,
-KERN_PAIRS: tuple[tuple[str, str, float], ...] = (
-    # Diagonal caps — continuous apex/crotch reads slightly more open; pull in.
-    ("A", "V", -56.0),
-    ("A", "W", -44.0),
-    ("A", "Y", -48.0),
-    ("A", "T", -28.0),
-    ("V", "A", -56.0),
-    ("W", "A", -44.0),
-    ("Y", "A", -48.0),
-    ("T", "A", -28.0),
-    ("T", "a", -40.0),
-    ("T", "o", -44.0),
-    ("T", "e", -40.0),
-    ("T", "y", -32.0),
-    ("F", "a", -32.0),
-    ("F", "o", -28.0),
-    ("F", "comma", -52.0),
-    ("F", "period", -52.0),
-    ("P", "a", -28.0),
-    ("P", "o", -24.0),
-    ("P", "period", -60.0),
-    ("P", "comma", -60.0),
-    ("R", "A", -20.0),
-    ("R", "a", -12.0),
-    ("R", "o", -10.0),
-    # L + continuous T/diags: previous LT still open on kern proof.
-    ("L", "T", -56.0),
-    ("L", "V", -48.0),
-    ("L", "Y", -52.0),
-    ("L", "W", -40.0),
-    ("Y", "o", -36.0),
-    ("Y", "a", -32.0),
-    ("Y", "e", -28.0),
-    ("V", "o", -32.0),
-    ("V", "a", -28.0),
-    ("V", "e", -24.0),
-    ("W", "o", -24.0),
-    ("W", "a", -20.0),
-    ("K", "o", -16.0),
-    ("K", "a", -12.0),
-    ("r", "a", -8.0),
-    ("r", "o", -6.0),
-    ("f", "a", -6.0),
-    ("f", "o", -4.0),
-    ("f", "period", -20.0),
-    ("f", "comma", -20.0),
-    ("quotedbl", "A", -12.0),
-    ("quotesingle", "A", -12.0),
+METRICS = Metrics(
+    keys={
+        'n': (Stem('lc', 0.9), Stem('lc', 0.9)),
+        'o': (Stem('lc', 0.55), Stem('lc', 0.55)),
+        'H': (Stem('uc', 0.85), Stem('uc', 0.85)),
+        'O': (Stem('uc', 0.5), Stem('uc', 0.5)),
+        'h': (Ref('n', 'lsb'), Ref('n', 'rsb')),
+        'm': (Ref('n', 'lsb'), Ref('n', 'rsb')),
+        'u': (Ref('n', 'lsb'), Ref('n', 'rsb')),
+        'r': (Ref('n', 'lsb'), Stem('lc', 0.45)),
+        'i': (Stem('lc', 1.0), Stem('lc', 1.0)),
+        'l': (Ref('i', 'lsb'), Ref('i', 'rsb')),
+        'j': (Stem('lc', 0.4), Ref('i', 'rsb')),
+        'f': (Stem('lc', 0.35), Stem('lc', 0.25)),
+        't': (Stem('lc', 0.35), Stem('lc', 0.45)),
+        'b': (Ref('n', 'lsb'), Ref('o', 'rsb')),
+        'd': (Ref('o', 'lsb'), Ref('n', 'rsb')),
+        'p': (Ref('n', 'lsb'), Ref('o', 'rsb')),
+        'q': (Ref('o', 'lsb'), Ref('n', 'rsb')),
+        'c': (Ref('o', 'lsb'), Stem('lc', 0.35)),
+        'e': (Ref('o', 'lsb'), Ref('o', 'rsb')),
+        'a': (Stem('lc', 0.45), Ref('n', 'rsb')),
+        'g': (Ref('o', 'lsb'), Ref('o', 'rsb')),
+        's': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'v': (Stem('lc', 0.2), Stem('lc', 0.2)),
+        'w': (Stem('lc', 0.15), Stem('lc', 0.15)),
+        'x': (Stem('lc', 0.25), Stem('lc', 0.25)),
+        'y': (Stem('lc', 0.2), Stem('lc', 0.2)),
+        'z': (Stem('lc', 0.4), Stem('lc', 0.4)),
+        'k': (Ref('n', 'lsb'), Stem('lc', 0.25)),
+        'I': (Stem('uc', 1.0), Stem('uc', 1.0)),
+        'L': (Ref('H', 'lsb'), Stem('uc', 0.28)),
+        'E': (Ref('H', 'lsb'), Stem('uc', 0.4)),
+        'F': (Ref('H', 'lsb'), Stem('uc', 0.35)),
+        'T': (Stem('uc', 0.22), Stem('uc', 0.22)),
+        'N': (Ref('H', 'lsb'), Ref('H', 'rsb')),
+        'M': (Ref('H', 'lsb'), Ref('H', 'rsb')),
+        'U': (Ref('H', 'lsb'), Ref('H', 'rsb')),
+        'B': (Ref('H', 'lsb'), Ref('O', 'rsb')),
+        'P': (Ref('H', 'lsb'), Stem('uc', 0.4)),
+        'R': (Ref('H', 'lsb'), Stem('uc', 0.25)),
+        'D': (Ref('H', 'lsb'), Ref('O', 'rsb')),
+        'J': (Stem('uc', 0.35), Ref('H', 'rsb')),
+        'C': (Ref('O', 'lsb'), Stem('uc', 0.3)),
+        'G': (Ref('O', 'lsb'), Ref('O', 'rsb')),
+        'Q': (Ref('O', 'lsb'), Ref('O', 'rsb')),
+        'S': (Stem('uc', 0.45), Stem('uc', 0.45)),
+        'A': (Stem('uc', 0.12), Stem('uc', 0.12)),
+        'V': (Stem('uc', 0.12), Stem('uc', 0.12)),
+        'W': (Stem('uc', 0.08), Stem('uc', 0.08)),
+        'X': (Stem('uc', 0.2), Stem('uc', 0.2)),
+        'Y': (Stem('uc', 0.12), Stem('uc', 0.12)),
+        'Z': (Stem('uc', 0.35), Stem('uc', 0.35)),
+        'K': (Ref('H', 'lsb'), Stem('uc', 0.2)),
+        'zero': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'one': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'two': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'three': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'four': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'five': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'six': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'seven': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'eight': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'nine': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'period': (Stem('lc', 0.55), Stem('lc', 0.55)),
+        'comma': (Stem('lc', 0.55), Stem('lc', 0.55)),
+        'colon': (Stem('lc', 0.6), Stem('lc', 0.6)),
+        'semicolon': (Stem('lc', 0.6), Stem('lc', 0.6)),
+        'exclam': (Stem('lc', 0.7), Stem('lc', 0.7)),
+        'question': (Stem('lc', 0.4), Stem('lc', 0.4)),
+        'quotesingle': (Stem('lc', 0.7), Stem('lc', 0.7)),
+        'quotedbl': (Stem('lc', 0.5), Stem('lc', 0.5)),
+        'hyphen': (Stem('lc', 0.45), Stem('lc', 0.45)),
+        'endash': (Stem('lc', 0.35), Stem('lc', 0.35)),
+        'emdash': (Stem('lc', 0.25), Stem('lc', 0.25)),
+        'parenleft': (Stem('lc', 0.55), Stem('lc', 0.35)),
+        'parenright': (Stem('lc', 0.35), Stem('lc', 0.55)),
+        'bracketleft': (Stem('lc', 0.55), Stem('lc', 0.35)),
+        'bracketright': (Stem('lc', 0.35), Stem('lc', 0.55)),
+        'slash': (Stem('lc', 0.3), Stem('lc', 0.3)),
+        'backslash': (Stem('lc', 0.3), Stem('lc', 0.3)),
+    },
+    space=Token("space_advance"),
+    pack=None,
+    italic_pack_ys=(),
 )
 
-
-def _eval_side(expr: Any, system: System, resolved: dict[str, tuple[float, float]]) -> float:
-    if isinstance(expr, (int, float)):
-        return float(expr)
-    if not isinstance(expr, tuple) or not expr:
-        raise TypeError(f"bad metrics key expression: {expr!r}")
-    kind = expr[0]
-    if kind == "stem":
-        _, stem_key, factor = expr
-        return float(system.stem[stem_key]) * float(factor)
-    if kind == "ref":
-        _, ref_name, side = expr
-        if ref_name not in resolved:
-            raise KeyError(f"metrics key ref {ref_name!r} not resolved yet")
-        lsb, rsb = resolved[ref_name]
-        return lsb if side == "lsb" else rsb
-    if kind == "token":
-        _, token_key, factor = expr
-        return float(system.tokens[token_key]) * float(factor)
-    raise ValueError(f"unknown metrics key kind: {kind!r}")
-
-
-def resolve_sidebearings(system: System) -> dict[str, tuple[float, float]]:
-    """Resolve METRICS_KEYS to ``{name: (lsb, rsb)}`` in dependency order."""
-    resolved: dict[str, tuple[float, float]] = {}
-    pending = dict(METRICS_KEYS)
-    # Multi-pass so refs can point at earlier keys.
-    for _ in range(len(pending) + 2):
-        if not pending:
-            break
-        progressed = False
-        for name, sides in list(pending.items()):
-            try:
-                lsb = _eval_side(sides["lsb"], system, resolved)
-                rsb = _eval_side(sides["rsb"], system, resolved)
-            except KeyError:
-                continue
-            resolved[name] = (lsb, rsb)
-            del pending[name]
-            progressed = True
-        if not progressed:
-            break
-    if pending:
-        raise ValueError(f"unresolved metrics keys (cycle or missing ref): {sorted(pending)}")
-    return resolved
-
-
-def _translate_outline(outline: Outline, dx: float, dy: float = 0.0) -> Outline:
-    def move(p: Point) -> Point:
-        return Point(p.x + dx, p.y + dy)
-
-    return Outline(
-        tuple(
-            Contour(tuple(map_segment(s, move) for s in c.segments), closed=c.closed)
-            for c in outline.contours
-        )
-    )
-
-
-def _pack_glyph(glyph: Glyph, lsb: float, rsb: float, system: System | None = None) -> Glyph:
-    """Shift ink so sidebearing target matches; advance = lsb + bbox + rsb.
-
-    The advance always comes from the full ink bbox, so a slanted top arm or
-    diagonal cannot overhang its own advance. For italic **x-height** glyphs,
-    the shift is chosen from the mid-x-height silhouette instead of the bbox:
-    the old bbox shift put the lean's bottom/top extreme at ``lsb`` and made
-    x-height spacing depend on the shear. Caps and ascender/descender glyphs
-    keep the bbox shift, because their silhouette at x-height is only a stem
-    (a ``T`` would otherwise measure as thick as its stem and collide).
-    """
-    if not glyph.outline.contours or not any(c.segments for c in glyph.outline.contours):
-        return replace(glyph, advance=max(glyph.advance, lsb + rsb))
-
-    min_x, min_y, max_x, max_y = bounds(glyph.outline)
-    ink = float(max_x - min_x)
-    dx = lsb - float(min_x)
-
-    if system is not None and system.is_italic:
-        xh = float(system.zones.x)
-        ov = float(system.overshoot.round)
-        if min_y >= -ov and max_y <= xh + ov:
-            from typekernel.optics.space import silhouette_edge
-
-            left = silhouette_edge([glyph.outline], xh * 0.5, "left")
-            if left is not None:
-                dx = lsb - float(left)
-
-    shifted = _translate_outline(glyph.outline, dx)
-    return replace(glyph, outline=shifted, advance=lsb + ink + rsb)
-
-
-
-def apply_spacing(font: Font, system: System) -> dict[str, tuple[float, float]]:
-    """Pack sidebearings from metrics keys and write KERN_PAIRS onto ``font``.
-
-    Glyphs without a metrics key keep their existing advance (token / bbox).
-    Returns the resolved ``{name: (lsb, rsb)}`` table for diagnostics.
-    """
-    resolved = resolve_sidebearings(system)
-    for name, (lsb, rsb) in resolved.items():
-        if name not in font:
-            continue
-        font.add_glyph(_pack_glyph(font[name], lsb, rsb, system), replace=True)
-
-    # Space width from project tokens (not library letter formulas).
-    # Prefer absolute ``space_advance``; else stem[lc]*space_stem_mul + n_lsb*space_lsb_mul.
-    if "space" in font:
-        tokens = system.tokens
-        if "space_advance" in tokens:
-            space_adv = float(tokens["space_advance"])
-        elif "n" in resolved:
-            n_lsb, _n_rsb = resolved["n"]
-            stem_mul = float(tokens.get("space_stem_mul", 2.5))
-            lsb_mul = float(tokens.get("space_lsb_mul", 0.5))
-            space_adv = float(system.stem["lc"]) * stem_mul + n_lsb * lsb_mul
-        else:
-            space_adv = None
-        if space_adv is not None:
-            g = font["space"]
-            font.add_glyph(replace(g, advance=space_adv), replace=True)
-
-    for left, right, value in KERN_PAIRS:
-        left_n = font.resolve(left)
-        right_n = font.resolve(right)
-        if left_n is None or right_n is None:
-            continue
-        font.kerning[(left_n, right_n)] = float(value)
-
-    return resolved
+KERNING = Kerning(
+    pairs=(
+        KernPair('A', 'V', -56.0),
+        KernPair('A', 'W', -44.0),
+        KernPair('A', 'Y', -48.0),
+        KernPair('A', 'T', -28.0),
+        KernPair('V', 'A', -56.0),
+        KernPair('W', 'A', -44.0),
+        KernPair('Y', 'A', -48.0),
+        KernPair('T', 'A', -28.0),
+        KernPair('T', 'a', -40.0),
+        KernPair('T', 'o', -44.0),
+        KernPair('T', 'e', -40.0),
+        KernPair('T', 'y', -32.0),
+        KernPair('F', 'a', -32.0),
+        KernPair('F', 'o', -28.0),
+        KernPair('F', 'comma', -52.0),
+        KernPair('F', 'period', -52.0),
+        KernPair('P', 'a', -28.0),
+        KernPair('P', 'o', -24.0),
+        KernPair('P', 'period', -60.0),
+        KernPair('P', 'comma', -60.0),
+        KernPair('R', 'A', -20.0),
+        KernPair('R', 'a', -12.0),
+        KernPair('R', 'o', -10.0),
+        KernPair('L', 'T', -56.0),
+        KernPair('L', 'V', -48.0),
+        KernPair('L', 'Y', -52.0),
+        KernPair('L', 'W', -40.0),
+        KernPair('Y', 'o', -36.0),
+        KernPair('Y', 'a', -32.0),
+        KernPair('Y', 'e', -28.0),
+        KernPair('V', 'o', -32.0),
+        KernPair('V', 'a', -28.0),
+        KernPair('V', 'e', -24.0),
+        KernPair('W', 'o', -24.0),
+        KernPair('W', 'a', -20.0),
+        KernPair('K', 'o', -16.0),
+        KernPair('K', 'a', -12.0),
+        KernPair('r', 'a', -8.0),
+        KernPair('r', 'o', -6.0),
+        KernPair('f', 'a', -6.0),
+        KernPair('f', 'o', -4.0),
+        KernPair('f', 'period', -20.0),
+        KernPair('f', 'comma', -20.0),
+        KernPair('quotedbl', 'A', -12.0),
+        KernPair('quotesingle', 'A', -12.0),
+    ),
+)

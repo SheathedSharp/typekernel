@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from spacing import KERNING, METRICS
 from system import (
     AUDIT_STEMS,
     BRIEF,
@@ -24,5 +25,7 @@ PROJECT = Project(
     masters=tuple(MasterSpec(m.name, {}, m.system) for m in masters),
     audit=AuditConfig(stems=AUDIT_STEMS),
     brief=BRIEF,
+    metrics=METRICS,
+    kerning=KERNING,
     style_name=STYLE_NAME,
 )

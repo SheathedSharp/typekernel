@@ -24,7 +24,7 @@ Write a font project that:
 2. draws glyphs with `typekernel.draw` (`Writer` / fragments / named nodes / overlap),
 3. registers them with `@glyph` under `glyphs/`,
 4. configures corners/ends plugins in `project.py` (`PROJECT`),
-5. spaces via `spacing.py` (metrics keys + kern),
+5. spaces via `Project.metrics` / `spacing.py` (`METRICS` + `KERNING`),
 6. audits, proofs, and compiles (`tk audit` / `tk proof` / `tk build`).
 
 ## 标准工作流（按顺序执行）
@@ -67,7 +67,7 @@ Designers' loop is driven by **looking**. Do not invent private PIL croppers:
 - Put letter geometry only in the project (`elements.py`, `glyphs/**`). Kernel packages stay letter-free.
 - Prefer **overlap construction** (stem + trough) over boolean unions for interpolatable masters.
 - Name nodes (`stem.l`, `arch.…`) so `tk audit` can measure them.
-- Advances / LSB / RSB: declare metrics keys in `spacing.py`; do not rely on bbox-only advances.
+- Advances / LSB / RSB: declare `METRICS` keys in `spacing.py` (wired on `PROJECT.metrics`); do not rely on bbox-only advances or `<glyph>_advance` tokens.
 - Conventional commits; local review against ARCHITECTURE.md 交接规格 / 设计禁令与边界 after each commit.
 
 ## Constructors & optics (do not rediscover)

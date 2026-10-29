@@ -12,7 +12,7 @@
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
 | `glyphs_italic/` 约定 | **未实现** | §2「母版与斜体」写的是另一套字形目录；现行斜体靠独立 starter（`latin-humanist-italic` / `latin-chancery`），没有同项目 `glyphs_italic/` 加载路径 |
-| `plugins.spacing` | **空包** | 仅占位；现行间距在项目 `spacing.py`，由 `tk build` 接入 |
+| `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
@@ -184,9 +184,9 @@ def b(s):
 
 ### 间距
 
-- `metrics keys`（`n: lsb==stem*0.9`、`h: lsb=n, rsb=n`、`b: lsb=n, rsb=o`），像 Glyphs 一样声明。
+- `metrics keys`（`Abs`/`Stem`/`Token`/`Ref`/`Mirror`；`Optical` 签名预留至 P2）：声明在 `Project.metrics`，引擎在 `typekernel.metrics`。
 - Tracy 法、光学测量做成插件，可选。（**尚未接入工作流**——见上表；`plugins.spacing` 仍为空包。）
-- 结果写进 `spacing.py`，agent 可以手调。
+- 项目 `spacing.py` 只放 `METRICS` / `KERNING` 数据，agent 可以手调。
 
 ---
 

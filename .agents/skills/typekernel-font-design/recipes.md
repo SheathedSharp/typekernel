@@ -18,7 +18,7 @@ Open the glyph file under `glyphs/`. Adjust fragment geometry or overlap (stem +
 
 ## Spacing
 
-Edit `METRICS_KEYS` / `KERN_PAIRS` in `spacing.py`. `tk proof spacing` / `tk proof kern`.
+Edit `METRICS` / `KERNING` in `spacing.py` (data only; engine is `typekernel.metrics`). `tk proof spacing` / `tk proof kern`.
 
 ## Audit follow-ups
 
@@ -41,7 +41,7 @@ x, y = system.map_xy(100, 500)
 bearing = system.stem_direction_deg()  # for oriented stem probes
 ```
 
-`tk audit` and project `apply_spacing` read ``System.slant`` for italic-aware
+`tk audit` and `apply_metrics` read ``System.slant`` for italic-aware
 vertical probes and mid-x-height sidebearing packing.
 
 ## Chancery flourishes

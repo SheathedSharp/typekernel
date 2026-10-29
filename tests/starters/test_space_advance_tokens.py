@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typekernel.font.font import Font
-from typekernel.starters.latin_sans.spacing import apply_spacing
+from typekernel.metrics import Metrics, Token, apply_metrics
 from typekernel.system import Overshoot, System, Zones
 
 
@@ -25,5 +25,5 @@ def test_space_advance_absolute_token_override() -> None:
         tokens={"space_advance": 333.0, "lsb_lc": 40},
     )
     font = Font.from_system(system, "Tok", "Regular")
-    apply_spacing(font, system)
+    apply_metrics(font, Metrics(keys={}, space=Token("space_advance")), system)
     assert font["space"].advance == 333.0

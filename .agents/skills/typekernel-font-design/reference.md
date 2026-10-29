@@ -38,7 +38,7 @@ light = system.tuned(stem={k: v * 0.62 for k, v in dict(system.stem).items()})
 ```
 
 Italic faces set ``System.slant`` (e.g. ``0.18``) so ``tk audit`` probes slanted
-verticals and project ``apply_spacing`` packs sidebearings at mid x-height.
+verticals and ``apply_metrics`` packs sidebearings at mid x-height.
 Do **not** hide lean only in ``tokens["slant"]`` — kern/audit/spacing read the field.
 
 Space width is a **project token**: ``space_advance`` absolute, or
@@ -178,8 +178,8 @@ PROJECT = Project(
 
 ## spacing.py
 
-Declare Tracy / Glyphs-style metrics keys and kern pairs; `tk build` calls `apply_spacing`
-so ink is packed to LSB and `advance = lsb + ink + rsb`.
+Data only: export ``METRICS`` (:class:`~typekernel.metrics.Metrics`) and ``KERNING`` (:class:`~typekernel.metrics.Kerning`). Wire them on ``PROJECT.metrics`` / ``PROJECT.kerning``. The engine (``resolve`` / ``pack`` / ``apply_metrics``) lives in ``typekernel.metrics``; `tk build` applies them via the session.
+
 
 ## Plugins
 

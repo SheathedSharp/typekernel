@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
-from typing import cast
+from typing import Any, cast
 
 from typekernel.font.font import Font
+from typekernel.metrics.applying import apply_kerning, apply_metrics
 from typekernel.project import Project, ProjectSession, open_project
 from typekernel.system import System
 
@@ -53,13 +55,15 @@ def build_font_from_session(
     for name in session.specs():
         font.add_glyph(session.glyph(name, master=master), replace=True)
     if apply_spacing:
-        apply_project_spacing_with_system(font, system, session.root)
+        apply_project_spacing(font, project, session.root)
     return font
 
 
 def apply_project_spacing(font: Font, project: Project, project_root: Path) -> None:
-    """If ``project_root/spacing.py`` defines ``apply_spacing``, run it."""
-    apply_project_spacing_with_system(font, project.system, project_root)
+    """Apply ``Project.metrics`` / ``kerning``, or legacy ``spacing.apply_spacing``."""
+    apply_project_spacing_with_system(
+        font, project.system, project_root, project=project
+    )
 
 
 def build_font_from_project(
@@ -89,19 +93,31 @@ def build_font_from_project(
 
 
 def apply_project_spacing_with_system(
-    font: Font, system: System, project_root: Path
+    font: Font,
+    system: System,
+    project_root: Path,
+    *,
+    project: Project | None = None,
 ) -> None:
-    """Run project ``spacing.apply_spacing`` when present (until P1-4 metrics)."""
+    """Apply metrics from ``project`` when set; else legacy ``spacing.apply_spacing``."""
+    if project is not None and project.metrics is not None:
+        apply_metrics(font, project.metrics, system)
+        if project.kerning is not None:
+            apply_kerning(font, project.kerning)
+        return
+
     spacing_py = Path(project_root) / "spacing.py"
     if not spacing_py.is_file():
         return
     root_resolved = Path(project_root).resolve()
-    apply_fn = None
+    apply_fn: Callable[..., Any] | None = None
     bare = sys.modules.get("spacing")
     if bare is not None:
         bare_file = getattr(bare, "__file__", "") or ""
         if bare_file and Path(bare_file).resolve().parent == root_resolved:
-            apply_fn = getattr(bare, "apply_spacing", None)
+            candidate = getattr(bare, "apply_spacing", None)
+            if callable(candidate):
+                apply_fn = candidate
     if apply_fn is None:
         mod_name = f"_typekernel_user_spacing_{abs(hash(str(root_resolved))) & 0xFFFFFFFF:x}"
         source = spacing_py.read_text(encoding="utf-8")
@@ -112,7 +128,9 @@ def apply_project_spacing_with_system(
         module.__package__ = None
         sys.modules[mod_name] = module
         exec(code, module.__dict__)  # noqa: S102 - project spacing by design
-        apply_fn = getattr(module, "apply_spacing", None)
+        candidate = getattr(module, "apply_spacing", None)
+        if callable(candidate):
+            apply_fn = candidate
     if apply_fn is None:
         return
     apply_fn(font, system)
