@@ -160,6 +160,36 @@ def _cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_see(args: argparse.Namespace) -> int:
+    from typekernel.cli.see_cmd import see_project
+
+    paths = see_project(
+        args.path,
+        args.glyph,
+        out_dir=args.out,
+        master=args.master,
+        masters=bool(args.masters),
+        context=bool(args.context),
+        overlay=bool(args.overlay),
+        diff=None if args.diff is None else (args.diff if args.diff != "" else ""),
+        reference=args.reference,
+        size=args.size,
+        watch=bool(args.watch),
+    )
+    for p in paths:
+        print(p)
+    return 0
+
+
+def _cmd_explain(args: argparse.Namespace) -> int:
+    from typekernel.cli.explain_cmd import explain_project, format_report
+
+    report = explain_project(args.path, args.glyph, master=args.master)
+    print(format_report(report, as_json=bool(args.json)))
+    return 0
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
@@ -317,6 +347,48 @@ def main(argv: list[str] | None = None) -> int:
         help="optional Project master name for evaluation",
     )
     p_diff.set_defaults(func=_cmd_diff)
+
+
+    p_see = sub.add_parser("see", help="live edit view of a glyph (no compile)")
+    p_see.add_argument("glyph", help="glyph name")
+    p_see.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="project root (default: .)",
+    )
+    p_see.add_argument("--out", default=None, help="output directory (default: proofs/see)")
+    p_see.add_argument("--master", default=None, help="master name")
+    p_see.add_argument("--masters", action="store_true", help="also render master overlay")
+    p_see.add_argument("--context", action="store_true", help="trait-based context strips")
+    p_see.add_argument("--overlay", action="store_true", help="alias for --masters")
+    p_see.add_argument(
+        "--diff",
+        nargs="?",
+        const="",
+        default=None,
+        help="before/after vs snapshot (default: build/glyph_hashes.json)",
+    )
+    p_see.add_argument("--reference", default=None, help="reference OTF/TTF for side-by-side")
+    p_see.add_argument("--size", type=int, default=512, help="PNG size (default: 512)")
+    p_see.add_argument(
+        "--watch",
+        action="store_true",
+        help="reload and re-render when project sources change",
+    )
+    p_see.set_defaults(func=_cmd_see)
+
+    p_explain = sub.add_parser("explain", help="structured glyph measurements as text/JSON")
+    p_explain.add_argument("glyph", help="glyph name")
+    p_explain.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="project root (default: .)",
+    )
+    p_explain.add_argument("--master", default=None)
+    p_explain.add_argument("--json", action="store_true", help="emit GlyphReport JSON")
+    p_explain.set_defaults(func=_cmd_explain)
 
     args = parser.parse_args(argv)
     if args.command == "build" and not args.format:
