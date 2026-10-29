@@ -49,3 +49,14 @@ def test_family_link_roman_italic(tmp_path: Path) -> None:
     assert i["typo_subfamily_id17"] == "Italic"
     assert i["fs_selection_italic"] is True
     assert "ital" in r["stat_axes"] and "ital" in i["stat_axes"]
+
+
+def test_n_group_and_uc_straight_expand() -> None:
+    """P5-3: beyond control set toward roman group progression."""
+    with open_project(STARTER) as session:
+        names = ("h", "m", "u", "l", "r", "I", "L", "T", "E", "F")
+        assert set(names) <= set(session.specs())
+        for name in names:
+            g = session.glyph(name)
+            assert g.outline.contours, name
+            assert g.advance > 0, name

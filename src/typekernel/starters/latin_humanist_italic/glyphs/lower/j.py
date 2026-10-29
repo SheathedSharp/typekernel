@@ -1,8 +1,10 @@
-"""j — descender stem + tittle (skeleton+pen)."""
+"""j — descender stem + shallow hook + oval tittle (G-class)."""
 
 from __future__ import annotations
 
-from elements import stroke
+import math
+
+from elements import oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,24 +17,22 @@ def j(system: System):
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     x = lsb + st * 1.1
-    # Stem with leftward hook; tip stays above desc - tol.
-    tip_y = desc + st * 0.35
-    stem = stroke(
-        system,
-        [
-            (x, xh * 0.72),
-            (x, desc + st * 0.85),
-            (x - st * 1.1, tip_y),
-            (x - st * 1.8, tip_y + st * 0.35),
-        ],
-        thickness=st,
-    )
+    stem = stroke(system, [(x, xh * 0.65), (x, desc + st * 1.4)], thickness=st)
+    pts = []
+    for i in range(7):
+        t = i / 6.0
+        pts.append(
+            (
+                x - st * 1.4 * math.sin(math.pi * 0.5 * t),
+                (desc + st * 0.5) + st * 0.9 * (1.0 - math.cos(math.pi * 0.5 * t)),
+            )
+        )
+    hook = stroke(system, pts, thickness=st)
     cy = xh * 0.88
-    r = st * 0.45
     dot = stroke(
         system,
-        [(x, cy - r), (x + r, cy), (x, cy + r), (x - r, cy)],
+        oval_points(x, cy, st * 0.35, st * 0.4, n=12),
         closed=True,
-        thickness=st * 0.85,
+        thickness=st * 0.35,
     )
-    return stem + dot
+    return stem + hook + dot
