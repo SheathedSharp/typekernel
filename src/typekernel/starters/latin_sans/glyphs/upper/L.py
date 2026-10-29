@@ -1,9 +1,10 @@
-"""H-group glyph L — stem + baseline bar."""
+"""Straight glyph L — anatomy stem + baseline bar (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, crossbar, stem_rect
+from elements import WIDTHS
 
+from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -14,9 +15,14 @@ def glyph_L(system: System):
     cap = float(system.zones.cap)
     width = float(WIDTHS["L"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
-    stem = stem_rect(lsb, lsb + uc, 0.0, cap, prefix="stem.l")
     bar_t = float(system.tokens.get("bar_thickness", uc * 0.85))
+    left = stem(lsb, lsb + uc, 0.0, cap, name="stem.l")
     bar = crossbar(
-        system, x0=lsb, x1=lsb + width, cy=bar_t / 2.0, tag_prefix="L.bar"
+        lsb + uc * 0.5,
+        lsb + width,
+        bar_t / 2.0,
+        thick=bar_t,
+        name="bar",
+        ends="none",
     )
-    return stem + bar
+    return left + bar

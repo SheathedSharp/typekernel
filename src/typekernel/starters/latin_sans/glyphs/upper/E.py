@@ -1,9 +1,10 @@
-"""H-group glyph E — stem + three bars."""
+"""Straight glyph E — anatomy stem + three bars (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, crossbar, stem_rect
+from elements import WIDTHS
 
+from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -15,14 +16,29 @@ def glyph_E(system: System):
     width = float(WIDTHS["E"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     bar_t = float(system.tokens.get("bar_thickness", uc * 0.85))
-    stem = stem_rect(lsb, lsb + uc, 0.0, cap, prefix="stem.l")
-    top = crossbar(system, x0=lsb, x1=lsb + width, cy=cap - bar_t / 2.0, tag_prefix="E.top")
-    mid = crossbar(
-        system,
-        x0=lsb,
-        x1=lsb + width * 0.82,
-        cy=cap * 0.5,
-        tag_prefix="E.mid",
+    left = stem(lsb, lsb + uc, 0.0, cap, name="stem.l")
+    top = crossbar(
+        lsb + uc * 0.5,
+        lsb + width,
+        cap - bar_t / 2.0,
+        thick=bar_t,
+        name="bar.t",
+        ends="none",
     )
-    bot = crossbar(system, x0=lsb, x1=lsb + width, cy=bar_t / 2.0, tag_prefix="E.bot")
-    return stem + top + mid + bot
+    mid = crossbar(
+        lsb + uc * 0.5,
+        lsb + width * 0.82,
+        cap * 0.5,
+        thick=bar_t,
+        name="bar.m",
+        ends="none",
+    )
+    bot = crossbar(
+        lsb + uc * 0.5,
+        lsb + width,
+        bar_t / 2.0,
+        thick=bar_t,
+        name="bar.b",
+        ends="none",
+    )
+    return left + top + mid + bot
