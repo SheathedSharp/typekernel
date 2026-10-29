@@ -75,7 +75,7 @@ Read **[reference.md](reference.md)** before hand-rolling primitives. Especially
 - `typekernel.plugins.construct.skeleton_pen`: `broad_nib`, `pointed_pen`, `expand_skeleton`
 - `typekernel.optics.stem`: `measure_oriented_stem`, `diagonal_compensation`, `vertical_equiv_from_diagonal`
 
-Cold-start agents: open `reference.md` in the same pass as this skill (see `docs/AGENT_TRIALS.md` 终验清单).
+Cold-start agents: open `reference.md` in the same pass as this skill, then follow [trials.md](trials.md) (cold-start / final-acceptance checklist).
 
 ## Companion docs
 
@@ -84,6 +84,7 @@ Cold-start agents: open `reference.md` in the same pass as this skill (see `docs
 | [reference.md](reference.md) | CLI, System, construct, optics, @glyph, plugins |
 | [recipes.md](recipes.md) | Common edits: heavier stems, tighter spacing, corner plugins |
 | [anti-patterns.md](anti-patterns.md) | Stroke-expand weight, heal/blend/seal, self_union policy |
+| [trials.md](trials.md) | Cold-start / final-acceptance checklist (tracked) |
 
 Elements live **in the project**, not in a library catalog. Copy patterns from
 `src/typekernel/starters/latin_sans/elements.py` and sibling glyph files.

@@ -5,6 +5,18 @@
 
 本文描述 typekernel 当前的架构与公开契约。实现与评审以本文为准。
 
+目标架构草案见 [`docs/design/target-architecture.md`](design/target-architecture.md)；某一节落地后并入本文并从草案删除。
+
+### 实现状态（诚实表）
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| `glyphs_italic/` 约定 | **未实现** | §2「母版与斜体」写的是另一套字形目录；现行斜体靠独立 starter（`latin-humanist-italic` / `latin-chancery`），没有同项目 `glyphs_italic/` 加载路径 |
+| `plugins.spacing` | **空包** | 仅占位；现行间距在项目 `spacing.py`，由 `tk build` 接入 |
+| Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
+| 内核字母名 | 过渡中 | P0 前 `cli/audit` / `checks.zone` 仍有字形名表；目标是内核零字母字面量（见目标架构 §14） |
+| Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
+
 ---
 
 ## 1. 三层分离
@@ -167,12 +179,12 @@ def b(s):
 
 - 同一个字形函数用不同母版的 `System` 求值；兼容性靠节点标签 + 段结构检查。
 - 某个母版需要不同画法时，用 `@n.master("Black")` 单独覆盖。
-- 斜体是 `glyphs_italic/` 下的**另一套字形文件**（可以 import 正体的元素），不是开关。
+- 斜体是 `glyphs_italic/` 下的**另一套字形文件**（可以 import 正体的元素），不是开关。（**约定尚未实现**——见上表；现行用独立 italic starter。）
 
 ### 间距
 
 - `metrics keys`（`n: lsb==stem*0.9`、`h: lsb=n, rsb=n`、`b: lsb=n, rsb=o`），像 Glyphs 一样声明。
-- Tracy 法、光学测量做成插件，可选。
+- Tracy 法、光学测量做成插件，可选。（**尚未接入工作流**——见上表；`plugins.spacing` 仍为空包。）
 - 结果写进 `spacing.py`，agent 可以手调。
 
 ---
@@ -247,6 +259,7 @@ src/typekernel/
   starters/
     latin_sans/              # tk new --starter latin-sans
     latin_humanist_italic/   # tk new --starter latin-humanist-italic
+    latin_chancery/          # tk new --starter latin-chancery
 ```
 
 `draw` / `system` / `project` / `cli` 是内核；`plugins` 是插件；`starters` 是模板数据，**不被任何内核模块 import**。

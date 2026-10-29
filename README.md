@@ -84,7 +84,7 @@ geo / draw  →  system / project / plugins  →  font / compile (fontTools)
 - **光学原语**（`typekernel.optics`）— overshoot、stem 测量、光学间距
 - **字体模型**（`typekernel.font`）— `Font` / `Glyph` / kerning；从 `System` 推度量
 - **CLI** — `tk new` / `tk build` / `tk proof` / `tk audit` / `tk diff`
-- **Starter** — `latin-sans` / `latin-humanist-italic`（满 ASCII + spacing + Light/Bold VF）；`latin-chancery`（满 ASCII + `pen_dot`/flourish，斜体 `System.slant`）
+- **Starter** — `latin-sans` / `latin-humanist-italic`（满 ASCII + spacing + Light/Bold VF）；`latin-chancery`（满 ASCII + `pen_dot`/flourish，斜体 `System.slant`）。结构示例而已，**字形尚未通过视觉评审**，不要当作字形质量范本。
 
 **校样**（`typekernel.qa.proof`）— 从编译后的字体路径排瀑布、间距串、字偶对与字符网格。
 
