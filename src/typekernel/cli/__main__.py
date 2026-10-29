@@ -199,6 +199,35 @@ def _cmd_explain(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_review(args: argparse.Namespace) -> int:
+    from typekernel.cli.review_cmd import review_open, review_record
+
+    if args.review_command == "open":
+        path = review_open(args.path, args.group, reviewer=args.reviewer)
+        print(path)
+        return 0
+    if args.review_command == "record":
+        path = review_record(
+            args.path,
+            args.group,
+            verdict=args.verdict,
+            note=args.note or "",
+            reviewer=args.reviewer,
+        )
+        print(path)
+        return 0
+    print("error: tk review needs open|record", file=sys.stderr)
+    return 2
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    from typekernel.cli.review_cmd import status_project
+
+    print(status_project(args.path))
+    return 0
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
@@ -418,6 +447,26 @@ def main(argv: list[str] | None = None) -> int:
     p_explain.add_argument("--master", default=None)
     p_explain.add_argument("--json", action="store_true", help="emit GlyphReport JSON")
     p_explain.set_defaults(func=_cmd_explain)
+
+
+    p_review = sub.add_parser("review", help="open/record glyph-group reviews")
+    rev_sub = p_review.add_subparsers(dest="review_command", required=True)
+    p_open = rev_sub.add_parser("open", help="write a pending review template")
+    p_open.add_argument("group")
+    p_open.add_argument("path", nargs="?", default=".")
+    p_open.add_argument("--reviewer", default="agent:unknown")
+    p_open.set_defaults(func=_cmd_review)
+    p_rec = rev_sub.add_parser("record", help="record pass/fail with outline hashes")
+    p_rec.add_argument("group")
+    p_rec.add_argument("path", nargs="?", default=".")
+    p_rec.add_argument("--verdict", required=True, choices=("pass", "fail", "pending"))
+    p_rec.add_argument("--note", default="")
+    p_rec.add_argument("--reviewer", default="agent:unknown")
+    p_rec.set_defaults(func=_cmd_review)
+
+    p_status = sub.add_parser("status", help="designer task board")
+    p_status.add_argument("path", nargs="?", default=".")
+    p_status.set_defaults(func=_cmd_status)
 
     args = parser.parse_args(argv)
     if args.command == "build" and not args.format:

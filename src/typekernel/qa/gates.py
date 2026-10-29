@@ -37,6 +37,11 @@ def write_approval(
     This function does **not** decide approval — it only records the values
     passed in.
     """
+    if approved and str(approver).startswith("agent:"):
+        raise ValueError(
+            "refusing approved:true from agent: approver; "
+            "human approvals must use approver starting with human:"
+        )
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     document: dict[str, Any] = {
