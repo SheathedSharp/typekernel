@@ -1,27 +1,35 @@
-"""Round glyph a — bowl + right stem (double-storey geometric sans)."""
+"""Mixed glyph a — anatomy bowl + right stem (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, bowl, stem_rect
+from elements import WIDTHS
 
+from typekernel.anatomy import bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
 
-@glyph("a", group="lc.round")
+@glyph("a", group="lc.mixed")
 def a(system: System):
     st = float(system.stem["lc"])
+    thin = float(system.stem.get("lc_h", st * 0.85))
     xh = float(system.zones.x)
     width = float(WIDTHS["a"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     ov = float(system.overshoot.round)
-    # Right stem full x-height; bowl sits to the left overlapping it.
-    stem = stem_rect(lsb + width - st, lsb + width, 0.0, xh, prefix="stem.r")
-    # Bowl centered in the left portion, slightly below x-height.
+    exp = float(system.tokens.get("bowl_exponent", 2.15))
+    right = stem(lsb + width - st, lsb + width, 0.0, xh, name="stem.r")
     bowl_w = width - st * 0.55
     cx = lsb + bowl_w / 2.0
     cy = xh * 0.48
-    rx = bowl_w / 2.0
-    ry = xh * 0.48 + ov * 0.5
-    ring = bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=st)
-    return stem + ring
+    ring = bowl(
+        (cx, cy),
+        bowl_w / 2.0,
+        xh * 0.48,
+        thick=st,
+        thin=thin,
+        exponent=exp,
+        overshoot=ov * 0.5,
+        name="bowl",
+    )
+    return ring + right

@@ -241,6 +241,7 @@ def open_bowl(
     overshoot: float = 0.0,
     tension: float = 0.55,
     name: str = "bowl",
+    aperture_index: int = 0,
 ) -> Drawing:
     """Open superellipse ring with a vertical-chord aperture.
 
@@ -303,12 +304,16 @@ def open_bowl(
     # Terminal joins are not G1 (chord across the aperture): outer ends are
     # end slots for ends plugins; inner chord corners are corner slots so
     # apply_slots can exempt them after plain/unmatched fill.
+    if int(aperture_index) < 0:
+        raise ValueError("aperture_index must be >= 0")
+    ap_a = f"aperture.{int(aperture_index)}.a"
+    ap_b = f"aperture.{int(aperture_index)}.b"
     w = Writer()
-    w.start(top_o).end("aperture.0.a").cusp()
+    w.start(top_o).end(ap_a).cusp()
     w.fragment(stub_top_o)
     w.fragment(o1).fragment(o2)
     w.fragment(stub_bot_o)
-    w.end("aperture.0.b").cusp()
+    w.end(ap_b).cusp()
     w.line(bot_i)
     w.corner(f"{name}.i.b")
     w.fragment(stub_bot_i.reversed())
@@ -321,9 +326,9 @@ def open_bowl(
         drawing = drawing.mirrored_x(cx)
 
     measures: tuple[Measure, ...] = (
-        Measure(kind="gap", a="aperture.0.a", b="aperture.0.b"),
-        Measure(kind="stem", a="aperture.0.a", expected=float(thick), direction_deg=0.0),
-        Measure(kind="thin", a="aperture.0.a", expected=float(thin), direction_deg=90.0),
+        Measure(kind="gap", a=ap_a, b=ap_b),
+        Measure(kind="stem", a=ap_a, expected=float(thick), direction_deg=0.0),
+        Measure(kind="thin", a=ap_a, expected=float(thin), direction_deg=90.0),
     )
 
     if bar is None:

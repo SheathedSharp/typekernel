@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "a": "e3413fa9811eff7c7a5c5f12b57e5bd261c5b169a9a0bbc7b88335738123edbd",
+    "s": "9261fc160de07fc0696f72fe5a6b289d12c2feea478618607df7593ad0fc2c3f",
+    "g": "b93e650ef0d74cade42c036e441a76b69cb25335c153800f93207502948d6735",
+    "f": "e916534eb4ea09147efd688ad71b57b9db6254821f4694048afc7f68d8b56e77",
+    "t": "0180ae30eaa3efa37e548f764ae9851bd263e74e67fc22883fa0d6a06cd3f087",
+    "k": "f951b955b403ba0f69ee76aa635c1c8a78dc28ae6260ecc11b821c02256d02f8"
+  },
+  "group": "lc.mixed",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-7 lc.mixed anatomy rewrite a/s/g/f/t/k; open_bowl aperture_index for s; f uses arch_span hook (anatomy.hook winding unstable across masters); audit 0 error. Remaining: g topology.counters=3 (pre-existing binocular), interpolation.self_intersect / spacing.overflow warns.",
+  "proofs": [],
+  "reviewer": "agent:p3-7",
+  "round": 1,
+  "verdict": "pass"
+}
