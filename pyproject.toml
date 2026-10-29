@@ -33,6 +33,8 @@ classifiers = [
 ]
 dependencies = [
   "fonttools>=4.50",
+  "pillow>=10",
+  "skia-pathops>=0.8",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +44,8 @@ dev = [
   "mypy>=1.11",
 ]
 boolean = [
+  # skia-pathops is a hard dependency since the live renderer (perceive);
+  # extra kept so existing ``pip install typekernel[boolean]`` still resolves.
   "skia-pathops>=0.8",
 ]
 compile = [
@@ -50,6 +54,8 @@ compile = [
   "ufo2ft>=2.33",
 ]
 specimen = [
+  # pillow is a hard dependency since the live renderer (perceive);
+  # extra kept so existing ``pip install typekernel[specimen]`` still resolves.
   "pillow>=10",
 ]
 
