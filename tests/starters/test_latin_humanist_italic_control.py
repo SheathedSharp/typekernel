@@ -36,7 +36,11 @@ def test_starter_tree_has_control_files() -> None:
 def test_starter_uses_construct_plugin_not_writer_outlines() -> None:
     """Glyph sources expand skeleton+pen; elements imports construct plugin."""
     elements = (STARTER / "elements.py").read_text(encoding="utf-8")
-    assert "expand_skeleton" in elements or "plugins.construct" in elements
+    assert (
+        "anatomy.pen" in elements
+        or "expand_skeleton" in elements
+        or "plugins.construct" in elements
+    )
     n_src = (STARTER / "glyphs" / "lower" / "n.py").read_text(encoding="utf-8")
     assert "Writer" not in n_src
     assert "stroke" in n_src

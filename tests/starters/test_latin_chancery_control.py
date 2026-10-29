@@ -29,7 +29,7 @@ def test_starter_tree_has_control_and_helpers() -> None:
     elements = (STARTER / "elements.py").read_text(encoding="utf-8")
     assert "pen_dot" in elements
     assert "flourish_exit" in elements
-    assert "expand_skeleton" in elements
+    assert "anatomy.pen" in elements or "expand_skeleton" in elements
     for rel in (
         "glyphs/lower/n.py",
         "glyphs/lower/o.py",

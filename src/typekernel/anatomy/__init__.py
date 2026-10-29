@@ -2,6 +2,9 @@
 
 Parts return a single structural ``Drawing`` (stem, arch, bowl, …), never a
 whole letter. Projects assemble glyphs in ``elements.py`` / ``glyphs/``.
+
+Pen / skeleton construction for italic starters lives in
+:mod:`typekernel.anatomy.pen` (P5-1) — cubic skeletons only on ``stroke``.
 """
 
 from __future__ import annotations

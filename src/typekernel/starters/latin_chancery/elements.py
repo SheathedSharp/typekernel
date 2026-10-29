@@ -1,232 +1,72 @@
-"""Chancery helpers — pen_dot, flourish entry/exit, slanted stroke (project-side).
+"""Chancery project helpers — thin shim over :mod:`typekernel.anatomy.pen`.
 
-Reuse ``hook`` / ``tensioned_arc`` from draw.construct; do not reimplement
-entry / exit / flourish arcs by hand when these helpers fit.
+Polyline bowls/stroke keep hash-stable expand; flourishes use cubic
+:func:`~typekernel.anatomy.pen.stroke_fragment`.
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 
 from fontTools.misc.bezierTools import cubicPointAtT
 
-from typekernel.draw import Drawing, Fragment, Writer, hook, tensioned_arc
-from typekernel.geo.point import Point
+from typekernel.anatomy.pen import (
+    expand_slanted_centerline,
+    flourish_entry,
+    flourish_exit,
+    open_arc_points,
+    oval_points,
+    pen_dot,
+    pen_for_optical_stem,
+    project_pen,
+    slanted_centerline,
+    slanted_vertical_optical_ratio,
+)
+from typekernel.draw import Drawing, Fragment
 from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.geo.stroke import Centerline
-from typekernel.plugins.construct import broad_nib, expand_skeleton
 from typekernel.system import System
 
-
-def _pen_params(system: System) -> tuple[float, float]:
-    contrast = float(system.tokens.get("pen_contrast", 0.28))
-    angle = float(system.tokens.get("pen_angle_deg", 38.0))
-    return contrast, angle
+__all__ = [
+    "bowl",
+    "flourish_entry",
+    "flourish_exit",
+    "fragment_polyline",
+    "n_arch_points",
+    "nest_bowl",
+    "open_arc_points",
+    "open_bowl",
+    "oval_points",
+    "pen_dot",
+    "pen_for_optical_stem",
+    "project_pen",
+    "slanted_polyline",
+    "slanted_vertical_optical_ratio",
+    "stroke",
+    "stroke_fragment",
+    "u_arch_points",
+]
 
 
 def slanted_polyline(
-    points: list[tuple[float, float]],
+    points: Sequence[tuple[float, float]],
     system: System,
     *,
     closed: bool = False,
 ) -> Centerline:
-    slanted = [system.map_xy(x, y) for x, y in points]
-    return Centerline.from_points(slanted, closed=closed)
-
-
-
-def slanted_vertical_optical_ratio(system: System) -> float:
-    """Horizontal stem width per unit pen thickness for a slanted vertical.
-
-    ``tk audit`` measures filled horizontal spans. An elliptical broad nib at
-    ``pen_angle_deg`` on a stem leaned by ``System.slant`` yields optical width
-    ``ratio * thickness``, not ``thickness`` itself. Calibrating pens by this
-    ratio keeps System.stem aligned with audit (no heal).
-    """
-    from typekernel.optics.stem import list_vertical_stems
-
-    contrast, angle = _pen_params(system)
-    probe_th = 40.0
-    cl = slanted_polyline([(200.0, 0.0), (200.0, 500.0)], system, closed=False)
-    drawing = expand_skeleton(
-        cl,
-        broad_nib(probe_th, contrast=contrast, angle_deg=angle),
-        join="round",
-        cap="round",
-    )
-    spans = list_vertical_stems(drawing.outline(), y=250.0)
-    if not spans or spans[0].width <= 0:
-        return 1.0
-    return float(spans[0].width) / probe_th
-
-
-def pen_for_optical_stem(system: System, optical: float):
-    """Broad nib whose slanted vertical measures ``optical`` horizontally."""
-    contrast, angle = _pen_params(system)
-    ratio = slanted_vertical_optical_ratio(system)
-    thickness = float(optical) / ratio if ratio > 0 else float(optical)
-    return broad_nib(thickness, contrast=contrast, angle_deg=angle)
-
-
-def project_pen(system: System, thickness: float | None = None):
-    """Broad nib sized so slanted verticals hit ``thickness`` (default lc stem)."""
-    optical = float(system.stem["lc"] if thickness is None else thickness)
-    return pen_for_optical_stem(system, optical)
-
+    return slanted_centerline(points, system, closed=closed)
 
 
 def stroke(
     system: System,
-    points: list[tuple[float, float]],
+    points: Sequence[tuple[float, float]],
     *,
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
-    """Expand a pre-slant polyline with the project pen (``System.slant`` applied).
-
-    ``thickness`` is the *optical* horizontal stem target (System.stem units),
-    not raw ``Pen.thickness`` — elliptical angle + italic slant are calibrated
-    out so ``tk audit`` stem checks match the numeric table.
-    """
-    cl = slanted_polyline(points, system, closed=closed)
-    optical = float(system.stem["lc"]) if thickness is None else float(thickness)
-    pen = pen_for_optical_stem(system, optical)
-    # closed → bevel: expand_skeleton rejects join="round" on closed rails (VF).
-    join = "bevel" if closed else "round"
-    return expand_skeleton(cl, pen, join=join, cap="round")
-
-
-def pen_dot(
-    system: System,
-    cx: float,
-    cy: float,
-    *,
-    radius: float | None = None,
-) -> Drawing:
-    """Tittle / period-style **filled** dot, center in pre-slant space.
-
-    Radius tracks stem weight so Light→Bold outer contours gain weight
-    (fixed ``dot_radius`` tokens alone make interpolatable underweight).
-
-    Built as one solid contour: stroking a closed circle here would produce an
-    annulus (ink + counter), i.e. a hollow ring for a period/tittle.
-    """
-    thin = float(system.stem.get("lc_h", system.stem["lc"]))
-    if radius is None:
-        # Regular table: dot_radius / lc_h ≈ size; masters inherit via stem scale.
-        ref_h = 36.0  # design lc_h at Regular in system.py
-        mul = float(system.tokens.get("dot_radius", 28.0)) / ref_h
-        r = thin * mul
-    else:
-        r = float(radius)
-    # Match the old stroked ring's outer radius (centerline r + half pen).
-    outer = r + thin * 0.5
-    n = 48
-    pts = [
-        system.map_xy(
-            cx + outer * math.cos(2.0 * math.pi * i / n),
-            cy + outer * math.sin(2.0 * math.pi * i / n),
-        )
-        for i in range(n)
-    ]
-    writer = Writer()
-    writer.start(pts[0])
-    for p in pts[1:]:
-        writer.line(p)
-    writer.close()
-    return writer.build()
-
-
-def flourish_exit(
-    system: System,
-    stem_edge_x: float,
-    y_join: float,
-    tip: tuple[float, float],
-    *,
-    depth: float | None = None,
-) -> Fragment:
-    """Hook-shaped exit flourish from a stem edge (letter-free ``hook``)."""
-    d = float(system.tokens["flourish_depth"] if depth is None else depth)
-    return hook(stem_edge_x, y_join, Point(*tip), depth=d, tension=0.55)
-
-
-def flourish_entry(
-    system: System,
-    p0: tuple[float, float],
-    p1: tuple[float, float],
-    *,
-    tension: float = 0.6,
-) -> Fragment:
-    """Lead-in arc into a stem (``tensioned_arc``)."""
-    a = Point(*p0)
-    b = Point(*p1)
-    return tensioned_arc(a, Point(0.35, 1.0), b, Point(0.0, 1.0), tension=tension)
-
-
-def fragment_polyline(fragment: Fragment, *, samples_per_cubic: int = 8) -> list[tuple[float, float]]:
-    """Sample a Fragment into pre-slant polyline points for ``stroke``."""
-    pts: list[tuple[float, float]] = []
-    for seg in fragment.segments:
-        if isinstance(seg, LineSegment):
-            for p in (seg.p0, seg.p1):
-                pts.append((p.x, p.y))
-        elif isinstance(seg, CubicSegment):
-            ctrl = [p.as_tuple() for p in seg.points]
-            for i in range(samples_per_cubic):
-                t = i / (samples_per_cubic - 1)
-                x, y = cubicPointAtT(*ctrl, t)
-                pts.append((float(x), float(y)))
-        else:
-            p0 = seg.points[0]
-            pts.append((p0.x, p0.y))
-    cleaned: list[tuple[float, float]] = []
-    for p in pts:
-        if not cleaned or math.hypot(p[0] - cleaned[-1][0], p[1] - cleaned[-1][1]) > 0.5:
-            cleaned.append(p)
-    return cleaned
-
-
-def stroke_fragment(
-    system: System,
-    fragment: Fragment,
-    *,
-    thickness: float | None = None,
-) -> Drawing:
-    """Expand a flourish Fragment with the project pen."""
-    pts = fragment_polyline(fragment)
-    if len(pts) < 2:
-        raise ValueError("flourish fragment too short to stroke")
-    return stroke(system, pts, thickness=thickness)
-
-
-def oval_points(
-    cx: float, cy: float, rx: float, ry: float, *, n: int = 48
-) -> list[tuple[float, float]]:
-    return [
-        (cx + rx * math.cos(2.0 * math.pi * i / n), cy + ry * math.sin(2.0 * math.pi * i / n))
-        for i in range(n)
-    ]
-
-
-def open_arc_points(
-    cx: float,
-    cy: float,
-    rx: float,
-    ry: float,
-    *,
-    start_deg: float,
-    end_deg: float,
-    n: int = 36,
-) -> list[tuple[float, float]]:
-    a0 = math.radians(start_deg)
-    a1 = math.radians(end_deg)
-    return [
-        (
-            cx + rx * math.cos(a0 + (a1 - a0) * i / (n - 1)),
-            cy + ry * math.sin(a0 + (a1 - a0) * i / (n - 1)),
-        )
-        for i in range(n)
-    ]
+    cl = slanted_centerline(points, system, closed=closed)
+    return expand_slanted_centerline(system, cl, thickness=thickness)
 
 
 def bowl(
@@ -239,7 +79,7 @@ def bowl(
     thickness: float | None = None,
 ) -> Drawing:
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
-    return stroke(system, oval_points(cx, cy, rx, ry), closed=True, thickness=st)
+    return stroke(system, oval_points(cx, cy, rx, ry, n=48), closed=True, thickness=st)
 
 
 def open_bowl(
@@ -283,7 +123,6 @@ def nest_bowl(
     ry: float | None = None,
     pull: float = 0.78,
 ) -> Drawing:
-    """Oval bowl nestled against a stem (``side`` left/right of stem)."""
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
     ov = float(system.overshoot.round)
     rx_v = width * 0.36 if rx is None else float(rx)
@@ -298,10 +137,44 @@ def nest_bowl(
     return bowl(system, cx=cx, cy=cy_v, rx=rx_v, ry=ry_v, thickness=st)
 
 
+def fragment_polyline(fragment: Fragment, *, samples_per_cubic: int = 8) -> list[tuple[float, float]]:
+    pts: list[tuple[float, float]] = []
+    for seg in fragment.segments:
+        if isinstance(seg, LineSegment):
+            for p in (seg.p0, seg.p1):
+                pts.append((p.x, p.y))
+        elif isinstance(seg, CubicSegment):
+            ctrl = [p.as_tuple() for p in seg.points]
+            for i in range(samples_per_cubic):
+                t = i / (samples_per_cubic - 1)
+                x, y = cubicPointAtT(*ctrl, t)
+                pts.append((float(x), float(y)))
+        else:
+            p0 = seg.points[0]
+            pts.append((p0.x, p0.y))
+    cleaned: list[tuple[float, float]] = []
+    for p in pts:
+        if not cleaned or math.hypot(p[0] - cleaned[-1][0], p[1] - cleaned[-1][1]) > 0.5:
+            cleaned.append(p)
+    return cleaned
+
+
+def stroke_fragment(
+    system: System,
+    fragment: Fragment,
+    *,
+    thickness: float | None = None,
+) -> Drawing:
+    """Expand a flourish Fragment via sampled polyline (hash-stable)."""
+    pts = fragment_polyline(fragment)
+    if len(pts) < 2:
+        raise ValueError("flourish fragment too short to stroke")
+    return stroke(system, pts, thickness=thickness)
+
+
 def n_arch_points(
     x0: float, x1: float, y0: float, y1: float, *, rise: float
 ) -> list[tuple[float, float]]:
-    """n-style arch from (x0,y0) up to y1 then down to (x1,y0)."""
     mid = (x0 + x1) / 2.0
     span = x1 - x0
     return [
