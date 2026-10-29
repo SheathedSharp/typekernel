@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from typekernel.cli.audit import audit_project
 from typekernel.cli.new import create_project
 from typekernel.draw import Drawing, Writer
@@ -132,6 +134,7 @@ def test_overlap_skips_pure_multi_ink() -> None:
 
 def test_overlap_warns_only_when_cancel_enters_counter(tmp_path: Path) -> None:
     """b's stem/bowl cancel stays in the ring; Q's tail cancel enters 字腔."""
+    pytest.importorskip("pathops")  # typekernel[boolean]
     root = create_project("ovnear", parent=tmp_path, starter="latin-sans")
     report = audit_project(root, glyphs=["b", "Q", "n"], check_overlap=True)
     b_warns = [f for f in report.findings if f.kind == "overlap" and f.glyph == "b"]

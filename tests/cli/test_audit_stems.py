@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from typekernel.cli.audit import audit_project, load_audit_stems
 from typekernel.cli.new import create_project
 from typekernel.draw import Writer
@@ -65,6 +67,7 @@ def test_measure_oriented_stem_on_diagonal_band() -> None:
 
 
 def test_overlap_check_opt_in(tmp_path: Path) -> None:
+    pytest.importorskip("pathops")  # typekernel[boolean]
     root = create_project("ov", parent=tmp_path, starter="latin-sans")
     quiet = audit_project(root, check_overlap=False)
     noisy = audit_project(root, check_overlap=True)
