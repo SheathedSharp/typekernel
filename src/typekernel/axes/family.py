@@ -40,123 +40,117 @@ class FamilySpec:
     members: Sequence[FamilyMember]
 
 
-def _set_name(tt, name_id: int, string: str, *, platform_id: int = 3, plat_enc_id: int = 1, lang_id: int = 0x409) -> None:
-    from fontTools.ttLib import TTFont  # noqa: F401 — typing aid
-    name = tt["name"]
+def _set_name(
+    tt: object,
+    name_id: int,
+    string: str,
+    *,
+    platform_id: int = 3,
+    plat_enc_id: int = 1,
+    lang_id: int = 0x409,
+) -> None:
+    name = tt["name"]  # type: ignore[index]
     name.setName(string, name_id, platform_id, plat_enc_id, lang_id)
-    # Also Mac Roman for broader tooling.
+    # Mac Roman (platform 1) for broader tooling; skip if the string is not encodable.
     try:
-        name.setName(string, name_id, 1, 0, 0)
-    except Exception:
-        pass
+        string.encode("mac_roman")
+    except UnicodeEncodeError:
+        return
+    name.setName(string, name_id, 1, 0, 0)
 
 
-def apply_family_names(tt, family: FamilySpec, member: FamilyMember) -> None:
+def _ribbi_subfamily(member: FamilyMember) -> str:
+    if member.italic and member.weight_class == 400:
+        return "Italic"
+    if not member.italic and member.weight_class == 400:
+        return "Regular"
+    if member.italic and member.weight_class == 700:
+        return "Bold Italic"
+    if not member.italic and member.weight_class == 700:
+        return "Bold"
+    return member.style_name
+
+
+def _typo_subfamily(member: FamilyMember) -> str:
+    if member.style_name in {"Regular", "Roman"} and not member.italic:
+        return "Regular"
+    if member.style_name in {"Italic", "Oblique"} or (
+        member.italic and member.weight_class == 400 and member.style_name in {"Italic", "Oblique", "Regular"}
+    ):
+        return "Italic"
+    if member.italic and "Italic" not in member.style_name:
+        return f"{member.style_name} Italic"
+    return member.style_name
+
+
+def apply_family_names(tt: object, family: FamilySpec, member: FamilyMember) -> None:
     """Write name IDs 1/2/4/6/16/17 for ``member`` under ``family.name``."""
-    # RIBBI-compatible: Family (1) + Subfamily (2); Typographic (16/17) for larger sets.
-    family_ribbi = family.name
-    subfamily = "Italic" if member.italic and member.style_name in {"Italic", "Oblique"} else member.style_name
-    if member.italic and "Italic" not in subfamily and "Oblique" not in subfamily:
-        subfamily = f"{member.style_name} Italic"
+    subfamily = _ribbi_subfamily(member)
     typo_family = family.name
-    typo_subfamily = member.style_name if member.style_name not in {"Regular", "Italic"} else (
-        "Italic" if member.italic else "Regular"
-    )
-    if member.italic and member.style_name in {"Italic", "Oblique"}:
-        typo_subfamily = "Italic"
-
+    typo_subfamily = _typo_subfamily(member)
     full = f"{typo_family} {typo_subfamily}".strip()
     postscript = f"{typo_family}-{typo_subfamily}".replace(" ", "")
 
-    _set_name(tt, 1, family_ribbi)
-    _set_name(tt, 2, subfamily if member.style_name in {"Regular", "Italic", "Bold", "Bold Italic"} or member.italic else member.style_name)
-    # Prefer classic RIBBI for Regular/Italic pair.
-    if member.italic and member.weight_class == 400:
-        _set_name(tt, 2, "Italic")
-    elif not member.italic and member.weight_class == 400 and member.style_name in {"Regular", "Roman"}:
-        _set_name(tt, 2, "Regular")
+    _set_name(tt, 1, family.name)
+    _set_name(tt, 2, subfamily)
     _set_name(tt, 4, full)
     _set_name(tt, 6, postscript)
     _set_name(tt, 16, typo_family)
     _set_name(tt, 17, typo_subfamily)
 
-    if "OS/2" in tt:
-        os2 = tt["OS/2"]
+    os2 = tt.get("OS/2")  # type: ignore[attr-defined]
+    if os2 is not None:
         os2.usWeightClass = int(member.weight_class)
-        # bit 0 = italic
         fs = int(getattr(os2, "fsSelection", 0) or 0)
         if member.italic:
-            fs = (fs | 0x01) & ~0x40  # italic, clear regular
+            fs = (fs | 0x01) & ~0x40
         else:
-            fs = (fs | 0x40) & ~0x01  # regular, clear italic
+            fs = (fs | 0x40) & ~0x01
         os2.fsSelection = fs
-    if "head" in tt:
-        head = tt["head"]
+
+    head = tt.get("head")  # type: ignore[attr-defined]
+    if head is not None:
         mac = int(getattr(head, "macStyle", 0) or 0)
-        if member.italic:
-            mac |= 0x02
-        else:
-            mac &= ~0x02
-        head.macStyle = mac
-    if member.italic and "post" in tt:
-        # Synthetic oblique fixture uses ~−12°; leave existing if set.
-        if getattr(tt["post"], "italicAngle", 0) == 0:
-            tt["post"].italicAngle = -12.0
+        head.macStyle = (mac | 0x02) if member.italic else (mac & ~0x02)
+
+    post = tt.get("post")  # type: ignore[attr-defined]
+    if member.italic and post is not None and getattr(post, "italicAngle", 0) == 0:
+        post.italicAngle = -12.0
 
 
-def apply_family_stat(tt, family: FamilySpec, member: FamilyMember) -> None:
-    """Install a minimal STAT with ``ital`` (and optional ``wght``) for linking."""
+def apply_family_stat(tt: object, family: FamilySpec, member: FamilyMember) -> None:
+    """Install a minimal STAT with ``ital`` (and ``wght``) for linking."""
     from fontTools.otlLib.builder import buildStatTable
 
-    axes = [
-        dict(
-            tag="ital",
-            name="Italic",
-            ordering=1,
-            values=[
-                dict(value=0, name="Roman", flags=2, linkedValue=1),  # ElidableAxisValueName
-                dict(value=1, name="Italic"),
-            ],
-        )
-    ]
-    # If the face already exposes wght via fvar, mirror a weight axis into STAT.
-    if "fvar" in tt:
-        for ax in tt["fvar"].axes:
-            if ax.axisTag == "wght":
-                axes.insert(
-                    0,
-                    dict(
-                        tag="wght",
-                        name="Weight",
-                        ordering=0,
-                        values=[
-                            dict(
-                                value=float(member.weight_class),
-                                name=member.style_name.replace(" Italic", "").replace(" Oblique", "")
-                                or ("Regular" if not member.italic else "Regular"),
-                            )
-                        ],
-                    ),
-                )
-                break
-    else:
-        # Static pair: still record weight for the member.
-        axes.insert(
-            0,
-            dict(
-                tag="wght",
-                name="Weight",
-                ordering=0,
-                values=[
-                    dict(
-                        value=float(member.weight_class),
-                        name="Regular" if member.weight_class == 400 else str(member.weight_class),
-                        flags=2 if member.weight_class == 400 else 0,
-                    )
-                ],
-            ),
-        )
+    weight_name = (
+        member.style_name.replace(" Italic", "").replace(" Oblique", "") or "Regular"
+    )
+    if weight_name in {"Italic", "Oblique"}:
+        weight_name = "Regular"
 
+    axes: list[dict] = [
+        {
+            "tag": "wght",
+            "name": "Weight",
+            "ordering": 0,
+            "values": [
+                {
+                    "value": float(member.weight_class),
+                    "name": weight_name,
+                    "flags": 2 if member.weight_class == 400 else 0,
+                }
+            ],
+        },
+        {
+            "tag": "ital",
+            "name": "Italic",
+            "ordering": 1,
+            "values": [
+                {"value": 0, "name": "Roman", "flags": 2, "linkedValue": 1},
+                {"value": 1, "name": "Italic"},
+            ],
+        },
+    ]
     locations = [
         {
             "name": member.style_name,
@@ -178,6 +172,7 @@ def link_family(
     """Apply names + STAT to each member binary; return written paths."""
     from fontTools.ttLib import TTFont
 
+    items: Sequence[tuple[FamilyMember, str | Path]]
     if isinstance(paths, Mapping):
         items = list(paths.items())
     else:
@@ -203,27 +198,22 @@ def read_family_identity(path: str | Path) -> dict[str, object]:
     name = tt["name"]
 
     def get(nid: int) -> str | None:
-        v = name.getDebugName(nid)
-        return v
+        return name.getDebugName(nid)
 
     ital_values: list[float] = []
+    tags: list[str] = []
     if "STAT" in tt:
         stat = tt["STAT"].table
-        for avs in getattr(stat, "AxisValueArray", None) and stat.AxisValueArray.AxisValue or []:
-            # Format 1/2/3/4 — collect ital axis values when tag matches.
-            pass
         axis_records = list(stat.DesignAxisRecord.Axis)
         tags = [a.AxisTag for a in axis_records]
-        # Axis values
         if stat.AxisValueArray is not None:
             for av in stat.AxisValueArray.AxisValue:
-                axis_tag = tags[av.AxisIndex] if hasattr(av, "AxisIndex") else None
-                if axis_tag == "ital" and hasattr(av, "Value"):
-                    ital_values.append(float(av.Value))
-    else:
-        tags = []
+                if hasattr(av, "AxisIndex"):
+                    axis_tag = tags[av.AxisIndex]
+                    if axis_tag == "ital" and hasattr(av, "Value"):
+                        ital_values.append(float(av.Value))
 
-    os2 = tt["OS/2"] if "OS/2" in tt else None
+    os2 = tt.get("OS/2")
     return {
         "family_name_id1": get(1),
         "subfamily_id2": get(2),
