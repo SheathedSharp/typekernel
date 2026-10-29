@@ -9,7 +9,7 @@ from typekernel.draw.construct import (
     superellipse_quarter,
     tensioned_arc,
 )
-from typekernel.draw.drawing import ContourRole, Drawing, Slot
+from typekernel.draw.drawing import ContourRole, Drawing, Measure, Slot
 from typekernel.draw.errors import ContinuityError
 from typekernel.draw.fragment import Fragment, Node
 from typekernel.draw.slots import (
@@ -35,6 +35,7 @@ __all__ = [
     "EndFiller",
     "EndSite",
     "Fragment",
+    "Measure",
     "Node",
     "Slot",
     "SlotFillError",

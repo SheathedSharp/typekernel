@@ -36,6 +36,31 @@ class Slot:
         object.__setattr__(self, "meta", _freeze_meta(self.meta))
 
 
+
+
+@dataclass(frozen=True, slots=True)
+class Measure:
+    """Declared stem / gap / height check between tagged nodes (target-architecture §4.4)."""
+
+    kind: Literal["stem", "thin", "gap", "height", "crotch"]
+    a: str
+    b: str | None = None
+    expected: float | None = None
+    direction_deg: float | None = None
+
+    def prefixed(self, prefix: str) -> Measure:
+        """Prefix label refs (used by :meth:`Drawing.tagged`)."""
+        if not prefix:
+            return self
+        return Measure(
+            kind=self.kind,
+            a=f"{prefix}.{self.a}",
+            b=None if self.b is None else f"{prefix}.{self.b}",
+            expected=self.expected,
+            direction_deg=self.direction_deg,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class Drawing:
     """Closed contours with named nodes and slots."""
@@ -44,6 +69,7 @@ class Drawing:
     roles: tuple[ContourRole, ...]
     nodes: tuple[tuple[Node, ...], ...]
     slots: tuple[Slot, ...] = ()
+    measures: tuple[Measure, ...] = ()
 
     def __post_init__(self) -> None:
         if len(self.contours) != len(self.roles) or len(self.contours) != len(self.nodes):
@@ -71,7 +97,7 @@ class Drawing:
     def signature(self) -> tuple[tuple[ContourRole, tuple[str, ...], tuple[str, ...]], ...]:
         """Compatibility signature: per contour (role, segment kinds, tags).
 
-        Equal signatures mean masters are structurally interpolatable (``signature`` 只做结构比较；插值检查由 ``axes.interpolatable`` 负责).
+        Measures are omitted. Equal signatures mean masters are structurally interpolatable (``signature`` 只做结构比较；插值检查由 ``axes.interpolatable`` 负责).
         """
         parts: list[tuple[ContourRole, tuple[str, ...], tuple[str, ...]]] = []
         for role, contour, cnodes in zip(self.roles, self.contours, self.nodes, strict=True):
@@ -107,6 +133,38 @@ class Drawing:
             roles=self.roles + other.roles,
             nodes=self.nodes + other.nodes,
             slots=self.slots + shifted_slots,
+            measures=self.measures + other.measures,
+        )
+
+
+    def tagged(self, prefix: str) -> Drawing:
+        """Prefix every node tag and Measure label with ``prefix.``."""
+        if not prefix:
+            return self
+        new_nodes = tuple(
+            tuple(
+                Node(index=n.index, tag=f"{prefix}.{n.tag}", meta=n.meta) for n in group
+            )
+            for group in self.nodes
+        )
+        new_slots = tuple(
+            Slot(
+                kind=s.kind,
+                tag=f"{prefix}.{s.tag}" if s.tag else s.tag,
+                contour=s.contour,
+                node=s.node,
+                meta=s.meta,
+                fill=s.fill,
+            )
+            for s in self.slots
+        )
+        new_measures = tuple(m.prefixed(prefix) for m in self.measures)
+        return Drawing(
+            self.contours,
+            self.roles,
+            new_nodes,
+            new_slots,
+            new_measures,
         )
 
 
@@ -118,7 +176,7 @@ class Drawing:
             Contour(tuple(map_segment(s, move) for s in c.segments), closed=c.closed)
             for c in self.contours
         )
-        return Drawing(contours, self.roles, self.nodes, self.slots)
+        return Drawing(contours, self.roles, self.nodes, self.slots, self.measures)
 
     def mirrored_x(self, axis_x: float) -> Drawing:
         def mirror(p: Point) -> Point:
@@ -154,7 +212,13 @@ class Drawing:
                     fill=slot.fill,
                 )
             )
-        return Drawing(tuple(new_contours), self.roles, tuple(new_nodes), tuple(rebuilt))
+        return Drawing(
+            tuple(new_contours),
+            self.roles,
+            tuple(new_nodes),
+            tuple(rebuilt),
+            self.measures,
+        )
 
 
 def on_curve_at(contour: Contour, index: int) -> Point:

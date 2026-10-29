@@ -641,4 +641,5 @@ def apply_slots(
         roles=d.roles,
         nodes=tuple(new_nodes),
         slots=tuple(remaining_slots),
+        measures=d.measures,
     )
