@@ -23,6 +23,7 @@
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
 | LihuiT 移植 Hausdorff 指标 | **程序侧已达标** | `transplants/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `transplants/lihuit/BACKLOG.md`） |
 | Stem `AUDIT_STEMS` 策略 | **已落地** | 项目声明 map 之外的字形不跑 stem 门禁（Ext-A/符号安静）；空元组=无光学探针 |
+| `perceive.voice_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2 距离；**不是**美学 originality。主观的 distinctive 由人审另行记录 |
 
 ---
 

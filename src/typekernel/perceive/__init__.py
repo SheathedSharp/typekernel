@@ -13,18 +13,28 @@ from typekernel.perceive.views import (
     overlay_view,
     reference_view,
 )
+from typekernel.perceive.voice import (
+    CONTROL_GLYPHS,
+    VoiceFeatures,
+    extract_voice,
+    voice_distance,
+)
 
 __all__ = [
+    "CONTROL_GLYPHS",
     "GlyphReport",
     "LiveGlyph",
     "SeeResult",
     "Topology",
+    "VoiceFeatures",
     "context_view",
     "diff_view",
     "edit_view",
     "explain",
+    "extract_voice",
     "measure_topology",
     "overlay_view",
     "reference_view",
     "render_live",
+    "voice_distance",
 ]

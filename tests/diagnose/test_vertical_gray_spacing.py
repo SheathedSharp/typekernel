@@ -68,16 +68,15 @@ def test_overshoot_fixture_too_big() -> None:
         shutil.rmtree(td)
 
 
-def test_gray_flags_dense_stem_outliers_on_latin_sans() -> None:
-    """Narrow stems (i/l/I) are dense vs letter cohorts — useful signal."""
+def test_gray_narrow_stems_not_false_letter_outliers() -> None:
+    """Tall thin stems compare in a .narrow cohort — not vs n/o letter gray."""
     td = Path(tempfile.mkdtemp())
     try:
         root = create_project("gray", parent=td, starter="latin-sans")
         report = audit_project(root)
         gray = [f for f in report.findings if f.check == "gray.density" and f.level == "warn"]
         glyphs = {f.glyph for f in gray}
-        assert glyphs & {"i", "l", "I", "dotlessi"}, glyphs
-        # Parens live in punct cohort now — not false cap outliers.
         assert "parenleft" not in glyphs and "parenright" not in glyphs, glyphs
+        assert len(gray) <= 5, glyphs
     finally:
         shutil.rmtree(td)

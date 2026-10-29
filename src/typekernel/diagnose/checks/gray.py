@@ -62,6 +62,12 @@ class GrayCheck:
                 key = "x-height" if key != "descender" else key
             elif group.startswith("uc"):
                 key = "cap"
+            # Tall thin stems (i/l/I/brackets/ones) are not letter-gray peers.
+            by0, by1 = report.bbox[1], report.bbox[3]
+            bx0, bx1 = report.bbox[0], report.bbox[2]
+            aspect = (by1 - by0) / max(bx1 - bx0, 1e-6)
+            if aspect >= 2.8:
+                key = f"{key}.narrow"
             cohorts.setdefault(key, []).append((name, report.ink_density))
 
         out: list[Finding] = []
