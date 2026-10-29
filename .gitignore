@@ -87,3 +87,6 @@ examples/*/out/**
 
 uploads/
 dogfood/**/build/
+
+# Local trial output: kept on this machine, never distributed
+dogfood/trials/
