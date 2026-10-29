@@ -655,3 +655,6 @@ class Project:
 | 解剖构件（曲线） | `arch` `bowl` `bowl_join` `open_bowl`/`BarSpec` `spine` |
 | 解剖构件（斜笔） | `diagonal_pair` `crossing` |
 | 解剖构件（钩尾） | `hook` `tail` `ear` `spur` |
+| latin-sans 控制字 anatomy 化 | **agent pass**；人工批准待定 |
+| 插件语义 / slab litmus | **已落地**（slab/bracketed/rounded） |
+| designed masters | **已落地**（Light/Bold 宽/开口/张力）；阶梯人工批准待定 |

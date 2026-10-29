@@ -255,6 +255,9 @@ starter 自带 `charset/latin-core.txt`、`latin-1.txt`、`latin-ext-a.txt`（�
 
 ### 4.3 构件清单与几何语义契约
 
+> **轮廓构件已落地** → `typekernel.anatomy`（`stem`…`spur`）；契约测试在 `tests/anatomy/`。下表仍是规范性签名，供对照。`anatomy.pen`（§4.5）仍属 P5。
+
+
 所有构件都满足：轮廓闭合、方向正确、曲线接合 G1（声明的角点除外）、同一组参数在合法范围内
 变化时 `signature()` 稳定（可插值）。下面只列各自额外的语义契约。
 
