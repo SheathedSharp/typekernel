@@ -122,3 +122,20 @@ def test_spine_end_slots_and_signature_stable() -> None:
     assert all(is_valid_tag(t) for t in ends)
     other = spine((200.0, 500.0), (200.0, 0.0), thick=100.0, thin=40.0, tension=0.55)
     assert d.signature() == other.signature()
+
+
+def test_open_bowl_survives_plain_apply_slots() -> None:
+    """Unmatched end slots + inner corners stay exempt after plain fill."""
+    from typekernel.draw import apply_slots
+    from typekernel.plugins.corners import plain
+    from typekernel.starters.latin_sans.system import system
+
+    d = open_bowl(
+        (200.0, 260.0), 180.0, 260.0, thick=84.0, thin=70.0, aperture=0.42
+    )
+    out = apply_slots(d, system, corners={"*": plain()}, ends={})
+    ends = sorted(s.tag for s in out.slots if s.kind == "end")
+    assert ends == ["aperture.0.a", "aperture.0.b"]
+    topo = measure_topology(out.outline(), stem=84.0)
+    assert topo.islands == 1
+    assert topo.counters == 0

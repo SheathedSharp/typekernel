@@ -359,10 +359,10 @@ def _check_contour_g1(
     *,
     exempt_nodes: set[int] | None = None,
 ) -> None:
-    """Post-fill G1 check; ``exempt_nodes`` are on-curve indices still marked corner.
+    """Post-fill G1 check; ``exempt_nodes`` are on-curve indices still sharp.
 
     Intentional skips (ARCHITECTURE.md Writer / 槽位与填充协议):
-    - ``exempt_nodes``: sharp corners left unmatched or filled with plain/noop.
+    - ``exempt_nodes``: unmatched/noop corner or end slots (cusps kept).
     - line–line joins: G1 is not required (sharp corners between straights).
 
     Zero-length segments are **not** skipped: fillers must return ``path=None``
@@ -627,10 +627,12 @@ def apply_slots(
             applied.add(slot.tag)
 
         new_contour = Contour(tuple(working), closed=True)
+        # Unmatched / noop corner *and* end slots keep intentional cusps
+        # (open_bowl aperture chords; ARCHITECTURE Writer cusp / end slots).
         exempt = {
             s.node
             for s in remaining_slots
-            if s.contour == ci and s.kind == "corner"
+            if s.contour == ci and s.kind in ("corner", "end")
         }
         _check_contour_g1(new_contour.segments, exempt_nodes=exempt)
         new_contours.append(new_contour)

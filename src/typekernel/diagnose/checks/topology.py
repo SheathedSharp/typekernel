@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from typekernel.anatomy.tags import TagGrammarError, parse_tag
 from typekernel.diagnose.protocol import CheckContext, Finding, Scope
 from typekernel.perceive.topology import measure_topology
 from typekernel.project.manifest import Expect
@@ -18,6 +19,41 @@ def _expect_for(ctx: CheckContext) -> Expect | None:
     if spec is not None and spec.expect is not None:
         return spec.expect
     return ctx.project.expect.get(ctx.name)
+
+
+def _aperture_tags(drawing: object) -> list[str]:
+    """Collect aperture.* tags from nodes and slots on a Drawing-like object."""
+    tags: list[str] = []
+    nodes = getattr(drawing, "nodes", ()) or ()
+    for group in nodes:
+        for n in group:
+            tag = getattr(n, "tag", "")
+            if isinstance(tag, str) and tag.startswith("aperture."):
+                tags.append(tag)
+    slots = getattr(drawing, "slots", ()) or ()
+    for slot in slots:
+        tag = getattr(slot, "tag", "")
+        if isinstance(tag, str) and tag.startswith("aperture."):
+            tags.append(tag)
+    return tags
+
+
+def _aperture_index_count(tags: list[str]) -> int:
+    """Count unique aperture.N indices (target §7.3 apertures)."""
+    indices: set[str] = set()
+    for tag in tags:
+        try:
+            parsed = parse_tag(tag)
+        except TagGrammarError:
+            indices.add(tag)
+            continue
+        if parsed.part != "aperture":
+            continue
+        if parsed.indices:
+            indices.add(parsed.indices[0])
+        else:
+            indices.add(tag)
+    return len(indices)
 
 
 class TopologyCheck:
@@ -84,15 +120,12 @@ class TopologyCheck:
                 )
             )
 
-        # Apertures: count aperture.* tags when expect.apertures is set.
+        # Apertures: unique aperture.N indices on raw (pre-fill) tags.
+        # open_bowl stamps end slots aperture.N.a/b — count N, not endpoints.
         if expect is not None and expect.apertures is not None:
-            tags = [
-                n.tag
-                for group in ctx.final.nodes
-                for n in group
-                if n.tag.startswith("aperture.")
-            ]
-            counted = len(tags)
+            drawing = ctx.raw if ctx.raw is not None else ctx.final
+            tags = _aperture_tags(drawing)
+            counted = _aperture_index_count(tags)
             if counted != expect.apertures:
                 out.append(
                     Finding(
@@ -100,13 +133,13 @@ class TopologyCheck:
                         level="warn",
                         glyph=ctx.name,
                         master=ctx.master,
-                        where=",".join(tags) or None,
+                        where=",".join(sorted(tags)) or None,
                         measured=counted,
                         expected=expect.apertures,
                         message=(
-                            f"aperture tags={counted} expected {expect.apertures}"
+                            f"aperture indices={counted} expected {expect.apertures}"
                         ),
-                        hint="open_bowl should stamp aperture.* tags",
+                        hint="open_bowl should stamp aperture.N.a/b; count unique N",
                     )
                 )
         return out

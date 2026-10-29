@@ -300,8 +300,9 @@ def open_bowl(
         south_i, (1.0, 0.0), bot_i, _ccw_unit(x_i, -y_i), tension=ten
     )
 
-    # Terminal joins are not G1 (chord across the aperture); mark cusps and
-    # declare end slots so ends plugins can finish the stroke.
+    # Terminal joins are not G1 (chord across the aperture): outer ends are
+    # end slots for ends plugins; inner chord corners are corner slots so
+    # apply_slots can exempt them after plain/unmatched fill.
     w = Writer()
     w.start(top_o).end("aperture.0.a").cusp()
     w.fragment(stub_top_o)
@@ -309,11 +310,11 @@ def open_bowl(
     w.fragment(stub_bot_o)
     w.end("aperture.0.b").cusp()
     w.line(bot_i)
-    w.cusp()
+    w.corner(f"{name}.i.b")
     w.fragment(stub_bot_i.reversed())
     w.fragment(i2.reversed()).fragment(i1.reversed())
     w.fragment(stub_top_i.reversed())
-    w.cusp()
+    w.corner(f"{name}.i.t")
     w.line(top_o)
     drawing = w.close().build()
     if open_side == "left":
@@ -336,13 +337,14 @@ def open_bowl(
     left_x = cx - outer_rx + max(float(bar.inset), float(thick) * 0.2)
     # Aim the right end at the lower aperture outer terminal (bot_o).
     right_x = float(bot_o[0]) - float(thick) * 0.1
-    # Keep the bar below mid so the upper eye closes as the sole counter.
-    # Clamp bar_y toward the lower half if the caller passed center.
-    bar_y = min(bar_y, cy - float(thin) * 0.1)
+    # Keep the bar in the lower-half band that seals against the lip.
+    # Too high → upper eye stays open (0 counters); too low → slit/miss.
+    lip_y = float(bot_i[1])
+    max_y = cy - max(float(thin) * 0.3, half * 0.6)
+    min_y = lip_y - half * 0.2
+    bar_y = min(max(bar_y, min_y), max_y)
     top_y = bar_y + half
     bot_y = bar_y - half
-    # Also nudge right end down onto the lower lip y so the seal is real.
-    lip_y = float(bot_i[1])
     # Build a wedge-ish bar: left rectangle into a right end near (right_x, lip).
     bar_drawing = (
         Writer()
