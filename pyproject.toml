@@ -92,6 +92,7 @@ packages = ["typekernel"]
 module = [
   "fontTools.*",
   "pathops",
+  "uharfbuzz",
   "ufoLib2",
   "ufoLib2.*",
   "fontmake",

@@ -91,6 +91,28 @@ def _cmd_proof(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
+    if getattr(args, "features", None):
+        from typekernel.perceive.specimen import proof_features
+        from typekernel.cli.proof_cmd import _find_binary
+        from pathlib import Path as _P
+
+        root = _P(path).resolve()
+        bdir = _P(args.build_dir) if args.build_dir else root / "build"
+        odir = _P(args.out) if args.out else root / "proofs"
+        binary = _find_binary(root, bdir)
+        feat = [f.strip() for f in args.features.split(",") if f.strip()]
+        try:
+            out = proof_features(
+                binary,
+                args.text or "Hamburg",
+                odir / "features.png",
+                features=feat,
+            )
+        except ImportError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(out)
+        return 0
     paths = proof_project(
         path,
         proof_set,
@@ -314,6 +336,11 @@ def main(argv: list[str] | None = None) -> int:
         "--build-dir",
         default=None,
         help="directory with OTF/TTF (default: <project>/build)",
+    )
+    p_proof.add_argument(
+        "--features",
+        default=None,
+        help="comma-separated OpenType features (needs uharfbuzz + raqm Pillow)",
     )
     p_proof.set_defaults(func=_cmd_proof)
 

@@ -5,12 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 
 from typekernel.cli.build import build_project
-from typekernel.qa.proof import (
+from typekernel.perceive.sidecar import write_sidecar
+from typekernel.perceive.specimen import (
     proof_charset_grid,
     proof_context,
     proof_glyph,
+    proof_gray_heatmap,
     proof_kern_pairs,
+    proof_named_glyph_grid,
     proof_sheet,
+    proof_small_waterfall,
     proof_spacing_strings,
     proof_weight_ladder,
 )
@@ -156,6 +160,40 @@ def proof_project(
             )
     if proof_set == "all":
         written.append(proof_sheet(binary, odir / "sheet.png", context_text=ctrl))
+        written.append(
+            proof_small_waterfall(
+                binary, ctrl, odir / "waterfall-small.png"
+            )
+        )
+        written.append(
+            proof_gray_heatmap(
+                binary,
+                "hamburgefonstiv\n" * 4,
+                odir / "gray-heatmap.png",
+            )
+        )
+        # Named grid for a sample of glyph names from the font.
+        try:
+            from fontTools.ttLib import TTFont
+
+            glyph_names = TTFont(str(binary)).getGlyphOrder()[:48]
+            written.append(
+                proof_named_glyph_grid(
+                    binary, glyph_names, odir / "named-grid.png"
+                )
+            )
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError):
+            pass
+    for png in written:
+        write_sidecar(
+            png,
+            {
+                "view": "proof",
+                "path": str(png),
+                "proof_set": proof_set,
+                "font": str(binary),
+            },
+        )
     return written
 
 
