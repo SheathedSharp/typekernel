@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import arch_span, crossbar, stem_rect
+from elements import WIDTHS, arch_span, crossbar, stem_rect
 
 from typekernel.draw import Writer
 from typekernel.project import glyph
@@ -14,7 +14,7 @@ def f(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     asc = float(system.zones.asc)
-    width = float(system.tokens["f_width"])
+    width = float(WIDTHS["f"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     # Stem slightly right of left SB so the top hook can curl left.

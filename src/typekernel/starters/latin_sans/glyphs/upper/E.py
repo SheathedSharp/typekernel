@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import crossbar, stem_rect
+from elements import WIDTHS, crossbar, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def glyph_E(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["E_width"])
+    width = float(WIDTHS["E"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     bar_t = float(system.tokens.get("bar_thickness", uc * 0.85))
     stem = stem_rect(lsb, lsb + uc, 0.0, cap, prefix="stem.l")

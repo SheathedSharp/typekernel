@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import diagonal_stroke
+from elements import WIDTHS, diagonal_stroke
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -16,7 +16,7 @@ def y(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     desc = float(system.zones.desc)
-    width = float(system.tokens["y_width"])
+    width = float(WIDTHS["y"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     cx = lsb + width / 2.0
     # Join slightly above baseline so the descender continues the right leg.

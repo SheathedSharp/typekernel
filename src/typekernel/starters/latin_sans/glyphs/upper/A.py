@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import crossbar, diagonal_stroke
+from elements import WIDTHS, crossbar, diagonal_stroke
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -15,7 +15,7 @@ from typekernel.system import System
 def glyph_A(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["A_width"])
+    width = float(WIDTHS["A"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     dx = width / 2.0 - st * 0.2
     ang = math.degrees(math.atan2(dx, cap))

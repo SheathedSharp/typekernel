@@ -22,6 +22,7 @@ from typekernel.plugins.checks import builtin_checks
 from typekernel.plugins.checks.protocol import CheckContext, CheckFn, Finding, raw_drawing
 from typekernel.project import open_project
 from typekernel.system.intent import Intent
+from typekernel.system.lint import lint_per_glyph_metric_tokens
 
 __all__ = [
     "AuditReport",
@@ -209,6 +210,22 @@ def audit_project(
                         message=f"{mismatch.field}: {mismatch.message}",
                     )
                 )
+
+        for token in lint_per_glyph_metric_tokens(project.system):
+            report.findings.append(
+                Finding(
+                    kind="system",
+                    level="warn",
+                    glyph="*",
+                    message=(
+                        f"token {token!r} looks like a per-glyph width/advance; "
+                        "move it to project elements (or metrics) — "
+                        "System.tokens keeps only global controls "
+                        "(n_width/o_width/H_width/O_width)"
+                    ),
+                )
+            )
+
         checks = list(
             builtin_checks(
                 check_stem=check_stem,

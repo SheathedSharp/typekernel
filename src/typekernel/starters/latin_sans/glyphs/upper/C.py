@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import open_bowl
+from elements import WIDTHS, open_bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def glyph_C(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["C_width"])
+    width = float(WIDTHS["C"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0

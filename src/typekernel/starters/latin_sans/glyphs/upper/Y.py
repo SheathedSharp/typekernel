@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import diagonal_stroke, stem_rect
+from elements import WIDTHS, diagonal_stroke, stem_rect
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -15,7 +15,7 @@ from typekernel.system import System
 def glyph_Y(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["Y_width"])
+    width = float(WIDTHS["Y"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     join_y = cap * 0.45
     cx = lsb + width / 2.0

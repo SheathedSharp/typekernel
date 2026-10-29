@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import arch_span, stem_rect
+from elements import WIDTHS, arch_span, stem_rect
 
 from typekernel.draw import Writer
 from typekernel.project import glyph
@@ -13,7 +13,7 @@ from typekernel.system import System
 def r(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens["r_width"])
+    width = float(WIDTHS["r"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     ov = float(system.overshoot.round) * 0.35

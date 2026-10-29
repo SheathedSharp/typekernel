@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import crossbar, diagonal_stroke, stem_rect
+from elements import WIDTHS, crossbar, diagonal_stroke, stem_rect
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -14,7 +14,7 @@ from typekernel.system import System
 @glyph("four", group="figs")
 def four(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 500))
+    width = float(WIDTHS.get("fig", 500))
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     h = float(system.zones.cap) * 0.72
     x_stem = lsb + width * 0.62

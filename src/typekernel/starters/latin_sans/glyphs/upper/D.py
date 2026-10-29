@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import bowl, stem_rect
+from elements import WIDTHS, bowl, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def glyph_D(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["D_width"])
+    width = float(WIDTHS["D"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     ov = float(system.overshoot.round)
     stem = stem_rect(lsb, lsb + st, 0.0, cap, prefix="stem.l")

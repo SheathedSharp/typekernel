@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from typekernel.draw import (
@@ -15,7 +16,72 @@ from typekernel.draw import (
 )
 from typekernel.system import System
 
-__all__ = ["Arch", "arch", "arch_span", "bowl", "cap_stem", "crossbar", "diagonal_stroke", "open_bowl", "shoulder_trough", "stem_rect"]
+__all__ = [
+    "WIDTHS",
+    "Arch",
+    "arch",
+    "arch_span",
+    "bowl",
+    "cap_stem",
+    "crossbar",
+    "diagonal_stroke",
+    "open_bowl",
+    "shoulder_trough",
+    "stem_rect",
+]
+
+# Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
+WIDTHS: Mapping[str, float] = {
+    "h": 430,
+    "m": 700,
+    "u": 430,
+    "r": 300,
+    "v": 460,
+    "w": 700,
+    "x": 460,
+    "y": 460,
+    "z": 460,
+    "k": 430,
+    "a": 430,
+    "c": 430,
+    "e": 450,
+    "s": 400,
+    "f": 280,
+    "t": 300,
+    "i": 180,
+    "j": 220,
+    "l": 180,
+    "g": 470,
+    "I": 220,
+    "L": 520,
+    "T": 620,
+    "E": 540,
+    "F": 500,
+    "C": 700,
+    "G": 720,
+    "Q": 700,
+    "D": 680,
+    "A": 700,
+    "V": 700,
+    "W": 980,
+    "X": 680,
+    "Y": 680,
+    "Z": 620,
+    "K": 640,
+    "B": 620,
+    "P": 580,
+    "R": 640,
+    "U": 680,
+    "N": 700,
+    "M": 860,
+    "J": 520,
+    "S": 600,
+    "fig": 500,
+    "question": 320,
+    "hyphen": 220,
+    "slash": 320,
+}
+
 
 
 @dataclass(frozen=True, slots=True)

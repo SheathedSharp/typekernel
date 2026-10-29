@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import diagonal_stroke
+from elements import WIDTHS, diagonal_stroke
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -15,7 +15,7 @@ from typekernel.system import System
 def v(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens["v_width"])
+    width = float(WIDTHS["v"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     # Angle of each leg from vertical.
     dx = width / 2.0 - st * 0.15

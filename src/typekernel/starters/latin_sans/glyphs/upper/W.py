@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import diagonal_stroke
+from elements import WIDTHS, diagonal_stroke
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -15,7 +15,7 @@ from typekernel.system import System
 def glyph_W(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["W_width"])
+    width = float(WIDTHS["W"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     t0 = lsb + st * 0.25
     t1 = lsb + width * 0.36

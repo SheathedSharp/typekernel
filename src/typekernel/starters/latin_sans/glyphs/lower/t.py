@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import crossbar, stem_rect
+from elements import WIDTHS, crossbar, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -13,7 +13,7 @@ def t(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     asc = float(system.zones.asc)
-    width = float(system.tokens["t_width"])
+    width = float(WIDTHS["t"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     # Stem from baseline to a bit above x-height (not full ascender).
     top = xh + (asc - xh) * 0.55

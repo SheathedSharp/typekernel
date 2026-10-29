@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import shoulder_trough, stem_rect
+from elements import WIDTHS, shoulder_trough, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def m(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens["m_width"])
+    width = float(WIDTHS["m"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     inset = st * 0.35
     # Three stems evenly spanning width.

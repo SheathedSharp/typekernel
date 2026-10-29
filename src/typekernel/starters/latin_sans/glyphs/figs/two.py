@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import diagonal_stroke, stem_rect
+from elements import WIDTHS, diagonal_stroke, stem_rect
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -14,7 +14,7 @@ from typekernel.system import System
 @glyph("two", group="figs")
 def two(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 500))
+    width = float(WIDTHS.get("fig", 500))
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     h = float(system.zones.cap) * 0.72
     top = stem_rect(lsb + width * 0.2, lsb + width, h - st, h, prefix="two.top")

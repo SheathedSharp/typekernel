@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import bowl, crossbar
+from elements import WIDTHS, bowl, crossbar
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def e(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens["e_width"])
+    width = float(WIDTHS["e"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import arch_span, stem_rect
+from elements import WIDTHS, arch_span, stem_rect
 
 from typekernel.draw import Writer
 from typekernel.project import glyph
@@ -14,7 +14,7 @@ def j(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     desc = float(system.zones.desc)
-    width = float(system.tokens["j_width"])
+    width = float(WIDTHS["j"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     x0 = lsb + (width - st) / 2.0

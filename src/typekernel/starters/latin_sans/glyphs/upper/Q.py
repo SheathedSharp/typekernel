@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import bowl, diagonal_stroke
+from elements import WIDTHS, bowl, diagonal_stroke
 
 from typekernel.plugins.passes.diagonal_comp import compensated_weight
 from typekernel.project import glyph
@@ -15,7 +15,7 @@ from typekernel.system import System
 def glyph_Q(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens["Q_width"])
+    width = float(WIDTHS["Q"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     ov = float(system.overshoot.round)
     cx = lsb + width / 2.0

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import bowl, stem_rect
+from elements import WIDTHS, bowl, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def a(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens["a_width"])
+    width = float(WIDTHS["a"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     ov = float(system.overshoot.round)
     # Right stem full x-height; bowl sits to the left overlapping it.

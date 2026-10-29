@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stem_rect
+from elements import WIDTHS, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,7 @@ def question(system: System):
     xh = float(system.zones.x)
     size = st * 0.95
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.4
-    width = float(system.tokens.get("question_width", 320))
+    width = float(WIDTHS.get("question", 320))
     top = stem_rect(lsb + width * 0.15, lsb + width, xh - st, xh, prefix="q.top")
     stem = stem_rect(
         lsb + width - st * 1.1,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import bowl, stem_rect
+from elements import WIDTHS, bowl, stem_rect
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,7 +11,7 @@ from typekernel.system import System
 @glyph("nine", group="figs")
 def nine(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 500))
+    width = float(WIDTHS.get("fig", 500))
     lsb = float(system.tokens.get("lsb_lc", 40.0))
     h = float(system.zones.cap) * 0.72
     ov = float(system.overshoot.round) * 0.4
