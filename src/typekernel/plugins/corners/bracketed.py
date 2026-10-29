@@ -36,6 +36,10 @@ def bracketed(
         raw_in = max(0.0, float(length) * stem)
         raw_out = max(0.0, float(thickness) * stem)
         depth = max(0.0, float(thickness) * stem)
+        # Same opposite-corner headroom rule as slab — avoid zero-length edges.
+        need = max(raw_in, raw_out) * 2.05
+        if site.in_len < need or site.out_len < need:
+            return noop_corner_fill(site)
         trim_in = clamp_trim(raw_in, site.in_len)
         trim_out = clamp_trim(raw_out, site.out_len)
         depth = min(depth, max(trim_in, trim_out, 0.0))
