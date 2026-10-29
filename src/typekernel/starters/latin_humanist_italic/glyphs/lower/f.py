@@ -1,4 +1,4 @@
-"""f — ascender stem + crossbar (skeleton+pen)."""
+"""f — continuous ascender with top flag + right-only crossbar (G/VF-safe)."""
 
 from __future__ import annotations
 
@@ -16,20 +16,17 @@ def f(system: System):
     width = float(system.tokens.get("f_width", 260.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     x = lsb + st * 0.55
+    # Single continuous stem→flag (no mid-cross) keeps VF start-points stable.
     stem = stroke(
         system,
-        [
-            (x, 0.0),
-            (x, asc - st * 0.8),
-            (x + width * 0.35, asc),
-            (x + width * 0.75, asc - st * 0.15),
-        ],
+        [(x, 0.0), (x, asc - st * 0.25), (x + width * 0.55, asc)],
         thickness=st,
     )
-    bar_y = xh * 0.72
+    # Crossbar only to the right of the stem (gap avoids overlap SI).
+    by = xh * 0.55
     bar = stroke(
         system,
-        [(lsb, bar_y), (lsb + width, bar_y)],
+        [(x + st * 1.2, by), (lsb + width, by)],
         thickness=st * 0.85,
     )
     return stem + bar

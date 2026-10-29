@@ -1,11 +1,13 @@
-"""Round glyph s — stacked open_bowl pair overlapping at the waist."""
+"""Round glyph s — gapped top/diag/base (G-class; open_bowl pair SI)."""
 
 from __future__ import annotations
 
-from elements import open_bowl
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_GAP = 60.0
 
 
 @glyph("s", group="lc.round")
@@ -14,29 +16,10 @@ def s(system: System):
     xh = float(system.zones.x)
     width = float(system.tokens.get("s_width", 360.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
-    ov = float(system.overshoot.round)
-    cx = lsb + width / 2.0
-    rx = width / 2.0 * 0.98
-    overlap = st * 0.85
-    ry = max(xh * 0.32, (xh + 2.0 * ov + overlap) / 4.0)
-    upper = open_bowl(
-        system,
-        cx=cx,
-        cy=(xh + ov) - ry,
-        rx=rx,
-        ry=ry,
-        thickness=st,
-        open_side="right",
-        aperture_deg=72.0,
+    gap = _GAP
+    top = stroke(system, [(lsb + width * 0.15, xh), (lsb + width * 0.85, xh)], thickness=st)
+    diag = stroke(
+        system, [(lsb + width * 0.8, xh - gap), (lsb + width * 0.2, gap)], thickness=st
     )
-    lower = open_bowl(
-        system,
-        cx=cx,
-        cy=(-ov) + ry,
-        rx=rx,
-        ry=ry,
-        thickness=st,
-        open_side="left",
-        aperture_deg=72.0,
-    )
-    return upper + lower
+    bot = stroke(system, [(lsb + width * 0.15, 0.0), (lsb + width * 0.85, 0.0)], thickness=st)
+    return top + diag + bot

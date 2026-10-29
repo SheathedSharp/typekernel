@@ -1,11 +1,14 @@
-"""Figure 9 — bowl with overlapping lower open spine."""
+"""Figure 9 — upper oval + gapped descender (G-class)."""
 
 from __future__ import annotations
 
-from elements import bowl, open_bowl
+from elements import oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_OVAL_N = 48
+_GAP = 50.0
 
 
 @glyph("nine", group="figs")
@@ -14,24 +17,13 @@ def nine(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    cx = lsb + width / 2.0
-    upper = bowl(
-        system,
-        cx=cx,
-        cy=h * 0.68,
-        rx=width * 0.40,
-        ry=h * 0.28,
-        thickness=st,
+    cx = lsb + width * 0.48
+    cy = h * 0.62
+    rx = width * 0.32
+    ry = h * 0.28
+    bowl = stroke(
+        system, oval_points(cx, cy, rx, ry, n=_OVAL_N), closed=True, thickness=st
     )
-    spine = open_bowl(
-        system,
-        cx=cx,
-        cy=h * 0.40,
-        rx=width * 0.40,
-        ry=h * 0.40,
-        thickness=st,
-        open_side="left",
-        aperture_deg=120.0,
-        n=20,
-    )
-    return upper + spine
+    x = lsb + width * 0.78
+    stem = stroke(system, [(x, 0.0), (x, cy - ry - _GAP)], thickness=st)
+    return bowl + stem

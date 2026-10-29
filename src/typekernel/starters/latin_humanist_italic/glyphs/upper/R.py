@@ -1,11 +1,14 @@
-"""R — stem + continuous bowl arc into diagonal leg."""
+"""R — stem + gapped bowl + leg (G-class)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke, uc_stem
+from elements import oval_points, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_OVAL_N = 32
+_GAP = 60.0
 
 
 @glyph("R", group="uc.round")
@@ -14,16 +17,21 @@ def R(system: System):
     cap = float(system.zones.cap)
     width = float(system.tokens.get("R_width", 580.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
-    ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5
-    rx = width * 0.40
-    cy = cap * 0.68
-    ry = cap * 0.28 + ov * 0.25
-    pull = 0.38
-    arc = open_arc_points(
-        x0 + rx * pull, cy, rx, ry, start_deg=125.0, end_deg=-125.0, n=22
+    stem = uc_stem(system, x0, thickness=uc)
+    gap = _GAP
+    rx = width * 0.28
+    cy = cap * 0.70
+    ry = cap * 0.18
+    bowl = stroke(
+        system,
+        oval_points(x0 + uc * 0.5 + gap + rx, cy, rx, ry, n=_OVAL_N),
+        closed=True,
+        thickness=uc * 0.85,
     )
-    # Continuous: bowl terminals share stem ink; leg continues from lower terminal.
-    leg_tip = (lsb + width - uc * 0.15, 0.0)
-    bowl_leg = stroke(system, list(arc) + [leg_tip], thickness=uc)
-    return uc_stem(system, x0, thickness=uc) + bowl_leg
+    leg = stroke(
+        system,
+        [(x0 + gap + uc, cy - ry - gap), (lsb + width - uc * 0.2, 0.0)],
+        thickness=uc,
+    )
+    return stem + bowl + leg

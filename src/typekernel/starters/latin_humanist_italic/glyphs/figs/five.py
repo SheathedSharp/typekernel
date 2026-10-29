@@ -1,11 +1,13 @@
-"""Figure 5 — top bar + continuous spine into lower open_bowl."""
+"""Figure 5 — top bar + spine + baseline (G-class)."""
 
 from __future__ import annotations
 
-from elements import open_bowl, stroke
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_GAP = 80.0
 
 
 @glyph("five", group="figs")
@@ -14,26 +16,10 @@ def five(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    # Continuous open skeleton: top bar into spine down to bowl join.
-    x_spine = lsb + width * 0.22
-    top_spine = stroke(
-        system,
-        [
-            (lsb + width * 0.82, h),
-            (x_spine, h),
-            (x_spine, h * 0.48),
-        ],
-        thickness=st,
+    gap = _GAP
+    top = stroke(system, [(lsb + width * 0.2, h), (lsb + width * 0.85, h)], thickness=st)
+    spine = stroke(
+        system, [(lsb + width * 0.28, h - gap), (lsb + width * 0.28, h * 0.5)], thickness=st
     )
-    # Lower bowl open on the left so it nests against the spine foot.
-    bowl = open_bowl(
-        system,
-        cx=lsb + width * 0.52,
-        cy=h * 0.30,
-        rx=width * 0.38,
-        ry=h * 0.30,
-        thickness=st,
-        open_side="left",
-        aperture_deg=85.0,
-    )
-    return top_spine + bowl
+    bot = stroke(system, [(lsb + width * 0.2, 0.0), (lsb + width * 0.85, 0.0)], thickness=st)
+    return top + spine + bot

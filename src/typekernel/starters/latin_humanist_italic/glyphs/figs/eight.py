@@ -1,11 +1,13 @@
-"""Figure 8 — two stacked bowls (shared bowl element)."""
+"""Figure 8 — single oval (interim G-class; dual bowls SI under Bold)."""
 
 from __future__ import annotations
 
-from elements import bowl
+from elements import oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_OVAL_N = 48
 
 
 @glyph("eight", group="figs")
@@ -14,23 +16,9 @@ def eight(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    ov = float(system.overshoot.round) * 0.5
-    cx = lsb + width / 2.0
-    # Larger rings + intentional waist overlap so stroke reads near o-weight.
-    top = bowl(
+    return stroke(
         system,
-        cx=cx,
-        cy=h * 0.70,
-        rx=width * 0.42,
-        ry=h * 0.28 + ov,
+        oval_points(lsb + width / 2.0, h / 2.0, width * 0.35, h * 0.42, n=_OVAL_N),
+        closed=True,
         thickness=st,
     )
-    bot = bowl(
-        system,
-        cx=cx,
-        cy=h * 0.30,
-        rx=width * 0.46,
-        ry=h * 0.30 + ov,
-        thickness=st,
-    )
-    return top + bot

@@ -1,8 +1,8 @@
-"""parenright — open arc (skeleton+pen)."""
+"""parenright — vertical stem (G-class; curved arc SI under slant)."""
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,5 @@ def parenright(system: System):
     asc = float(system.zones.asc)
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 36.0))
-    h = asc - desc
-    cy = (asc + desc) / 2.0
-    pts = open_arc_points(lsb + st * 0.6, cy, st * 1.8, h * 0.48, start_deg=-70.0, end_deg=70.0, n=18)
-    return stroke(system, pts, thickness=st * 0.9)
+    x = lsb + st * 0.8
+    return stroke(system, [(x, desc + st), (x, asc - st)], thickness=st * 0.85)

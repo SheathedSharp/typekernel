@@ -1,11 +1,13 @@
-"""G — open capital bowl + spur bar (shared open_bowl)."""
+"""G — open C + right spur (G-class)."""
 
 from __future__ import annotations
 
-from elements import open_bowl, stroke
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_GAP = 70.0
 
 
 @glyph("G", group="uc.round")
@@ -14,27 +16,22 @@ def G(system: System):
     cap = float(system.zones.cap)
     width = float(system.tokens.get("G_width", 640.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
-    ov = float(system.overshoot.round)
-    cx = lsb + width / 2.0
-    cy = cap / 2.0
-    rx = width / 2.0 - uc * 0.1
-    ry = cap / 2.0 + ov - uc * 0.1
-    # Slightly smaller aperture than C so the spur has a longer right stub.
-    bowl = open_bowl(
-        system,
-        cx=cx,
-        cy=cy,
-        rx=rx,
-        ry=ry,
-        thickness=uc,
-        open_side="right",
-        aperture_deg=55.0,
-        n=28,
+    gap = _GAP
+    x = lsb + width * 0.28
+    body = (
+        stroke(system, [(x, uc * 0.3 + gap), (x, cap - uc * 0.3 - gap)], thickness=uc)
+        + stroke(
+            system,
+            [(x + gap * 0.5, cap - uc * 0.25), (lsb + width * 0.85, cap - uc * 0.25)],
+            thickness=uc,
+        )
+        + stroke(
+            system,
+            [(x + gap * 0.5, uc * 0.25), (lsb + width * 0.7, uc * 0.25)],
+            thickness=uc,
+        )
     )
-    sx = cx + rx * 0.92
     spur = stroke(
-        system,
-        [(sx, cy + uc * 0.05), (sx, cy), (cx + rx * 0.15, cy)],
-        thickness=uc * 0.9,
+        system, [(lsb + width * 0.85, uc * 0.25), (lsb + width * 0.85, cap * 0.42)], thickness=uc
     )
-    return bowl + spur
+    return body + spur

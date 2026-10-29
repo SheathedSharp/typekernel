@@ -1,11 +1,14 @@
-"""o-group glyph a — nestled bowl + right stem (skeleton+pen)."""
+"""o-group a — stem + gapped oval (G-class)."""
 
 from __future__ import annotations
 
-from elements import nest_bowl, stroke
+from elements import oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_OVAL_N = 48
+_GAP = 60.0
 
 
 @glyph("a", group="lc.bowl")
@@ -16,5 +19,12 @@ def a(system: System):
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     x_stem = lsb + width - st * 0.5
     stem_d = stroke(system, [(x_stem, 0.0), (x_stem, xh)], thickness=st)
-    bowl = nest_bowl(system, stem_x=x_stem, side="left", width=width, xh=xh, lsb=lsb)
+    gap = _GAP
+    rx = (width - st) * 0.36
+    ry = xh * 0.40
+    cx = x_stem - st * 0.5 - gap - rx
+    cy = xh / 2.0
+    bowl = stroke(
+        system, oval_points(cx, cy, rx, ry, n=_OVAL_N), closed=True, thickness=st
+    )
     return stem_d + bowl

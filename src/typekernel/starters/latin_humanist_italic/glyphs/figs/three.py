@@ -1,11 +1,13 @@
-"""Figure 3 — stacked left-open bowls overlapping at the waist."""
+"""Figure 3 — open E with mid bar, gapped joins (G-class)."""
 
 from __future__ import annotations
 
-from elements import open_bowl
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_GAP = 55.0
 
 
 @glyph("three", group="figs")
@@ -14,30 +16,10 @@ def three(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    ov = float(system.overshoot.round) * 0.35
-    cx = lsb + width * 0.52
-    rx = width * 0.40
-    overlap = st * 0.5
-    ry_u = max(h * 0.24, (h * 0.55 + overlap) / 4.0)
-    ry_l = max(h * 0.28, (h * 0.55 + overlap) / 4.0)
-    upper = open_bowl(
-        system,
-        cx=cx,
-        cy=h * 0.72,
-        rx=rx * 0.92,
-        ry=ry_u + ov,
-        thickness=st,
-        open_side="left",
-        aperture_deg=90.0,
-    )
-    lower = open_bowl(
-        system,
-        cx=cx,
-        cy=h * 0.28,
-        rx=rx,
-        ry=ry_l + ov,
-        thickness=st,
-        open_side="left",
-        aperture_deg=90.0,
-    )
-    return upper + lower
+    gap = _GAP
+    x = lsb + width * 0.75
+    stem = stroke(system, [(x, gap), (x, h - gap)], thickness=st)
+    top = stroke(system, [(lsb + width * 0.2, h), (x - gap, h)], thickness=st)
+    mid = stroke(system, [(lsb + width * 0.25, h * 0.5), (x - gap, h * 0.5)], thickness=st * 0.85)
+    bot = stroke(system, [(lsb + width * 0.2, 0.0), (x - gap, 0.0)], thickness=st)
+    return stem + top + mid + bot
