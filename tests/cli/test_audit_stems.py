@@ -100,7 +100,6 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
 def test_declared_diagonal_is_warn_empty_is_quiet() -> None:
     """Empty kinds stay quiet; declared ("diagonal",) opts into stem warnings."""
     import math
-
     from unittest.mock import MagicMock
 
     from typekernel.plugins.checks import stem as stem_check

@@ -1,10 +1,13 @@
 """Latin-1 spacing accents, guillemets, ordinals, etc. ."""
 from __future__ import annotations
+
 from elements import WIDTHS
+
 from typekernel.anatomy import bowl, crossbar, diagonal_pair, dot, drop, stem
 from typekernel.draw import Writer
-from typekernel.project import GlyphDraft, glyph
+from typekernel.project import glyph
 from typekernel.system import System
+
 
 def _lsb(system):
     return float(system.tokens.get("lsb_lc", 40.0)) * 0.5
@@ -77,7 +80,8 @@ def exclamdown(system: System):
 def questiondown(system: System):
     st = float(system.stem["lc"]); thin = float(system.stem.get("lc_h", st * 0.85))
     xh = float(system.zones.x); lsb = _lsb(system); ov = float(system.overshoot.round)
-    from typekernel.anatomy import open_bowl, stem as stem_part
+    from typekernel.anatomy import open_bowl
+    from typekernel.anatomy import stem as stem_part
     exp = float(system.tokens.get("bowl_exponent", 2.15)); w = float(WIDTHS.get("question", 320))
     # inverted question: bowl at bottom-ish + stem + dot on top
     bowl_y = xh * 0.35
@@ -90,7 +94,8 @@ def questiondown(system: System):
 @glyph("ordfeminine", unicodes=(0x00AA,), group="symbol", traits=("symbol",))
 def ordfeminine(system: System):
     st = float(system.stem["lc"]) * 0.7; thin = st * 0.85; xh = float(system.zones.x); lsb = _lsb(system)
-    from typekernel.anatomy import bowl, stem as stem_part
+    from typekernel.anatomy import bowl
+    from typekernel.anatomy import stem as stem_part
     exp = float(system.tokens.get("bowl_exponent", 2.15)); w = float(WIDTHS.get("ord", 280))
     # small a raised
     y0 = xh * 0.45; h = xh * 0.5
@@ -185,12 +190,10 @@ def registered(system: System):
 def mu(system: System):
     st = float(system.stem["lc"]); thin = float(system.stem.get("lc_h", st * 0.85))
     xh = float(system.zones.x); desc = float(system.zones.desc); lsb = float(system.tokens.get("lsb_lc", 40.0))
-    from typekernel.anatomy import arch
     width = float(WIDTHS.get("u", 430))
     left = stem(lsb, lsb + st, desc * 0.2, xh, name="stem.l")
     right = stem(lsb + width - st, lsb + width, 0.0, xh, name="stem.r")
     # u arch at bottom
-    from typekernel.anatomy import arch as arch_fn
     # use inverted feel via bowl trough — approximate with two stems + bottom connection via Writer
     bot = (Writer().start((lsb + st, st * 0.2)).corner("arch.l")
            .curve((lsb + st, -st * 0.1), (lsb + width - st, -st * 0.1), (lsb + width - st, st * 0.2))

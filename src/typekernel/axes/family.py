@@ -128,7 +128,7 @@ def apply_family_stat(tt: object, family: FamilySpec, member: FamilyMember) -> N
     if weight_name in {"Italic", "Oblique"}:
         weight_name = "Regular"
 
-    axes: list[dict] = [
+    axes: list[dict[str, object]] = [
         {
             "tag": "wght",
             "name": "Weight",
@@ -198,7 +198,8 @@ def read_family_identity(path: str | Path) -> dict[str, object]:
     name = tt["name"]
 
     def get(nid: int) -> str | None:
-        return name.getDebugName(nid)
+        value = name.getDebugName(nid)
+        return value if isinstance(value, str) else None
 
     ital_values: list[float] = []
     tags: list[str] = []

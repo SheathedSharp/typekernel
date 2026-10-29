@@ -1,9 +1,12 @@
 """Ldot / ldot — L/l with middot ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import crossbar, dot, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Ldot", unicodes=(0x013F,), group="uc.straight")
 def Ldot(system: System):

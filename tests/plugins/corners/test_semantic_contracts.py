@@ -6,7 +6,6 @@ import math
 
 from tests.plugins.corners.helpers import square_with_knee
 from typekernel.draw import Writer, apply_slots
-from typekernel.geo.point import Point
 from typekernel.plugins.corners import bracketed, ink_trap, rounded, slab, wedge
 from typekernel.system import System
 

@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from typekernel.diagnose.protocol import Finding
 
@@ -28,7 +29,7 @@ class ReleaseReport:
 
     binary: str
     findings: tuple[Finding, ...]
-    fontbakery: dict | None = None
+    fontbakery: dict[str, Any] | None = None
     timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
@@ -166,7 +167,7 @@ def check_release_binary(path: str | Path) -> list[Finding]:
     return out
 
 
-def run_fontbakery_opentype(path: str | Path) -> dict | None:
+def run_fontbakery_opentype(path: str | Path) -> dict[str, Any] | None:
     """Run FontBakery ``check-opentype`` if installed; return summary counts or None."""
     import importlib.util
     import subprocess
@@ -177,7 +178,7 @@ def run_fontbakery_opentype(path: str | Path) -> dict | None:
         return None
 
     binary = str(Path(path).resolve())
-    counts: dict = {"FAIL": 0, "WARN": 0, "ERROR": 0, "SKIP": 0, "PASS": 0, "INFO": 0}
+    counts: dict[str, Any] = {"FAIL": 0, "WARN": 0, "ERROR": 0, "SKIP": 0, "PASS": 0, "INFO": 0}
     with tempfile.TemporaryDirectory() as tmp:
         json_path = Path(tmp) / "fontbakery.json"
         proc = subprocess.run(

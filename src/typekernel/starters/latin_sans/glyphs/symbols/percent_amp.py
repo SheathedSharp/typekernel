@@ -1,10 +1,13 @@
 """percent and ampersand ."""
 from __future__ import annotations
+
 from elements import WIDTHS
+
 from typekernel.anatomy import bowl
 from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 def _lsb(system):
     return float(system.tokens.get("lsb_lc", 40.0)) * 0.45
@@ -23,7 +26,7 @@ def percent(system: System):
 @glyph("ampersand", unicodes=(0x0026,), group="symbol", traits=("symbol",))
 def ampersand(system: System):
     st = float(system.stem["lc"]); thin = float(system.stem.get("lc_h", st * 0.85))
-    xh = float(system.zones.x); asc = float(system.zones.asc); lsb = _lsb(system)
+    xh = float(system.zones.x); lsb = _lsb(system)
     from typekernel.anatomy import open_bowl
     ov = float(system.overshoot.round); exp = float(system.tokens.get("bowl_exponent", 2.15))
     w = float(WIDTHS.get("ampersand", 620))

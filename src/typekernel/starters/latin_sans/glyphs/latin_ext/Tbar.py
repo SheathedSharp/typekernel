@@ -1,9 +1,12 @@
 """Tbar / tbar — T/t with stroke ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Tbar", unicodes=(0x0166,), group="uc.straight")
 def Tbar(system: System):

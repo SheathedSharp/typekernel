@@ -47,6 +47,7 @@ def check_release_project(
         if bin_path is None:
             raise FileNotFoundError(f"no font binary under {build_dir}")
 
+    assert bin_path is not None
     report = check_release(bin_path, fontbakery=fontbakery)
     print(format_release_report(report), end="")
     manifest = write_release_manifest(

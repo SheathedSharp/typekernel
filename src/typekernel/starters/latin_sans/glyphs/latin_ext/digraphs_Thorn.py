@@ -1,9 +1,12 @@
 """Thorn / thorn ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Thorn", unicodes=(0x00DE,), group="uc.mixed")
 def Thorn(system: System):

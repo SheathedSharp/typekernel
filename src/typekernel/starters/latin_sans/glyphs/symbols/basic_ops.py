@@ -1,10 +1,13 @@
 """Basic ASCII operators and braces ."""
 from __future__ import annotations
+
 from elements import WIDTHS
+
 from typekernel.anatomy import crossbar, stem
 from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 def _lsb(system):
     return float(system.tokens.get("lsb_lc", 40.0)) * 0.45

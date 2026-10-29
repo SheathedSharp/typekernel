@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import fuse, diagonal_stroke, uc_stem
+from elements import diagonal_stroke, fuse, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System

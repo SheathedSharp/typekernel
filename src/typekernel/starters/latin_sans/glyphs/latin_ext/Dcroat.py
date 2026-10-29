@@ -1,9 +1,12 @@
 """Dcroat / dcroat — D/d with stroke ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import bowl, crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Dcroat", unicodes=(0x0110,), group="uc.round")
 def Dcroat(system: System):

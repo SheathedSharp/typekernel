@@ -26,8 +26,8 @@ from typekernel.system import System
 __all__ = [
     "assemble",
     "bowl",
-    "fuse",
     "diagonal_stroke",
+    "fuse",
     "nest_bowl",
     "open_arc_points",
     "open_bowl",

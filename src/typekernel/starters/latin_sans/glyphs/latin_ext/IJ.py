@@ -1,10 +1,13 @@
 """IJ / ij — side-by-side I+J / i+j ."""
 from __future__ import annotations
+
 from elements import WIDTHS, arch_span, zone_anchors
+
 from typekernel.anatomy import stem
 from typekernel.draw import Writer
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("IJ", unicodes=(0x0132,), group="uc.straight")
 def IJ(system: System):

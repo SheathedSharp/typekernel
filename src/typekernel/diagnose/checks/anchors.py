@@ -48,8 +48,11 @@ class AnchorsCheck:
             anchor_names[name] = set(draft.anchors)
 
             traits = set(spec.traits)
-            if "mark" in traits and "spacing-mark" not in traits:
-                if not _attachment_anchors(draft.anchors):
+            if (
+                "mark" in traits
+                and "spacing-mark" not in traits
+                and not _attachment_anchors(draft.anchors)
+            ):
                     out.append(
                         Finding(
                             check="anchors.mark_attachment",

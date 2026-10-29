@@ -1,10 +1,13 @@
 """Oslash / oslash ."""
 from __future__ import annotations
-from elements import WIDTHS, zone_anchors
+
+from elements import zone_anchors
+
 from typekernel.anatomy import bowl
 from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Oslash", unicodes=(0x00D8,), group="uc.round")
 def Oslash(system: System):

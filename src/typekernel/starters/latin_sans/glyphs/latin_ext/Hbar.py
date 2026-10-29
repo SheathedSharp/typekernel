@@ -1,9 +1,12 @@
 """Hbar / hbar — H/h with stroke ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import arch, crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Hbar", unicodes=(0x0126,), group="uc.straight")
 def Hbar(system: System):

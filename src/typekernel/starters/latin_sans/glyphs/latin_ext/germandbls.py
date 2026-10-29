@@ -1,9 +1,12 @@
 """germandbls — long-s + s compound approx ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import open_bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("germandbls", unicodes=(0x00DF,), group="lc.mixed")
 def germandbls(system: System):

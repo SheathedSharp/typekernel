@@ -4,8 +4,8 @@ from __future__ import annotations
 
 # MasterSpec lives in axes; re-export for project authors.
 from typekernel.axes.spec import MasterSpec
-from typekernel.project.errors import GlyphBuildError, MigrationError
 from typekernel.project.compose import compose
+from typekernel.project.errors import GlyphBuildError, MigrationError
 from typekernel.project.evaluate import unicodes_for_glyph_name
 from typekernel.project.manifest import (
     AuditConfig,
@@ -25,7 +25,6 @@ __all__ = [
     "AuditConfig",
     "Charset",
     "ComponentRef",
-    "compose",
     "Composite",
     "Expect",
     "FamilyInfo",
@@ -39,6 +38,7 @@ __all__ = [
     "ProjectSession",
     "ProofConfig",
     "ReviewPolicy",
+    "compose",
     "glyph",
     "open_project",
     "unicodes_for_glyph_name",

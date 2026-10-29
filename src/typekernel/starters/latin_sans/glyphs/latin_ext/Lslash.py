@@ -1,10 +1,13 @@
 """Lslash / lslash — L/l with diagonal slash ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import crossbar, stem
 from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Lslash", unicodes=(0x0141,), group="uc.straight")
 def Lslash(system: System):

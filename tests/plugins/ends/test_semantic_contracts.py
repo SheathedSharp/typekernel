@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
 from typekernel.draw import Writer, apply_slots
 from typekernel.plugins.ends import angled, ball, flare, flat
 from typekernel.system import System

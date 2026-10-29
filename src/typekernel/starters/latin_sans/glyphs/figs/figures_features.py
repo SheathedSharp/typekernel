@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS
-
-from typekernel.anatomy import bowl, crossbar, open_bowl, stem
+from typekernel.anatomy import bowl, crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -49,7 +47,7 @@ def _zero(system, *, y0: float, h: float, tag: str):
 
 
 def _one(system, *, y0: float, h: float, tag: str):
-    st, thin, _xh, lsb, ov, exp = _fig_system(system)
+    st, _thin, _xh, lsb, _ov, _exp = _fig_system(system)
     w = _FIG_W
     x0 = lsb + (w - st) / 2
     return stem(x0, x0 + st, y0, y0 + h, name=f"stem.{tag}", foot="none", top="none")
@@ -57,7 +55,7 @@ def _one(system, *, y0: float, h: float, tag: str):
 
 def _generic_bar_digit(system, *, y0: float, h: float, tag: str):
     """Stable placeholder digit: stem + mid bar (used for several .tf/.osf)."""
-    st, thin, _xh, lsb, ov, exp = _fig_system(system)
+    st, thin, _xh, lsb, _ov, _exp = _fig_system(system)
     w = _FIG_W
     x0 = lsb + w * 0.35
     body = stem(x0, x0 + st, y0, y0 + h, name=f"stem.{tag}", foot="none", top="none")

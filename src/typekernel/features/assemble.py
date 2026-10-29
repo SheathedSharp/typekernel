@@ -15,7 +15,7 @@ __all__ = [
     "validate_fea",
 ]
 
-_REPLACE = re.compile(r"^#\s*tk:replace\s+(\w+)\s*$", re.M)
+_REPLACE = re.compile(r"^#\s*tk:replace\s+(\w+)\s*$", re.MULTILINE)
 
 
 class FeatureSyntaxError(Exception):
@@ -59,7 +59,7 @@ def _strip_auto_features(auto_text: str, replaced: set[str]) -> str:
             rf"feature\s+{re.escape(tag)}\s*\{{.*?\}}\s*{re.escape(tag)}\s*;\s*",
             "",
             out,
-            flags=re.S,
+            flags=re.DOTALL,
         )
     return out
 

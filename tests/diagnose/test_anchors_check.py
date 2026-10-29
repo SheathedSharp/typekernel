@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from typekernel.diagnose import audit_project
-from typekernel.project import open_project
 
 
 def _write(root: Path, *, with_attach: bool, with_composite: bool) -> None:

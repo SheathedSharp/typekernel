@@ -1,9 +1,11 @@
 """nbsp and soft hyphen ."""
 from __future__ import annotations
+
 from typekernel.anatomy import crossbar
 from typekernel.draw import Writer
 from typekernel.project import GlyphDraft, glyph
 from typekernel.system import System
+
 
 @glyph("nbspace", unicodes=(0x00A0,), group="space", traits=("no-stem",))
 def nbspace(system: System):

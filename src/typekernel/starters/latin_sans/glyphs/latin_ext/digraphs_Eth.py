@@ -1,9 +1,12 @@
 """Eth / eth ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import bowl, bowl_join, crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("Eth", unicodes=(0x00D0,), group="uc.round")
 def Eth(system: System):

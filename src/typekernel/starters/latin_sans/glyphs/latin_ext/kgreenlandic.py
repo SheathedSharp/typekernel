@@ -1,9 +1,12 @@
 """kgreenlandic — small-cap k form ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import diagonal_pair, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("kgreenlandic", unicodes=(0x0138,), group="lc.mixed")
 def kgreenlandic(system: System):

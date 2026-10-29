@@ -8,7 +8,6 @@ import pytest
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib import TTFont
 
-
 pytest.importorskip("ufo2ft")
 
 

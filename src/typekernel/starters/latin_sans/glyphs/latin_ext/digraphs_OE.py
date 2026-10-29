@@ -1,9 +1,12 @@
 """OE / oe digraphs ."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import BarSpec, bowl, crossbar, open_bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("OE", unicodes=(0x0152,), group="uc.round")
 def OE(system: System):

@@ -1,9 +1,12 @@
 """AE / ae digraphs . Paired file — macOS case-insensitive FS."""
 from __future__ import annotations
+
 from elements import WIDTHS, zone_anchors
+
 from typekernel.anatomy import BarSpec, bowl, crossbar, diagonal_pair, open_bowl, stem
 from typekernel.project import glyph
 from typekernel.system import System
+
 
 @glyph("AE", unicodes=(0x00C6,), group="uc.mixed")
 def AE(system: System):

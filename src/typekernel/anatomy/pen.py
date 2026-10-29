@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from typing import TypeAlias
+from typing import Literal, TypeAlias
 
 from typekernel.draw import Drawing, Fragment, Writer, hook, tensioned_arc
 from typekernel.geo.point import Point
@@ -30,13 +30,13 @@ from typekernel.plugins.construct import broad_nib, expand_skeleton, expand_skel
 from typekernel.system import System
 
 __all__ = [
+    "assemble",
     "bowl",
     "expand_slanted_centerline",
     "flourish_entry",
-    "assemble",
     "flourish_exit",
-    "fuse",
     "fragment_to_cubic_centerline",
+    "fuse",
     "nest_bowl",
     "open_arc_cubic",
     "open_arc_points",
@@ -153,7 +153,9 @@ def expand_slanted_centerline(
     """Polyline expand (hash-stable path used by migrating starters)."""
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
     pen = pen_for_optical_stem(system, optical)
-    join = "bevel" if centerline.closed else "round"
+    join: Literal["miter", "round", "bevel"] = (
+        "bevel" if centerline.closed else "round"
+    )
     return expand_skeleton(centerline, pen, join=join, cap="round")
 
 
@@ -185,7 +187,9 @@ def stroke(
 
     optical = float(system.stem["lc"]) if thickness is None else float(thickness)
     pen = pen_for_optical_stem(system, optical)
-    join = "bevel" if cubic.closed else "round"
+    join: Literal["miter", "round", "bevel"] = (
+        "bevel" if cubic.closed else "round"
+    )
     drawing, _report = expand_skeleton_cubic(cubic, pen, join=join, cap="round")
     return drawing
 
