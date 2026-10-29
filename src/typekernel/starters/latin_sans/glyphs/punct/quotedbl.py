@@ -1,9 +1,8 @@
-"""quotedbl — two vertical quote marks."""
+"""quotedbl — two anatomy stem quotes (P3-7)."""
 
 from __future__ import annotations
 
-from elements import stem_rect
-
+from typekernel.anatomy import stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -16,6 +15,6 @@ def quotedbl(system: System):
     h = st * 2.2
     w = st * 0.7
     gap = st * 0.55
-    left = stem_rect(lsb, lsb + w, cap - h, cap, prefix="quote.l")
-    right = stem_rect(lsb + w + gap, lsb + w + gap + w, cap - h, cap, prefix="quote.r")
+    left = stem(lsb, lsb + w, cap - h, cap, name="stem.l")
+    right = stem(lsb + w + gap, lsb + w + gap + w, cap - h, cap, name="stem.r")
     return left + right

@@ -1,9 +1,10 @@
-"""hyphen — short mid bar."""
+"""hyphen — anatomy crossbar (P3-7)."""
 
 from __future__ import annotations
 
-from elements import WIDTHS, stem_rect
+from elements import WIDTHS
 
+from typekernel.anatomy import crossbar
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -15,5 +16,4 @@ def hyphen(system: System):
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.5
     length = float(WIDTHS.get("hyphen", 220))
     t = st * 0.85
-    cy = xh * 0.48
-    return stem_rect(lsb, lsb + length, cy - t / 2, cy + t / 2, prefix="bar")
+    return crossbar(lsb, lsb + length, xh * 0.48, thick=t, name="bar", ends="none")

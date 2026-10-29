@@ -1,9 +1,8 @@
-"""bracketleft — [ shape."""
+"""bracketleft — anatomy stems (P3-7)."""
 
 from __future__ import annotations
 
-from elements import stem_rect
-
+from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -15,7 +14,9 @@ def bracketleft(system: System):
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.45
     arm = st * 1.6
-    vert = stem_rect(lsb, lsb + st, desc + st, asc, prefix="vert")
-    top = stem_rect(lsb, lsb + arm, asc - st, asc, prefix="top")
-    bot = stem_rect(lsb, lsb + arm, desc + st, desc + 2 * st, prefix="bot")
+    vert = stem(lsb, lsb + st, desc + st, asc, name="stem")
+    top = crossbar(lsb, lsb + arm, asc - st / 2.0, thick=st, name="bar.t", ends="none")
+    bot = crossbar(
+        lsb, lsb + arm, desc + st * 1.5, thick=st, name="bar.b", ends="none"
+    )
     return vert + top + bot

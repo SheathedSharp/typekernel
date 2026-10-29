@@ -1,9 +1,8 @@
-"""colon — two dots."""
+"""colon — two anatomy dots (P3-7)."""
 
 from __future__ import annotations
 
-from elements import stem_rect
-
+from typekernel.anatomy import dot
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -14,6 +13,7 @@ def colon(system: System):
     xh = float(system.zones.x)
     size = st * 0.9
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.5
-    bot = stem_rect(lsb, lsb + size, 0.0, size, prefix="dot.bot")
-    top = stem_rect(lsb, lsb + size, xh - size, xh, prefix="dot.top")
+    cx = lsb + size / 2.0
+    bot = dot((cx, size / 2.0), size, shape="square", name="dot.b")
+    top = dot((cx, xh - size / 2.0), size, shape="square", name="dot.t")
     return bot + top

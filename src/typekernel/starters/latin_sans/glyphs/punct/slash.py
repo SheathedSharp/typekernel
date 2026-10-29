@@ -1,12 +1,10 @@
-"""slash — solidus diagonal."""
+"""slash — anatomy compensated diagonal (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -18,11 +16,23 @@ def slash(system: System):
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.4
     width = float(WIDTHS.get("slash", 320))
-    ang = math.degrees(math.atan2(width, asc - desc))
-    wt = compensated_weight(st, ang)
-    return diagonal_stroke(
+    left, right = diagonal_band(
         (lsb + width - st * 0.2, asc),
         (lsb + st * 0.2, desc),
-        weight=wt,
-        tag_prefix="slash",
+        weight=st,
+        compensate=True,
+    )
+    return (
+        Writer()
+        .start(left.start)
+        .corner("diag.top.l")
+        .fragment(left)
+        .corner("diag.foot.l")
+        .line(right.start)
+        .corner("diag.foot.r")
+        .fragment(right)
+        .corner("diag.top.r")
+        .line(left.start)
+        .close()
+        .build()
     )

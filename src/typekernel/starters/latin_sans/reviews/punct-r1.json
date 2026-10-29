@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "period": "db9bd6a6f956712db6131e4592a0f8454f4d1ffdad58a94d838c85ecdf707a00",
+    "comma": "adcd09d4644861e8ba178ddb747644f94c0f830d58010d003b38700d07ca11f0",
+    "colon": "627cb50891c9fb5faf3071be48906af45fbc5f663e6cd83828bc23fac9d338be",
+    "semicolon": "264f8dac062f93f6edc250110ab3c4c64077a2cd51a681d39c48028c8ffbfe28",
+    "exclam": "df19c94049c2cffe2f4b73b5fde5001bb88114784bcd435034a256e007a6cb9a",
+    "question": "3efbb30f6986e2d127e1c20cf4826c9666a9c1b3e64a89fe384c527f34213f97",
+    "hyphen": "1e628de5130c27b301badf18961aa297e4e7aa7a138f1b363ed3bec337e9ffdf",
+    "endash": "db6a565af9ceb5c71c13a5e07051788de8887dc29a69374b529ec74394188b72",
+    "emdash": "6f882da1606b675c8adc418ea0e3599eb6acba24a827c4035cd5ee7bf00cc398",
+    "quotesingle": "e1d0d7e0fe09d630d6cb42a2cdca12cf938146f3b601b00f11bfa6519aed56d1",
+    "quotedbl": "b504a6fb499a67ec3bc1da4db149343b0fd8c3ffe8849e63d31f5b81a12ae1b0",
+    "parenleft": "51f10b133876d23ba5d9cda455ad8d4344c313bac32611ef53f3f8067a796384",
+    "parenright": "511fde23e6a43ef235ef085835cf80f3f4bbd271d44cb6942eefc19aba9fb58f",
+    "bracketleft": "b5e61cf3a6df9641c4e62f4520bf1578600fde85c534e2c3ac30f3b1ae07fbdf",
+    "bracketright": "121e15c708da2ad2bcb7476522312d786ebda6d490bafd9eb0f0818f71075513",
+    "slash": "9cf039fdba21028ed91777cf34c537f8ad79c64e531e5a0cbc3532e7ba289e19",
+    "backslash": "c1b5553c9017f5ebdfb0c261c9ba36739a6442d89a97471eee995123f9356cbc"
+  },
+  "group": "punct",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-7 punct anatomy rewrite (17 glyphs); audit 0 error.",
+  "proofs": [],
+  "reviewer": "agent:p3-7",
+  "round": 1,
+  "verdict": "pass"
+}

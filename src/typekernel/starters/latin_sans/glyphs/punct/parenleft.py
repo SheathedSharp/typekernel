@@ -1,4 +1,4 @@
-"""parenleft — tall open curve."""
+"""parenleft — arch_span cup (P3-7; signature-stable)."""
 
 from __future__ import annotations
 
@@ -25,13 +25,13 @@ def parenleft(system: System):
     return (
         Writer()
         .start(outer.start)
-        .corner("paren.top.o")
+        .corner("arch.t.o")
         .fragment(outer)
-        .corner("paren.bot.o")
+        .corner("arch.b.o")
         .line(inner.start)
-        .corner("paren.bot.i")
+        .corner("arch.b.i")
         .fragment(inner)
-        .corner("paren.top.i")
+        .corner("arch.t.i")
         .line(outer.start)
         .close()
         .build()
