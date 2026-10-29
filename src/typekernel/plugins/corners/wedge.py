@@ -28,17 +28,12 @@ def wedge(*, size: float = 0.25, depth: float | None = None) -> CornerFiller:
         if trim_in <= 1e-12 and trim_out <= 1e-12:
             return noop_corner_fill(site)
 
-        a = Point(
-            site.point.x - site.in_dir.x * trim_in,
-            site.point.y - site.in_dir.y * trim_in,
-        )
-        b = Point(
-            site.point.x + site.out_dir.x * trim_out,
-            site.point.y + site.out_dir.y * trim_out,
-        )
+        a = site.point_in(trim_in)
+        b = site.point_out(trim_out)
         ext = exterior_unit(site)
         tip = Point(site.point.x + ext.x * tip_d, site.point.y + ext.y * tip_d)
         path = Fragment((LineSegment(a, tip), LineSegment(tip, b)))
         return CornerFill(trim_in=trim_in, trim_out=trim_out, path=path)
 
+    fill.requires = frozenset({"line-line"})  # type: ignore[attr-defined]
     return fill

@@ -44,14 +44,8 @@ def _rect_drawing(width: float, height: float):
 
 def _chamfer(site: CornerSite, system: System) -> CornerFill:
     trim = 2.0
-    a = Point(
-        site.point.x - site.in_dir.x * trim,
-        site.point.y - site.in_dir.y * trim,
-    )
-    b = Point(
-        site.point.x + site.out_dir.x * trim,
-        site.point.y + site.out_dir.y * trim,
-    )
+    a = site.point_in(trim)
+    b = site.point_out(trim)
     return CornerFill(trim_in=trim, trim_out=trim, path=Fragment((LineSegment(a, b),)))
 
 

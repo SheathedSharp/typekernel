@@ -32,14 +32,8 @@ def rounded(*, radius: float | None = None) -> CornerFiller:
         if r <= 1e-12:
             return noop_corner_fill(site)
 
-        start = Point(
-            site.point.x - site.in_dir.x * r,
-            site.point.y - site.in_dir.y * r,
-        )
-        end = Point(
-            site.point.x + site.out_dir.x * r,
-            site.point.y + site.out_dir.y * r,
-        )
+        start = site.point_in(r)
+        end = site.point_out(r)
         c1 = Point(
             start.x + site.in_dir.x * r * KAPPA,
             start.y + site.in_dir.y * r * KAPPA,
@@ -54,4 +48,5 @@ def rounded(*, radius: float | None = None) -> CornerFiller:
             path=Fragment((CubicSegment(start, c1, c2, end),)),
         )
 
+    fill.requires = frozenset({"line-line"})  # type: ignore[attr-defined]
     return fill

@@ -35,7 +35,15 @@ FillerT = TypeVar("FillerT")
 
 
 class SlotFillError(ValueError):
-    """Raised when a fill trims past an edge or path endpoints miss trim points."""
+    """Raised when a fill trims past an edge or path endpoints miss trim points.
+
+    ``slot_tag`` is set when the failing slot is known so ``Project.evaluate``
+    can format ``glyph 'X' slot 'tag': reason``.
+    """
+
+    def __init__(self, message: str, *, slot_tag: str | None = None) -> None:
+        super().__init__(message)
+        self.slot_tag = slot_tag
 
 
 def _freeze_meta(meta: Mapping[str, float]) -> Mapping[str, float]:
@@ -50,17 +58,65 @@ def _unit(v: Point) -> Point:
 
 
 def _seg_length(seg: Segment) -> float:
+    """Edge length: Euclidean for lines, arc length for cubics."""
     if isinstance(seg, LineSegment):
         return math.hypot(seg.p1.x - seg.p0.x, seg.p1.y - seg.p0.y)
-    return math.hypot(seg.p3.x - seg.p0.x, seg.p3.y - seg.p0.y)
+    from fontTools.misc.bezierTools import calcCubicArcLength
+
+    return float(
+        calcCubicArcLength(
+            seg.p0.as_tuple(),
+            seg.p1.as_tuple(),
+            seg.p2.as_tuple(),
+            seg.p3.as_tuple(),
+        )
+    )
+
+
+def _cubic_arc_length_to_t(seg: CubicSegment, t: float) -> float:
+    """Arc length of ``seg`` from parameter 0 to ``t`` (clamped)."""
+    from fontTools.misc.bezierTools import calcCubicArcLength, splitCubicAtT
+
+    t = max(0.0, min(1.0, t))
+    if t <= 1e-12:
+        return 0.0
+    if t >= 1.0 - 1e-12:
+        return _seg_length(seg)
+    left, _right = splitCubicAtT(
+        seg.p0.as_tuple(),
+        seg.p1.as_tuple(),
+        seg.p2.as_tuple(),
+        seg.p3.as_tuple(),
+        t,
+    )
+    return float(calcCubicArcLength(left[0], left[1], left[2], left[3]))
+
+
+def _t_at_arc_distance(seg: CubicSegment, distance: float) -> float:
+    """Parameter ``t`` where arc length from the start equals ``distance``."""
+    length = _seg_length(seg)
+    if length < 1e-12 or distance <= 0.0:
+        return 0.0
+    if distance >= length:
+        return 1.0
+    lo, hi = 0.0, 1.0
+    for _ in range(48):
+        mid = 0.5 * (lo + hi)
+        if _cubic_arc_length_to_t(seg, mid) < distance:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
 
 
 def _point_along(seg: Segment, *, from_start: bool, distance: float) -> Point:
+    """Point at arc-length ``distance`` from an endpoint along ``seg``."""
     length = _seg_length(seg)
     if length < 1e-12:
         return segment_start(seg) if from_start else segment_end(seg)
-    t = max(0.0, min(1.0, distance / length))
+    dist = max(0.0, min(length, distance))
     if isinstance(seg, LineSegment):
+        t = dist / length
         if from_start:
             return Point(
                 seg.p0.x + (seg.p1.x - seg.p0.x) * t,
@@ -72,7 +128,8 @@ def _point_along(seg: Segment, *, from_start: bool, distance: float) -> Point:
         )
     from fontTools.misc.bezierTools import splitCubicAtT
 
-    u = t if from_start else 1.0 - t
+    target = dist if from_start else length - dist
+    u = _t_at_arc_distance(seg, target)
     left, _right = splitCubicAtT(
         seg.p0.as_tuple(),
         seg.p1.as_tuple(),
@@ -95,7 +152,7 @@ def _trim_segment_end(seg: Segment, distance: float) -> Segment | None:
         )
     from fontTools.misc.bezierTools import splitCubicAtT
 
-    u = max(0.0, min(1.0, 1.0 - distance / length))
+    u = _t_at_arc_distance(seg, length - distance)
     left, _right = splitCubicAtT(
         seg.p0.as_tuple(),
         seg.p1.as_tuple(),
@@ -117,7 +174,7 @@ def _trim_segment_start(seg: Segment, distance: float) -> Segment | None:
         return LineSegment(_point_along(seg, from_start=True, distance=distance), seg.p1)
     from fontTools.misc.bezierTools import splitCubicAtT
 
-    u = max(0.0, min(1.0, distance / length))
+    u = _t_at_arc_distance(seg, distance)
     _left, right = splitCubicAtT(
         seg.p0.as_tuple(),
         seg.p1.as_tuple(),
@@ -139,9 +196,31 @@ class CornerSite:
     out_len: float
     role: ContourRole
     meta: Mapping[str, float] = field(default_factory=dict)
+    # Real adjacent edges (set by apply_slots). Optional so synthetic sites in
+    # tests can still construct a CornerSite with directions only.
+    in_edge: Segment | None = None
+    out_edge: Segment | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "meta", _freeze_meta(self.meta))
+
+    def point_in(self, trim: float) -> Point:
+        """Point trim units back along the real incoming edge (arc length)."""
+        if self.in_edge is not None:
+            return _point_along(self.in_edge, from_start=False, distance=float(trim))
+        return Point(
+            self.point.x - self.in_dir.x * float(trim),
+            self.point.y - self.in_dir.y * float(trim),
+        )
+
+    def point_out(self, trim: float) -> Point:
+        """Point trim units forward along the real outgoing edge (arc length)."""
+        if self.out_edge is not None:
+            return _point_along(self.out_edge, from_start=True, distance=float(trim))
+        return Point(
+            self.point.x + self.out_dir.x * float(trim),
+            self.point.y + self.out_dir.y * float(trim),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,9 +243,36 @@ class EndSite:
     b_dir: Point
     role: ContourRole
     meta: Mapping[str, float] = field(default_factory=dict)
+    cut_edge: Segment | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "meta", _freeze_meta(self.meta))
+
+    def point_a(self, trim: float) -> Point:
+        """Point trim units from ``a`` toward ``b`` along the real cut edge."""
+        if self.cut_edge is not None:
+            return _point_along(self.cut_edge, from_start=True, distance=float(trim))
+        length = math.hypot(self.b.x - self.a.x, self.b.y - self.a.y)
+        if length < 1e-12:
+            return self.a
+        t = max(0.0, min(1.0, float(trim) / length))
+        return Point(
+            self.a.x + (self.b.x - self.a.x) * t,
+            self.a.y + (self.b.y - self.a.y) * t,
+        )
+
+    def point_b(self, trim: float) -> Point:
+        """Point trim units from ``b`` toward ``a`` along the real cut edge."""
+        if self.cut_edge is not None:
+            return _point_along(self.cut_edge, from_start=False, distance=float(trim))
+        length = math.hypot(self.b.x - self.a.x, self.b.y - self.a.y)
+        if length < 1e-12:
+            return self.b
+        t = max(0.0, min(1.0, float(trim) / length))
+        return Point(
+            self.b.x + (self.a.x - self.b.x) * t,
+            self.b.y + (self.a.y - self.b.y) * t,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,14 +302,18 @@ def _match_filler(
     return None
 
 
-def _assert_path_endpoints(path: Fragment, start: Point, end: Point) -> None:
+def _assert_path_endpoints(
+    path: Fragment, start: Point, end: Point, *, slot_tag: str | None = None
+) -> None:
     if not points_close(path.start, start, _POINT_TOL):
         raise SlotFillError(
-            f"fill path start {path.start.as_tuple()} != trim point {start.as_tuple()}"
+            f"fill path start {path.start.as_tuple()} != trim point {start.as_tuple()}",
+            slot_tag=slot_tag,
         )
     if not points_close(path.end, end, _POINT_TOL):
         raise SlotFillError(
-            f"fill path end {path.end.as_tuple()} != trim point {end.as_tuple()}"
+            f"fill path end {path.end.as_tuple()} != trim point {end.as_tuple()}",
+            slot_tag=slot_tag,
         )
 
 
@@ -305,6 +415,8 @@ def _corner_site_from_segs(
         out_len=_seg_length(nxt),
         role=role,
         meta=meta,
+        in_edge=prev,
+        out_edge=nxt,
     )
 
 
@@ -317,12 +429,13 @@ def _apply_corner(
     if fill.trim_in > site.in_len + 1e-9 or fill.trim_out > site.out_len + 1e-9:
         raise SlotFillError(
             f"trim exceeds edge length for {site.tag!r}: "
-            f"trim_in={fill.trim_in}/{site.in_len}, trim_out={fill.trim_out}/{site.out_len}"
+            f"trim_in={fill.trim_in}/{site.in_len}, trim_out={fill.trim_out}/{site.out_len}",
+            slot_tag=site.tag,
         )
     trim_start = _point_along(segs[prev_i], from_start=False, distance=fill.trim_in)
     trim_end = _point_along(segs[next_i], from_start=True, distance=fill.trim_out)
     if fill.path is not None:
-        _assert_path_endpoints(fill.path, trim_start, trim_end)
+        _assert_path_endpoints(fill.path, trim_start, trim_end, slot_tag=site.tag)
 
     new_prev = _trim_segment_end(segs[prev_i], fill.trim_in)
     new_next = _trim_segment_start(segs[next_i], fill.trim_out)
@@ -339,7 +452,10 @@ def _apply_corner(
     if new_next is not None:
         out.append(new_next)
     if not out:
-        raise SlotFillError(f"corner fill for {site.tag!r} removed entire contour")
+        raise SlotFillError(
+            f"corner fill for {site.tag!r} removed entire contour",
+            slot_tag=site.tag,
+        )
     return out
 
 
@@ -349,17 +465,21 @@ def _apply_end(segs: list[Segment], node_index: int, fill: EndFill, site: EndSit
     cut = segs[idx]
     cut_len = _seg_length(cut)
     if fill.trim_a < 0 or fill.trim_b < 0:
-        raise SlotFillError(f"negative end trim for {site.tag!r}")
+        raise SlotFillError(f"negative end trim for {site.tag!r}", slot_tag=site.tag)
     if fill.trim_a + fill.trim_b > cut_len + 1e-9:
         raise SlotFillError(
             f"end trim exceeds cut length for {site.tag!r}: "
-            f"{fill.trim_a}+{fill.trim_b} > {cut_len}"
+            f"{fill.trim_a}+{fill.trim_b} > {cut_len}",
+            slot_tag=site.tag,
         )
     if fill.path is None:
-        raise SlotFillError(f"end fill for {site.tag!r} has path=None (use noop skip)")
+        raise SlotFillError(
+            f"end fill for {site.tag!r} has path=None (use noop skip)",
+            slot_tag=site.tag,
+        )
     pa = _point_along(cut, from_start=True, distance=fill.trim_a)
     pb = _point_along(cut, from_start=False, distance=fill.trim_b)
-    _assert_path_endpoints(fill.path, pa, pb)
+    _assert_path_endpoints(fill.path, pa, pb, slot_tag=site.tag)
     replacement: list[Segment] = []
     if fill.trim_a > 1e-12:
         replacement.append(LineSegment(segment_start(cut), pa))
@@ -421,7 +541,8 @@ def apply_slots(
                 ]
                 if not candidates:
                     raise SlotFillError(
-                        f"could not relocate corner {slot.tag!r} after prior fill"
+                        f"could not relocate corner {slot.tag!r} after prior fill",
+                        slot_tag=slot.tag,
                     )
                 if len(candidates) == 1:
                     idx = candidates[0]
@@ -448,10 +569,19 @@ def apply_slots(
             site = _corner_site_from_segs(
                 working, idx, tag=slot.tag, role=role, meta=slot.meta
             )
+            requires = getattr(corner_filler, "requires", None) or ()
+            if "line-line" in requires and not (
+                isinstance(site.in_edge, LineSegment)
+                and isinstance(site.out_edge, LineSegment)
+            ):
+                # Filler needs straight neighbors; leave geometry + slot (info skip).
+                remaining_slots.append(slot)
+                continue
             fill = corner_filler(site, system)
             if not isinstance(fill, CornerFill):
                 raise SlotFillError(
-                    f"corner filler for {slot.tag!r} returned {type(fill)}"
+                    f"corner filler for {slot.tag!r} returned {type(fill)}",
+                    slot_tag=slot.tag,
                 )
             # plain / zero-radius: leave geometry + corner slot (槽位与填充协议 ≡ unmatched).
             if _is_noop_corner_fill(fill):
@@ -476,11 +606,13 @@ def apply_slots(
                 b_dir=_unit(outgoing_tangent(working[(idx + 1) % n])),
                 role=role,
                 meta=slot.meta,
+                cut_edge=cut,
             )
             fill_e = end_filler(site_e, system)
             if not isinstance(fill_e, EndFill):
                 raise SlotFillError(
-                    f"end filler for {slot.tag!r} returned {type(fill_e)}"
+                    f"end filler for {slot.tag!r} returned {type(fill_e)}",
+                    slot_tag=slot.tag,
                 )
             # Degenerate end params: leave geometry + end slot (槽位与填充协议 ≡ unmatched).
             if _is_noop_end_fill(fill_e):
@@ -488,7 +620,8 @@ def apply_slots(
                 continue
             if fill_e.path is None:
                 raise SlotFillError(
-                    f"end filler for {slot.tag!r} returned path=None with non-zero trim"
+                    f"end filler for {slot.tag!r} returned path=None with non-zero trim",
+                    slot_tag=slot.tag,
                 )
             working = _apply_end(working, idx, fill_e, site_e)
             applied.add(slot.tag)

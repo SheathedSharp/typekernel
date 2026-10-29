@@ -46,14 +46,8 @@ def ink_trap(
         if trim_in <= 1e-12 and trim_out <= 1e-12:
             return noop_corner_fill(site)
 
-        a = Point(
-            site.point.x - site.in_dir.x * trim_in,
-            site.point.y - site.in_dir.y * trim_in,
-        )
-        b = Point(
-            site.point.x + site.out_dir.x * trim_out,
-            site.point.y + site.out_dir.y * trim_out,
-        )
+        a = site.point_in(trim_in)
+        b = site.point_out(trim_out)
         inn = interior_unit(site)
         # Tip from the chord midpoint so a 90° corner cannot collapse tip onto a/b
         # (corner+interior*depth == b when depth==trim_out and interior==out_dir).
@@ -73,4 +67,5 @@ def ink_trap(
         segs = tuple(LineSegment(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
         return CornerFill(trim_in=trim_in, trim_out=trim_out, path=Fragment(segs))
 
+    fill.requires = frozenset({"line-line"})  # type: ignore[attr-defined]
     return fill

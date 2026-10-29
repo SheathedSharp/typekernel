@@ -43,14 +43,8 @@ def _square_with_corner() -> object:
 def _chamfer(site: CornerSite, system: System) -> CornerFill:
     trim = 2.0
     # Back along -in_dir from point, forward along out_dir
-    a = Point(
-        site.point.x - site.in_dir.x * trim,
-        site.point.y - site.in_dir.y * trim,
-    )
-    b = Point(
-        site.point.x + site.out_dir.x * trim,
-        site.point.y + site.out_dir.y * trim,
-    )
+    a = site.point_in(trim)
+    b = site.point_out(trim)
     path = Fragment((LineSegment(a, b),))
     return CornerFill(trim_in=trim, trim_out=trim, path=path)
 

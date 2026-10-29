@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType, ModuleType
 
-from typekernel.draw import CornerFiller, Drawing, EndFiller, apply_slots
+from typekernel.draw import CornerFiller, Drawing, EndFiller, SlotFillError, apply_slots
 from typekernel.font.glyph import Glyph
 from typekernel.project.evaluate import (
     advance_from_drawing,
@@ -117,12 +117,20 @@ class Project:
                 build = spec.masters[master]
         drawing = build(system)
         if self._corners is not None or self._ends is not None:
-            drawing = apply_slots(
-                drawing,
-                system,
-                self._corners or {},
-                self._ends or {},
-            )
+            try:
+                drawing = apply_slots(
+                    drawing,
+                    system,
+                    self._corners or {},
+                    self._ends or {},
+                )
+            except SlotFillError as exc:
+                tag = exc.slot_tag or "?"
+                reason = str(exc)
+                raise SlotFillError(
+                    f"glyph '{name}' slot '{tag}': {reason}",
+                    slot_tag=tag,
+                ) from exc
         return drawing
 
     def to_glyph(
