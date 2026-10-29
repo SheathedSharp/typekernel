@@ -12,6 +12,7 @@ STARTERS: dict[str, str] = {
     "latin-sans": "latin_sans",
     "latin-humanist-italic": "latin_humanist_italic",
     "latin-chancery": "latin_chancery",
+    "latin-sans-italic": "latin_sans_italic",
 }
 
 _BRIEF_MD = """\
@@ -99,7 +100,7 @@ def create_project(
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
-    ``latin-sans``, ``latin-humanist-italic``, or ``latin-chancery`` to copy
+    ``latin-sans``, ``latin-sans-italic``, ``latin-humanist-italic``, or ``latin-chancery`` to copy
     the matching starter (system, elements, glyph set, project.py).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):

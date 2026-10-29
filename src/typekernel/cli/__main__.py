@@ -303,7 +303,7 @@ def main(argv: list[str] | None = None) -> int:
     p_new.add_argument(
         "--starter",
         default=None,
-        help="starter template: omit/empty, or latin-sans | latin-humanist-italic | latin-chancery",
+        help="starter template: omit/empty, or latin-sans | latin-sans-italic | latin-humanist-italic | latin-chancery",
     )
     p_new.set_defaults(func=_cmd_new)
 
