@@ -1,40 +1,55 @@
-"""Rest glyph R — P + diagonal leg."""
+"""Mixed glyph R — anatomy stem + bowl + diagonal leg (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, bowl, diagonal_stroke, stem_rect
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import bowl, stem
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
 
-@glyph("R", group="uc.bowl")
+@glyph("R", group="uc.mixed")
 def glyph_R(system: System):
     st = float(system.stem["uc"])
+    thin = float(system.stem.get("uc_h", st * 0.85))
     cap = float(system.zones.cap)
     width = float(WIDTHS["R"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     ov = float(system.overshoot.round) * 0.4
-    stem = stem_rect(lsb, lsb + st, 0.0, cap, prefix="stem.l")
+    exp = float(system.tokens.get("bowl_exponent", 2.15))
+    left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
     cx = lsb + st + (width - st) * 0.45
-    bowl_ = bowl(
-        system,
-        cx=cx,
-        cy=cap * 0.70,
-        rx=(width - st) * 0.48,
-        ry=cap * 0.30 + ov,
-        thickness=st,
+    ring = bowl(
+        (cx, cap * 0.70),
+        (width - st) * 0.48,
+        cap * 0.30,
+        thick=st,
+        thin=thin,
+        exponent=exp,
+        overshoot=ov,
+        name="bowl",
     )
     join_y = cap * 0.42
-    ang = math.degrees(math.atan2(width * 0.45, join_y))
-    wt = compensated_weight(st, ang)
-    leg = diagonal_stroke(
+    band_l, band_r = diagonal_band(
         (lsb + st * 0.7, join_y),
         (lsb + width - st * 0.2, 0.0),
-        weight=wt,
-        tag_prefix="R.leg",
+        weight=st,
+        compensate=True,
     )
-    return stem + bowl_ + leg
+    leg = (
+        Writer()
+        .start(band_l.start)
+        .corner("diag.top.l")
+        .fragment(band_l)
+        .corner("diag.foot.l")
+        .line(band_r.start)
+        .corner("diag.foot.r")
+        .fragment(band_r)
+        .corner("diag.top.r")
+        .line(band_l.start)
+        .close()
+        .build()
+    )
+    return left + ring + leg
