@@ -147,6 +147,7 @@ class Project:
     info: FamilyInfo
     system: System
     glyphs: str | Path = "glyphs"
+    glyphs_italic: str | Path | None = None  # true italic masters
     marks: str | Path | None = "marks"
     axes: Sequence[Axis] = ()
     masters: Sequence[MasterSpec] = ()

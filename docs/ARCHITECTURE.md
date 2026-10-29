@@ -11,7 +11,7 @@
 
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
-| `glyphs_italic/` 约定 | **未实现** | §2「母版与斜体」写的是另一套字形目录；现行斜体靠独立 starter（`latin-humanist-italic` / `latin-chancery`），没有同项目 `glyphs_italic/` 加载路径 |
+| `glyphs_italic/` 约定 | **已落地（加载）** | `Project.glyphs_italic` + session 在 `system.is_italic` 母版上优先用该目录；starter 仍可独立 italic 项目。同项目 roman+italic 双目录可共元素 |
 | `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
@@ -186,7 +186,7 @@ def b(s):
 
 - 同一个字形函数用不同母版的 `System` 求值；兼容性靠节点标签 + 段结构检查。
 - 某个母版需要不同画法时，用 `@n.master("Black")` 单独覆盖。
-- 斜体是 `glyphs_italic/` 下的**另一套字形文件**（可以 import 正体的元素），不是开关。（**约定尚未实现**——见上表；现行用独立 italic starter。）
+- 斜体是 `glyphs_italic/` 下的**另一套字形文件**（可以 import 正体的元素），不是开关。（**加载已落地**——见上表；`latin-humanist-italic` / `latin-chancery` 仍是独立 starter 示例。）
 
 ### 间距
 

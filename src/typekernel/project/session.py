@@ -138,6 +138,7 @@ class ProjectSession:
     # module name → set of bare project deps it imported (best-effort)
     _deps: dict[str, set[str]] = field(default_factory=dict)
     _specs: dict[str, GlyphSpec] = field(default_factory=dict)
+    _specs_italic: dict[str, GlyphSpec] = field(default_factory=dict)
     # cache key (glyph, master, slots, dep fingerprint) → Drawing | GlyphDraft-like
     _eval_cache: dict[tuple[Any, ...], Any] = field(default_factory=dict)
     _dep_fingerprint: str = ""
@@ -147,7 +148,12 @@ class ProjectSession:
     _owned_modules: set[str] = field(default_factory=set)
 
     def specs(self) -> Mapping[str, GlyphSpec]:
+        """Roman (and marks) glyph specs. Italic outlines live in ``italic_specs``."""
         return MappingProxyType(self._specs)
+
+    def italic_specs(self) -> Mapping[str, GlyphSpec]:
+        """Specs discovered under ``Project.glyphs_italic`` (may be empty)."""
+        return MappingProxyType(self._specs_italic)
 
     def evaluate(
         self,
@@ -157,23 +163,28 @@ class ProjectSession:
         slots: bool = True,
     ) -> GlyphDraft:
         """Run the glyph builder (and optional slot fill); return a GlyphDraft."""
-        if name not in self._specs:
+        if name not in self._specs and name not in self._specs_italic:
             raise KeyError(name)
         cache_key = (name, master, slots, self._dep_fingerprint)
         cached = self._eval_cache.get(cache_key)
         if cached is not None:
             return cast(GlyphDraft, cached)
 
-        spec = self._specs[name]
         project = self.project
         system: System = project.system
-        build = spec.build
         masters_by_name = {m.name: m for m in project.masters}
-        if master is not None:
-            if master in masters_by_name:
-                system = masters_by_name[master].system
-            if master in spec.masters:
-                build = spec.masters[master]
+        if master is not None and master in masters_by_name:
+            system = masters_by_name[master].system
+        # True italic masters load from glyphs_italic/ when present.
+        if system.is_italic and name in self._specs_italic:
+            spec = self._specs_italic[name]
+        elif name in self._specs:
+            spec = self._specs[name]
+        else:
+            raise KeyError(name)
+        build = spec.build
+        if master is not None and master in spec.masters:
+            build = spec.masters[master]
         note = ""
         anchors: dict[str, object] = {}
         components: tuple[ComponentRef, ...] = ()
@@ -221,7 +232,7 @@ class ProjectSession:
     def glyph(self, name: str, *, master: str | None = None) -> Glyph:
         """Evaluate then wrap as ``font.Glyph`` (anchors/components/unicodes)."""
         draft = self.evaluate(name, master=master, slots=True)
-        spec = self._specs[name]
+        spec = self._specs.get(name) or self._specs_italic[name]
         if "mark" in spec.traits and "spacing-mark" not in spec.traits:
             advance = 0.0
         else:
@@ -539,6 +550,16 @@ class ProjectSession:
                     collected, label="marks", path_value=project.marks, required=False
                 )
         self._specs = collected
+        italic: dict[str, GlyphSpec] = {}
+        if project.glyphs_italic is not None:
+            with registration_target(italic):
+                self._scan_glyph_tree(
+                    italic,
+                    label="glyphs_italic",
+                    path_value=project.glyphs_italic,
+                    required=False,
+                )
+        self._specs_italic = italic
 
     def _scan_glyph_tree(
         self,
