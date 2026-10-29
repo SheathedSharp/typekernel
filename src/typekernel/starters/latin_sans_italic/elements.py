@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from typekernel.anatomy.pen import (
     expand_slanted_centerline,
+    fuse,
     slanted_centerline,
 )
 from typekernel.anatomy.pen import (
@@ -14,7 +15,7 @@ from typekernel.anatomy.pen import (
 from typekernel.draw import Drawing
 from typekernel.system import System
 
-__all__ = ["open_bowl", "stroke", "uc_stem"]
+__all__ = ["fuse", "open_bowl", "stroke", "uc_stem"]
 
 
 def stroke(

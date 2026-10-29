@@ -22,6 +22,17 @@ system = System(
         "o_width": 470,
         "r_width": 300,
         "l_width": 220,
+        "v_width": 420,
+        "w_width": 640,
+        "x_width": 420,
+        "y_width": 420,
+        "z_width": 420,
+        "k_width": 420,
+        "A_width": 640,
+        "V_width": 640,
+        "N_width": 620,
+        "M_width": 780,
+        "K_width": 600,
         "H_width": 620,
         "O_width": 700,
         "I_width": 220,
@@ -56,7 +67,7 @@ INTENT = BRIEF.intent
 def _designed_master(base: System, *, stem_scale: float, width_scale: float) -> System:
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
     tokens = dict(base.tokens)
-    for key in ("n_width", "m_width", "o_width", "H_width", "O_width", "r_width", "L_width", "T_width", "E_width", "F_width"):
+    for key in ("n_width", "m_width", "o_width", "H_width", "O_width", "r_width", "L_width", "T_width", "E_width", "F_width", "v_width", "w_width", "x_width", "y_width", "z_width", "k_width", "A_width", "V_width", "N_width", "M_width", "K_width"):
         if key in tokens:
             tokens[key] = float(tokens[key]) * width_scale
     return base.tuned(stem=stem, tokens=tokens)
