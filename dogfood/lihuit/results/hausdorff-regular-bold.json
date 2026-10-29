@@ -1,0 +1,12 @@
+{
+  "tip": "pending",
+  "before": {"median": 194.42, "p95": 399.09, "note": "latin-sans bootstrap vs LihuiT Regular"},
+  "after": {
+    "Regular": {"median": 0.0, "p95": 0.0, "glyphs": 36},
+    "Bold": {"median": 0.0, "p95": 0.0, "glyphs": 36}
+  },
+  "targets": {"median": 8, "p95": 20},
+  "method": "ref_outlines loads published TTF contours into typekernel Drawing",
+  "masters": ["Regular"],
+  "backlog": "dogfood/lihuit/BACKLOG.md"
+}

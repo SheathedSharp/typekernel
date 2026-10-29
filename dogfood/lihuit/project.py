@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from composites import COMPOSITES
 from expect import EXPECT
 from spacing import KERNING, METRICS
 from system import (
@@ -25,17 +24,16 @@ from typekernel.project import AuditConfig, Charset, FamilyInfo, Project
 __all__ = ["PROJECT"]
 
 _CHARSET_DIR = Path(__file__).resolve().parent / "charset"
-_CHARSET = Charset.from_text(_CHARSET_DIR / "latin-1.txt") | Charset.from_text(
-    _CHARSET_DIR / "latin-ext-a.txt"
-)
+# P6-3 scope: a–z + 0–9 only (Hausdorff transplant). Full Latin-1 left in charset/ for later.
+_CHARSET = Charset.from_text(_CHARSET_DIR / "dogfood-ascii.txt")
 
 PROJECT = Project(
-    info=FamilyInfo(family="Lihuit Boot"),
+    info=FamilyInfo(family="LihuiT Dogfood"),
     system=system,
     glyphs="glyphs",
-    marks="marks",
+    marks=None,
     charset=_CHARSET,
-    composites=COMPOSITES,
+    composites=(),  # P6-3: no composites until anchors restored
     axes=(WEIGHT_AXIS,),
     masters=tuple(
         MasterSpec(m.name, MASTER_LOCATIONS.get(m.name, {}), m.system) for m in masters

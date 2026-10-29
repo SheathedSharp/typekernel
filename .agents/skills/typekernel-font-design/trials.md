@@ -93,3 +93,7 @@ Keep PNGs / audit JSON under the project (or a local artifacts folder).
 
 - P6-2 baseline / final runs: same checklist; store scores with the trial log.
 - P6-3 LihuiT dogfood: see `dogfood/lihuit/README.md` (separate transplant workspace).
+
+## P6-2 status (maintainer)
+
+Baseline/final cold-agent score runs still require a zero-context executor + human 1–5 scores. Protocol above is ready; execution is gated on that.

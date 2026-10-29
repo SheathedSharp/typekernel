@@ -11,7 +11,6 @@ REPO = ROOT.parents[1]
 DEFAULT_REG = REPO.parent / "oh-my-font" / "dist" / "ttf" / "LihuiT" / "LihuiT-Regular.ttf"
 DEFAULT_BOLD = REPO.parent / "oh-my-font" / "dist" / "ttf" / "LihuiT" / "LihuiT-Bold.ttf"
 
-# lc + figs only for the transplant scope
 GLYPHS = list("abcdefghijklmnopqrstuvwxyz") + [
     "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"
 ]
@@ -22,19 +21,15 @@ def _font_path(env: str, default: Path) -> Path:
     return Path(raw) if raw else default
 
 
-def _outline_points(tt, name: str, *, n: int = 64) -> list[tuple[float, float]]:
-    from fontTools.pens.recordingPen import RecordingPen
-    from fontTools.pens.recordingPen import replayRecording
+def _outline_points(tt, name: str) -> list[tuple[float, float]]:
     from fontTools.pens.basePen import BasePen
+    from fontTools.pens.recordingPen import RecordingPen, replayRecording
 
     glyph_set = tt.getGlyphSet()
     if name not in glyph_set:
-        # try cmap name via best effort unicodes for a-z / 0-9
         return []
     pen = RecordingPen()
     glyph_set[name].draw(pen)
-
-    pts: list[tuple[float, float]] = []
 
     class SamplePen(BasePen):
         def __init__(self):
@@ -48,10 +43,8 @@ def _outline_points(tt, name: str, *, n: int = 64) -> list[tuple[float, float]]:
             self.pts.append(pt)
 
         def _curveToOne(self, p1, p2, p3):
-            # coarse sample
             for i in range(1, 5):
                 t = i / 4.0
-                # de Casteljau-ish linear blend (good enough for distance proxy)
                 x = (1 - t) ** 3 * self._p0[0] + 3 * (1 - t) ** 2 * t * p1[0] + 3 * (1 - t) * t**2 * p2[0] + t**3 * p3[0]
                 y = (1 - t) ** 3 * self._p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t**2 * p2[1] + t**3 * p3[1]
                 self.pts.append((x, y))
@@ -95,68 +88,88 @@ def _hausdorff(a: list[tuple[float, float]], b: list[tuple[float, float]]) -> fl
     return max(directed(a, b), directed(b, a))
 
 
-def main() -> int:
+def _summarize(distances: list[tuple[str, float]]) -> tuple[float, float]:
+    finite = sorted(d for _, d in distances if d != float("inf"))
+    n = len(finite)
+    if not n:
+        return float("inf"), float("inf")
+    return finite[n // 2], finite[min(n - 1, int(n * 0.95))]
+
+
+def _compare_face(label: str, tt_path: Path, *, bold: bool) -> int:
     from fontTools.ttLib import TTFont
 
     from typekernel.project import open_project
 
-    reg_path = _font_path("LIHUIT_REGULAR", DEFAULT_REG)
-    bold_path = _font_path("LIHUIT_BOLD", DEFAULT_BOLD)
-    if not reg_path.is_file():
-        print(f"missing reference Regular: {reg_path}", file=sys.stderr)
+    if not tt_path.is_file():
+        print(f"{label}: missing {tt_path}", file=sys.stderr)
         return 2
 
-    ref = TTFont(str(reg_path))
-    # Map a-z / 0-9 via cmap
+    ref = TTFont(str(tt_path))
     cmap = ref.getBestCmap() or {}
     code_to_name = {}
     for code, gname in cmap.items():
-        if 0x61 <= code <= 0x7A:  # a-z
+        if 0x61 <= code <= 0x7A:
             code_to_name[chr(code)] = gname
         if 0x30 <= code <= 0x39:
             code_to_name[
-                ["zero","one","two","three","four","five","six","seven","eight","nine"][code - 0x30]
+                ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][code - 0x30]
             ] = gname
 
     distances: list[tuple[str, float]] = []
     missing: list[str] = []
     with open_project(ROOT) as session:
-        for name in GLYPHS:
-            if name not in session.specs():
-                missing.append(name)
-                continue
-            ref_name = code_to_name.get(name)
-            if not ref_name:
-                missing.append(name)
-                continue
-            # dogfood outline via evaluated drawing → sample contour points
-            drawing = session.evaluate(name).drawing
-            ours: list[tuple[float, float]] = []
-            for c in drawing.outline().contours:
-                for seg in c.segments:
-                    for pt in seg.points:
-                        ours.append((float(pt.x), float(pt.y)))
-            theirs = _outline_points(ref, ref_name)
-            d = _hausdorff(ours, theirs)
-            distances.append((name, d))
+        # Bold outlines via stem threshold in ref_outlines.weight_for_system
+        master = None
+        if bold:
+            # Evaluate with a Bold-stem system without registering a VF master.
+            from system import system as base_sys
+
+            bold_sys = base_sys.tuned(stem={"lc": 116, "lc_h": 100, "uc": 116, "uc_h": 100})
+            for name in GLYPHS:
+                if name not in session.specs() or name not in code_to_name:
+                    missing.append(name)
+                    continue
+                from ref_outlines import ref_drawing
+
+                drawing = ref_drawing(name, bold_sys)
+                ours = []
+                for c in drawing.outline().contours:
+                    for seg in c.segments:
+                        for pt in seg.points:
+                            ours.append((float(pt.x), float(pt.y)))
+                theirs = _outline_points(ref, code_to_name[name])
+                distances.append((name, _hausdorff(ours, theirs)))
+        else:
+            for name in GLYPHS:
+                if name not in session.specs() or name not in code_to_name:
+                    missing.append(name)
+                    continue
+                drawing = session.evaluate(name).drawing
+                ours = []
+                for c in drawing.outline().contours:
+                    for seg in c.segments:
+                        for pt in seg.points:
+                            ours.append((float(pt.x), float(pt.y)))
+                theirs = _outline_points(ref, code_to_name[name])
+                distances.append((name, _hausdorff(ours, theirs)))
 
     distances.sort(key=lambda x: x[1], reverse=True)
-    finite = [d for _, d in distances if d != float("inf")]
-    print(f"compared={len(finite)} missing={missing[:12]}{'...' if len(missing)>12 else ''}")
-    if not finite:
-        print("no finite distances — check glyph presence / cmap")
-        return 1
-    finite_sorted = sorted(finite)
-    n = len(finite_sorted)
-    median = finite_sorted[n // 2]
-    p95 = finite_sorted[min(n - 1, int(n * 0.95))]
+    median, p95 = _summarize(distances)
+    print(f"=== {label} compared={len(distances)} missing={missing[:8]}")
     print(f"median={median:.2f} p95={p95:.2f} (targets ≤8 / ≤20)")
-    print("worst 10:")
-    for name, d in distances[:10]:
+    print("worst 5:")
+    for name, d in distances[:5]:
         print(f"  {name:10s} {d:.2f}")
-    # Bold path noted for later dual-master compare
-    print(f"bold_ref={'ok' if bold_path.is_file() else 'missing'}: {bold_path}")
     return 0 if median <= 8 and p95 <= 20 else 1
+
+
+def main() -> int:
+    reg = _font_path("LIHUIT_REGULAR", DEFAULT_REG)
+    bold = _font_path("LIHUIT_BOLD", DEFAULT_BOLD)
+    rc = _compare_face("Regular", reg, bold=False)
+    rc = max(rc, _compare_face("Bold", bold, bold=True))
+    return rc
 
 
 if __name__ == "__main__":

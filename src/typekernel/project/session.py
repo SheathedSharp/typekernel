@@ -46,6 +46,7 @@ _TOP_LEVEL_CANDIDATES = (
     "expect",
     "composites",
     "proofs",
+    "ref_outlines",  # P6 dogfood: published-face outline loader
 )
 
 
