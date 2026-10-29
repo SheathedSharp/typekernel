@@ -54,7 +54,7 @@ def test_family_link_roman_italic(tmp_path: Path) -> None:
 def test_n_group_and_uc_straight_expand() -> None:
     """P5-3: beyond control set toward roman group progression."""
     with open_project(STARTER) as session:
-        names = ("h", "m", "u", "l", "r", "v", "w", "x", "y", "z", "k", "I", "L", "T", "E", "F", "A", "V", "N", "M", "K")
+        names = ("h", "m", "u", "l", "r", "v", "w", "x", "y", "z", "k", "a", "b", "c", "d", "p", "q", "s", "I", "L", "T", "E", "F", "A", "V", "N", "M", "K")
         assert set(names) <= set(session.specs())
         for name in names:
             g = session.glyph(name)

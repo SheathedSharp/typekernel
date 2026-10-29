@@ -28,6 +28,7 @@ system = System(
         "y_width": 420,
         "z_width": 420,
         "k_width": 420,
+        "s_width": 380,
         "A_width": 640,
         "V_width": 640,
         "N_width": 620,
