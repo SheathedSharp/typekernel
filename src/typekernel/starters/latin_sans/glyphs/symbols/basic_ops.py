@@ -16,8 +16,8 @@ def _lsb(system):
 def plus(system: System):
     st = float(system.stem["lc"]) * 0.85; xh = float(system.zones.x); lsb = _lsb(system)
     w = float(WIDTHS.get("plus", 420)); cy = xh * 0.48
-    h = crossbar(lsb, lsb + w, cy, thick=st, name="bar.h", ends="none")
-    v = stem(lsb + (w - st) / 2, lsb + (w + st) / 2, cy - w * 0.35, cy + w * 0.35, name="bar.v", foot="none", top="none")
+    h = crossbar(lsb, lsb + w, cy, thick=st, name="bar", ends="none")
+    v = stem(lsb + (w - st) / 2, lsb + (w + st) / 2, cy - w * 0.35, cy + w * 0.35, name="stem", foot="none", top="none")
     return h + v
 
 @glyph("equal", unicodes=(0x003D,), group="symbol", traits=("symbol", "no-stem"))
@@ -34,8 +34,8 @@ def less(system: System):
     l1, r1 = diagonal_band((lsb + w * 0.85, cy + w * 0.35), (lsb + st, cy), weight=st, compensate=True)
     l2, r2 = diagonal_band((lsb + st, cy), (lsb + w * 0.85, cy - w * 0.35), weight=st, compensate=True)
     def band(l, r, tag):
-        return (Writer().start(l.start).corner(f"{tag}.a").fragment(l).corner(f"{tag}.b")
-                .line(r.start).corner(f"{tag}.c").fragment(r).corner(f"{tag}.d").line(l.start).close().build())
+        return (Writer().start(l.start).corner(f"{tag}.l.a").fragment(l).corner(f"{tag}.l.b")
+                .line(r.start).corner(f"{tag}.r.a").fragment(r).corner(f"{tag}.r.b").line(l.start).close().build())
     return band(l1, r1, "diag.t") + band(l2, r2, "diag.b")
 
 @glyph("greater", unicodes=(0x003E,), group="symbol", traits=("symbol", "no-stem"))
@@ -45,8 +45,8 @@ def greater(system: System):
     l1, r1 = diagonal_band((lsb + st, cy + w * 0.35), (lsb + w - st, cy), weight=st, compensate=True)
     l2, r2 = diagonal_band((lsb + w - st, cy), (lsb + st, cy - w * 0.35), weight=st, compensate=True)
     def band(l, r, tag):
-        return (Writer().start(l.start).corner(f"{tag}.a").fragment(l).corner(f"{tag}.b")
-                .line(r.start).corner(f"{tag}.c").fragment(r).corner(f"{tag}.d").line(l.start).close().build())
+        return (Writer().start(l.start).corner(f"{tag}.l.a").fragment(l).corner(f"{tag}.l.b")
+                .line(r.start).corner(f"{tag}.r.a").fragment(r).corner(f"{tag}.r.b").line(l.start).close().build())
     return band(l1, r1, "diag.t") + band(l2, r2, "diag.b")
 
 @glyph("asterisk", unicodes=(0x002A,), group="symbol", traits=("symbol", "no-stem"))
@@ -56,8 +56,8 @@ def asterisk(system: System):
     parts = []
     for i, (dx, dy) in enumerate([(0, 1), (0.87, 0.5), (0.87, -0.5), (0, -1), (-0.87, -0.5), (-0.87, 0.5)]):
         l, rr = diagonal_band((cx + dx * r * 0.2, cy + dy * r * 0.2), (cx + dx * r, cy + dy * r), weight=st, compensate=False)
-        parts.append(Writer().start(l.start).corner(f"ray.{i}.a").fragment(l).corner(f"ray.{i}.b")
-                     .line(rr.start).corner(f"ray.{i}.c").fragment(rr).corner(f"ray.{i}.d").line(l.start).close().build())
+        parts.append(Writer().start(l.start).corner(f"diag.{i}.a").fragment(l).corner(f"diag.{i}.b")
+                     .line(rr.start).corner(f"diag.{i}.r.a").fragment(rr).corner(f"diag.{i}.r.b").line(l.start).close().build())
     out = parts[0]
     for p in parts[1:]:
         out = out + p
@@ -117,22 +117,22 @@ def braceleft(system: System):
     st = float(system.stem["lc"]) * 0.7; asc = float(system.zones.asc); desc = float(system.zones.desc)
     lsb = _lsb(system); w = float(WIDTHS.get("brace", 280)); mid = (asc + desc) / 2
     # Slot-free construction: verticals + bars (no corner fillers).
-    outer = stem(lsb + w * 0.55, lsb + w * 0.55 + st, desc * 0.2, asc * 0.9, name="stem.o", foot="none", top="none")
-    tip = stem(lsb + w * 0.15, lsb + w * 0.15 + st, mid - st * 0.6, mid + st * 0.6, name="stem.tip", foot="none", top="none")
+    outer = stem(lsb + w * 0.55, lsb + w * 0.55 + st, desc * 0.2, asc * 0.9, name="stem.r", foot="none", top="none")
+    tip = stem(lsb + w * 0.15, lsb + w * 0.15 + st, mid - st * 0.6, mid + st * 0.6, name="stem.1", foot="none", top="none")
     top = crossbar(lsb + w * 0.15, lsb + w * 0.55 + st, asc * 0.9 - st / 2, thick=st, name="bar.t", ends="none")
     bot = crossbar(lsb + w * 0.15, lsb + w * 0.55 + st, desc * 0.2 + st / 2, thick=st, name="bar.b", ends="none")
-    midb = crossbar(lsb + w * 0.15, lsb + w * 0.55, mid, thick=st, name="bar.m", ends="none")
+    midb = crossbar(lsb + w * 0.15, lsb + w * 0.55, mid, thick=st, name="bar.1", ends="none")
     return outer + tip + top + bot + midb
 
 @glyph("braceright", unicodes=(0x007D,), group="punct", traits=("punct", "no-stem"))
 def braceright(system: System):
     st = float(system.stem["lc"]) * 0.7; asc = float(system.zones.asc); desc = float(system.zones.desc)
     lsb = _lsb(system); w = float(WIDTHS.get("brace", 280)); mid = (asc + desc) / 2
-    outer = stem(lsb + w * 0.3, lsb + w * 0.3 + st, desc * 0.2, asc * 0.9, name="stem.o", foot="none", top="none")
-    tip = stem(lsb + w * 0.7, lsb + w * 0.7 + st, mid - st * 0.6, mid + st * 0.6, name="stem.tip", foot="none", top="none")
+    outer = stem(lsb + w * 0.3, lsb + w * 0.3 + st, desc * 0.2, asc * 0.9, name="stem.r", foot="none", top="none")
+    tip = stem(lsb + w * 0.7, lsb + w * 0.7 + st, mid - st * 0.6, mid + st * 0.6, name="stem.1", foot="none", top="none")
     top = crossbar(lsb + w * 0.3, lsb + w * 0.7 + st, asc * 0.9 - st / 2, thick=st, name="bar.t", ends="none")
     bot = crossbar(lsb + w * 0.3, lsb + w * 0.7 + st, desc * 0.2 + st / 2, thick=st, name="bar.b", ends="none")
-    midb = crossbar(lsb + w * 0.3 + st, lsb + w * 0.7 + st, mid, thick=st, name="bar.m", ends="none")
+    midb = crossbar(lsb + w * 0.3 + st, lsb + w * 0.7 + st, mid, thick=st, name="bar.1", ends="none")
     return outer + tip + top + bot + midb
 
 @glyph("asciitilde", unicodes=(0x007E,), group="symbol", traits=("symbol", "no-stem"))

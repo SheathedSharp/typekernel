@@ -15,7 +15,7 @@ def Tbar(system: System):
     width = float(WIDTHS.get("T", 620))
     bar = crossbar(lsb, lsb + width, cap - thin / 2, thick=thin, name="bar.t", ends="none")
     mid = stem(lsb + (width - st) / 2, lsb + (width + st) / 2, 0.0, cap - thin * 0.5, name="stem")
-    stroke = crossbar(lsb + width * 0.25, lsb + width * 0.75, cap * 0.45, thick=thin * 0.85, name="bar.stroke", ends="none")
+    stroke = crossbar(lsb + width * 0.25, lsb + width * 0.75, cap * 0.45, thick=thin * 0.85, name="bar.1", ends="none")
     return zone_anchors(bar + mid + stroke, system, top="cap")
 
 @glyph("tbar", unicodes=(0x0167,), group="lc.mixed")
@@ -26,5 +26,5 @@ def tbar(system: System):
     x0 = lsb + (width - st) / 2
     body = stem(x0, x0 + st, 0.0, asc * 0.85, name="stem")
     bar = crossbar(lsb, lsb + width, xh * 0.85, thick=thin, name="bar", ends="none")
-    stroke = crossbar(lsb + width * 0.15, lsb + width * 0.85, xh * 0.45, thick=thin * 0.8, name="bar.stroke", ends="none")
+    stroke = crossbar(lsb + width * 0.15, lsb + width * 0.85, xh * 0.45, thick=thin * 0.8, name="bar.1", ends="none")
     return zone_anchors(body + bar + stroke, system, top="x")

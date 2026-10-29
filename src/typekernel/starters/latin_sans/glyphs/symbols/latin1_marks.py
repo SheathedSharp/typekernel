@@ -114,16 +114,16 @@ def ordmasculine(system: System):
 def logicalnot(system: System):
     st = float(system.stem["lc"]) * 0.75; xh = float(system.zones.x); lsb = _lsb(system)
     w = float(WIDTHS.get("logicalnot", 420))
-    return (crossbar(lsb, lsb + w, xh * 0.55, thick=st, name="bar.h", ends="none")
-            + stem(lsb + w - st, lsb + w, xh * 0.25, xh * 0.55, name="bar.v", foot="none", top="none"))
+    return (crossbar(lsb, lsb + w, xh * 0.55, thick=st, name="bar", ends="none")
+            + stem(lsb + w - st, lsb + w, xh * 0.25, xh * 0.55, name="stem", foot="none", top="none"))
 
 @glyph("plusminus", unicodes=(0x00B1,), group="symbol", traits=("symbol", "no-stem"))
 def plusminus(system: System):
     st = float(system.stem["lc"]) * 0.8; xh = float(system.zones.x); lsb = _lsb(system)
     w = float(WIDTHS.get("plus", 420)); cy = xh * 0.58
-    h = crossbar(lsb, lsb + w, cy, thick=st, name="bar.h", ends="none")
-    v = stem(lsb + (w - st) / 2, lsb + (w + st) / 2, cy - w * 0.28, cy + w * 0.28, name="bar.v", foot="none", top="none")
-    m = crossbar(lsb, lsb + w, xh * 0.28, thick=st, name="bar.m", ends="none")
+    h = crossbar(lsb, lsb + w, cy, thick=st, name="bar", ends="none")
+    v = stem(lsb + (w - st) / 2, lsb + (w + st) / 2, cy - w * 0.28, cy + w * 0.28, name="stem", foot="none", top="none")
+    m = crossbar(lsb, lsb + w, xh * 0.28, thick=st, name="bar.1", ends="none")
     return h + v + m
 
 @glyph("multiply", unicodes=(0x00D7,), group="symbol", traits=("symbol", "no-stem"))
@@ -134,9 +134,9 @@ def multiply(system: System):
     l1, r1 = diagonal_band((lsb + st, cy + w * 0.32), (lsb + w - st, cy - w * 0.32), weight=st, compensate=True)
     l2, r2 = diagonal_band((lsb + st, cy - w * 0.32), (lsb + w - st, cy + w * 0.32), weight=st, compensate=True)
     def band(l, r, tag):
-        return (Writer().start(l.start).corner(f"{tag}.a").fragment(l).corner(f"{tag}.b")
-                .line(r.start).corner(f"{tag}.c").fragment(r).corner(f"{tag}.d").line(l.start).close().build())
-    return band(l1, r1, "diag.a") + band(l2, r2, "diag.b")
+        return (Writer().start(l.start).corner(f"{tag}.l.a").fragment(l).corner(f"{tag}.l.b")
+                .line(r.start).corner(f"{tag}.r.a").fragment(r).corner(f"{tag}.r.b").line(l.start).close().build())
+    return band(l1, r1, "diag.1") + band(l2, r2, "diag.2")
 
 @glyph("divide", unicodes=(0x00F7,), group="symbol", traits=("symbol", "no-stem"))
 def divide(system: System):
@@ -172,7 +172,7 @@ def copyright(system: System):
     from typekernel.anatomy import open_bowl
     exp = float(system.tokens.get("bowl_exponent", 2.15)); w = float(WIDTHS.get("copyright", 640)); ov = float(system.overshoot.round)
     outer = bowl((lsb + w / 2, xh / 2), w / 2, xh / 2, thick=st, thin=thin, exponent=exp, overshoot=ov * 0.3, name="bowl.o")
-    inner = open_bowl((lsb + w / 2, xh / 2), w * 0.22, xh * 0.22, thick=st * 0.9, thin=thin * 0.9, aperture=0.4, open_side="right", exponent=exp, name="bowl.c")
+    inner = open_bowl((lsb + w / 2, xh / 2), w * 0.22, xh * 0.22, thick=st * 0.9, thin=thin * 0.9, aperture=0.4, open_side="right", exponent=exp, name="bowl")
     return outer + inner
 
 @glyph("registered", unicodes=(0x00AE,), group="symbol", traits=("symbol",))
@@ -198,7 +198,7 @@ def mu(system: System):
     bot = (Writer().start((lsb + st, st * 0.2)).corner("arch.l")
            .curve((lsb + st, -st * 0.1), (lsb + width - st, -st * 0.1), (lsb + width - st, st * 0.2))
            .corner("arch.r").line((lsb + width - st * 0.15, st * 0.2 + thin))
-           .corner("arch.ri")
+           .corner("arch.r.i")
            .curve((lsb + width - st, thin * 1.2), (lsb + st, thin * 1.2), (lsb + st * 0.15, st * 0.2 + thin))
-           .corner("arch.li").line((lsb + st, st * 0.2)).close().build())
+           .corner("arch.l.i").line((lsb + st, st * 0.2)).close().build())
     return left + right + bot

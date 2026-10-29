@@ -17,8 +17,8 @@ def Lslash(system: System):
     left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
     bar = crossbar(lsb, lsb + width, thin / 2, thick=thin, name="bar.b", ends="none")
     left_b, right_b = diagonal_band((lsb + width * 0.55, cap * 0.55), (lsb - st * 0.2, cap * 0.25), weight=st * 0.75, compensate=True)
-    slash = (Writer().start(left_b.start).corner("slash.t.l").fragment(left_b).corner("slash.b.l")
-             .line(right_b.start).corner("slash.b.r").fragment(right_b).corner("slash.t.r").line(left_b.start).close().build())
+    slash = (Writer().start(left_b.start).corner("diag.t.l").fragment(left_b).corner("diag.b.l")
+             .line(right_b.start).corner("diag.b.r").fragment(right_b).corner("diag.t.r").line(left_b.start).close().build())
     return zone_anchors(left + bar + slash, system, top="cap")
 
 @glyph("lslash", unicodes=(0x0142,), group="lc.straight")
@@ -28,6 +28,6 @@ def lslash(system: System):
     x0 = lsb + (width - st) / 2
     body = stem(x0, x0 + st, 0.0, asc * 0.95, name="stem")
     left_b, right_b = diagonal_band((x0 + st * 1.8, xh * 0.7), (x0 - st * 0.9, xh * 0.25), weight=st * 0.7, compensate=True)
-    slash = (Writer().start(left_b.start).corner("slash.t.l").fragment(left_b).corner("slash.b.l")
-             .line(right_b.start).corner("slash.b.r").fragment(right_b).corner("slash.t.r").line(left_b.start).close().build())
+    slash = (Writer().start(left_b.start).corner("diag.t.l").fragment(left_b).corner("diag.b.l")
+             .line(right_b.start).corner("diag.b.r").fragment(right_b).corner("diag.t.r").line(left_b.start).close().build())
     return zone_anchors(body + slash, system, top="x")

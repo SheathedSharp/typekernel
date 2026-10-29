@@ -69,8 +69,8 @@ def currency(system: System):
         (lsb + w * 0.88, xh * 0.12, lsb + w * 0.68, xh * 0.32),
     ]):
         l, r = diagonal_band((x0, y0), (x1, y1), weight=st * 0.85, compensate=False)
-        parts.append(Writer().start(l.start).corner(f"arm.{i}.a").fragment(l).corner(f"arm.{i}.b")
-                     .line(r.start).corner(f"arm.{i}.c").fragment(r).corner(f"arm.{i}.d").line(l.start).close().build())
+        parts.append(Writer().start(l.start).corner(f"diag.{i}.a").fragment(l).corner(f"diag.{i}.b")
+                     .line(r.start).corner(f"diag.{i}.r.a").fragment(r).corner(f"diag.{i}.r.b").line(l.start).close().build())
     out = parts[0]
     for p in parts[1:]:
         out = out + p

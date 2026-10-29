@@ -16,7 +16,7 @@ def Dcroat(system: System):
     width = float(WIDTHS.get("D", 680))
     left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
     ring = bowl((lsb + width * 0.55, cap / 2), width * 0.42, cap / 2, thick=st, thin=thin, exponent=exp, overshoot=ov, name="bowl")
-    stroke = crossbar(lsb - st * 0.35, lsb + st * 1.8, cap * 0.55, thick=thin, name="bar.stroke", ends="none")
+    stroke = crossbar(lsb - st * 0.35, lsb + st * 1.8, cap * 0.55, thick=thin, name="bar.1", ends="none")
     return zone_anchors(left + ring + stroke, system, top="cap")
 
 @glyph("dcroat", unicodes=(0x0111,), group="lc.round")
@@ -28,5 +28,5 @@ def dcroat(system: System):
     right = stem(lsb + width - st, lsb + width, 0.0, asc * 0.95, name="stem.r")
     cx = lsb + (width - st) * 0.5
     ring = bowl((cx, xh * 0.48), (width - st) * 0.55, xh * 0.48, thick=st, thin=thin, exponent=exp, overshoot=ov * 0.5, name="bowl")
-    stroke = crossbar(lsb + width - st * 1.8, lsb + width + st * 0.35, asc * 0.7, thick=thin * 0.85, name="bar.stroke", ends="none")
+    stroke = crossbar(lsb + width - st * 1.8, lsb + width + st * 0.35, asc * 0.7, thick=thin * 0.85, name="bar.1", ends="none")
     return zone_anchors(ring + right + stroke, system, top="x")

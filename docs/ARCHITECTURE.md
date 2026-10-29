@@ -15,7 +15,7 @@
 | `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
-| 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；不合规清单见 `tests/anatomy` 用例 |
+| 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；三 starter 0 不合规（见 `docs/design/tag-noncompliance.md`） |
 | `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |

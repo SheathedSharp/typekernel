@@ -16,7 +16,7 @@ def IJ(system: System):
     i_w = float(WIDTHS.get("I", 220)); j_w = float(WIDTHS.get("J", 520))
     i_body = stem(lsb, lsb + st, 0.0, cap, name="stem.i")
     j_x0 = lsb + i_w
-    j_stem = stem(j_x0 + (j_w - st) * 0.55, j_x0 + (j_w - st) * 0.55 + st, desc * 0.25, cap, name="stem.j")
+    j_stem = stem(j_x0 + (j_w - st) * 0.55, j_x0 + (j_w - st) * 0.55 + st, desc * 0.25, cap, name="stem.1")
     # simple J hook via arch_span trough
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     x0 = j_x0 + (j_w - st) * 0.55
@@ -39,8 +39,8 @@ def ij(system: System):
     di = st * 1.05; tittle_i = dot((ix + st / 2, xh + di * 0.7), di, name="dot.i")
     jx = lsb + i_w + (j_w - st) / 2
     hook_y = desc + st * 1.1
-    j_body = stem(jx, jx + st, hook_y, xh, name="stem.j")
-    tittle_j = dot((jx + st / 2, xh + di * 0.7), di, name="dot.j")
+    j_body = stem(jx, jx + st, hook_y, xh, name="stem.1")
+    tittle_j = dot((jx + st / 2, xh + di * 0.7), di, name="dot")
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     x_l = jx + st - j_w * 0.85
     outer = arch_span(jx + st, hook_y, x_l, desc + st * 0.2, desc - 4.0, tension=tension)

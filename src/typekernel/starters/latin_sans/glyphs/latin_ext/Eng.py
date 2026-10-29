@@ -25,7 +25,7 @@ def Eng(system: System):
         lsb + width - st * 0.3,
         cap * 0.5,
         thick=st * 0.85,
-        name="bar.diag",
+        name="diag",
         ends="none",
     )
     hook_bar = crossbar(
@@ -33,7 +33,7 @@ def Eng(system: System):
         lsb + width,
         desc + st * 1.2,
         thick=thin,
-        name="bar.hook",
+        name="hook",
         ends="none",
     )
     return zone_anchors(left + right + diag + hook_bar, system, top="cap")
@@ -64,7 +64,7 @@ def eng(system: System):
         lsb + width,
         desc + st * 1.1,
         thick=thin,
-        name="bar.hook",
+        name="hook",
         ends="none",
     )
     return zone_anchors(left + right + shoulder + hook_bar, system, top="x")

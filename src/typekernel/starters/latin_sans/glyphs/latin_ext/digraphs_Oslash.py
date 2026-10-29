@@ -18,8 +18,8 @@ def Oslash(system: System):
     cx = lsb + width / 2; cy = cap / 2
     ring = bowl((cx, cy), width / 2, cap / 2, thick=st, thin=thin, exponent=exp, overshoot=ov, name="bowl")
     left, right = diagonal_band((lsb + width * 0.85, cap * 0.92), (lsb + width * 0.15, cap * 0.08), weight=st * 0.85, compensate=True)
-    stroke = (Writer().start(left.start).corner("slash.t.l").fragment(left).corner("slash.b.l")
-              .line(right.start).corner("slash.b.r").fragment(right).corner("slash.t.r").line(left.start).close().build())
+    stroke = (Writer().start(left.start).corner("diag.t.l").fragment(left).corner("diag.b.l")
+              .line(right.start).corner("diag.b.r").fragment(right).corner("diag.t.r").line(left.start).close().build())
     return zone_anchors(ring + stroke, system, top="cap")
 
 @glyph("oslash", unicodes=(0x00F8,), group="lc.round")
@@ -31,6 +31,6 @@ def oslash(system: System):
     cx = lsb + width / 2; cy = xh / 2
     ring = bowl((cx, cy), width / 2, xh / 2, thick=st, thin=thin, exponent=exp, overshoot=ov, name="bowl")
     left, right = diagonal_band((lsb + width * 0.88, xh * 0.95), (lsb + width * 0.12, xh * 0.05), weight=st * 0.8, compensate=True)
-    stroke = (Writer().start(left.start).corner("slash.t.l").fragment(left).corner("slash.b.l")
-              .line(right.start).corner("slash.b.r").fragment(right).corner("slash.t.r").line(left.start).close().build())
+    stroke = (Writer().start(left.start).corner("diag.t.l").fragment(left).corner("diag.b.l")
+              .line(right.start).corner("diag.b.r").fragment(right).corner("diag.t.r").line(left.start).close().build())
     return zone_anchors(ring + stroke, system, top="x")

@@ -1,6 +1,6 @@
 """Inventory noncompliant anatomy tags on the three starters.
 
-Does not fail the build for debt — documents the list so it can be burned down.
+All starter tags must match the grammar documented in ARCHITECTURE.md.
 Info-level ``tags.grammar`` findings surface the same issues at audit time.
 """
 
@@ -44,19 +44,9 @@ def test_inventory_noncompliant_tags(starter: str) -> None:
         for tag in sorted(tags):
             if not is_valid_tag(tag):
                 bad.append((glyph, tag))
-    # Always produce a stable sorted report for humans / later phases.
-    report_lines = [f"{g}\t{t}" for g, t in bad]
-    report = "\n".join(report_lines)
-    # Smoke: collection succeeded (starters have glyphs).
     assert by_glyph, f"{starter} produced no glyphs"
-    # Debt is expected; assert the inventory is well-formed.
-    for glyph, tag in bad:
-        assert isinstance(glyph, str) and glyph
-        assert isinstance(tag, str) and tag
-        assert not is_valid_tag(tag)
-    # Keep the report accessible when pytest -s is used.
-    if report:
-        print(f"\n# noncompliant tags in {starter} ({len(bad)})\n{report}\n")
+    report = "\n".join(f"{g}\t{t}" for g, t in bad)
+    assert bad == [], f"{starter} has {len(bad)} noncompliant tags:\n{report}"
 
 
 def test_control_stem_tags_already_legal_on_latin_sans() -> None:

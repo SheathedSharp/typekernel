@@ -31,7 +31,7 @@ def _fig_system(system: System):
     return st, thin, xh, lsb, ov, exp
 
 
-def _zero(system, *, y0: float, h: float, tag: str):
+def _zero(system, *, y0: float, h: float, _tag: str):
     st, thin, _xh, lsb, ov, exp = _fig_system(system)
     w = _FIG_W
     return bowl(
@@ -42,24 +42,24 @@ def _zero(system, *, y0: float, h: float, tag: str):
         thin=thin,
         exponent=exp,
         overshoot=ov * 0.3,
-        name=f"bowl.{tag}",
+        name="bowl",
     )
 
 
-def _one(system, *, y0: float, h: float, tag: str):
+def _one(system, *, y0: float, h: float, _tag: str):
     st, _thin, _xh, lsb, _ov, _exp = _fig_system(system)
     w = _FIG_W
     x0 = lsb + (w - st) / 2
-    return stem(x0, x0 + st, y0, y0 + h, name=f"stem.{tag}", foot="none", top="none")
+    return stem(x0, x0 + st, y0, y0 + h, name="stem", foot="none", top="none")
 
 
-def _generic_bar_digit(system, *, y0: float, h: float, tag: str):
+def _generic_bar_digit(system, *, y0: float, h: float, _tag: str):
     """Stable placeholder digit: stem + mid bar (used for several .tf/.osf)."""
     st, thin, _xh, lsb, _ov, _exp = _fig_system(system)
     w = _FIG_W
     x0 = lsb + w * 0.35
-    body = stem(x0, x0 + st, y0, y0 + h, name=f"stem.{tag}", foot="none", top="none")
-    bar = crossbar(lsb + w * 0.15, lsb + w * 0.85, y0 + h * 0.5, thick=thin, name=f"bar.{tag}", ends="none")
+    body = stem(x0, x0 + st, y0, y0 + h, name="stem", foot="none", top="none")
+    bar = crossbar(lsb + w * 0.15, lsb + w * 0.85, y0 + h * 0.5, thick=thin, name="bar", ends="none")
     return body + bar
 
 
@@ -69,9 +69,9 @@ _BUILDERS = {
 }
 
 
-def _build(name: str, system: System, *, y0: float, h: float, tag: str):
+def _build(name: str, system: System, *, y0: float, h: float, _tag: str):
     fn = _BUILDERS.get(name, _generic_bar_digit)
-    return fn(system, y0=y0, h=h, tag=tag)
+    return fn(system, y0=y0, h=h, _tag=_tag)
 
 
 # Register .tf and .osf for each figure.
@@ -83,7 +83,7 @@ def _register():
             @glyph(f"{n}.tf", unicodes=(), group="figs.tf", traits=("figure", "tabular"))
             def _tf(system: System, n=n):
                 xh = float(system.zones.x)
-                return _build(n, system, y0=0.0, h=xh * xh_frac, tag="tf")
+                return _build(n, system, y0=0.0, h=xh * xh_frac, _tag="tf")
 
             return _tf
 
@@ -96,7 +96,7 @@ def _register():
                 hang = desc * 0.35 if n in {"3", "5", "7", "9", "four", "five", "seven", "nine", "three"} else 0.0
                 # name is zero..nine
                 hang = desc * 0.35 if n in {"three", "five", "seven", "nine"} else 0.0
-                return _build(n, system, y0=hang, h=xh * 0.75, tag="osf")
+                return _build(n, system, y0=hang, h=xh * 0.75, _tag="osf")
 
             return _osf
 
