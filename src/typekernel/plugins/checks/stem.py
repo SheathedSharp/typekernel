@@ -70,7 +70,7 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
         if w is not None:
             measured.append((prefix, w, expected))
 
-    if not measured and (len(name) == 1 or name in {"zero", "one", "four", "seven"}):
+    if not measured and kinds:
         outline = drawing.outline()
         zone = float(system.zones.cap if is_uc else system.zones.x)
         if "vertical" in kinds:

@@ -162,6 +162,11 @@ def notdef_glyph_from_system(system: System) -> Glyph:
 
 
 def space_glyph_from_system(system: System, width: float | None = None) -> Glyph:
-    """Empty ``space`` (U+0020) from a :class:`~typekernel.system.System`."""
+    """Empty space glyph (U+0020) from a :class:`~typekernel.system.System`."""
     advance = 0.5 * system.zones.x if width is None else width
-    return Glyph("space", Outline(()), advance=advance, unicodes=(0x20,))
+    return Glyph(
+        glyph_name_for_char(" "),
+        Outline(()),
+        advance=advance,
+        unicodes=(0x20,),
+    )

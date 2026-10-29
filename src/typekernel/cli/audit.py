@@ -32,55 +32,6 @@ __all__ = [
     "load_intent",
 ]
 
-# Glyphs that rarely carry upright stems; optical vertical probes on these are
-# usually measuring diagonals or bowls. Projects may override via AUDIT_STEMS.
-_DEFAULT_NON_VERTICAL = frozenset(
-    {
-        "v",
-        "w",
-        "x",
-        "y",
-        "z",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-        "s",
-        "S",
-        "e",
-        "c",
-        "o",
-        "O",
-        "a",
-        "A",
-        "Q",
-        "G",
-        "C",
-        "zero",
-        "seven",
-    }
-)
-
-# Diagonal-primary letters: default optical probe is oriented (not vertical),
-# so sans does not flood with "vertical stem on a diagonal" noise, but italic /
-# diagonal projects still get measure_oriented_stem without declaring AUDIT_STEMS.
-_DEFAULT_DIAGONAL = frozenset(
-    {
-        "v",
-        "w",
-        "x",
-        "y",
-        "z",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-    }
-)
-
-
 @dataclass
 class AuditReport:
     findings: list[Finding] = field(default_factory=list)
@@ -126,8 +77,8 @@ def load_audit_stems(root: Path) -> Mapping[str, Sequence[str]]:
             "x": "none",        # alias for ()
         }
 
-    Allowed kinds: ``vertical``, ``diagonal``. Unknown keys fall back to the
-    built-in auto policy in :func:`_kinds_for`.
+    Allowed kinds: ``vertical``, ``diagonal``. Glyphs omitted from the map
+    get no optical stem kinds (named nodes only).
     """
     module = _load_system_module(root)
     if module is None:
@@ -191,29 +142,18 @@ def _normalize_kinds(value: Any) -> tuple[str, ...]:
 
 
 def _kinds_for(name: str, declared: Mapping[str, Sequence[str]]) -> tuple[str, ...]:
+    """Resolve optical stem kinds for ``name``.
+
+    Kernel default is empty (named-node measurements only). Projects opt in
+    per glyph via ``AUDIT_STEMS``. The legacy ``"auto"`` token is accepted
+    as an alias for empty — there is no letter-name auto policy anymore.
+    """
     if name in declared:
         kinds = tuple(declared[name])
         if kinds == ("auto",):
-            return _auto_kinds(name)
+            return ()
         return kinds
-    return _auto_kinds(name)
-
-
-def _auto_kinds(name: str) -> tuple[str, ...]:
-    """Default optical policy when the project does not declare AUDIT_STEMS.
-
-    Letters without upright stems skip optical **vertical** probes (the
-    historical false-noise source). Diagonal-primary letters
-    (``v w x y z`` and caps) default to oriented ``diagonal`` probes via
-    ``measure_oriented_stem`` — quiet on upright sans, useful when stems are
-    truly diagonal. Bowl letters (``o e c s …``) stay silent unless the
-    project opts in via ``AUDIT_STEMS``.
-    """
-    if name in _DEFAULT_DIAGONAL:
-        return ("diagonal",)
-    if name in _DEFAULT_NON_VERTICAL:
-        return ()
-    return ("vertical",)
+    return ()
 
 
 def audit_project(

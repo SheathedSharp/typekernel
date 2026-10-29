@@ -115,7 +115,7 @@ def write_outline_to_ufo(
     outline: Outline,
     path: str | Path,
     *,
-    glyph_name: str = "A",
+    glyph_name: str = "glyph",
     units_per_em: int = DEFAULT_UNITS_PER_EM,
     advance_width: int = DEFAULT_ADVANCE_WIDTH,
     family_name: str = "TypekernelExport",

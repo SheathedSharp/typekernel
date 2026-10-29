@@ -145,17 +145,13 @@ def test_overlap_warns_only_when_cancel_enters_counter(tmp_path: Path) -> None:
     assert not n_warns, "pure multi-ink n must not warn"
 
 
-def test_auto_kinds_diagonal_default() -> None:
-    from typekernel.cli.audit import _auto_kinds
+def test_kinds_for_default_is_empty() -> None:
+    """Kernel no longer guesses optical kinds from glyph names."""
+    from typekernel.cli.audit import _kinds_for
 
-    assert _auto_kinds("v") == ("diagonal",)
-    assert _auto_kinds("X") == ("diagonal",)
-    assert _auto_kinds("o") == ()
-    assert _auto_kinds("n") == ("vertical",)
-    # k/K/R have real vertical stems; do not silence them.
-    assert _auto_kinds("k") == ("vertical",)
-    assert _auto_kinds("K") == ("vertical",)
-    assert _auto_kinds("R") == ("vertical",)
-    # zero/seven are bowls/diagonals, not upright stems.
-    assert _auto_kinds("zero") == ()
-    assert _auto_kinds("seven") == ()
+    assert _kinds_for("v", {}) == ()
+    assert _kinds_for("n", {}) == ()
+    assert _kinds_for("zero", {}) == ()
+    assert _kinds_for("n", {"n": ("vertical",)}) == ("vertical",)
+    assert _kinds_for("v", {"v": ("diagonal",)}) == ("diagonal",)
+    assert _kinds_for("w", {"w": ("auto",)}) == ()

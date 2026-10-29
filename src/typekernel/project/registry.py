@@ -14,7 +14,7 @@ from typekernel.system import System
 __all__ = ["GlyphFn", "GlyphSpec", "Master", "glyph", "registration_target"]
 
 GlyphFn = Callable[[System], Drawing]
-F = TypeVar("F", bound=GlyphFn)
+GlyphFnT = TypeVar("GlyphFnT", bound=GlyphFn)
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,7 +63,7 @@ def _put(spec: GlyphSpec) -> None:
     target[spec.name] = spec
 
 
-def glyph(name: str, *, group: str = "") -> Callable[[F], F]:
+def glyph(name: str, *, group: str = "") -> Callable[[GlyphFnT], GlyphFnT]:
     """Register a glyph builder. ``fn(system) -> Drawing``.
 
     Attach master overrides with ``@fn.master("Black")`` on a second function
@@ -73,7 +73,7 @@ def glyph(name: str, *, group: str = "") -> Callable[[F], F]:
     if not name:
         raise ValueError("glyph name must be non-empty")
 
-    def decorator(fn: F) -> F:
+    def decorator(fn: GlyphFnT) -> GlyphFnT:
         masters_mut: dict[str, GlyphFn] = {}
         spec = GlyphSpec(
             name=name,
@@ -83,11 +83,11 @@ def glyph(name: str, *, group: str = "") -> Callable[[F], F]:
         )
         _put(spec)
 
-        def master(master_name: str) -> Callable[[F], F]:
+        def master(master_name: str) -> Callable[[GlyphFnT], GlyphFnT]:
             if not master_name:
                 raise ValueError("master name must be non-empty")
 
-            def master_decorator(mfn: F) -> F:
+            def master_decorator(mfn: GlyphFnT) -> GlyphFnT:
                 masters_mut[master_name] = mfn
                 # Refresh the registry entry (proxy still views masters_mut).
                 _put(
@@ -106,6 +106,6 @@ def glyph(name: str, *, group: str = "") -> Callable[[F], F]:
         marked.master = master
         marked.__glyph_name__ = name
         marked.__glyph_group__ = group
-        return cast(F, marked)
+        return cast(GlyphFnT, marked)
 
     return decorator

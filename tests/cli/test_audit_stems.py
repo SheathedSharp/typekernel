@@ -75,15 +75,17 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
     assert any(f.kind == "overlap" for f in noisy.warnings)
 
 
-def test_auto_diagonal_is_info_declared_diagonal_is_warn(tmp_path: Path) -> None:
+def test_declared_diagonal_is_warn_empty_is_quiet(tmp_path: Path) -> None:
+    """Starter maps diagonals to (); opting into ("diagonal",) yields warnings."""
     root = create_project("diagkinds", parent=tmp_path, starter="latin-humanist-italic")
-    auto = audit_project(root, glyphs=["w"])
-    auto_w = [f for f in auto.findings if f.kind == "stem" and f.glyph == "w"]
-    assert auto_w and all(f.level == "info" for f in auto_w)
+    quiet = audit_project(root, glyphs=["w"])
+    assert not [f for f in quiet.findings if f.kind == "stem" and f.glyph == "w"]
 
     sys_py = root / "system.py"
+    # Last AUDIT_STEMS assignment wins when the module is exec'd.
     sys_py.write_text(
-        sys_py.read_text(encoding="utf-8") + '\n\nAUDIT_STEMS = {"w": ("diagonal",)}\n',
+        sys_py.read_text(encoding="utf-8")
+        + '\n\nAUDIT_STEMS = {"w": ("diagonal",)}\n',
         encoding="utf-8",
     )
     declared = audit_project(root, glyphs=["w"])

@@ -14,7 +14,7 @@
 | `glyphs_italic/` 约定 | **未实现** | §2「母版与斜体」写的是另一套字形目录；现行斜体靠独立 starter（`latin-humanist-italic` / `latin-chancery`），没有同项目 `glyphs_italic/` 加载路径 |
 | `plugins.spacing` | **空包** | 仅占位；现行间距在项目 `spacing.py`，由 `tk build` 接入 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
-| 内核字母名 | 过渡中 | P0 前 `cli/audit` / `checks.zone` 仍有字形名表；目标是内核零字母字面量（见目标架构 §14） |
+| 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
 
 ---
@@ -545,13 +545,14 @@ class Project:
 
 ## 7. 架构守卫
 
-`tests/architecture/test_boundaries.py`，对 `draw` / `system` / `project` / `cli` / `plugins` 生效：
+`tests/architecture/test_boundaries.py`，对内核包生效：
 
 1. 禁止 import `typekernel.parts`（对全仓生效）。
 2. 函数名不得匹配 `^(build_[A-Za-z]|[A-Za-z]_|[a-z]+_from_[A-Za-z]|\w+_yoke)$`。
 3. 源码不得出现 `style.serif`、`italic_slant_deg`、`vf_compat`。
 4. `plugins/<x>/` 不得 import `plugins/<y>/`；任何新包不得 import 其他模块的 `_` 私有名。
 5. 内核测试（`tests/draw`、`tests/system`、`tests/project`）里不得出现字母字形名字符串（用一个小正则：单字母 glyph 名或 `uniXXXX`）；需要形状时用合成夹具。
+6. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由项目 `AUDIT_STEMS` 声明，内核不再按字母名猜测。
 
 用 `ast` 扫描实现，不额外引入依赖。
 

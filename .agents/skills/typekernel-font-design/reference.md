@@ -48,16 +48,16 @@ Optional in the same `system.py` module — stroke kinds for `tk audit` optical 
 
 ```python
 AUDIT_STEMS = {
-    "n": ("vertical",),   # default for upright letters when omitted
-    "v": ("diagonal",),   # use measure_oriented_stem (+ vertical_equiv)
+    "n": ("vertical",),   # optical vertical probe when tags missing
+    "v": ("diagonal",),   # measure_oriented_stem (+ vertical_equiv)
     "w": (),              # named stem.*.foot nodes only; no optical fallback
     "x": "none",          # alias for ()
 }
 ```
 
-Diagonal letters (`v w x y z` + caps) default to oriented **diagonal**
-optical probes. Bowl letters (`s e o c …`) stay silent. Override with
-`AUDIT_STEMS` when needed. Vertical probes never run on the non-vertical set.
+Kernel default is **named nodes only** — omitted glyphs get no optical stem
+kinds. Starters ship a full `AUDIT_STEMS` map; copy and edit it. Declaring
+`("diagonal",)` turns oriented probes into warnings (not info).
 
 No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations go in project `elements.py`.
 
@@ -141,7 +141,7 @@ equiv = vertical_equiv_from_diagonal(measured_perp, angle_from_vertical_deg=45)
 ```
 
 `tk audit` uses named `stem.*.foot.o/i` nodes first; optical vertical fallback is
-gated by `AUDIT_STEMS` / the non-vertical default set. Prefer tagged nodes.
+gated by project `AUDIT_STEMS` (kernel has no letter-name defaults). Prefer tagged nodes.
 
 ## @glyph
 

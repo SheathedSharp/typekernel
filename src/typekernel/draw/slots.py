@@ -31,7 +31,7 @@ from typekernel.system import System
 _G1_TOL = 1e-6
 _POINT_TOL = 1e-6
 
-T = TypeVar("T")
+FillerT = TypeVar("FillerT")
 
 
 class SlotFillError(ValueError):
@@ -182,10 +182,10 @@ class EndFiller(Protocol):
 
 def _match_filler(
     tag: str,
-    patterns: Mapping[str, T],
+    patterns: Mapping[str, FillerT],
     named: Mapping[str, object],
     fill_name: str | None,
-) -> T | None:
+) -> FillerT | None:
     if fill_name is not None:
         if fill_name not in named:
             raise SlotFillError(f"Slot.fill={fill_name!r} not in named fillers")

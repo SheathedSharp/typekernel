@@ -328,3 +328,127 @@ def test_no_heal_blend_seal_on_default_path(default_path_files: list[Path]) -> N
                 if name in _HEAL_IMPORT_NAMES:
                     violations.append(f"{_rel(path)}:{node.lineno}: call {name}()")
     assert not violations, "heal/blend/seal on default path:\n" + "\n".join(violations)
+
+
+# ---------------------------------------------------------------------------
+# Rule (target-architecture §14 #1): no glyph-name string literals in kernel.
+# Packages listed below; test fixtures under tests/ are out of scope here
+# (rule 5 still covers tests/draw|system|project).
+# ---------------------------------------------------------------------------
+
+_GLYPH_LITERAL_PACKAGES = (
+    "geo",
+    "draw",
+    "system",
+    "project",
+    "font",
+    "compile",
+    "cli",
+    "plugins",
+    # Future packages from the target architecture (empty today → no-op):
+    "anatomy",
+    "metrics",
+    "axes",
+    "features",
+    "perceive",
+    "diagnose",
+    "review",
+)
+
+# Geometry / typing tokens that coincide with AGL names but are not glyph refs.
+_GLYPH_LITERAL_ALLOW = frozenset(
+    {
+        "union",
+        "intersection",
+        "difference",
+        "xor",
+    }
+)
+
+_SINGLE_LETTER = re.compile(r"^[A-Za-z]$")
+_UNI_NAME = re.compile(r"^uni[0-9A-Fa-f]{4}$")
+
+
+def _agl_names() -> frozenset[str]:
+    try:
+        from fontTools.agl import AGL2UV
+    except ImportError:  # pragma: no cover
+        return frozenset()
+    return frozenset(AGL2UV)
+
+
+def _is_glyph_name_literal(value: str, agl: frozenset[str]) -> bool:
+    if value in _GLYPH_LITERAL_ALLOW:
+        return False
+    if _SINGLE_LETTER.match(value) or _UNI_NAME.match(value):
+        return True
+    return value in agl
+
+
+def _fstring_constant_ids(tree: ast.AST) -> set[int]:
+    """id() of Constant nodes inside f-strings (literal chunks + format specs).
+
+    Letter tables are plain string constants, not f-string chunks. Skipping
+    JoinedStr pieces avoids false positives on Unicode-name prefixes like
+    ``f"u{cp:05X}"`` and hex format specs like ``:x``.
+    """
+    skip: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr):
+            for part in node.values:
+                if isinstance(part, ast.Constant):
+                    skip.add(id(part))
+                elif isinstance(part, ast.FormattedValue) and part.format_spec is not None:
+                    for sub in ast.walk(part.format_spec):
+                        if isinstance(sub, ast.Constant):
+                            skip.add(id(sub))
+    return skip
+
+
+def _typevar_name_constant_ids(tree: ast.AST) -> set[int]:
+    """id() of Constant nodes that are TypeVar / ParamSpec / TypeVarTuple names."""
+    skip: set[int] = set()
+    typevar_names = {"TypeVar", "ParamSpec", "TypeVarTuple", "NewType"}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not node.args:
+            continue
+        func = node.func
+        name = None
+        if isinstance(func, ast.Name):
+            name = func.id
+        elif isinstance(func, ast.Attribute):
+            name = func.attr
+        if name not in typevar_names:
+            continue
+        a0 = node.args[0]
+        if isinstance(a0, ast.Constant) and isinstance(a0.value, str):
+            skip.add(id(a0))
+    return skip
+
+
+@pytest.fixture(scope="module")
+def glyph_literal_files() -> list[Path]:
+    files: list[Path] = []
+    for name in _GLYPH_LITERAL_PACKAGES:
+        files.extend(_py_files(SRC / name))
+    return files
+
+
+def test_no_glyph_name_literals_in_kernel(glyph_literal_files: list[Path]) -> None:
+    """Kernel string literals must not be single-letter or AGL glyph names."""
+    agl = _agl_names()
+    violations: list[str] = []
+    for path in glyph_literal_files:
+        tree = _parse(path)
+        skip = _fstring_constant_ids(tree) | _typevar_name_constant_ids(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if id(node) in skip:
+                continue
+            if _is_glyph_name_literal(node.value, agl):
+                violations.append(
+                    f"{_rel(path)}:{getattr(node, 'lineno', '?')}: "
+                    f"glyph name literal {node.value!r}"
+                )
+    assert not violations, "glyph-name literals in kernel:\n" + "\n".join(violations)
