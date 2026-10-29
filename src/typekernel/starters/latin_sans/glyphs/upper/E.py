@@ -30,7 +30,7 @@ def glyph_E(system: System):
         lsb + width * 0.82,
         cap * 0.5,
         thick=bar_t,
-        name="bar.m",
+        name="bar.1",
         ends="none",
     )
     bot = crossbar(

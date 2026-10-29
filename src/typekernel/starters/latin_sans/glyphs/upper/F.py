@@ -30,7 +30,7 @@ def glyph_F(system: System):
         lsb + width * 0.78,
         cap * 0.52,
         thick=bar_t,
-        name="bar.m",
+        name="bar.1",
         ends="none",
     )
     return left + top + mid

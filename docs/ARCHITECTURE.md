@@ -655,6 +655,8 @@ class Project:
 | 解剖构件（曲线） | `arch` `bowl` `bowl_join` `open_bowl`/`BarSpec` `spine` |
 | 解剖构件（斜笔） | `diagonal_pair` `crossing` |
 | 解剖构件（钩尾） | `hook` `tail` `ear` `spur` |
-| latin-sans 控制字 anatomy 化 | **agent pass**；人工批准待定 |
+| latin-sans 控制字 anatomy 化 | **agent pass**；人工批准待定（`approvals/latin-sans-control.json`） |
+| latin-sans v2 字组（P3-7） | **agent pass**（lc/uc/figs/punct 全组 + reviews）；全字符集样张人工批准待定 |
+| 三 starter 标签语法 | **已合法**（`tags.grammar` 0；latin-sans / humanist-italic / chancery） |
 | 插件语义 / slab litmus | **已落地**（slab/bracketed/rounded） |
-| designed masters | **已落地**（Light/Bold 宽/开口/张力）；阶梯人工批准待定 |
+| designed masters | **已落地**（Light/Bold 宽/开口/张力）；阶梯人工批准待定（`approvals/latin-sans-ladder.json`） |
