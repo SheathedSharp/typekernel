@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "f": "b3f0e5fb061e4fd4f586971fbff63d8bbb20337eeea5c15426112d5881509073",
+    "h": "4773b792260871f46f030d25a87f9bb29c7d913e676359558f6affde9951173f",
+    "i": "c3a43ab91a7df0021b86f5e8afc22411f4d3991bb13d577638d8622ab1e93f8d",
+    "j": "1ee8c0e5351a40c4955873ee77f3d94326e451e56acbb8d4073cff85bb06b5a8",
+    "l": "825da405745abbd190edb7b94a60ab4ef4333f7851249d382063363551aa9f21",
+    "m": "9ced850e7df2f8d25ebe8f935c9b64caaee48e15a8c285e03948ee7968eb4a54",
+    "n": "8959eeaaa3c32fad1cc100c8b062209d7983b78ba3bd13ea4e6a327b3bbbf1b0",
+    "r": "81ebe165d483cefdcbc227bbbb46ae80841c2a088d51f5b85840b0a79de0ac54",
+    "t": "fad5bc208fbbea0ae58cc3b241780da2ee0034508453c5b3148dbe6429555aa2",
+    "u": "5db0de48d820684d2a0603d244232f81d502a51acfde925a4fd5af4aea3e44b2"
+  },
+  "group": "lc.straight",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-6 anatomy rewrite: audit 0 error on control set; agent visual pass on see PNG.",
+  "proofs": [],
+  "reviewer": "agent:p3-6",
+  "round": 1,
+  "verdict": "pass"
+}

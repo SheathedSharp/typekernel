@@ -1,8 +1,8 @@
-"""Control glyph H — two stems + bar; corners tagged for future serifs."""
+"""Control glyph H — anatomy stems + crossbar (P3-6)."""
 
 from __future__ import annotations
 
-from typekernel.draw import Writer
+from typekernel.anatomy import crossbar, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -15,40 +15,16 @@ def H(system: System):
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     bar_t = float(system.tokens.get("bar_thickness", uc * 0.85))
     bar_cy = float(system.tokens.get("bar_height", cap * 0.48))
-    x0 = lsb
-    x1 = lsb + uc
-    x2 = lsb + width - uc
-    x3 = lsb + width
-    bar_top = bar_cy + bar_t / 2.0
-    bar_bot = bar_cy - bar_t / 2.0
 
-    return (
-        Writer()
-        .start((x0, 0.0))
-        .corner("stem.l.foot.o")
-        .line((x0, cap))
-        .corner("stem.l.top.o")
-        .line((x1, cap))
-        .corner("stem.l.top.i")
-        .line((x1, bar_top))
-        .corner("bar.l.top")
-        .line((x2, bar_top))
-        .corner("bar.r.top")
-        .line((x2, cap))
-        .corner("stem.r.top.i")
-        .line((x3, cap))
-        .corner("stem.r.top.o")
-        .line((x3, 0.0))
-        .corner("stem.r.foot.o")
-        .line((x2, 0.0))
-        .corner("stem.r.foot.i")
-        .line((x2, bar_bot))
-        .corner("bar.r.bot")
-        .line((x1, bar_bot))
-        .corner("bar.l.bot")
-        .line((x1, 0.0))
-        .corner("stem.l.foot.i")
-        .line((x0, 0.0))
-        .close()
-        .build()
+    left = stem(lsb, lsb + uc, 0.0, cap, name="stem.l")
+    right = stem(lsb + width - uc, lsb + width, 0.0, cap, name="stem.r")
+    # Bar overlaps both stems (ends=none: no end slots into stem interiors).
+    bar = crossbar(
+        lsb + uc * 0.5,
+        lsb + width - uc * 0.5,
+        bar_cy,
+        thick=bar_t,
+        name="bar",
+        ends="none",
     )
+    return left + right + bar

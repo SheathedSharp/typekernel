@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "a": "763153fa6664557bab7c1b1746d43972a9c4b001925c922794ecf6365faec662",
+    "c": "a0e72b814f5c533e31f8fc9ea06fb8c648e79bcd41c19a8107ea921b93aa7bda",
+    "e": "009d9a4f236249832b3910cadaed09bddfdeb8a62f70264c64ffb1d228a318f4",
+    "g": "cd6cfa256e445af47b16a2b5b399a200ff3dee41406589762aaf2f2b88b11f0d",
+    "o": "0b1169901a42d586a329aa297c286c3da8838a8cd1b08c403165acb166407589",
+    "s": "9261fc160de07fc0696f72fe5a6b289d12c2feea478618607df7593ad0fc2c3f"
+  },
+  "group": "lc.round",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-6 control o in lc.round; agent pass.",
+  "proofs": [],
+  "reviewer": "agent:p3-6",
+  "round": 1,
+  "verdict": "pass"
+}

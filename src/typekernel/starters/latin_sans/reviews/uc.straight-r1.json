@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "E": "32ee5dc500e8a8a04576fd252009bc56826db02db3223df84c62f9c08f10a6d6",
+    "F": "47fd9b01ca6363827701dee74818ffeb1133804f27fba2535da6ea6f6577e196",
+    "H": "53041565c6ebfebbcf705a77e114b63fe99982ca96df42c0a638ac1d22076a94",
+    "I": "3413226999e921f514f7b4d4cb4f0df698bb49a470fccdab0b9c63fa85993e41",
+    "J": "b28c9d22da0007ce8c8717a5b56a5882f48e5fc5874da7d74d300519f864be58",
+    "L": "0c10619e9f6fd99c07eb7c564c0525d7696f7f56ddda6c0ee9d147896dfa1728",
+    "T": "e9a43ec6be08f8c1a129bc5bd9a2ab055df56998881193894f6493092da4d261",
+    "U": "c7f80ac57fc677988e1171aa364a0a83eea1b2a05e70d49d44f5f222bb7e67b5"
+  },
+  "group": "uc.straight",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-6 anatomy rewrite: audit 0 error on control set; agent visual pass on see PNG.",
+  "proofs": [],
+  "reviewer": "agent:p3-6",
+  "round": 1,
+  "verdict": "pass"
+}

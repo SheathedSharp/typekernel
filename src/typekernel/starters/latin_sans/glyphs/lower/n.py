@@ -1,9 +1,8 @@
-"""Control / n-group glyph n — stems + overlapping arch trough."""
+"""Control / n-group glyph n — anatomy stem + arch (P3-6)."""
 
 from __future__ import annotations
 
-from elements import shoulder_trough, stem_rect
-
+from typekernel.anatomy import arch, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -11,18 +10,26 @@ from typekernel.system import System
 @glyph("n", group="lc.straight")
 def n(system: System):
     st = float(system.stem["lc"])
+    thin = float(system.stem.get("lc_h", st * 0.85))
     xh = float(system.zones.x)
     width = float(system.tokens["n_width"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
-    inset = st * 0.35
-    left = stem_rect(lsb, lsb + st, 0.0, xh, prefix="stem.l")
-    right = stem_rect(lsb + width - st, lsb + width, 0.0, xh, prefix="stem.r")
-    trough = shoulder_trough(
-        system,
-        x_left=lsb + inset,
-        x_right=lsb + width - inset,
-        y_top=xh,
-        y_bot=xh - st + float(system.overshoot.round) * 0.35,
-        tag_prefix="arch",
+    tension = float(system.tokens.get("shoulder_tension", 0.55))
+    ov = float(system.overshoot.round)
+    join_depth = st * 0.45
+
+    left = stem(lsb, lsb + st, 0.0, xh, name="stem.l")
+    right = stem(lsb + width - st, lsb + width, 0.0, xh, name="stem.r")
+    shoulder = arch(
+        lsb + st,
+        lsb + width - st,
+        height=xh,
+        thick=st,
+        thin=thin,
+        join_depth=join_depth,
+        tension=tension,
+        crown_shift=st * 0.15,
+        overshoot=ov * 0.35,
+        name="arch",
     )
-    return left + right + trough
+    return left + right + shoulder

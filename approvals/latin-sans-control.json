@@ -1,0 +1,16 @@
+{
+  "group": "latin-sans-control",
+  "glyphs": [
+    "n",
+    "o",
+    "H",
+    "O"
+  ],
+  "approved": false,
+  "approver": "",
+  "artifacts": [
+    "artifacts/p3-6/",
+    "src/typekernel/starters/latin_sans/reviews/"
+  ],
+  "notes": "Awaiting human visual approval of control samples (P3-6 / P3 exit)."
+}
