@@ -83,6 +83,20 @@ WIDTHS: Mapping[str, float] = {
     "question": 320,
     "hyphen": 220,
     "slash": 320,
+    "AE": 920,
+    "ae": 700,
+    "OE": 980,
+    "oe": 720,
+    "germandbls": 520,
+    "ampersand": 620,
+    "percent": 640,
+    "dollar": 480,
+    "plus": 420,
+    "equal": 420,
+    "copyright": 640,
+    "fraction": 560,
+    "guillemet": 420,
+    "brace": 280,
 }
 
 
