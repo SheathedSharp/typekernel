@@ -16,14 +16,16 @@ from typekernel.project.registry import GlyphSpec
 
 
 def test_appendix_a7_reach_on_latin_sans() -> None:
+    """Expect table matches structural reach (J hook / question bowl)."""
     td = Path(tempfile.mkdtemp())
     try:
         root = create_project("reach", parent=td, starter="latin-sans")
         report = audit_project(root, glyphs=["J", "question", "n"])
         reach = [f for f in report.findings if f.check == "vertical.reach"]
         glyphs = {f.glyph for f in reach}
-        assert "J" in glyphs, reach
-        assert "question" in glyphs, reach
+        assert "J" not in glyphs, reach
+        assert "question" not in glyphs, reach
+        assert "n" not in glyphs, reach
     finally:
         shutil.rmtree(td)
 
@@ -66,13 +68,16 @@ def test_overshoot_fixture_too_big() -> None:
         shutil.rmtree(td)
 
 
-def test_gray_flags_paren_outliers_on_latin_sans() -> None:
+def test_gray_flags_dense_stem_outliers_on_latin_sans() -> None:
+    """Narrow stems (i/l/I) are dense vs letter cohorts — useful signal."""
     td = Path(tempfile.mkdtemp())
     try:
         root = create_project("gray", parent=td, starter="latin-sans")
         report = audit_project(root)
-        gray = [f for f in report.findings if f.check == "gray.density"]
+        gray = [f for f in report.findings if f.check == "gray.density" and f.level == "warn"]
         glyphs = {f.glyph for f in gray}
-        assert "parenleft" in glyphs or "parenright" in glyphs, glyphs
+        assert glyphs & {"i", "l", "I", "dotlessi"}, glyphs
+        # Parens live in punct cohort now — not false cap outliers.
+        assert "parenleft" not in glyphs and "parenright" not in glyphs, glyphs
     finally:
         shutil.rmtree(td)

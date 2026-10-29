@@ -130,7 +130,13 @@ class InterpolationCheck:
                         )
                     )
                     continue
-                if _self_intersects(mid.outline()):
+                # Overlap-built masters (stem+bowl) also simplify to fewer
+                # contours; only warn when mid introduces intersection the
+                # endpoint masters do not already share.
+                mid_si = _self_intersects(mid.outline())
+                if mid_si and not (
+                    _self_intersects(d0.outline()) or _self_intersects(d1.outline())
+                ):
                     out.append(
                         Finding(
                             check="interpolation.self_intersect",
@@ -144,10 +150,20 @@ class InterpolationCheck:
                             hint="fix start-point / contour order between masters",
                         )
                     )
-                # Topology at mid should match light (same counters).
+                # Topology at mid should match masters when Light/Bold agree.
+                # Overlap joins can change slit-counter counts at endpoints
+                # already; only flag mid regressions vs a shared master topo.
                 topo0 = measure_topology(d0.outline(), stem=stem0)
+                topo1 = measure_topology(d1.outline(), stem=stem1)
                 topo_t = measure_topology(mid.outline(), stem=stem0 + (stem1 - stem0) * t)
-                if topo_t.counters != topo0.counters or topo_t.islands != topo0.islands:
+                masters_agree = (
+                    topo0.counters == topo1.counters
+                    and topo0.islands == topo1.islands
+                )
+                if masters_agree and (
+                    topo_t.counters != topo0.counters
+                    or topo_t.islands != topo0.islands
+                ):
                     out.append(
                         Finding(
                             check="interpolation.topology",

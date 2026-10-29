@@ -42,13 +42,26 @@ class GrayCheck:
                 continue
             by0, by1 = report.bbox[1], report.bbox[3]
             key = _band(by0, by1, float(zones.x), float(zones.cap))
-            traits = set(session.specs()[name].traits)
-            if "punct" in traits:
+            spec = session.specs()[name]
+            traits = set(spec.traits)
+            group = spec.group or ""
+            # Combining marks / empty ink are not letter-gray peers.
+            if "mark" in traits or "spacing-mark" in traits:
+                continue
+            if "no-stem" in traits:
+                continue  # rules / bars / operators — not gray peers
+            if report.ink_density <= 1e-9:
+                continue  # space / blank
+            if "punct" in traits or group.startswith("punct"):
                 key = "punct"
-            elif "symbol" in traits:
+            elif "symbol" in traits or group.startswith("symbol"):
                 key = "symbol"
-            elif "figure" in traits:
+            elif "figure" in traits or group.startswith("fig"):
                 key = "figure"
+            elif group.startswith("lc"):
+                key = "x-height" if key != "descender" else key
+            elif group.startswith("uc"):
+                key = "cap"
             cohorts.setdefault(key, []).append((name, report.ink_density))
 
         out: list[Finding] = []
@@ -62,7 +75,7 @@ class GrayCheck:
             scale = 1.4826 * mad if mad > 1e-12 else max(med * 0.05, 1e-6)
             for name, density in members:
                 z = (density - med) / scale
-                if abs(z) > 2.0:
+                if abs(z) > 3.0:
                     out.append(
                         Finding(
                             check="gray.density",

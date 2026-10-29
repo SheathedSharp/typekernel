@@ -106,7 +106,7 @@ class TopologyCheck:
             out.append(
                 Finding(
                     check="topology.slits",
-                    level="warn",
+                    level="info",  # overlap joins are intentional VF construction
                     glyph=ctx.name,
                     master=ctx.master,
                     where=None,

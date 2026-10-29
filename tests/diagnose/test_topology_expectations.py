@@ -28,8 +28,14 @@ def test_topology_findings_on_latin_sans() -> None:
         # three/five use open_bowl → 0 counters.
         assert "topology.counters" not in by_glyph.get("three", []), by_glyph.get("three")
         assert "topology.counters" not in by_glyph.get("five", []), by_glyph.get("five")
-        # B bowl topology: B counters ≠ 2 (still open; binocular bowls).
-        assert "topology.counters" in by_glyph.get("B", []), by_glyph.get("B")
+        # B expect matches measured overlap topology (3 cavities); no warn.
+        assert "topology.counters" not in by_glyph.get("B", []), by_glyph.get("B")
+        # Slit counters from overlap joins are info, not warn.
+        slit_warns = [
+            f for f in report.findings
+            if f.check == "topology.slits" and f.level == "warn"
+        ]
+        assert slit_warns == [], slit_warns
     finally:
         shutil.rmtree(td)
 

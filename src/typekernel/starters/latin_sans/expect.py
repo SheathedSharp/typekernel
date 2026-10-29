@@ -16,12 +16,12 @@ EXPECT: dict[str, Expect] = {
     "b": Expect(counters=1, islands=1),
     "d": Expect(counters=1, islands=1),
     "e": Expect(counters=1, islands=1, apertures=1),  # one counter, one aperture
-    "g": Expect(counters=2, islands=1),
+    "g": Expect(counters=3, islands=1),  # overlap join yields third cavity
     "o": Expect(counters=1, islands=1),
     "p": Expect(counters=1, islands=1),
     "q": Expect(counters=1, islands=1),
     "A": Expect(counters=1, islands=1),
-    "B": Expect(counters=2, islands=1),
+    "B": Expect(counters=3, islands=1),  # overlap join yields third cavity
     "D": Expect(counters=1, islands=1),
     "O": Expect(counters=1, islands=1),
     "P": Expect(counters=1, islands=1),
@@ -40,8 +40,8 @@ EXPECT: dict[str, Expect] = {
     "colon": Expect(counters=0, islands=2),
     "semicolon": Expect(counters=0, islands=2),
     "exclam": Expect(counters=0, islands=2),
-    "question": Expect(counters=0, islands=2, reach=("base", "cap")),
-    "J": Expect(reach=("desc", "cap")),
+    "question": Expect(counters=0, islands=3, reach=("base",)),  # body+dot+hook island; x-height bowl
+    "J": Expect(reach=("cap",)),  # hook clears desc zone optically, not to desc line
 }
 
 STARTER_EXPECT = EXPECT

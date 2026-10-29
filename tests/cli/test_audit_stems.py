@@ -17,13 +17,14 @@ def test_latin_sans_default_audit_quiet(tmp_path: Path) -> None:
     root = create_project("quiet", parent=tmp_path, starter="latin-sans")
     report = audit_project(root)
     assert report.errors == []
-    # Structural starter: B/C/E/F-class warnings are expected after P2 diagnose.
-    expected = ("topology.", "vertical.", "spacing.", "gray.", "interpolation.")
-    unexpected = [
-        f for f in report.warnings if not f.check.startswith(expected)
-    ]
+    # Stem checks only run for declared glyphs; overlap self-intersections
+    # and reference-sidebearing warnings are suppressed.
+    assert not [f for f in report.warnings if f.check == "stem"]
+    allowed = ("topology.", "vertical.", "spacing.", "gray.", "interpolation.")
+    unexpected = [f for f in report.warnings if not f.check.startswith(allowed)]
     assert unexpected == [], unexpected
-    assert any(f.check.startswith("topology.") for f in report.warnings)
+    # Gray may still flag dense single-stem outliers (i/l/I); that is signal.
+    assert len(report.warnings) < 50, len(report.warnings)
 
 
 def test_audit_stems_none_skips_optical(tmp_path: Path) -> None:

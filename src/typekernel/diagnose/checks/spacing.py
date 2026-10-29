@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 from typekernel.diagnose.protocol import CheckContext, Finding, Scope
 from typekernel.geo.outline import bounds
-from typekernel.metrics import Optical, Ref
+from typekernel.metrics import Optical
 from typekernel.optics.space import pair_gap_bbox
 
 __all__ = ["SpacingCheck"]
@@ -197,7 +197,11 @@ class RefConsistencyCheck:
     scope: Scope = "font"
 
     def run(self, ctx: CheckContext) -> Iterable[Finding]:
-        """Warn when Ref-linked sidebearings diverge optically."""
+        """Warn when Optical-linked sidebearings diverge from the reference.
+
+        ``Ref`` only copies numeric sidebearings (enforced by resolve); shape
+        mismatch is expected. Optical is the promise of matched whitespace.
+        """
         from typekernel.optics.space import measure_side_whitespace
 
         metrics = ctx.project.metrics
@@ -212,9 +216,9 @@ class RefConsistencyCheck:
                 continue
             g = session.glyph(name, master=ctx.master)
             for side_name, side in (("lsb", left), ("rsb", right)):
-                if not isinstance(side, (Ref, Optical)):
+                if not isinstance(side, Optical):
                     continue
-                ref_name = side.glyph if isinstance(side, Ref) else side.ref
+                ref_name = side.ref
                 if ref_name not in session.specs():
                     continue
                 ref_g = session.glyph(ref_name, master=ctx.master)
