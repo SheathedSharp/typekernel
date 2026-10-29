@@ -1,5 +1,10 @@
 # Brief — Latin Humanist Italic
 
+> **Quality note:** 结构示例，字形未通过视觉评审，不要当作字形质量范本。
+>
+> Structural example only — glyph shapes are **not** visually approved; do not treat this starter as a quality reference.
+
+
 Humanist true italic drawn with a **broad nib** (skeleton + `broad_nib`), not
 contour Writer outlines. Medium calligraphic contrast, ~28° pen angle, Regular
 weight, normal counter openness. Lean is first-class `System.slant` (~0.18).

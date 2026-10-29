@@ -1,5 +1,10 @@
 # Brief — Latin Chancery
 
+> **Quality note:** 结构示例，字形未通过视觉评审，不要当作字形质量范本。
+>
+> Structural example only — glyph shapes are **not** visually approved; do not treat this starter as a quality reference.
+
+
 Chancery italic drawn with a **broad nib** (skeleton + `broad_nib`), not contour
 Writer outlines. High calligraphic contrast, ~38° pen angle, Regular weight,
 normal counter openness, and a first-class `System.slant` lean of 0.22.

@@ -13,6 +13,9 @@ description: >-
 Letter geometry lives in the **project** (starter). The kernel packages contain no
 letter builders — do not go looking for one there.
 
+> **Starter quality:** 结构示例，字形未通过视觉评审，不要当作字形质量范本。
+> Copy structure from `latin-sans` / `latin-humanist-italic` / `latin-chancery`; do not treat their outlines as a visual target.
+
 ## Product goal
 
 Write a font project that:
@@ -39,7 +42,7 @@ tk new myfont --starter latin-sans
 9. tk build                         → OTF / TTF / VF
 ```
 
-Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/Bold).
+Default starter: **latin-sans** (full Latin + figures + punct + spacing + Light/Bold). 结构示例，字形未通过视觉评审，不要当作字形质量范本。
 Also: **latin-humanist-italic** (skeleton+pen, `System.slant`), **latin-chancery**
 (minimal + `pen_dot` / flourish helpers — do not reinvent curls).
 
