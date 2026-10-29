@@ -362,6 +362,22 @@ _GLYPH_LITERAL_ALLOW = frozenset(
         "intersection",
         "difference",
         "xor",
+        # Pillow image modes / channel names (not glyph refs).
+        "L",
+        "LA",
+        "RGB",
+        "RGBA",
+        "CMYK",
+        "1",
+        "I",
+        "F",
+        "P",
+        # Zone / JSON field names used in perceive sidecars (not glyph refs).
+        "base",
+        "cap",
+        "asc",
+        "desc",
+        "x-height",
     }
 )
 

@@ -147,11 +147,11 @@ def test_overlap_warns_only_when_cancel_enters_counter(tmp_path: Path) -> None:
 
 def test_kinds_for_default_is_empty() -> None:
     """Kernel no longer guesses optical kinds from glyph names."""
-    from typekernel.cli.audit import _kinds_for
+    from typekernel.cli.audit import kinds_for
 
-    assert _kinds_for("v", {}) == ()
-    assert _kinds_for("n", {}) == ()
-    assert _kinds_for("zero", {}) == ()
-    assert _kinds_for("n", {"n": ("vertical",)}) == ("vertical",)
-    assert _kinds_for("v", {"v": ("diagonal",)}) == ("diagonal",)
-    assert _kinds_for("w", {"w": ("auto",)}) == ()
+    assert kinds_for("v", {}) == ()
+    assert kinds_for("n", {}) == ()
+    assert kinds_for("zero", {}) == ()
+    assert kinds_for("n", {"n": ("vertical",)}) == ("vertical",)
+    assert kinds_for("v", {"v": ("diagonal",)}) == ("diagonal",)
+    assert kinds_for("w", {"w": ("auto",)}) == ()

@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typekernel.diagnose.engine import (
     AuditReport,
-    _kinds_for,
     audit_project,
     format_report,
+    kinds_for,
     load_audit_stems,
     load_extra_checks,
     load_intent,
@@ -20,9 +20,9 @@ from typekernel.diagnose.protocol import Finding
 __all__ = [
     "AuditReport",
     "Finding",
-    "_kinds_for",
     "audit_project",
     "format_report",
+    "kinds_for",
     "load_audit_stems",
     "load_extra_checks",
     "load_intent",

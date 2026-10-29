@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from expect import EXPECT
 from spacing import KERNING, METRICS
 from system import (
     AUDIT_STEMS,
@@ -29,5 +30,6 @@ PROJECT = Project(
     brief=BRIEF,
     metrics=METRICS,
     kerning=KERNING,
+    expect=EXPECT,
     style_name=STYLE_NAME,
 )

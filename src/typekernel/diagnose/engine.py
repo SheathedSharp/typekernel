@@ -21,6 +21,7 @@ __all__ = [
     "AuditReport",
     "audit_project",
     "format_report",
+    "kinds_for",
     "load_audit_stems",
     "load_extra_checks",
     "load_intent",
@@ -127,7 +128,7 @@ def _load_stems_from_system(root: Path) -> dict[str, tuple[str, ...]]:
     return {str(k): _normalize_kinds(v) for k, v in raw.items()}
 
 
-def _kinds_for(name: str, declared: Mapping[str, Sequence[str]]) -> tuple[str, ...]:
+def kinds_for(name: str, declared: Mapping[str, Sequence[str]]) -> tuple[str, ...]:
     if name in declared:
         kinds = tuple(declared[name])
         if kinds == ("auto",):
@@ -143,7 +144,9 @@ def _builtin_v2(
     check_direction: bool,
     check_compat: bool,
     check_overlap: bool,
+    check_topology: bool = True,
 ) -> list[Check]:
+    from typekernel.diagnose.checks.topology import TopologyCheck
     from typekernel.plugins.checks import compat, direction, overlap, stem, zone
 
     out: list[Check] = []
@@ -157,6 +160,8 @@ def _builtin_v2(
         out.append(wrap_check_fn(compat.check, check_id="compat"))
     if check_overlap:
         out.append(wrap_check_fn(overlap.check, check_id="overlap"))
+    if check_topology:
+        out.append(TopologyCheck())
     return out
 
 
@@ -169,6 +174,7 @@ def audit_project(
     check_direction: bool = True,
     check_compat: bool = True,
     check_overlap: bool = False,
+    check_topology: bool = True,
     masters: Sequence[str] | None = None,
     baseline: Path | str | Baseline | None = None,
     extra_checks: Sequence[Check] | None = None,
@@ -256,6 +262,7 @@ def audit_project(
             check_direction=check_direction,
             check_compat=check_compat,
             check_overlap=check_overlap,
+            check_topology=check_topology,
         )
         # Project EXTRA_CHECKS (legacy CheckFn) + diagnose Check objects.
         legacy_extras = (
@@ -282,7 +289,7 @@ def audit_project(
                 raw = raw_drawing(session, name, master=master)
                 final = session.evaluate(name, master=master).drawing
                 hashes[name] = outline_hash(final.outline())
-                resolved = {name: _kinds_for(name, stem_kinds)}
+                resolved = {name: kinds_for(name, stem_kinds)}
                 ctx = CheckContext(
                     session=session,
                     project=project,

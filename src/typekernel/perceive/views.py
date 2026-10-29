@@ -138,14 +138,14 @@ def edit_view(
     # Zone lines + labels.
     zones = {
         "base": system.zones.base,
-        "x": system.zones.x,
+        "x-height": system.zones.x,
         "cap": system.zones.cap,
         "asc": system.zones.asc,
         "desc": system.zones.desc,
     }
     zone_colors = {
         "base": (120, 120, 120, 180),
-        "x": (80, 120, 180, 180),
+        "x-height": (80, 120, 180, 180),
         "cap": (80, 80, 160, 160),
         "asc": (60, 140, 60, 160),
         "desc": (160, 80, 60, 160),
@@ -204,7 +204,7 @@ def edit_view(
             if node.tag:
                 draw.text((cx + 5, cy - 10), node.tag, fill=(30, 30, 40, 220), font=font_sm)
             node_table.append(
-                {"tag": node.tag, "x": pt.x, "y": pt.y, "contour": ci, "smooth": smooth}
+                {"tag": node.tag, "pos_x": pt.x, "pos_y": pt.y, "contour": ci, "smooth": smooth}
             )
 
     # Sidebearings / advance.
@@ -222,8 +222,8 @@ def edit_view(
         measure_rows.append(
             {
                 "kind": m.kind,
-                "a": m.a,
-                "b": m.b,
+                "from_tag": m.a,
+                "to_tag": m.b,
                 "expected": m.expected,
                 "measured": m.measured,
             }

@@ -17,7 +17,10 @@ def test_latin_sans_default_audit_quiet(tmp_path: Path) -> None:
     root = create_project("quiet", parent=tmp_path, starter="latin-sans")
     report = audit_project(root)
     assert report.errors == []
-    assert report.warnings == []
+    # Structural starter: topology (B-class) warnings are expected after P2-5.
+    non_topo = [f for f in report.warnings if not f.check.startswith("topology.")]
+    assert non_topo == [], non_topo
+    assert any(f.check.startswith("topology.") for f in report.warnings)
 
 
 def test_audit_stems_none_skips_optical(tmp_path: Path) -> None:
@@ -69,8 +72,8 @@ def test_measure_oriented_stem_on_diagonal_band() -> None:
 def test_overlap_check_opt_in(tmp_path: Path) -> None:
     pytest.importorskip("pathops")  # typekernel[boolean]
     root = create_project("ov", parent=tmp_path, starter="latin-sans")
-    quiet = audit_project(root, check_overlap=False)
-    noisy = audit_project(root, check_overlap=True)
+    quiet = audit_project(root, check_overlap=False, check_topology=False)
+    noisy = audit_project(root, check_overlap=True, check_topology=False)
     assert quiet.warnings == []
     assert any(f.kind == "overlap" for f in noisy.warnings)
 

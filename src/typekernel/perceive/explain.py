@@ -164,7 +164,7 @@ def explain(
     zones = system.zones
     zone_fit = {
         "base": bbox[1],
-        "x": bbox[3],
+        "x-height": bbox[3],
         "cap": zones.cap,
         "asc": zones.asc,
         "desc": zones.desc,
