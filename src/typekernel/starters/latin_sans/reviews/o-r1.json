@@ -2,14 +2,14 @@
   "date": "2026-10-29",
   "expect_changes": [],
   "glyphs": {
-    "O": "9cfee130dbbcab26f6f435838f098e120b00fe84fec980026f5bd6cef6a884a1"
+    "o": "0b1169901a42d586a329aa297c286c3da8838a8cd1b08c403165acb166407589"
   },
-  "group": "O",
+  "group": "o",
   "masters": [
     "Light",
     "Bold"
   ],
-  "notes": "P3-6 anatomy bowl rewrite; audit 0 error.",
+  "notes": "P3-6 anatomy bowl rewrite for o; audit 0 error.",
   "proofs": [],
   "reviewer": "agent:p3-6",
   "round": 1,

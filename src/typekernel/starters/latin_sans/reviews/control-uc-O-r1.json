@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [],
+  "glyphs": {
+    "O": "9cfee130dbbcab26f6f435838f098e120b00fe84fec980026f5bd6cef6a884a1"
+  },
+  "group": "O",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "P3-6 anatomy bowl rewrite for O; audit 0 error. File named glyph-O.",
+  "proofs": [],
+  "reviewer": "agent:p3-6",
+  "round": 1,
+  "verdict": "pass"
+}
