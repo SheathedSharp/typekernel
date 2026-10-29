@@ -671,5 +671,7 @@ class Project:
 | latin-sans 组合附加符 | `starters/latin_sans/marks/`（12 comb + `.case`）；基字 `zone_anchors` |
 | `compose` / composites | **已落地**（`project.compose`；latin-sans ~160 composites） |
 | charset + `tk status` 区块覆盖率 | **已落地**（latin-1 + ext-a **319/319**） |
-| 特性 / kern / VF / FontBakery | **未做**（P4-3…） |
+| 特性后缀生成 + fea 汇编 | **已落地**（`generate_features` / `assemble_features` / `features.syntax`） |
+| latin-sans ss01 / tnum / onum / case | **已落地**（`a.ss01`、`*.tf`/`*.osf`、`*.case` punct） |
+| kern / VF / FontBakery | **未做**（P4-4…） |
 

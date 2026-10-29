@@ -272,6 +272,16 @@ class ProjectSession:
                     replace=True,
                 )
         apply_project_spacing(font, project, self.root)
+        # OpenType features from naming suffixes + features/*.fea
+        from typekernel.features import assemble_features
+
+        glyph_names = {g.name for g in font} | set(self._specs) | set(project.composites)
+        font.features = assemble_features(
+            glyph_names,
+            fea_dir=project.features.fea_dir,
+            root=self.root,
+            extra=tuple(project.features.extra),
+        )
         return font
 
     def reload(self) -> set[str]:

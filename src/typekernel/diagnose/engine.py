@@ -151,6 +151,7 @@ def _builtin_v2(
     check_interpolation: bool = True,
 ) -> list[Check]:
     from typekernel.diagnose.checks.anchors import AnchorsCheck
+    from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
     from typekernel.diagnose.checks.spacing import (
@@ -188,6 +189,7 @@ def _builtin_v2(
         out.append(InterpolationCheck())
     # Anchors (A-class) + tag grammar always on; letter-free / data-driven.
     out.append(AnchorsCheck())
+    out.append(FeaturesSyntaxCheck())
     out.append(TagsGrammarCheck())
     return out
 
