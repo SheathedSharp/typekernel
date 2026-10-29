@@ -16,23 +16,26 @@ def _starter(tmp: Path) -> Path:
     return create_project("explain_trial", parent=tmp, starter="latin-sans")
 
 
-def test_latin_sans_e_has_two_counters() -> None:
+def test_latin_sans_e_has_one_counter_and_aperture() -> None:
+    """Align with latin-sans expect.py: e → counters=1."""
     td = Path(tempfile.mkdtemp())
     try:
         root = _starter(td)
         report = explain_project(root, "e")
-        assert report.counters == 2, report
+        assert report.counters == 1, report
         assert report.islands == 1, report
     finally:
         shutil.rmtree(td)
 
 
-def test_latin_sans_three_has_at_least_two_counters() -> None:
+def test_latin_sans_three_has_open_counters() -> None:
+    """Align with latin-sans expect.py: three → counters=0."""
     td = Path(tempfile.mkdtemp())
     try:
         root = _starter(td)
         report = explain_project(root, "three")
-        assert report.counters >= 2, report
+        assert report.counters == 0, report
+        assert report.islands == 1, report
     finally:
         shutil.rmtree(td)
 

@@ -182,8 +182,6 @@ AUDIT_STEMS = {
     "Q": (),
     "q": ('vertical',),
     "question": (),
-    "quotedbl": (),
-    "quotesingle": (),
     "R": ('vertical',),
     "r": ('vertical',),
     "S": (),

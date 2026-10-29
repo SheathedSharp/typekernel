@@ -12,5 +12,7 @@
     "artifacts/p3-6/",
     "src/typekernel/starters/latin_sans/reviews/"
   ],
-  "notes": "Awaiting human visual approval of control samples."
+  "notes": "Awaiting human visual approval of control samples.",
+  "gate": "latin-sans-control",
+  "date": "2026-10-28"
 }

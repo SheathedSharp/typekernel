@@ -41,6 +41,10 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
     name = ctx.name
     drawing = ctx.raw
     system = ctx.system
+    # When the project declares AUDIT_STEMS, undeclared glyphs stay quiet
+    # (Ext-A / symbols / composites inherit stem.* nodes from bases).
+    if ctx.declared_stems and name not in ctx.declared_stems:
+        return
     kinds: Sequence[str] = ctx.stem_kinds.get(name, ())
     # When caller put kinds on context via audit, stem_kinds is the full map;
     # kinds_for already resolved — audit passes per-glyph via a side channel.

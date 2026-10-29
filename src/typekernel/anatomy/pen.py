@@ -418,10 +418,10 @@ def fuse(drawing: Drawing) -> Drawing:
     self-intersection risks. Always pathops-simplify so Light/Bold topology is stable.
     """
     from typekernel.perceive.render import simplify_outline
-    from typekernel.plugins.construct.skeleton_pen import _drawing_from_contours
+    from typekernel.plugins.construct import drawing_from_contours
 
     simplified = simplify_outline(drawing.outline())
-    fused = _drawing_from_contours(simplified.contours)
+    fused = drawing_from_contours(simplified.contours)
     # Preserve slots/measures from the pre-fuse drawing when present.
     if drawing.slots or drawing.measures:
         return Drawing(

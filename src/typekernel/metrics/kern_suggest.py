@@ -33,45 +33,50 @@ class KernSuggestion:
     reason: str
 
 
-# Letter-agnostic seeds come from project kerning + proofs; this helper only
-# expands a small control set when the project has none.
-_DEFAULT_SEEDS: tuple[tuple[str, str], ...] = (
-    ("A", "V"),
-    ("A", "W"),
-    ("A", "Y"),
-    ("V", "A"),
-    ("W", "A"),
-    ("Y", "A"),
-    ("T", "a"),
-    ("T", "o"),
-    ("T", "e"),
-    ("T", "y"),
-    ("F", "a"),
-    ("F", "o"),
-    ("F", "comma"),
-    ("F", "period"),
-    ("P", "a"),
-    ("P", "o"),
-    ("P", "period"),
-    ("P", "comma"),
-    ("L", "T"),
-    ("L", "V"),
-    ("L", "Y"),
-    ("Y", "o"),
-    ("Y", "a"),
-    ("V", "o"),
-    ("V", "a"),
-    ("r", "a"),
-    ("r", "o"),
-    ("f", "a"),
-    ("f", "o"),
-    ("f", "period"),
-    ("f", "comma"),
+# Fallback control pairs as Unicode codepoints → AGL names via the public
+# glyph-name API (no hard-coded letter / AGL string literals in the kernel).
+_DEFAULT_SEED_CODEPOINTS: tuple[tuple[int, int], ...] = (
+    (0x41, 0x56),  # A V
+    (0x41, 0x57),  # A W
+    (0x41, 0x59),  # A Y
+    (0x56, 0x41),  # V A
+    (0x57, 0x41),  # W A
+    (0x59, 0x41),  # Y A
+    (0x54, 0x61),  # T a
+    (0x54, 0x6F),  # T o
+    (0x54, 0x65),  # T e
+    (0x54, 0x79),  # T y
+    (0x46, 0x61),  # F a
+    (0x46, 0x6F),  # F o
+    (0x46, 0x2C),  # F comma
+    (0x46, 0x2E),  # F period
+    (0x50, 0x61),  # P a
+    (0x50, 0x6F),  # P o
+    (0x50, 0x2E),  # P period
+    (0x50, 0x2C),  # P comma
+    (0x4C, 0x54),  # L T
+    (0x4C, 0x56),  # L V
+    (0x4C, 0x59),  # L Y
+    (0x59, 0x6F),  # Y o
+    (0x59, 0x61),  # Y a
+    (0x56, 0x6F),  # V o
+    (0x56, 0x61),  # V a
+    (0x72, 0x61),  # r a
+    (0x72, 0x6F),  # r o
+    (0x66, 0x61),  # f a
+    (0x66, 0x6F),  # f o
+    (0x66, 0x2E),  # f period
+    (0x66, 0x2C),  # f comma
 )
 
 
 def default_seed_pairs() -> tuple[tuple[str, str], ...]:
-    return _DEFAULT_SEEDS
+    from typekernel.font.glyph import glyph_name_for_char
+
+    return tuple(
+        (glyph_name_for_char(chr(a)), glyph_name_for_char(chr(b)))
+        for a, b in _DEFAULT_SEED_CODEPOINTS
+    )
 
 
 def _current_kern(session: ProjectSession, left: str, right: str) -> float:
@@ -102,7 +107,7 @@ def _seed_pairs(session: ProjectSession) -> list[tuple[str, str]]:
         for item in list(kerning.pairs) + list(kerning.exceptions):
             if isinstance(item, KernPair):
                 add(item.left, item.right)
-    for a, b in _DEFAULT_SEEDS:
+    for a, b in default_seed_pairs():
         add(a, b)
     return out
 

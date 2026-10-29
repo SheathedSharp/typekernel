@@ -263,7 +263,7 @@ def _normalize_winding(contour: Contour, *, want_positive: bool) -> Contour:
     return reverse_contour(contour)
 
 
-def _drawing_from_contours(contours: tuple[Contour, ...]) -> Drawing:
+def drawing_from_contours(contours: tuple[Contour, ...]) -> Drawing:
     """Assign ink/counter and normalize winding (outer CCW, hole CW).
 
     A single expanded stroke is always ``ink``. Rings: largest |area| is ink,
@@ -412,7 +412,7 @@ def expand_skeleton(
         cap=cap,
         miter_limit=miter_limit,
     )
-    return _drawing_from_contours(outline.contours)
+    return drawing_from_contours(outline.contours)
 
 
 def expand_skeleton_cubic(
@@ -435,4 +435,4 @@ def expand_skeleton_cubic(
         chord_budget=chord_budget,
         offset_fit_budget=offset_fit_budget,
     )
-    return _drawing_from_contours(outline.contours), report
+    return drawing_from_contours(outline.contours), report

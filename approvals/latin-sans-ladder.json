@@ -5,5 +5,7 @@
   "artifacts": [
     "artifacts/p3-9/"
   ],
-  "notes": "Designed Light/Bold masters \u2014 await human approval of weight ladder."
+  "notes": "Designed Light/Bold masters — await human approval of weight ladder.",
+  "gate": "latin-sans-ladder",
+  "date": "2026-10-28"
 }

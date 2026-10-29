@@ -97,19 +97,65 @@ def test_overlap_check_opt_in(tmp_path: Path) -> None:
     assert any(f.kind == "overlap" for f in noisy.warnings)
 
 
-def test_declared_diagonal_is_warn_empty_is_quiet(tmp_path: Path) -> None:
-    """Starter maps diagonals to (); opting into ("diagonal",) yields warnings."""
-    root = create_project("diagkinds", parent=tmp_path, starter="latin-humanist-italic")
-    quiet = audit_project(root, glyphs=["w"])
-    assert not [f for f in quiet.findings if f.kind == "stem" and f.glyph == "w"]
+def test_declared_diagonal_is_warn_empty_is_quiet() -> None:
+    """Empty kinds stay quiet; declared ("diagonal",) opts into stem warnings."""
+    import math
 
-    sys_py = root / "system.py"
-    # Last AUDIT_STEMS assignment wins when the module is exec'd.
-    sys_py.write_text(
-        sys_py.read_text(encoding="utf-8")
-        + '\n\nAUDIT_STEMS = {"w": ("diagonal",)}\n',
-        encoding="utf-8",
+    from unittest.mock import MagicMock
+
+    from typekernel.plugins.checks import stem as stem_check
+    from typekernel.plugins.checks.protocol import CheckContext
+    from typekernel.system import Overshoot, System, Zones
+
+    # Thick 45° parallelogram (~100) vs System lc=50 → clear diagonal miss.
+    ux = uy = math.sqrt(0.5)
+    nx, ny = -uy, ux
+    # Width ~60 vs System lc=50: within optical accept band, above warn tol.
+    half = 30.0
+    p0, p1 = Point(40, 40), Point(240, 240)
+    a = Point(p0.x + nx * half, p0.y + ny * half)
+    b = Point(p1.x + nx * half, p1.y + ny * half)
+    c = Point(p1.x - nx * half, p1.y - ny * half)
+    d = Point(p0.x - nx * half, p0.y - ny * half)
+    drawing = (
+        Writer()
+        .start((a.x, a.y))
+        .line((b.x, b.y))
+        .line((c.x, c.y))
+        .line((d.x, d.y))
+        .close()
+        .build()
     )
-    declared = audit_project(root, glyphs=["w"])
-    declared_w = [f for f in declared.findings if f.kind == "stem" and f.glyph == "w"]
-    assert any(f.level == "warn" for f in declared_w)
+    system = System(
+        upm=1000,
+        zones=Zones(base=0, x=500, cap=700, asc=750, desc=-200),
+        overshoot=Overshoot(round=12, pointed=10),
+        stem={"lc": 70, "uc": 70},
+    )
+
+    quiet_ctx = CheckContext(
+        name="diag",
+        raw=drawing,
+        final=drawing,
+        system=system,
+        project=MagicMock(),
+        stem_kinds={"diag": ()},
+        declared_stems={"diag": ()},
+        findings=[],
+    )
+    stem_check.check(quiet_ctx)
+    assert not [f for f in quiet_ctx.findings if f.kind == "stem"]
+
+    warn_ctx = CheckContext(
+        name="diag",
+        raw=drawing,
+        final=drawing,
+        system=system,
+        project=MagicMock(),
+        stem_kinds={"diag": ("diagonal",)},
+        declared_stems={"diag": ("diagonal",)},
+        findings=[],
+    )
+    stem_check.check(warn_ctx)
+    declared = [f for f in warn_ctx.findings if f.kind == "stem"]
+    assert any(f.level == "warn" for f in declared), declared

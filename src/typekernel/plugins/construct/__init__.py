@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typekernel.plugins.construct.skeleton_pen import (
     broad_nib,
+    drawing_from_contours,
     densify_polyline,
     ellipse_point_count,
     expand_skeleton,
@@ -18,6 +19,7 @@ from typekernel.plugins.construct.skeleton_pen import (
 __all__ = [
     "broad_nib",
     "densify_polyline",
+    "drawing_from_contours",
     "ellipse_point_count",
     "expand_skeleton",
     "expand_skeleton_cubic",
