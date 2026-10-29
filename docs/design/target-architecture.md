@@ -1,8 +1,11 @@
 # typekernel 目标架构（v1 草案）
 
-> **状态**：设计草案，尚未实现。现行契约仍以 [`ARCHITECTURE.md`](../ARCHITECTURE.md) 为准；
-> 本文某一节落地后，把该节并入 `ARCHITECTURE.md` 并从本文删除，避免两份真相。
-> **实施状态**：以 `ARCHITECTURE.md` 为准；本文保留目标契约原文。
+> **状态**：部分章节已实现。现行契约以 [`ARCHITECTURE.md`](../ARCHITECTURE.md) 为准；
+> 已实现章节并入 ARCHITECTURE 后，本文只保留目标与指针，避免同一内容出现两份不同描述。
+> **已并入 / 以 ARCHITECTURE 为准**：感知与诊断、解剖标签与轮廓构件、
+> `Measure`、metrics pack（含 `absolute`）、整族/特性/VF 程序侧。
+> **仍属目标草案（未并或未实现）**：同项目 `glyphs_italic/` 加载、`plugins.spacing`/Tracy 工作流、
+> 部分轴/特性细节以 ARCHITECTURE 的现状表为准。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
 > **不变的前提**：第一性原理仍是「人类字体设计师怎么做，agent 就怎么做」；内核不出现字母名；
 > 不事后修缝；编译全部复用 fontTools；Oblique ≠ Italic；字重是 designed deltas。
@@ -391,154 +394,16 @@ starter 的期望表和 traits 默认值都是数据（例如 latin-sans 的 `ex
 ---
 
 ## 6. 感知
-> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
- `typekernel.perceive`（新，吸收 `qa.proof` / `qa.specimen_png`）
+> **已并入** [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)「感知与诊断（已实现）」；此处不再重复维护契约。实现以 `typekernel.perceive` / `diagnose` / `review` 为准。
 
-### 6.1 两条渲染路径
-
-| 路径 | 输入 | 用途 | 依赖 |
-| --- | --- | --- | --- |
-| **live** | `GlyphDraft` / `Glyph`（不编译） | 编辑视图、上下文、叠图、diff，迭代时用 | Pillow + skia-pathops（先 simplify 成非零绕向，再以 even-odd 填充） |
-| **shipped** | 编译后的 OTF / TTF / VF | 最终样张：kerning、特性、hinting、小字号 | Pillow（可选 raqm）；特性样张用可选的 uharfbuzz |
-
-### 6.2 视图（`tk see` / `tk proof`）
-
-| 视图 | 内容 | 命令 |
-| --- | --- | --- |
-| 编辑视图 | 浅色填充 + 轮廓线 + 节点（方 = 角点，圆 = 平滑）+ 控制柄 + 节点标签 + 槽位标记 + 区线与超调带 + 侧距与步进 + `Measure` 实测值标注 | `tk see n [--masters]` |
-| 上下文 | `nn?nn oo?oo HH?HH OO?OO`（按 trait 选择参照），3 个字号 | `tk see n --context` |
-| 母版叠图 | 各母版叠放，对应节点之间连线（看插值路径是否交叉） | `tk see n --overlay masters` |
-| 前后对比 | 与快照对比：红 = 删除，绿 = 新增 | `tk see n --diff [snapshot]` |
-| 参照并置 | 与一款参照字体并排显示（只看不测，遵守已确认的 D4） | `tk see n --reference ref.otf` |
-| 文本 | 瀑布（含 9–16 px 小字号）、段落、间距串、字偶串、字符网格、按名字形网格（含未编码字形） | `tk proof …` |
-| 灰度 | 段落模糊后的灰度热图，暴露黑度不均 | `tk proof color` |
-
-每张 PNG 都配一个同名 `.json` 边车文件：视图类型、字形列表、各字形轮廓哈希、母版、渲染参数、
-图中标注的测量值。agent 用 JSON 对照图片，不必从像素里猜数字。
-
-### 6.3 测量 `tk explain`
-
-```python
-def explain(session: ProjectSession, glyph: str, *, master: str | None = None) -> GlyphReport
-```
-
-`tk explain n --json` 输出：bbox、advance、lsb / rsb（及其来自哪条 metrics key）、节点表
-（坐标、标签、平滑或角点、接合角）、槽位与填充结果、`Measure` 实测值与期望值、字腔数和面积、
-墨块数、开口宽度、区线贴合与超调实测、墨量密度、`GlyphDraft.note`。
-
----
 
 ## 7. 诊断
-> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
- `typekernel.diagnose`（新，吸收 `cli/audit.py` 的逻辑）
+> **已并入** [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)「感知与诊断（已实现）」；此处不再重复维护契约。实现以 `typekernel.perceive` / `diagnose` / `review` 为准。
 
-### 7.1 协议 v2
-
-```python
-Scope = Literal["glyph", "pair", "font", "family"]
-Level = Literal["error", "warn", "info"]
-
-@dataclass(frozen=True, slots=True)
-class Finding:
-    check: str                 # 稳定 id，如 "topology.counters"
-    level: Level
-    glyph: str | None
-    master: str | None
-    where: str | None          # 标签或 "x,y"
-    measured: float | str | None
-    expected: float | str | None
-    message: str
-    hint: str = ""             # 「改什么」：指向构件参数或标签
-
-class Check(Protocol):
-    id: str
-    scope: Scope
-    def run(self, ctx: CheckContext) -> Iterable[Finding]: ...
-```
-
-- 输出人读文本和 `--json`；`--masters all` 对每个母版都跑一遍。
-- **基线**：`audit-baseline.json` 记录被接受的 warn，每条必须写 `reason`；基线中的条目对应的字形
-  哈希变化后，该条自动失效。不允许接受 error。
-- 退出码：有 error 时为 1；`--strict` 下 warn 也算失败。
-
-### 7.2 检查目录（全部字母无关，由 traits / expect / 标签驱动）
-
-| 类 | 检查 | 默认级别 |
-| --- | --- | --- |
-| A 结构 | 轮廓方向、开放轮廓、自交（pathops）、零长段、重复节点、母版签名兼容 + `fontTools.varLib.interpolatable`、组件缺失或循环、unicode 重复、组合字锚点缺失、charset 缺字 | error |
-| B 拓扑 | 闭合字腔数 vs `expect.counters`；墨块数 vs `expect.islands`；细缝字腔（面积 < k·stem²，常见于 overlap 接合）；开口宽度（`aperture.*` 标签） | warn（项目可升级为 error） |
-| C 垂直度量 | flat-* 端贴合区线（容差 1）；round-* 端超调落在 `[0.5, 1.5] × overshoot`；pointed-* 同理；`expect.reach` 要求触及的区线 | warn |
-| D 笔画 | `Measure` 实测 vs 期望 / `System.stem`；斜笔补偿；同组细横笔一致性；削薄点厚度 | warn |
-| E 间距 | 墨溢出 advance；无 key 字形；字偶碰撞（全部 kerning 字偶 + 样张串里的相邻字偶，按 kerning 后的最小墨距）；引用一致性（`Ref` 引用的两侧光学留白相差过大）；kerning 极值 | warn |
-| F 灰度 | 每个字形的墨量密度 vs 同 trait 组中位数（z 分数 > 2 报出） | info → warn |
-| G 插值 | 在 t = 0.25 / 0.5 / 0.75 处插值出实例，检查自交和拓扑期望；字干随 wght 单调变化 | warn |
-| H 发布 | 垂直度量、name 表、OS/2 字重类、STAT、字形名合法性；可选调用 FontBakery / fontspector | `tk check --release` 专用 |
-| I 意图 | Intent 区间（现有）；System lint（§5.1） | warn |
-| J 评审 | 字形哈希相对上一次评审已变化 → stale | info（发布时为 error） |
-
-### 7.3 期望表 `Expect`
-
-```python
-@dataclass(frozen=True, slots=True)
-class Expect:
-    counters: int | None = None        # 闭合字腔数（不计细缝）
-    islands: int | None = None         # 墨块数（i = 2，colon = 2）
-    apertures: int | None = None       # 开口数（按 aperture.* 标签计数）
-    reach: tuple[str, ...] = ()        # 必须触及的区线名：("base", "x") / ("base", "asc") / ("desc", "x")
-```
-
-期望表是项目数据（starter 带一份 `expect.py`）。为了防止「改期望表来通过检查」：
-`tk audit` 会列出项目期望表相对 starter 原始表的改动，评审时必须对每处改动写理由（§8）。
-
-### 7.4 拓扑的计算方法
-
-在 live 路径上：对最终轮廓（槽位填充之后）做 `pathops.simplify`（非零绕向），得到不重叠的
-外轮廓和洞。洞的数量减去细缝即字腔数；外轮廓数即墨块数。开口不做通用检测，只认构件产生的
-`aperture.*` 标签，避免启发式误报。
-
----
 
 ## 8. 评审
-> **已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「感知与诊断」一节为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
- `typekernel.review`（新，吸收 `qa.gates`）
+> **已并入** [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)「感知与诊断（已实现）」；此处不再重复维护契约。实现以 `typekernel.perceive` / `diagnose` / `review` 为准。
 
-### 8.1 评审记录
-
-```json
-{
-  "group": "lc.n",
-  "round": 3,
-  "reviewer": "agent:<model>",
-  "verdict": "fail",
-  "masters": ["Regular", "Bold"],
-  "glyphs": {"n": "<outline_hash>", "h": "<outline_hash>"},
-  "proofs": ["proofs/r3/see-n.png", "proofs/r3/context-n.png"],
-  "expect_changes": [],
-  "notes": "肩接干太高，冠点偏左；下一轮把 join_depth 从 0.18 提到 0.24 × x",
-  "date": "2026-11-02"
-}
-```
-
-- `tk review open <group>`：生成该组的标准视图，在 `reviews/` 里写一份 `verdict: pending` 的模板。
-- `tk review record <group> --verdict pass|fail --note "…"`：写入记录，并自动填好当前哈希。
-- **过期**：只要组内任一字形的哈希和最新的 pass 记录不一致，该组就是 stale。
-- **两级门**：`reviewer` 以 `agent:` 开头的记录是组级的推进门（agent 可以写）；里程碑和发布要求
-  `approvals/` 里由人写的批准（`approver` 以 `human:` 开头）。工具拒绝替人写 `approved: true`。
-
-### 8.2 `tk status`（设计师的任务板）
-
-```
-Trial  (latin-sans v2)          charset 312/330  masters 3  compat ok
-group        glyphs  E  W  review          masters
-lc.n         8/8     0  1  pass r3         ok
-lc.o         7/7     0  0  stale (o,e)     ok
-lc.mixed     4/6     0  3  fail r2         -
-uc.straight  0/6     -  -  -               -
-…
-release gate: blocked (2 groups not passed, 0 human approvals)
-```
-
----
 
 ## 9. 槽位与插件 v2
 
