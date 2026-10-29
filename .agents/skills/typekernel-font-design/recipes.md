@@ -10,7 +10,7 @@ Reduce `n_width` / `o_width` / `H_width` / `O_width` (and related `*_width` toke
 
 ## Different corners
 
-In `font.py`, swap `corners={"*": plain()}` for another corner plugin (e.g. slab) after installing/importing it from `typekernel.plugins.corners`. Glyph source hashes should stay stable for the same outlines（解耦试金石）.
+In `project.py` (`PROJECT.corners`), swap `corners={"*": plain()}` for another corner plugin (e.g. slab) after installing/importing it from `typekernel.plugins.corners`. Glyph source hashes should stay stable for the same outlines（解耦试金石）.
 
 ## Fix a bad join
 

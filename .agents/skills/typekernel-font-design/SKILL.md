@@ -23,7 +23,7 @@ Write a font project that:
 1. declares proportions in `system.py` (`System` / zones / stems / tokens),
 2. draws glyphs with `typekernel.draw` (`Writer` / fragments / named nodes / overlap),
 3. registers them with `@glyph` under `glyphs/`,
-4. configures corners/ends plugins in `font.py`,
+4. configures corners/ends plugins in `project.py` (`PROJECT`),
 5. spaces via `spacing.py` (metrics keys + kern),
 6. audits, proofs, and compiles (`tk audit` / `tk proof` / `tk build`).
 
@@ -36,7 +36,7 @@ tk new myfont --starter latin-sans
 3. control glyphs n o H O           → tk proof control  → look, change, repeat
 4. elements.py + expand groups      → tk proof --glyph n / --text "…"
 5. tk audit                         → stem / zone / direction / compat; fix in glyph code
-6. corners / ends in font.py        → tk proof all
+6. corners / ends in project.py     → tk proof all
 7. spacing.py                       → tk proof spacing / kern
 8. masters (Light/Bold) / italic    → tk audit --compat; tk proof ladder; tk build --variable
 9. tk build                         → OTF / TTF / VF

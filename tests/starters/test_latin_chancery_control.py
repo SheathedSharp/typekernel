@@ -9,6 +9,7 @@ import pytest
 from typekernel.cli.build import build_project
 from typekernel.cli.load import load_project
 from typekernel.cli.new import create_project
+from typekernel.project import open_project
 
 STARTER = (
     Path(__file__).resolve().parents[2]
@@ -22,7 +23,7 @@ STARTER = (
 def test_starter_tree_has_control_and_helpers() -> None:
     assert (STARTER / "system.py").is_file()
     assert (STARTER / "elements.py").is_file()
-    assert (STARTER / "font.py").is_file()
+    assert (STARTER / "project.py").is_file()
     assert (STARTER / "spacing.py").is_file()
     assert (STARTER / "brief.md").is_file()
     elements = (STARTER / "elements.py").read_text(encoding="utf-8")
@@ -48,25 +49,24 @@ def test_system_uses_first_class_slant() -> None:
 
 
 def test_discover_evaluate_control_set() -> None:
-    project = load_project(STARTER)
-    project.discover()
-    assert {"n", "o", "H", "O", "h", "i"} <= set(project.specs())
-    for name in ("n", "o", "H", "O", "h", "i"):
-        drawing = project.evaluate(name)
-        assert len(drawing.contours) >= 1
-        assert drawing.roles[0] == "ink"
+    with open_project(STARTER) as session:
+        assert {"n", "o", "H", "O", "h", "i"} <= set(session.specs())
+        for name in ("n", "o", "H", "O", "h", "i"):
+            drawing = session.evaluate(name)
+            assert len(drawing.contours) >= 1
+            assert drawing.roles[0] == "ink"
+
 
 
 def test_pen_dot_is_solid_not_a_ring() -> None:
     """A stroked closed circle would be ink+counter; a period must be one ink."""
-    project = load_project(STARTER)
-    project.discover()
-    period = project.evaluate("period")
-    assert len(period.contours) == 1
-    assert period.roles == ("ink",)
+    with open_project(STARTER) as session:
+        period = session.evaluate("period")
+        assert len(period.contours) == 1
+        assert period.roles == ("ink",)
 
-    tittle = project.evaluate("i")
-    assert "counter" not in tittle.roles
+        tittle = session.evaluate("i")
+        assert "counter" not in tittle.roles
 
 
 def test_tk_new_chancery_builds_otf(tmp_path: Path) -> None:

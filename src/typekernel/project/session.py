@@ -19,8 +19,9 @@ from typing import Any, cast
 from typekernel.draw import Drawing, SlotFillError, apply_slots
 from typekernel.font.font import Font
 from typekernel.font.glyph import Glyph
-from typekernel.project.errors import GlyphBuildError
+from typekernel.project.errors import GlyphBuildError, MigrationError
 from typekernel.project.evaluate import (
+    advance_from_drawing,
     drawing_to_glyph,
 )
 from typekernel.project.registry import GlyphSpec, registration_target
@@ -175,13 +176,13 @@ class ProjectSession:
             if not isinstance(drawing, Drawing):
                 # Forward-compat: GlyphDraft.drawing (P1-3).
                 drawing = cast(Drawing, drawing.drawing)
-            if slots and (project._corners is not None or project._ends is not None):
+            if slots and (project.corners is not None or project.ends is not None):
                 try:
                     drawing = apply_slots(
                         drawing,
                         system,
-                        project._corners or {},
-                        project._ends or {},
+                        project.corners or {},
+                        project.ends or {},
                     )
                 except SlotFillError as exc:
                     raise GlyphBuildError(
@@ -196,10 +197,22 @@ class ProjectSession:
         return drawing
 
     def glyph(self, name: str, *, master: str | None = None) -> Glyph:
-        """Evaluate then wrap as ``font.Glyph`` (advance via project rules)."""
+        """Evaluate then wrap as ``font.Glyph`` (advance via tokens until P1-4)."""
         drawing = self.evaluate(name, master=master, slots=True)
-        advance = self.project._resolve_advance(drawing, name=name)
+        advance = self._resolve_advance(drawing, name=name)
         return drawing_to_glyph(name, drawing, advance=advance)
+
+    def _resolve_advance(self, drawing: Drawing, *, name: str = "") -> float:
+        """Token / bbox advance. Per-glyph ``*_advance`` removed in P1-4."""
+        system = self.project.system
+        if name:
+            keyed = system.tokens.get(f"{name}_advance")
+            if keyed is not None:
+                return float(keyed)
+        token = system.tokens.get("advance")
+        if token is not None:
+            return float(token)
+        return advance_from_drawing(drawing)
 
     def font(self, *, master: str | None = None, family_name: str | None = None, style_name: str = "Regular") -> Font:
         """Assemble a Font from every registered glyph (spacing applied when present)."""
@@ -232,7 +245,8 @@ class ProjectSession:
                 self._fingerprints[bare] = fp
 
         # Glyph file changes.
-        glyphs_root = Path(self.project._glyphs).resolve()
+        _gp = Path(self.project.glyphs)
+        glyphs_root = (_gp if _gp.is_absolute() else self.root / _gp).resolve()
         changed_glyph_rels: set[str] = set()
         for path in sorted(glyphs_root.rglob("*.py")):
             if "__pycache__" in path.parts:
@@ -304,10 +318,18 @@ class ProjectSession:
             if path.is_file():
                 self._top_level_files[bare] = path
 
-        # Load every top-level module under the namespace.
+        # Drop stale bare aliases from a previous session so ``from system
+        # import …`` inside project.py cannot resolve the wrong module.
+        for bare in list(self._top_level_files):
+            sys.modules.pop(bare, None)
+
+        # Load every top-level module under the namespace; alias immediately
+        # so later files (project.py) can ``from system import …``.
         for bare in list(self._top_level_files):
             self._load_top_level(bare, force=True)
-        self._install_aliases()
+            sys.modules[bare] = sys.modules[self._loaded[bare]]
+            if bare not in self._aliases:
+                self._aliases.append(bare)
 
         # Obtain Project (P1-1: font.get_project; P1-2 switches to PROJECT).
         self.project = self._load_project_object()
@@ -340,30 +362,58 @@ class ProjectSession:
         importlib.invalidate_caches()
 
     def _load_project_object(self) -> Any:
-        """Load Project via font.get_project() (P1-1) or PROJECT (P1-2)."""
-        # Prefer project.PROJECT when present (forward-compat for P1-2).
+        """Load ``PROJECT`` from ``project.py``; reject legacy conventions."""
+        from typekernel.project.manifest import Project
+
+        mapping = {
+            "font.get_project / font.project": "project.py → PROJECT",
+            "FAMILY_NAME / STYLE_NAME": "Project.info.family / Project.style_name",
+            "MASTER_LOCATIONS": "MasterSpec.location on Project.masters",
+            "AUDIT_STEMS": "Project.audit.stems (AuditConfig)",
+            "EXTRA_CHECKS / CHECKS": "Project.audit.extra_checks",
+            "BRIEF (as load entry)": "Project.brief",
+            "spacing.apply_spacing (as sole advance path)": "Project.metrics + typekernel.metrics",
+        }
+        map_lines = "\n".join(f"  {old} → {new}" for old, new in mapping.items())
+
         if "project" in self._loaded:
             mod = sys.modules[self._loaded["project"]]
             if hasattr(mod, "PROJECT"):
-                return mod.PROJECT
-        if "font" not in self._loaded:
-            raise FileNotFoundError(
-                f"no font.py or project.py in project root: {self.root}"
+                project = mod.PROJECT
+                if not isinstance(project, Project):
+                    raise TypeError(f"PROJECT must be Project, got {type(project)!r}")
+                return project
+            raise MigrationError(
+                f"{self.root / 'project.py'} must export PROJECT = Project(...). "
+                f"Old conventions are not loaded:\n{map_lines}",
+                mapping=mapping,
             )
-        mod = sys.modules[self._loaded["font"]]
-        if hasattr(mod, "get_project"):
-            project = mod.get_project()
-        elif hasattr(mod, "project"):
-            project = mod.project() if callable(mod.project) else mod.project
-        else:
-            raise AttributeError(
-                f"{self.root / 'font.py'} must define get_project() or project"
-            )
-        from typekernel.project import Project
 
-        if not isinstance(project, Project):
-            raise TypeError(f"expected Project, got {type(project)!r}")
-        return project
+        hints: list[str] = []
+        if "font" in self._loaded:
+            font_mod = sys.modules[self._loaded["font"]]
+            if hasattr(font_mod, "get_project") or hasattr(font_mod, "project"):
+                hints.append("font.get_project / font.project")
+        if "system" in self._loaded:
+            sys_mod = sys.modules[self._loaded["system"]]
+            for name in (
+                "FAMILY_NAME",
+                "STYLE_NAME",
+                "MASTER_LOCATIONS",
+                "AUDIT_STEMS",
+                "EXTRA_CHECKS",
+                "CHECKS",
+            ):
+                if hasattr(sys_mod, name):
+                    hints.append(name)
+        detail = ""
+        if hints:
+            detail = " Detected legacy names: " + ", ".join(hints) + "."
+        raise MigrationError(
+            f"no project.py with PROJECT in {self.root}.{detail}\n"
+            f"Migrate to project.py → PROJECT. Old → new field map:\n{map_lines}",
+            mapping=mapping,
+        )
 
     def _spec_for_bare(self, bare: str, *, qualname: str) -> importlib.machinery.ModuleSpec | None:
         # Glyph submodule path: ``glyphs.lower.n`` under glyphs/
@@ -417,7 +467,9 @@ class ProjectSession:
 
     def _discover_glyphs(self) -> None:
         project = self.project
-        root = Path(project._glyphs).resolve()
+        glyphs_path = Path(project.glyphs)
+        root = glyphs_path if glyphs_path.is_absolute() else (self.root / glyphs_path)
+        root = root.resolve()
         if not root.is_dir():
             raise FileNotFoundError(f"glyphs path is not a directory: {root}")
         collected: dict[str, GlyphSpec] = {}
@@ -430,10 +482,6 @@ class ProjectSession:
                 key = f"glyphs:{rel.as_posix()}"
                 self._fingerprints[key] = _fingerprint(path)
         self._specs = collected
-        # Copy into Project so session._close()'s clear() cannot empty the
-        # caller's Project.specs() after load_project returns.
-        project._specs = dict(collected)
-        project._discovered = True
 
     def _load_glyph_module(self, root: Path, path: Path, rel: Path) -> ModuleType:
         if path.name == "__init__.py":
@@ -467,8 +515,9 @@ class ProjectSession:
 def open_project(root: str | Path) -> Iterator[ProjectSession]:
     """Open an isolated :class:`ProjectSession` for ``root``."""
     session = ProjectSession(root=Path(root))
-    session._open()
     try:
+        session._open()
         yield session
     finally:
-        session._close()
+        if session._active:
+            session._close()

@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 
 from typekernel.cli.build import build_project, build_variable_project
-from typekernel.cli.load import load_project
 from typekernel.cli.new import create_project
 from typekernel.cli.proof_cmd import proof_project
+from typekernel.project import open_project
 
 STARTER = (
     Path(__file__).resolve().parents[2]
@@ -23,7 +23,7 @@ STARTER = (
 def test_starter_tree_has_control_files() -> None:
     assert (STARTER / "system.py").is_file()
     assert (STARTER / "elements.py").is_file()
-    assert (STARTER / "font.py").is_file()
+    assert (STARTER / "project.py").is_file()
     for rel in (
         "glyphs/lower/n.py",
         "glyphs/lower/o.py",
@@ -43,21 +43,19 @@ def test_starter_uses_construct_plugin_not_writer_outlines() -> None:
 
 
 def test_discover_evaluate_control_set() -> None:
-    project = load_project(STARTER)
-    project.discover()
-    assert {"n", "o", "H", "O"} <= set(project.specs())
-    for name in ("n", "o", "H", "O"):
-        drawing = project.evaluate(name)
-        assert len(drawing.contours) >= 1
-        assert drawing.roles[0] == "ink"
-        glyph = project.to_glyph(name)
-        assert glyph.unicodes == (ord(name),)
-        assert glyph.advance > 0
-    # Closed bowls expose a counter contour.
-    o = project.evaluate("o")
-    assert "counter" in o.roles
-    O = project.evaluate("O")
-    assert "counter" in O.roles
+    with open_project(STARTER) as session:
+        assert {"n", "o", "H", "O"} <= set(session.specs())
+        for name in ("n", "o", "H", "O"):
+            drawing = session.evaluate(name)
+            assert len(drawing.contours) >= 1
+            assert drawing.roles[0] == "ink"
+            glyph = session.glyph(name)
+            assert glyph.unicodes == (ord(name),)
+            assert glyph.advance > 0
+        o = session.evaluate("o")
+        assert "counter" in o.roles
+        O = session.evaluate("O")
+        assert "counter" in O.roles
 
 
 def test_tk_new_humanist_italic_builds_otf(tmp_path: Path) -> None:
@@ -92,23 +90,21 @@ def test_proof_control_png(tmp_path: Path) -> None:
 
 
 def test_n_group_glyphs_evaluate() -> None:
-    project = load_project(STARTER)
-    project.discover()
-    for name in ("h", "m", "u", "i", "l"):
-        drawing = project.evaluate(name)
-        assert len(drawing.contours) >= 1
-        assert drawing.roles[0] == "ink"
-        assert project.to_glyph(name).advance > 0
+    with open_project(STARTER) as session:
+        for name in ("h", "m", "u", "i", "l"):
+            drawing = session.evaluate(name)
+            assert len(drawing.contours) >= 1
+            assert drawing.roles[0] == "ink"
+            assert session.glyph(name).advance > 0
 
 
 def test_o_group_glyphs_evaluate() -> None:
-    project = load_project(STARTER)
-    project.discover()
-    for name in ("a", "b", "d", "e", "p", "q"):
-        drawing = project.evaluate(name)
-        assert len(drawing.contours) >= 2  # stem ink + bowl (+counter)
-        assert "ink" in drawing.roles
-        assert project.to_glyph(name).advance > 0
+    with open_project(STARTER) as session:
+        for name in ("a", "b", "d", "e", "p", "q"):
+            drawing = session.evaluate(name)
+            assert len(drawing.contours) >= 2  # stem ink + bowl (+counter)
+            assert "ink" in drawing.roles
+            assert session.glyph(name).advance > 0
 
 
 
@@ -116,31 +112,20 @@ def test_masters_signature_compatible() -> None:
     """Light / Regular / Bold drawings share signatures for every glyph."""
     from typekernel.starters.latin_humanist_italic.system import (
         MASTER_LOCATIONS,
-        _weight_system,
         masters,
-        system,
     )
 
     assert len(masters) == 2
     assert set(MASTER_LOCATIONS) >= {"Light", "Regular", "Bold"}
-    project = load_project(STARTER)
-    project.discover()
-    names = sorted(project.specs())
-    scales = {
-        "Light": 0.62,
-        "Regular": 1.0,
-        "Bold": 1.38,
-    }
-    for name in names:
-        sigs = []
-        for scale in scales.values():
-            sys_w = system if scale == 1.0 else _weight_system(system, scale)
-            from typekernel.project import Project
-
-            p = Project(sys_w, STARTER / "glyphs", masters=())
-            p.discover()
-            sigs.append(p.evaluate(name).signature())
-        assert sigs[0] == sigs[1] == sigs[2], name
+    with open_project(STARTER) as session:
+        names = sorted(session.specs())
+        for name in names:
+            sigs = [
+                session.evaluate(name).signature(),
+                session.evaluate(name, master="Light").signature(),
+                session.evaluate(name, master="Bold").signature(),
+            ]
+            assert sigs[0] == sigs[1] == sigs[2], name
 
 
 def test_variable_font_builds(tmp_path: Path) -> None:

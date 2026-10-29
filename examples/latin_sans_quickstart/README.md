@@ -12,7 +12,7 @@ Or by hand (ARCHITECTURE.md 标准工作流):
 ```bash
 tk new myface --starter latin-sans
 cd myface
-# edit system.py / glyphs / spacing.py / font.py
+# edit system.py / glyphs / spacing.py / project.py
 tk build .
 tk proof control .
 tk audit .

@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from typekernel.cli.__main__ import main
-from typekernel.cli.load import load_project
 from typekernel.cli.new import create_project
 
 
@@ -42,16 +41,16 @@ def syn_box(system: System):
 def test_tk_new_creates_empty_layout(tmp_path: Path) -> None:
     root = create_project("demo_font", parent=tmp_path)
     assert (root / "system.py").is_file()
-    assert (root / "font.py").is_file()
+    assert (root / "project.py").is_file()
     assert (root / "glyphs").is_dir()
-    project = load_project(root)
-    project.discover()
-    assert project.specs() == {}
+    from typekernel.project import open_project
+    with open_project(root) as session:
+        assert session.specs() == {}
 
 
 def test_tk_new_via_main(tmp_path: Path) -> None:
     assert main(["new", "via_main", "--parent", str(tmp_path)]) == 0
-    assert (tmp_path / "via_main" / "font.py").is_file()
+    assert (tmp_path / "via_main" / "project.py").is_file()
 
 
 def test_tk_build_otf_with_synthetic_glyph(tmp_path: Path) -> None:

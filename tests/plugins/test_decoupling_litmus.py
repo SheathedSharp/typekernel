@@ -9,8 +9,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from typekernel.plugins.corners import bracketed, plain, slab
-from typekernel.project import Project
+from typekernel.project import open_project
 from typekernel.system import Overshoot, System, Zones
 
 
@@ -132,41 +131,59 @@ def _hash_files(files: list[Path]) -> dict[str, str]:
     return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
 
-def _kinds(project: Project, name: str) -> tuple[str, ...]:
-    drawing = project.evaluate(name)
-    return tuple(type(s).__name__ for s in drawing.contours[0].segments)
 
 
 def test_three_corner_configs_leave_glyph_sources_unchanged(tmp_path: Path) -> None:
-    glyphs = tmp_path / "glyphs"
+    glyphs = tmp_path / "shared_glyphs"
     files = _write_synthetic_glyphs(glyphs)
     before = _hash_files(files)
 
-    # Named configs: explicit plain() (not {}), plus slab / bracketed.
-    # Source hashes must stay identical across the three Project wirings.
-    configs = {
-        "plain": {"*": plain()},
-        "slab": {"*foot*": slab(length=0.42, thickness=0.18)},
-        "bracketed": {"*foot*": bracketed(length=0.42, thickness=0.18)},
+    corner_exprs = {
+        "plain": '{"*": plain()}',
+        "slab": '{"*foot*": slab(length=0.42, thickness=0.18)}',
+        "bracketed": '{"*foot*": bracketed(length=0.42, thickness=0.18)}',
+        "empty": "{}",
     }
     names = ("syn.stem1", "syn.stem2", "syn.bar1")
 
     results: dict[str, dict[str, tuple[str, ...]]] = {}
-    for label, corners in configs.items():
-        project = Project(_system(), glyphs, corners=corners, ends={})
-        project.discover()
-        results[label] = {name: _kinds(project, name) for name in names}
+    for label, expr in corner_exprs.items():
+        root = tmp_path / label
+        root.mkdir()
+        # Share the same glyph sources via symlink/copy of files list paths —
+        # copytree glyphs so each project has its own glyphs/ with identical bytes.
+        import shutil
+        shutil.copytree(glyphs, root / "glyphs")
+        (root / "system.py").write_text(
+            "from typekernel.system import Overshoot, System, Zones\n"
+            "system = System(upm=1000, zones=Zones(base=0, x=500, cap=700, asc=750, desc=-200), "
+            "overshoot=Overshoot(round=12, pointed=10), stem={'lc': 80})\n",
+            encoding="utf-8",
+        )
+        (root / "project.py").write_text(
+            "from system import system\n"
+            "from typekernel.plugins.corners import bracketed, plain, slab\n"
+            "from typekernel.project import FamilyInfo, Project\n"
+            f"CORNERS = {expr}\n"
+            "PROJECT = Project(info=FamilyInfo(family='Litmus'), system=system, "
+            "glyphs='glyphs', corners=CORNERS, ends={})\n",
+            encoding="utf-8",
+        )
+        with open_project(root) as session:
+            results[label] = {
+                name: tuple(
+                    type(s).__name__ for s in session.evaluate(name).contours[0].segments
+                )
+                for name in names
+            }
 
     after = _hash_files(files)
     assert after == before, "glyph sources must not change when corner config changes"
 
     assert results["plain"]["syn.stem1"] != results["slab"]["syn.stem1"]
     assert results["slab"]["syn.stem1"] != results["bracketed"]["syn.stem1"]
-    # 槽位与填充协议: explicit plain() wiring ≡ unmatched empty map on segment kinds.
-    empty = Project(_system(), glyphs, corners={}, ends={})
-    empty.discover()
     for name in names:
-        assert results["plain"][name] == _kinds(empty, name)
-    for label in configs:
+        assert results["plain"][name] == results["empty"][name]
+    for label in ("plain", "slab", "bracketed"):
         for name in names:
             assert len(results[label][name]) >= 4

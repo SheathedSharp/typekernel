@@ -14,8 +14,10 @@ def check(ctx: CheckContext) -> None:
         return
     name = ctx.name
     base_sig = ctx.raw.signature()
+    if ctx.session is None:
+        return
     for master in project.masters:
-        other_raw = raw_drawing(project, name, master=master.name)
+        other_raw = raw_drawing(ctx.session, name, master=master.name)
         if other_raw.signature() != base_sig:
             ctx.findings.append(
                 Finding(

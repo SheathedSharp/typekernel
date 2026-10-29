@@ -17,10 +17,14 @@ from typekernel.axes.interpolatable import (
 )
 from typekernel.axes.masters import GlyphMasters
 from typekernel.axes.slant import ObliqueTransform
+from typekernel.axes.spec import Axis, Instance, MasterSpec
 from typekernel.axes.weight_delta import WeightDelta
 
 __all__ = [
+    "Axis",
     "GlyphMasters",
+    "Instance",
+    "MasterSpec",
     "ObliqueTransform",
     "WeightDelta",
     "check_drawing_interpolatable",

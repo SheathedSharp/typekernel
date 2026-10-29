@@ -31,7 +31,7 @@ Ensure this skill directory is available to the agent (Cursor skill mount or cop
 1. `tk new cold_trial --starter latin-sans` (pick any empty parent directory;
    **do not** mutate files under typekernel’s `starters/`).
 2. Write `brief.md` (your own brief is fine).
-3. Change only project `system.py` / `glyphs/` / `font.py` corners (record what
+3. Change only project `system.py` / `glyphs/` / `project.py` corners (record what
    you changed). Prefer `draw.construct` (`hook` / `tensioned_arc` / `spring` /
    `diagonal_band`) for hooks/arcs; use `optics.stem.measure_oriented_stem` /
    `diagonal_compensation` for diagonal optics (see `reference.md`).

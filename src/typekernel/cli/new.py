@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 
 __all__ = ["STARTERS", "create_project"]
 
-# Starter directory name under typekernel/starters/ → CLI --starter value.
 STARTERS: dict[str, str] = {
     "latin-sans": "latin_sans",
     "latin-humanist-italic": "latin_humanist_italic",
@@ -18,9 +18,9 @@ _BRIEF_MD = """\
 # Brief
 
 Write the face in prose. Typed intent (contrast / slant / openness / weight) lives
-in ``system.py`` as ``BRIEF`` / ``INTENT`` — see ``typekernel.system.intent`` and
-the font-design skill. ``tk audit`` warns when System drifts outside Intent bands;
-it does not score beauty (use ``tk proof``).
+on ``PROJECT.brief`` / ``system.py`` Intent helpers — see ``typekernel.system.intent``
+and the font-design skill. ``tk audit`` warns when System drifts outside Intent bands;
+it does not score beauty (use ``tk proof`` / ``tk see``).
 """
 
 _SYSTEM_PY = '''\
@@ -31,7 +31,6 @@ from __future__ import annotations
 from typekernel.system import Brief, Intent, Overshoot, System, Zones
 
 # Optional: typed intent checked by ``tk audit`` (see typekernel.system.intent).
-# Uncomment and keep System numbers inside the published bands.
 # BRIEF = Brief(
 #     prose="Describe the face; keep Intent fields honest.",
 #     intent=Intent(contrast="medium", slant="upright", openness="normal", weight="regular"),
@@ -44,31 +43,24 @@ system = System(
     overshoot=Overshoot(round=12, pointed=10),
     stem={"lc": 80, "lc_h": 70, "uc": 90},
 )
-
-masters = ()
-
-FAMILY_NAME = "{family_name}"
-STYLE_NAME = "Regular"
 '''
 
-_FONT_PY = '''\
-"""Wire System + glyphs/ into a Project."""
+_PROJECT_PY = '''\
+"""Project manifest — sole entry for typekernel loaders."""
 
 from __future__ import annotations
 
-from pathlib import Path
+from system import system
 
-from typekernel.project import Project
+from typekernel.project import FamilyInfo, Project
 
-from system import FAMILY_NAME, STYLE_NAME, masters, system
+__all__ = ["PROJECT"]
 
-ROOT = Path(__file__).resolve().parent
-
-__all__ = ["FAMILY_NAME", "STYLE_NAME", "ROOT", "get_project"]
-
-
-def get_project() -> Project:
-    return Project(system, ROOT / "glyphs", masters=masters)
+PROJECT = Project(
+    info=FamilyInfo(family="{family_name}"),
+    system=system,
+    glyphs="glyphs",
+)
 '''
 
 _GLYPH_README = '''\
@@ -95,7 +87,6 @@ One ``.py`` file per glyph. Example::
 
 
 def _starters_root() -> Path:
-    # typekernel/cli/new.py → typekernel/starters/
     return Path(__file__).resolve().parents[1] / "starters"
 
 
@@ -108,8 +99,8 @@ def create_project(
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
-    ``latin-sans``, ``latin-humanist-italic``, or ``latin-chancery`` to copy the matching starter
-    (system, elements, glyph set).
+    ``latin-sans``, ``latin-humanist-italic``, or ``latin-chancery`` to copy
+    the matching starter (system, elements, glyph set, project.py).
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
         raise ValueError(f"invalid project name: {name!r}")
@@ -129,12 +120,12 @@ def create_project(
         glyphs = root / "glyphs"
         glyphs.mkdir(parents=True)
         family = name.replace("_", " ").title()
-        (root / "system.py").write_text(
-            _SYSTEM_PY.replace("{family_name}", family),
+        (root / "system.py").write_text(_SYSTEM_PY, encoding="utf-8")
+        (root / "brief.md").write_text(_BRIEF_MD, encoding="utf-8")
+        (root / "project.py").write_text(
+            _PROJECT_PY.replace("{family_name}", family),
             encoding="utf-8",
         )
-        (root / "brief.md").write_text(_BRIEF_MD, encoding="utf-8")
-        (root / "font.py").write_text(_FONT_PY, encoding="utf-8")
         (glyphs / "README.md").write_text(_GLYPH_README, encoding="utf-8")
         return root
 
@@ -146,20 +137,35 @@ def create_project(
         root,
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
     )
-    # Stamp the project family name from the directory name.
+    family = name.replace("_", " ").title()
+    project_py = root / "project.py"
+    if project_py.is_file():
+        text = project_py.read_text(encoding="utf-8")
+        text, n = re.subn(
+            r"FamilyInfo\(family=FAMILY_NAME\)",
+            f'FamilyInfo(family="{family}")',
+            text,
+            count=1,
+        )
+        if not n:
+            text, n = re.subn(
+                r'FamilyInfo\(family="[^"]*"\)',
+                f'FamilyInfo(family="{family}")',
+                text,
+                count=1,
+            )
+        if n:
+            project_py.write_text(text, encoding="utf-8")
     system_py = root / "system.py"
     if system_py.is_file():
-        import re
-
-        text = system_py.read_text(encoding="utf-8")
-        family = name.replace("_", " ").title()
-        text, n = re.subn(
+        stext = system_py.read_text(encoding="utf-8")
+        stext, sn = re.subn(
             r'^FAMILY_NAME\s*=\s*"[^"]*"',
             f'FAMILY_NAME = "{family}"',
-            text,
+            stext,
             count=1,
             flags=re.MULTILINE,
         )
-        if n:
-            system_py.write_text(text, encoding="utf-8")
+        if sn:
+            system_py.write_text(stext, encoding="utf-8")
     return root

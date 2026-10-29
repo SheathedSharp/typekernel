@@ -183,10 +183,20 @@ def audit_project(
         project = session.project
         names = glyphs if glyphs is not None else sorted(session.specs())
         report = AuditReport(glyphs=len(names))
-        stem_kinds = load_audit_stems(root_path)
+        stem_kinds = {
+            str(k): tuple(v) for k, v in project.audit.stems.items()
+        }
+        if not stem_kinds:
+            # Transitional: still accept system.py AUDIT_STEMS until starters migrate fully.
+            stem_kinds = {
+                str(k): tuple(v) for k, v in load_audit_stems(root_path).items()
+            }
 
-        # Project-level intent check (once): prose Brief / typed Intent vs System.
-        intent = load_intent(root_path)
+        intent = None
+        if project.brief is not None:
+            intent = project.brief.intent
+        if intent is None:
+            intent = load_intent(root_path)
         if intent is not None:
             from typekernel.system.intent import check_intent
 
@@ -208,10 +218,13 @@ def audit_project(
                 check_overlap=check_overlap,
             )
         )
-        checks.extend(load_extra_checks(root_path))
+        if project.audit.extra_checks:
+            checks.extend(project.audit.extra_checks)
+        else:
+            checks.extend(load_extra_checks(root_path))
 
         for name in names:
-            raw = raw_drawing(project, name)
+            raw = raw_drawing(session, name)
             final = session.evaluate(name)
             resolved = {name: _kinds_for(name, stem_kinds)}
             ctx = CheckContext(
@@ -220,6 +233,7 @@ def audit_project(
                 final=final,
                 system=project.system,
                 project=project,
+                session=session,
                 stem_kinds=resolved,
                 declared_stems=stem_kinds,
                 findings=report.findings,

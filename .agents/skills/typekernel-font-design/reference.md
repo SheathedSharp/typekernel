@@ -157,14 +157,23 @@ def n(system: System):
 
 Master override: `@n.master("Bold")` on a second function of the same shape.
 
-## font.py
+## project.py
+
+Sole load entry. Export ``PROJECT`` (no ``font.get_project`` / module-level ``FAMILY_NAME``).
 
 ```python
+from typekernel.axes import MasterSpec
 from typekernel.plugins.corners import plain
-from typekernel.project import Project
+from typekernel.project import AuditConfig, FamilyInfo, Project
 
-def get_project() -> Project:
-    return Project(system, ROOT / "glyphs", masters=masters, corners={"*": plain()})
+PROJECT = Project(
+    info=FamilyInfo(family="My Face"),
+    system=system,
+    glyphs="glyphs",
+    masters=tuple(MasterSpec(m.name, {}, m.system) for m in masters),
+    corners={"*": plain()},
+    audit=AuditConfig(stems=AUDIT_STEMS),
+)
 ```
 
 ## spacing.py
@@ -178,7 +187,7 @@ so ink is packed to LSB and `advance = lsb + ink + rsb`.
 - `typekernel.plugins.ends` — `flat`, `angled`, `ball`, …
 - `typekernel.plugins.passes` — `overshoot`, `diagonal_comp`, `crotch_thin` (call from glyph code when needed; still not heal/blend/seal)
 - `typekernel.plugins.construct` — `skeleton_pen` (`broad_nib` / `expand_skeleton`)
-- `typekernel.plugins.checks` — `direction` / `stem` / `zone` / `compat` / `overlap`; append project rules via `EXTRA_CHECKS` in `system.py`
+- `typekernel.plugins.checks` — `direction` / `stem` / `zone` / `compat` / `overlap`; append project rules via `Project.audit.extra_checks` (legacy `EXTRA_CHECKS` in `system.py` is rejected)
 
 ## Proof strings (starter defaults)
 
