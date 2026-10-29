@@ -86,3 +86,4 @@ src/typekernel/starters/*/build/
 examples/*/out/**
 
 uploads/
+dogfood/**/build/

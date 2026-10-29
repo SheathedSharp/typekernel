@@ -35,3 +35,12 @@ vertical pen calibration. Reuse them instead of hand-rolling curls.
 - No heal / blend / seal.
 - No aperture / roundness mega-knobs.
 - Intent is not a glyph factory; letters stay in `glyphs/` + `elements.py`.
+
+## G-class / VF honesty (P5-4)
+
+Interpolation mid-masters must keep topology and avoid self-intersections
+under the slanted broad-nib expand. Several glyphs therefore use **intentional
+gap / shallow / bar constructions** (e.g. B/P/D as rails, S/s as three bars,
+bowl joins with ≥90 unit gaps, flourish tails replaced by gapped stubs). These
+are structural VF-safe skeletons, not calligraphic finals — visual approval is
+still required before treating shapes as house style.

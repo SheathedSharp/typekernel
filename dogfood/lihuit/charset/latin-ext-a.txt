@@ -1,0 +1,130 @@
+# Latin Extended-A
+
+U+0100  # Amacron  Ā
+U+0101  # amacron  ā
+U+0102  # Abreve  Ă
+U+0103  # abreve  ă
+U+0104  # Aogonek  Ą
+U+0105  # aogonek  ą
+U+0106  # Cacute  Ć
+U+0107  # cacute  ć
+U+0108  # Ccircumflex  Ĉ
+U+0109  # ccircumflex  ĉ
+U+010A  # Cdotaccent  Ċ
+U+010B  # cdotaccent  ċ
+U+010C  # Ccaron  Č
+U+010D  # ccaron  č
+U+010E  # Dcaron  Ď
+U+010F  # dcaron  ď
+U+0110  # Dcroat  Đ
+U+0111  # dcroat  đ
+U+0112  # Emacron  Ē
+U+0113  # emacron  ē
+U+0114  # Ebreve  Ĕ
+U+0115  # ebreve  ĕ
+U+0116  # Edotaccent  Ė
+U+0117  # edotaccent  ė
+U+0118  # Eogonek  Ę
+U+0119  # eogonek  ę
+U+011A  # Ecaron  Ě
+U+011B  # ecaron  ě
+U+011C  # Gcircumflex  Ĝ
+U+011D  # gcircumflex  ĝ
+U+011E  # Gbreve  Ğ
+U+011F  # gbreve  ğ
+U+0120  # Gdotaccent  Ġ
+U+0121  # gdotaccent  ġ
+U+0122  # Ģ
+U+0123  # ģ
+U+0124  # Hcircumflex  Ĥ
+U+0125  # hcircumflex  ĥ
+U+0126  # Hbar  Ħ
+U+0127  # hbar  ħ
+U+0128  # Itilde  Ĩ
+U+0129  # itilde  ĩ
+U+012A  # Imacron  Ī
+U+012B  # imacron  ī
+U+012C  # Ibreve  Ĭ
+U+012D  # ibreve  ĭ
+U+012E  # Iogonek  Į
+U+012F  # iogonek  į
+U+0130  # Idotaccent  İ
+U+0131  # dotlessi  ı
+U+0132  # IJ  Ĳ
+U+0133  # ij  ĳ
+U+0134  # Jcircumflex  Ĵ
+U+0135  # jcircumflex  ĵ
+U+0136  # Ķ
+U+0137  # ķ
+U+0138  # kgreenlandic  ĸ
+U+0139  # Lacute  Ĺ
+U+013A  # lacute  ĺ
+U+013B  # Ļ
+U+013C  # ļ
+U+013D  # Lcaron  Ľ
+U+013E  # lcaron  ľ
+U+013F  # Ldot  Ŀ
+U+0140  # ldot  ŀ
+U+0141  # Lslash  Ł
+U+0142  # lslash  ł
+U+0143  # Nacute  Ń
+U+0144  # nacute  ń
+U+0145  # Ņ
+U+0146  # ņ
+U+0147  # Ncaron  Ň
+U+0148  # ncaron  ň
+U+0149  # napostrophe  ŉ
+U+014A  # Eng  Ŋ
+U+014B  # eng  ŋ
+U+014C  # Omacron  Ō
+U+014D  # omacron  ō
+U+014E  # Obreve  Ŏ
+U+014F  # obreve  ŏ
+U+0150  # Ohungarumlaut  Ő
+U+0151  # ohungarumlaut  ő
+U+0152  # OE  Œ
+U+0153  # oe  œ
+U+0154  # Racute  Ŕ
+U+0155  # racute  ŕ
+U+0156  # Ŗ
+U+0157  # ŗ
+U+0158  # Rcaron  Ř
+U+0159  # rcaron  ř
+U+015A  # Sacute  Ś
+U+015B  # sacute  ś
+U+015C  # Scircumflex  Ŝ
+U+015D  # scircumflex  ŝ
+U+015E  # Scedilla  Ş
+U+015F  # scedilla  ş
+U+0160  # Scaron  Š
+U+0161  # scaron  š
+U+0162  # Ţ
+U+0163  # ţ
+U+0164  # Tcaron  Ť
+U+0165  # tcaron  ť
+U+0166  # Tbar  Ŧ
+U+0167  # tbar  ŧ
+U+0168  # Utilde  Ũ
+U+0169  # utilde  ũ
+U+016A  # Umacron  Ū
+U+016B  # umacron  ū
+U+016C  # Ubreve  Ŭ
+U+016D  # ubreve  ŭ
+U+016E  # Uring  Ů
+U+016F  # uring  ů
+U+0170  # Uhungarumlaut  Ű
+U+0171  # uhungarumlaut  ű
+U+0172  # Uogonek  Ų
+U+0173  # uogonek  ų
+U+0174  # Wcircumflex  Ŵ
+U+0175  # wcircumflex  ŵ
+U+0176  # Ycircumflex  Ŷ
+U+0177  # ycircumflex  ŷ
+U+0178  # Ydieresis  Ÿ
+U+0179  # Zacute  Ź
+U+017A  # zacute  ź
+U+017B  # Zdotaccent  Ż
+U+017C  # zdotaccent  ż
+U+017D  # Zcaron  Ž
+U+017E  # zcaron  ž
+U+017F  # longs  ſ

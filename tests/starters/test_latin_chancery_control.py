@@ -89,3 +89,14 @@ def test_space_advance_from_tokens() -> None:
 
     assert "space_stem_mul" in sys_.tokens
     assert "space_lsb_mul" in sys_.tokens
+
+
+def test_interpolation_g_class_clean() -> None:
+    """P5-4: InterpolationCheck stays at 0 for the full chancery charset."""
+    from typekernel.diagnose.checks.interpolation import InterpolationCheck
+    from typekernel.diagnose.engine import CheckContext
+
+    with open_project(STARTER) as session:
+        ctx = CheckContext(session=session, project=session.project, system=session.project.system)
+        findings = list(InterpolationCheck().run(ctx))
+        assert findings == [], [getattr(f, "glyph", None) for f in findings]
