@@ -6,6 +6,7 @@ whole letter. Projects assemble glyphs in ``elements.py`` / ``glyphs/``.
 
 from __future__ import annotations
 
+from typekernel.anatomy.curves import BarSpec, arch, bowl, bowl_join, open_bowl, spine
 from typekernel.anatomy.straight import crossbar, dot, drop, stem
 from typekernel.anatomy.tags import (
     ENDPOINTS,
@@ -25,12 +26,18 @@ __all__ = [
     "PARTS",
     "POSITIONS",
     "SIDES",
+    "BarSpec",
     "ParsedTag",
     "TagGrammarError",
+    "arch",
+    "bowl",
+    "bowl_join",
     "crossbar",
     "dot",
     "drop",
     "is_valid_tag",
+    "open_bowl",
     "parse_tag",
+    "spine",
     "stem",
 ]
