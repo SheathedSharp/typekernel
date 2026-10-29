@@ -108,6 +108,9 @@ def _cmd_proof(args: argparse.Namespace) -> int:
 def _cmd_audit(args: argparse.Namespace) -> int:
     from typekernel.cli.audit import audit_project, format_report
 
+    masters = None
+    if getattr(args, "masters", None):
+        masters = ["all"] if args.masters == "all" else [args.masters]
     report = audit_project(
         args.path,
         check_stem=not args.no_stem,
@@ -115,9 +118,15 @@ def _cmd_audit(args: argparse.Namespace) -> int:
         check_direction=not args.no_direction,
         check_compat=args.compat or not args.no_compat,
         check_overlap=bool(getattr(args, "overlap", False)),
+        masters=masters,
+        baseline=getattr(args, "baseline", None),
     )
-    print(format_report(report))
-    return 1 if report.errors else 0
+    print(format_report(report, as_json=bool(getattr(args, "json", False))))
+    if report.errors:
+        return 1
+    if getattr(args, "strict", False) and report.warnings:
+        return 1
+    return 0
 
 
 def _cmd_pen(args: argparse.Namespace) -> int:
@@ -295,6 +304,26 @@ def main(argv: list[str] | None = None) -> int:
         "--overlap",
         action="store_true",
         help="opt-in: warn when ink∩ink cancel adjoins a counter (cavity notch)",
+    )
+    p_audit.add_argument(
+        "--json",
+        action="store_true",
+        help="emit AuditReport JSON",
+    )
+    p_audit.add_argument(
+        "--masters",
+        default=None,
+        help="master name, or 'all' to audit every master",
+    )
+    p_audit.add_argument(
+        "--strict",
+        action="store_true",
+        help="treat warnings as failures (exit 1)",
+    )
+    p_audit.add_argument(
+        "--baseline",
+        default=None,
+        help="audit-baseline.json (default: <project>/audit-baseline.json if present)",
     )
     p_audit.set_defaults(func=_cmd_audit)
 
