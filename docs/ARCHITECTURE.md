@@ -669,5 +669,7 @@ class Project:
 | `marks/` 发现 + mark advance 0 | `ProjectSession`（trait `mark`）；槽位填充跳过 mark |
 | 锚点检查（A 类） | `diagnose.checks.anchors.AnchorsCheck` |
 | latin-sans 组合附加符 | `starters/latin_sans/marks/`（12 comb + `.case`）；基字 `zone_anchors` |
-| `compose` / charset / 特性 / VF | **未做**（P4-2…） |
+| `compose` / composites | **已落地**（`project.compose`；latin-sans ~147 composites） |
+| charset + `tk status` 区块覆盖率 | **已落地**（latin-1 / latin-ext-a；区块行） |
+| 特性 / kern / VF / FontBakery | **未做**（P4-3…） |
 

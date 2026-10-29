@@ -8,7 +8,13 @@ from typekernel.diagnose import audit_project
 from typekernel.project.session import ProjectSession
 from typekernel.review.records import is_stale, latest_pass
 
-__all__ = ["GroupStatus", "StatusBoard", "format_status", "status_board"]
+__all__ = [
+    "BlockCoverage",
+    "GroupStatus",
+    "StatusBoard",
+    "format_status",
+    "status_board",
+]
 
 
 @dataclass
@@ -23,13 +29,74 @@ class GroupStatus:
 
 
 @dataclass
+class BlockCoverage:
+    block: str
+    done: int
+    total: int
+
+
+@dataclass
 class StatusBoard:
     family: str
     charset_done: int
     charset_total: int
     masters: int
     groups: list[GroupStatus] = field(default_factory=list)
+    blocks: list[BlockCoverage] = field(default_factory=list)
     release_gate: str = ""
+
+
+_BLOCKS: tuple[tuple[str, int, int], ...] = (
+    ("Basic Latin", 0x0020, 0x007E),
+    ("Latin-1 Supplement", 0x00A0, 0x00FF),
+    ("Latin Extended-A", 0x0100, 0x017F),
+)
+
+
+def _covered_codepoints(session: ProjectSession) -> set[int]:
+    from typekernel.project.evaluate import unicodes_for_glyph_name
+
+    covered: set[int] = set()
+    for name, spec in session.specs().items():
+        if spec.unicodes is None:
+            covered.update(unicodes_for_glyph_name(name))
+        else:
+            covered.update(spec.unicodes)
+    for name, comp in session.project.composites.items():
+        if comp.unicodes is None:
+            covered.update(unicodes_for_glyph_name(name))
+        else:
+            covered.update(comp.unicodes)
+    return covered
+
+
+def _charset_totals(
+    session: ProjectSession,
+) -> tuple[int, int, list[BlockCoverage]]:
+    project = session.project
+    covered = _covered_codepoints(session)
+    if project.charset is None:
+        n = len(session.specs()) + len(project.composites)
+        return n, n, []
+    cps = project.charset.codepoints
+    extra = project.charset.extra_names
+    names_have = set(session.specs()) | set(project.composites)
+    extra_done = sum(1 for n in extra if n in names_have)
+    done = sum(1 for cp in cps if cp in covered) + extra_done
+    total = len(cps) + len(extra)
+    blocks: list[BlockCoverage] = []
+    for label, lo, hi in _BLOCKS:
+        block_cps = [cp for cp in cps if lo <= cp <= hi]
+        if not block_cps:
+            continue
+        blocks.append(
+            BlockCoverage(
+                block=label,
+                done=sum(1 for cp in block_cps if cp in covered),
+                total=len(block_cps),
+            )
+        )
+    return done, total, blocks
 
 
 def status_board(session: ProjectSession) -> StatusBoard:
@@ -106,12 +173,14 @@ def status_board(session: ProjectSession) -> StatusBoard:
     else:
         gate = "open"
 
+    charset_done, charset_total, blocks = _charset_totals(session)
     return StatusBoard(
         family=project.info.family,
-        charset_done=len(specs),
-        charset_total=len(specs),
+        charset_done=charset_done,
+        charset_total=charset_total,
         masters=len(project.masters),
         groups=group_rows,
+        blocks=blocks,
         release_gate=gate,
     )
 
@@ -122,8 +191,14 @@ def format_status(board: StatusBoard) -> str:
             f"{board.family}          charset {board.charset_done}/{board.charset_total}  "
             f"masters {board.masters}"
         ),
-        f"{'group':12} {'glyphs':8} {'err':3} {'wrn':3} {'review':18} masters",
     ]
+    if board.blocks:
+        lines.append("unicode blocks:")
+        for b in board.blocks:
+            lines.append(f"  {b.block:22} {b.done}/{b.total}")
+    lines.append(
+        f"{'group':12} {'glyphs':8} {'err':3} {'wrn':3} {'review':18} masters"
+    )
     for g in board.groups:
         lines.append(
             f"{g.group:12} {g.glyphs_done}/{g.glyphs_total:<6} "

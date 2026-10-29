@@ -262,6 +262,15 @@ class ProjectSession:
         font = Font.from_system(system, family, style_name)
         for name in self._specs:
             font.add_glyph(self.glyph(name, master=master), replace=True)
+        if project.composites:
+            from typekernel.project.compose import compose
+
+            base_map = {g.name: g for g in font}
+            for comp_name, spec in project.composites.items():
+                font.add_glyph(
+                    compose(spec, base_map, name=comp_name),
+                    replace=True,
+                )
         apply_project_spacing(font, project, self.root)
         return font
 
