@@ -30,3 +30,17 @@ def test_tk_check_release_writes_manifest(tmp_path: Path) -> None:
     assert manifest is not None and manifest.is_file()
     # H-class alone should pass; FontBakery skipped.
     assert code == 0
+
+
+def test_fontbakery_opentype_zero_fail(tmp_path: Path) -> None:
+    import importlib.util
+
+    if importlib.util.find_spec("fontbakery") is None:
+        pytest.skip("fontbakery not installed")
+    from typekernel.diagnose.release import check_release
+
+    root = Path(__file__).resolve().parents[2] / "src/typekernel/starters/latin_sans"
+    _font, built = build_project(root, out_dir=tmp_path, formats=("ttf",))
+    report = check_release(built.binaries["ttf"], fontbakery=True)
+    assert report.fontbakery is not None
+    assert report.fontbakery_fail_count == 0, report.fontbakery

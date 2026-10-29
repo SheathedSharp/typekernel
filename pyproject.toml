@@ -54,6 +54,9 @@ compile = [
   "ufo2ft>=2.33",
   "munkres>=1.1",
 ]
+release = [
+  "fontbakery>=1.0",
+]
 specimen = [
   # pillow is a hard dependency since the live renderer (perceive);
   # extra kept so existing ``pip install typekernel[specimen]`` still resolves.

@@ -167,58 +167,66 @@ def check_release_binary(path: str | Path) -> list[Finding]:
 
 
 def run_fontbakery_opentype(path: str | Path) -> dict | None:
-    """Run FontBakery opentype profile if installed; return summary counts or None."""
+    """Run FontBakery ``check-opentype`` if installed; return summary counts or None."""
     import importlib.util
     import subprocess
     import sys
+    import tempfile
 
     if importlib.util.find_spec("fontbakery") is None:
         return None
 
     binary = str(Path(path).resolve())
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "fontbakery",
-            "check-profile",
-            "opentype",
-            binary,
-            "--json",
-            "-",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
     counts: dict = {"FAIL": 0, "WARN": 0, "ERROR": 0, "SKIP": 0, "PASS": 0, "INFO": 0}
-    raw = proc.stdout.strip()
-    if raw:
-        try:
-            payload = json.loads(raw)
-            results = payload.get("results") or payload.get("checks") or []
-            if isinstance(results, dict):
-                for status, n in results.items():
+    with tempfile.TemporaryDirectory() as tmp:
+        json_path = Path(tmp) / "fontbakery.json"
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "fontbakery",
+                "check-opentype",
+                binary,
+                "--json",
+                str(json_path),
+                "-q",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if json_path.is_file():
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
+            result = payload.get("result")
+            if isinstance(result, dict):
+                for status, n in result.items():
                     key = str(status).upper()
                     if key in counts:
                         counts[key] = int(n)
-            elif isinstance(results, list):
-                for item in results:
-                    status = str(item.get("result") or item.get("status") or "").upper()
-                    if status in counts:
-                        counts[status] += 1
-        except json.JSONDecodeError:
-            for line in (proc.stdout + "\n" + proc.stderr).splitlines():
-                for key in list(counts):
-                    if line.strip().upper().startswith(key):
-                        for part in line.replace(":", " ").split():
-                            if part.isdigit():
-                                counts[key] = int(part)
-                                break
-    counts["returncode"] = proc.returncode
-    counts["available"] = True
+            for sec in payload.get("sections") or []:
+                for check in sec.get("checks") or []:
+                    st = check.get("result") or check.get("status")
+                    if isinstance(st, dict):
+                        st = st.get("result") or st.get("status")
+                    key = str(st or "").upper()
+                    if key in counts and not isinstance(result, dict):
+                        counts[key] += 1
+                    if key == "FAIL":
+                        counts.setdefault("fail_ids", [])
+                        cid = (
+                            check.get("key")
+                            or check.get("check_id")
+                            or check.get("description")
+                            or "unknown"
+                        )
+                        if isinstance(counts["fail_ids"], list):
+                            counts["fail_ids"].append(str(cid))
+        counts["returncode"] = proc.returncode
+        counts["available"] = True
+        if proc.returncode and not any(counts[k] for k in ("FAIL", "ERROR", "WARN", "PASS")):
+            # CLI failed before producing usable JSON — surface stderr briefly.
+            counts["stderr"] = (proc.stderr or proc.stdout or "")[-500:]
     return counts
-
 
 def check_release(path: str | Path, *, fontbakery: bool = True) -> ReleaseReport:
     """Run H-class checks (and optional FontBakery) on ``path``."""
