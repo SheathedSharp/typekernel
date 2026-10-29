@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from typekernel.cli.load import load_project
+from typekernel.project import open_project
 from typekernel.qa.outline_hash import glyph_hash
 
 __all__ = [
@@ -27,11 +27,10 @@ DEFAULT_SNAPSHOT_NAME = "glyph_hashes.json"
 
 def project_glyph_hashes(root: str | Path, *, master: str | None = None) -> dict[str, str]:
     """Evaluate every registered glyph and return ``{name: glyph_hash}``."""
-    project = load_project(root)
-    project.discover()
     out: dict[str, str] = {}
-    for name in sorted(project.specs()):
-        out[name] = glyph_hash(project.to_glyph(name, master=master))
+    with open_project(root) as session:
+        for name in sorted(session.specs()):
+            out[name] = glyph_hash(session.glyph(name, master=master))
     return out
 
 

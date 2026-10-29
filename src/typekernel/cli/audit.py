@@ -18,9 +18,9 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from typekernel.cli.load import load_project
 from typekernel.plugins.checks import builtin_checks
 from typekernel.plugins.checks.protocol import CheckContext, CheckFn, Finding, raw_drawing
+from typekernel.project import open_project
 from typekernel.system.intent import Intent
 
 __all__ = [
@@ -179,55 +179,55 @@ def audit_project(
     (:mod:`typekernel.system.intent`) — warnings only, not aesthetics AI.
     """
     root_path = Path(root).resolve()
-    project = load_project(root_path)
-    project.discover()
-    names = glyphs if glyphs is not None else sorted(project.specs())
-    report = AuditReport(glyphs=len(names))
-    stem_kinds = load_audit_stems(root_path)
+    with open_project(root_path) as session:
+        project = session.project
+        names = glyphs if glyphs is not None else sorted(session.specs())
+        report = AuditReport(glyphs=len(names))
+        stem_kinds = load_audit_stems(root_path)
 
-    # Project-level intent check (once): prose Brief / typed Intent vs System.
-    intent = load_intent(root_path)
-    if intent is not None:
-        from typekernel.system.intent import check_intent
+        # Project-level intent check (once): prose Brief / typed Intent vs System.
+        intent = load_intent(root_path)
+        if intent is not None:
+            from typekernel.system.intent import check_intent
 
-        for mismatch in check_intent(project.system, intent):
-            report.findings.append(
-                Finding(
-                    kind="intent",
-                    level=mismatch.level,
-                    glyph="*",
-                    message=f"{mismatch.field}: {mismatch.message}",
+            for mismatch in check_intent(project.system, intent):
+                report.findings.append(
+                    Finding(
+                        kind="intent",
+                        level=mismatch.level,
+                        glyph="*",
+                        message=f"{mismatch.field}: {mismatch.message}",
+                    )
                 )
+        checks = list(
+            builtin_checks(
+                check_stem=check_stem,
+                check_zone=check_zone,
+                check_direction=check_direction,
+                check_compat=check_compat,
+                check_overlap=check_overlap,
             )
-    checks = list(
-        builtin_checks(
-            check_stem=check_stem,
-            check_zone=check_zone,
-            check_direction=check_direction,
-            check_compat=check_compat,
-            check_overlap=check_overlap,
         )
-    )
-    checks.extend(load_extra_checks(root_path))
+        checks.extend(load_extra_checks(root_path))
 
-    for name in names:
-        raw = raw_drawing(project, name)
-        final = project.evaluate(name)
-        resolved = {name: _kinds_for(name, stem_kinds)}
-        ctx = CheckContext(
-            name=name,
-            raw=raw,
-            final=final,
-            system=project.system,
-            project=project,
-            stem_kinds=resolved,
-            declared_stems=stem_kinds,
-            findings=report.findings,
-        )
-        for fn in checks:
-            fn(ctx)
+        for name in names:
+            raw = raw_drawing(project, name)
+            final = session.evaluate(name)
+            resolved = {name: _kinds_for(name, stem_kinds)}
+            ctx = CheckContext(
+                name=name,
+                raw=raw,
+                final=final,
+                system=project.system,
+                project=project,
+                stem_kinds=resolved,
+                declared_stems=stem_kinds,
+                findings=report.findings,
+            )
+            for fn in checks:
+                fn(ctx)
 
-    return report
+        return report
 
 
 def format_report(report: AuditReport) -> str:

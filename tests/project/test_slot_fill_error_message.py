@@ -1,4 +1,4 @@
-"""Project.evaluate prefixes SlotFillError with glyph and slot tag."""
+"""Project.evaluate wraps slot failures as GlyphBuildError."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from typekernel.draw import CornerFill, Fragment, SlotFillError
+from typekernel.draw import CornerFill, Fragment
 from typekernel.geo.point import Point
 from typekernel.geo.segment import LineSegment
-from typekernel.project import Project
+from typekernel.project import GlyphBuildError, Project
 from typekernel.system import Overshoot, System, Zones
 
 
@@ -62,6 +62,7 @@ def syn_box(system):
         corners={"knee": bad_fill},
     )
     project.discover()
-    with pytest.raises(SlotFillError, match=r"glyph 'syn\.box' slot 'knee':") as ei:
+    with pytest.raises(GlyphBuildError, match=r"glyph 'syn\.box'.*slot 'knee'") as ei:
         project.evaluate("syn.box")
-    assert ei.value.slot_tag == "knee"
+    assert ei.value.tag == "knee"
+    assert ei.value.glyph == "syn.box"

@@ -1,4 +1,4 @@
-"""project — @glyph registry, directory discovery, master evaluation (Project / @glyph / Master)."""
+"""project — @glyph registry, Project, ProjectSession (ARCHITECTURE.md / target §3)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from types import MappingProxyType, ModuleType
 
 from typekernel.draw import CornerFiller, Drawing, EndFiller, SlotFillError, apply_slots
 from typekernel.font.glyph import Glyph
+from typekernel.project.errors import GlyphBuildError, MigrationError
 from typekernel.project.evaluate import (
     advance_from_drawing,
     drawing_to_glyph,
@@ -20,19 +21,29 @@ from typekernel.project.registry import (
     glyph,
     registration_target,
 )
+from typekernel.project.session import ProjectSession, open_project
 from typekernel.system import System
 
 __all__ = [
+    "GlyphBuildError",
     "GlyphSpec",
     "Master",
+    "MigrationError",
     "Project",
+    "ProjectSession",
     "glyph",
+    "open_project",
     "unicodes_for_glyph_name",
 ]
 
 
 class Project:
-    """Load ``@glyph`` modules, evaluate masters, and emit ``font.Glyph``."""
+    """Load ``@glyph`` modules, evaluate masters, and emit ``font.Glyph``.
+
+    Prefer :func:`open_project` / :class:`ProjectSession` for on-disk projects
+    (isolated imports). Constructing ``Project`` directly remains valid for
+    in-memory / unit-test use.
+    """
 
     def __init__(
         self,
@@ -63,35 +74,61 @@ class Project:
         return self._masters
 
     def discover(self) -> None:
-        """Import every ``*.py`` under ``glyphs`` and collect ``@glyph`` specs."""
+        """Import every ``*.py`` under ``glyphs`` and collect ``@glyph`` specs.
+
+        For on-disk multi-project work prefer :func:`open_project`, which
+        isolates ``system`` / ``elements`` / ``spacing`` via a meta-path finder.
+        This method still supports unit tests that build a temporary glyphs
+        tree without a full project root. When a sibling ``elements.py`` /
+        ``system.py`` exists, they are bound as bare names for the duration of
+        discovery so a stale ``sys.modules`` entry from another project cannot
+        win.
+        """
+        if self._discovered:
+            return
         root = self._glyphs.resolve()
         if not root.is_dir():
             raise FileNotFoundError(f"glyphs path is not a directory: {root}")
 
-        root_s = str(root)
-        if root_s not in sys.path:
-            sys.path.insert(0, root_s)
-        # Project root (parent of glyphs/) holds elements.py / system.py.
-        project_root = str(root.parent)
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-        for bare in ("elements", "system", "spacing"):
-            mod = sys.modules.get(bare)
-            if mod is None:
-                continue
-            mod_file = getattr(mod, "__file__", "") or ""
-            if not mod_file.startswith(project_root):
-                sys.modules.pop(bare, None)
-
-        collected: dict[str, GlyphSpec] = {}
-        with registration_target(collected):
-            for path in sorted(root.rglob("*.py")):
-                if "__pycache__" in path.parts:
+        project_root = root.parent
+        saved: dict[str, ModuleType | None] = {}
+        owned: list[str] = []
+        try:
+            for bare in ("system", "elements", "spacing", "font"):
+                path = project_root / f"{bare}.py"
+                if not path.is_file():
                     continue
-                _load_glyph_module(root, path)
+                saved[bare] = sys.modules.get(bare)
+                qual = f"_typekernel_discover_{abs(hash(str(project_root))) & 0xFFFFFFFF:x}.{bare}"
+                _ensure_parent_packages(qual)
+                source = path.read_text(encoding="utf-8")
+                code = compile(source, str(path), "exec")
+                module = ModuleType(qual)
+                module.__file__ = str(path)
+                module.__loader__ = None
+                module.__package__ = qual.rpartition(".")[0] or None
+                sys.modules[qual] = module
+                owned.append(qual)
+                exec(code, module.__dict__)  # noqa: S102 - project modules by design
+                sys.modules[bare] = module
 
-        self._specs = collected
-        self._discovered = True
+            collected: dict[str, GlyphSpec] = {}
+            with registration_target(collected):
+                for path in sorted(root.rglob("*.py")):
+                    if "__pycache__" in path.parts:
+                        continue
+                    _load_glyph_module(root, path)
+
+            self._specs = collected
+            self._discovered = True
+        finally:
+            for bare, prev in saved.items():
+                if prev is None:
+                    sys.modules.pop(bare, None)
+                else:
+                    sys.modules[bare] = prev
+            for qual in owned:
+                sys.modules.pop(qual, None)
 
     def specs(self) -> Mapping[str, GlyphSpec]:
         if not self._discovered:
@@ -115,22 +152,23 @@ class Project:
                 system = self._masters_by_name[master].system
             if master in spec.masters:
                 build = spec.masters[master]
-        drawing = build(system)
-        if self._corners is not None or self._ends is not None:
-            try:
-                drawing = apply_slots(
-                    drawing,
-                    system,
-                    self._corners or {},
-                    self._ends or {},
-                )
-            except SlotFillError as exc:
-                tag = exc.slot_tag or "?"
-                reason = str(exc)
-                raise SlotFillError(
-                    f"glyph '{name}' slot '{tag}': {reason}",
-                    slot_tag=tag,
-                ) from exc
+        try:
+            drawing = build(system)
+            if self._corners is not None or self._ends is not None:
+                try:
+                    drawing = apply_slots(
+                        drawing,
+                        system,
+                        self._corners or {},
+                        self._ends or {},
+                    )
+                except SlotFillError as exc:
+                    tag = exc.slot_tag or "?"
+                    raise GlyphBuildError(name, master, exc, tag=tag) from exc
+        except GlyphBuildError:
+            raise
+        except Exception as exc:
+            raise GlyphBuildError(name, master, exc) from exc
         return drawing
 
     def to_glyph(
@@ -140,13 +178,7 @@ class Project:
         master: str | None = None,
         advance: float | None = None,
     ) -> Glyph:
-        """``evaluate`` then wrap contours as ``font.Glyph``.
-
-        Advance resolution when ``advance`` is omitted: ``default_advance``,
-        else ``system.tokens['<name>_advance']``, else ``tokens['advance']``,
-        else bbox width of the drawing. Unicodes are derived from the glyph
-        name (AGL / single character) when available.
-        """
+        """``evaluate`` then wrap contours as ``font.Glyph``."""
         drawing = self.evaluate(name, master=master)
         if advance is None:
             advance = self._resolve_advance(drawing, name=name)
@@ -178,7 +210,6 @@ def _module_name(root: Path, path: Path) -> str:
 
 
 def _ensure_parent_packages(mod_name: str) -> None:
-    """Create missing parent package modules so dotted names are importable."""
     parts = mod_name.split(".")
     for i in range(1, len(parts)):
         parent = ".".join(parts[:i])
@@ -191,8 +222,6 @@ def _ensure_parent_packages(mod_name: str) -> None:
 def _load_glyph_module(root: Path, path: Path) -> ModuleType:
     name = _module_name(root, path)
     _ensure_parent_packages(name)
-    # Compile from current file bytes so same-second edits are not masked by
-    # SourceFileLoader / __pycache__ mtime races (needed for ``tk diff``).
     source = path.read_text(encoding="utf-8")
     code = compile(source, str(path), "exec")
     module = ModuleType(name)
@@ -200,7 +229,5 @@ def _load_glyph_module(root: Path, path: Path) -> ModuleType:
     module.__loader__ = None
     module.__package__ = name.rpartition(".")[0] or None
     sys.modules[name] = module
-    # Project glyph modules are user code loaded by design; this is not a
-    # sandbox boundary.
-    exec(code, module.__dict__)  # noqa: S102
+    exec(code, module.__dict__)  # noqa: S102 - project glyph modules by design
     return module

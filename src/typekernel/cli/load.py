@@ -1,87 +1,68 @@
-"""Load a user project directory into a :class:`~typekernel.project.Project`."""
+"""Load a user project directory via :class:`~typekernel.project.ProjectSession`."""
 
 from __future__ import annotations
 
-import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
+from typing import cast
 
 from typekernel.font.font import Font
-from typekernel.project import Project
+from typekernel.project import Project, ProjectSession, open_project
 from typekernel.system import System
 
-__all__ = ["apply_project_spacing", "apply_project_spacing_with_system", "build_font_from_project", "load_project"]
-
-def _purge_project_local_modules(project_root: Path | None = None) -> None:
-    """Drop bare ``system`` / ``elements`` / ``spacing`` so the next project root wins.
-
-    Starter ``font.py`` does ``from system import …``. Concurrent or sequential
-    tests that load different project roots would otherwise reuse the first
-    ``system`` module left on ``sys.modules``.
-
-    Also clears that root's ``__pycache__`` for those modules so same-second
-    edits are not masked by stale ``.pyc`` (needed for ``tk diff`` / in-process
-    rebuild loops).
-    """
-    import importlib
-
-    for bare in ("system", "elements", "spacing", "font"):
-        sys.modules.pop(bare, None)
-    importlib.invalidate_caches()
-    if project_root is None:
-        return
-    cache = Path(project_root) / "__pycache__"
-    if not cache.is_dir():
-        return
-    for bare in ("system", "elements", "spacing", "font"):
-        for pyc in cache.glob(f"{bare}.cpython-*.pyc"):
-            pyc.unlink(missing_ok=True)
-
+__all__ = [
+    "apply_project_spacing",
+    "apply_project_spacing_with_system",
+    "build_font_from_project",
+    "build_font_from_session",
+    "load_project",
+    "open_project",
+]
 
 
 def load_project(root: str | Path) -> Project:
-    """Import ``font.py`` from ``root`` and return its Project.
+    """Open ``root`` briefly and return its :class:`~typekernel.project.Project`.
 
-    ``font.py`` must define ``get_project() -> Project`` or a ``project``
-    attribute (instance or zero-arg callable).
+    Prefer :func:`open_project` / :class:`~typekernel.project.ProjectSession`
+    when evaluating glyphs — this helper exists for call sites that only need
+    the Project declaration. The session's isolation is used during the load
+    so ``system`` / ``elements`` from another project cannot leak in.
     """
-    root_path = Path(root).resolve()
-    font_py = root_path / "font.py"
-    if not font_py.is_file():
-        raise FileNotFoundError(f"no font.py in project root: {root_path}")
+    with open_project(root) as session:
+        project = session.project
+        # Detach a stable Project: specs already discovered; keep corners/ends.
+        # Callers that later call discover()/evaluate() use Project's own loader
+        # (unit-test path). CLI paths should keep the session open instead.
+        return cast(Project, project)
 
-    root_s = str(root_path)
-    if root_s not in sys.path:
-        sys.path.insert(0, root_s)
 
-    _purge_project_local_modules(root_path)
-
-    # Unique module name so multiple projects / reloads do not clash.
-    mod_name = f"_typekernel_user_font_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
-    spec = importlib.util.spec_from_file_location(mod_name, font_py)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load {font_py}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[mod_name] = module
-    spec.loader.exec_module(module)
-
-    if hasattr(module, "get_project"):
-        project = module.get_project()
-    elif hasattr(module, "project"):
-        project = module.project() if callable(module.project) else module.project
-    else:
-        raise AttributeError(f"{font_py} must define get_project() or project")
-    if not isinstance(project, Project):
-        raise TypeError(f"expected Project, got {type(project)!r}")
-    return project
+def build_font_from_session(
+    session: ProjectSession,
+    *,
+    family_name: str,
+    style_name: str = "Regular",
+    apply_spacing: bool = True,
+    master: str | None = None,
+) -> Font:
+    """Assemble a Font from an open session (isolated imports already active)."""
+    project = session.project
+    system = project.system
+    if master is not None:
+        by_name = {m.name: m for m in project.masters}
+        if master not in by_name:
+            raise KeyError(f"unknown master {master!r}")
+        system = by_name[master].system
+    font = Font.from_system(system, family_name, style_name)
+    for name in session.specs():
+        font.add_glyph(session.glyph(name, master=master), replace=True)
+    if apply_spacing:
+        apply_project_spacing_with_system(font, system, session.root)
+    return font
 
 
 def apply_project_spacing(font: Font, project: Project, project_root: Path) -> None:
-    """If ``project_root/spacing.py`` defines ``apply_spacing``, run it.
-
-    Starter / user spacing is project code (ARCHITECTURE.md「核心概念」) — not kernel
-    letter builders. Missing file is a no-op so empty scaffolds still build.
-    """
+    """If ``project_root/spacing.py`` defines ``apply_spacing``, run it."""
     apply_project_spacing_with_system(font, project.system, project_root)
 
 
@@ -96,13 +77,29 @@ def build_font_from_project(
 ) -> Font:
     """Discover glyphs and assemble a :class:`~typekernel.font.Font`.
 
-    When ``project_root`` is set (or inferred from ``project`` glyphs parent)
-    and ``apply_spacing`` is true, load optional ``spacing.py`` so advances /
-    LSB / RSB are metrics-key based rather than bbox-only.
-
-    ``master`` selects a Project master System (and per-glyph overrides) for
-    Light/Bold evaluation; default ``None`` uses the project's base system.
+    When ``project_root`` is set, prefer opening a :class:`ProjectSession` so
+    imports stay isolated. Falls back to ``project.discover()`` for in-memory
+    projects (no on-disk root).
     """
+    root = Path(project_root).resolve() if project_root is not None else None
+    if root is None:
+        # Infer from glyphs parent when it looks like a real project tree.
+        candidate = Path(project._glyphs).resolve().parent
+        if (candidate / "font.py").is_file() or (candidate / "project.py").is_file():
+            root = candidate
+
+    if root is not None and (
+        (root / "font.py").is_file() or (root / "project.py").is_file()
+    ):
+        with open_project(root) as session:
+            return build_font_from_session(
+                session,
+                family_name=family_name,
+                style_name=style_name,
+                apply_spacing=apply_spacing,
+                master=master,
+            )
+
     project.discover()
     system = project.system
     if master is not None:
@@ -113,32 +110,47 @@ def build_font_from_project(
     font = Font.from_system(system, family_name, style_name)
     for name in project.specs():
         font.add_glyph(project.to_glyph(name, master=master), replace=True)
-    if apply_spacing:
-        root = Path(project_root) if project_root is not None else Path(project._glyphs).resolve().parent
-        # Pack with the master's stem values so bearings track weight.
-        # Temporarily swap project.system view: apply_spacing takes system arg.
+    if apply_spacing and root is not None:
         apply_project_spacing_with_system(font, system, root)
     return font
 
 
 def apply_project_spacing_with_system(font: Font, system: System, project_root: Path) -> None:
-    """Like :func:`apply_project_spacing` but with an explicit System (masters)."""
-    spacing_py = project_root / "spacing.py"
+    """Like :func:`apply_project_spacing` but with an explicit System (masters).
+
+    Loads ``spacing.py`` under a unique module name. When a ProjectSession is
+    active for this root, the session alias already provides ``spacing``; we
+    still exec via a unique name so repeated calls see fresh source without
+    deleting ``__pycache__``.
+    """
+    spacing_py = Path(project_root) / "spacing.py"
     if not spacing_py.is_file():
         return
-    root_s = str(project_root.resolve())
-    if root_s not in sys.path:
-        sys.path.insert(0, root_s)
-    mod_name = f"_typekernel_user_spacing_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
-    spec = importlib.util.spec_from_file_location(mod_name, spacing_py)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load {spacing_py}")
-    module = sys.modules.get(mod_name)
-    if module is None:
-        module = importlib.util.module_from_spec(spec)
+    root_s = str(Path(project_root).resolve())
+    # Prefer the live session alias when present (isolated load).
+    apply_fn = None
+    bare = sys.modules.get("spacing")
+    if bare is not None:
+        bare_file = getattr(bare, "__file__", "") or ""
+        if bare_file and Path(bare_file).resolve().parent == Path(project_root).resolve():
+            apply_fn = getattr(bare, "apply_spacing", None)
+    if apply_fn is None:
+        mod_name = f"_typekernel_user_spacing_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
+        # Always re-exec from source so same-second edits are visible (no pyc race).
+        source = spacing_py.read_text(encoding="utf-8")
+        code = compile(source, str(spacing_py), "exec")
+        module = ModuleType_safe(mod_name, spacing_py)
         sys.modules[mod_name] = module
-    spec.loader.exec_module(module)
-    apply_fn = getattr(module, "apply_spacing", None)
+        exec(code, module.__dict__)  # noqa: S102 - project spacing by design
+        apply_fn = getattr(module, "apply_spacing", None)
     if apply_fn is None:
         return
     apply_fn(font, system)
+
+
+def ModuleType_safe(name: str, path: Path) -> ModuleType:
+    module = ModuleType(name)
+    module.__file__ = str(path)
+    module.__loader__ = None
+    module.__package__ = None
+    return module
