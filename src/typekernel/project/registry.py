@@ -1,19 +1,44 @@
-"""@glyph registration and discovery collector (ARCHITECTURE.md Project / @glyph / Master)."""
+"""@glyph registration and discovery collector (ARCHITECTURE.md / target §3.3)."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, TypeVar, cast
 
 from typekernel.draw import Drawing
-from typekernel.system import System
+from typekernel.project.manifest import ComponentRef, Expect
+from typekernel.system import System, validate_traits
 
-__all__ = ["GlyphFn", "GlyphSpec", "Master", "glyph", "registration_target"]
+__all__ = [
+    "GlyphDraft",
+    "GlyphFn",
+    "GlyphSpec",
+    "Master",
+    "glyph",
+    "registration_target",
+]
 
-GlyphFn = Callable[[System], Drawing]
+PointLike = tuple[float, float] | Any  # Point or (x, y)
+
+
+@dataclass(frozen=True, slots=True)
+class GlyphDraft:
+    """Builder return value: drawing plus optional anchors / components / note."""
+
+    drawing: Drawing
+    anchors: Mapping[str, PointLike] = field(default_factory=dict)
+    components: Sequence[ComponentRef] = ()
+    note: str = ""
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "anchors", MappingProxyType(dict(self.anchors)))
+        object.__setattr__(self, "components", tuple(self.components))
+
+
+GlyphFn = Callable[[System], Drawing | GlyphDraft]
 GlyphFnT = TypeVar("GlyphFnT", bound=GlyphFn)
 
 
@@ -33,9 +58,11 @@ class GlyphSpec:
     group: str
     build: GlyphFn
     masters: Mapping[str, GlyphFn]
+    unicodes: tuple[int, ...] | None = None  # None = derive; () = unencoded
+    traits: tuple[str, ...] = ()
+    expect: Expect | None = None
 
 
-# Stack of collect dicts; discover() pushes one so @glyph lands there.
 _targets: list[dict[str, GlyphSpec]] = []
 
 
@@ -56,22 +83,32 @@ def _current_target() -> dict[str, GlyphSpec] | None:
 def _put(spec: GlyphSpec) -> None:
     target = _current_target()
     if target is None:
-        # Import outside discover(): keep silent so accidental imports don't
-        # crash; discover() only reads its own target.
         return
-    # Last registration wins (reload-safe; master() refreshes the same entry).
     target[spec.name] = spec
 
 
-def glyph(name: str, *, group: str = "") -> Callable[[GlyphFnT], GlyphFnT]:
-    """Register a glyph builder. ``fn(system) -> Drawing``.
+def glyph(
+    name: str,
+    *,
+    unicodes: Sequence[int] | None = None,
+    group: str = "",
+    traits: Iterable[str] = (),
+    expect: Expect | None = None,
+) -> Callable[[GlyphFnT], GlyphFnT]:
+    """Register a glyph builder. ``fn(system) -> Drawing | GlyphDraft``.
 
-    Attach master overrides with ``@fn.master("Black")`` on a second function
-    of the same shape. Glyph ``name`` is a production name (may be a letter in
-    *projects*); kernel tests must still use synthetic names (架构守卫 rule 5).
+    ``unicodes=None`` derives from the glyph name (AGL / single character).
+    ``unicodes=()`` marks the glyph unencoded (not in cmap).
+    ``traits`` must be members of :data:`typekernel.system.TRAITS`.
     """
     if not name:
         raise ValueError("glyph name must be non-empty")
+    trait_tuple = validate_traits(traits)
+    uni_tuple: tuple[int, ...] | None
+    if unicodes is None:
+        uni_tuple = None
+    else:
+        uni_tuple = tuple(int(u) for u in unicodes)
 
     def decorator(fn: GlyphFnT) -> GlyphFnT:
         masters_mut: dict[str, GlyphFn] = {}
@@ -80,6 +117,9 @@ def glyph(name: str, *, group: str = "") -> Callable[[GlyphFnT], GlyphFnT]:
             group=group,
             build=fn,
             masters=MappingProxyType(masters_mut),
+            unicodes=uni_tuple,
+            traits=trait_tuple,
+            expect=expect,
         )
         _put(spec)
 
@@ -89,13 +129,15 @@ def glyph(name: str, *, group: str = "") -> Callable[[GlyphFnT], GlyphFnT]:
 
             def master_decorator(mfn: GlyphFnT) -> GlyphFnT:
                 masters_mut[master_name] = mfn
-                # Refresh the registry entry (proxy still views masters_mut).
                 _put(
                     GlyphSpec(
                         name=name,
                         group=group,
                         build=fn,
                         masters=MappingProxyType(masters_mut),
+                        unicodes=uni_tuple,
+                        traits=trait_tuple,
+                        expect=expect,
                     )
                 )
                 return mfn
@@ -106,6 +148,8 @@ def glyph(name: str, *, group: str = "") -> Callable[[GlyphFnT], GlyphFnT]:
         marked.master = master
         marked.__glyph_name__ = name
         marked.__glyph_group__ = group
+        marked.__glyph_unicodes__ = uni_tuple
+        marked.__glyph_traits__ = trait_tuple
         return cast(GlyphFnT, marked)
 
     return decorator

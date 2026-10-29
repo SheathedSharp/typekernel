@@ -27,7 +27,7 @@ def test_starter_discover_evaluate_to_glyph() -> None:
         assert {"n", "o", "H", "O"} <= set(session.specs())
         expected_uni = {ch: ord(ch) for ch in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"}
         for name, uni in expected_uni.items():
-            drawing = session.evaluate(name)
+            drawing = session.evaluate(name).drawing
             assert len(drawing.contours) >= 1
             glyph = session.glyph(name)
             assert glyph.unicodes == (uni,)

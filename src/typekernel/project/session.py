@@ -22,9 +22,13 @@ from typekernel.font.glyph import Glyph
 from typekernel.project.errors import GlyphBuildError, MigrationError
 from typekernel.project.evaluate import (
     advance_from_drawing,
+    anchors_from_draft,
+    components_from_draft,
     drawing_to_glyph,
+    unicodes_for_glyph_name,
 )
-from typekernel.project.registry import GlyphSpec, registration_target
+from typekernel.project.manifest import ComponentRef
+from typekernel.project.registry import GlyphDraft, GlyphSpec, registration_target
 from typekernel.system import System
 
 __all__ = [
@@ -151,14 +155,14 @@ class ProjectSession:
         *,
         master: str | None = None,
         slots: bool = True,
-    ) -> Drawing:
-        """Run the glyph builder (and optional slot fill); wrap failures."""
+    ) -> GlyphDraft:
+        """Run the glyph builder (and optional slot fill); return a GlyphDraft."""
         if name not in self._specs:
             raise KeyError(name)
         cache_key = (name, master, slots, self._dep_fingerprint)
         cached = self._eval_cache.get(cache_key)
         if cached is not None:
-            return cast(Drawing, cached)
+            return cast(GlyphDraft, cached)
 
         spec = self._specs[name]
         project = self.project
@@ -170,12 +174,18 @@ class ProjectSession:
                 system = masters_by_name[master].system
             if master in spec.masters:
                 build = spec.masters[master]
+        note = ""
+        anchors: dict[str, object] = {}
+        components: tuple[ComponentRef, ...] = ()
         try:
-            drawing = build(system)
-            # P1-3: Drawing | GlyphDraft — for now builders return Drawing.
-            if not isinstance(drawing, Drawing):
-                # Forward-compat: GlyphDraft.drawing (P1-3).
-                drawing = cast(Drawing, drawing.drawing)
+            result = build(system)
+            if isinstance(result, Drawing):
+                drawing = result
+            else:
+                drawing = result.drawing
+                anchors = dict(result.anchors)
+                components = tuple(result.components)
+                note = result.note
             if slots and (project.corners is not None or project.ends is not None):
                 try:
                     drawing = apply_slots(
@@ -193,14 +203,32 @@ class ProjectSession:
         except Exception as exc:
             raise GlyphBuildError(name, master, exc) from exc
 
-        self._eval_cache[cache_key] = drawing
-        return drawing
+        draft = GlyphDraft(
+            drawing=drawing,
+            anchors=anchors,
+            components=components,
+            note=note,
+        )
+        self._eval_cache[cache_key] = draft
+        return draft
 
     def glyph(self, name: str, *, master: str | None = None) -> Glyph:
-        """Evaluate then wrap as ``font.Glyph`` (advance via tokens until P1-4)."""
-        drawing = self.evaluate(name, master=master, slots=True)
-        advance = self._resolve_advance(drawing, name=name)
-        return drawing_to_glyph(name, drawing, advance=advance)
+        """Evaluate then wrap as ``font.Glyph`` (anchors/components/unicodes)."""
+        draft = self.evaluate(name, master=master, slots=True)
+        spec = self._specs[name]
+        advance = self._resolve_advance(draft.drawing, name=name)
+        if spec.unicodes is None:
+            unicodes = unicodes_for_glyph_name(name)
+        else:
+            unicodes = spec.unicodes
+        return drawing_to_glyph(
+            name,
+            draft.drawing,
+            advance=advance,
+            unicodes=unicodes,
+            anchors=anchors_from_draft(draft.anchors),
+            components=components_from_draft(tuple(draft.components)),
+        )
 
     def _resolve_advance(self, drawing: Drawing, *, name: str = "") -> float:
         """Token / bbox advance. Per-glyph ``*_advance`` removed in P1-4."""

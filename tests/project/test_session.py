@@ -55,17 +55,17 @@ def test_reload_sees_two_edits_within_one_second(tmp_path: Path) -> None:
     )
 
     with open_project(root) as session:
-        d0 = session.evaluate("syn.mark")
+        d0 = session.evaluate("syn.mark").drawing
         assert d0.contours[0].segments[0].points[1].x == pytest.approx(10.0)
 
         (root / "elements.py").write_text("MARKER = 2\n", encoding="utf-8")
         affected1 = session.reload()
         assert "syn.mark" in affected1
-        d1 = session.evaluate("syn.mark")
+        d1 = session.evaluate("syn.mark").drawing
         assert d1.contours[0].segments[0].points[1].x == pytest.approx(20.0)
 
         (root / "elements.py").write_text("MARKER = 3\n", encoding="utf-8")
         affected2 = session.reload()
         assert "syn.mark" in affected2
-        d2 = session.evaluate("syn.mark")
+        d2 = session.evaluate("syn.mark").drawing
         assert d2.contours[0].segments[0].points[1].x == pytest.approx(30.0)

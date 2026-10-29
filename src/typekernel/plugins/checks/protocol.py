@@ -59,4 +59,8 @@ def raw_drawing(
             system = by[master].system
         if master in spec.masters:
             build = spec.masters[master]
-    return build(system)
+    result = build(system)
+    from typekernel.project.registry import GlyphDraft
+    if isinstance(result, GlyphDraft):
+        return result.drawing
+    return result

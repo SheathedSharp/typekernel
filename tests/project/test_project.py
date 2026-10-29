@@ -180,8 +180,8 @@ def test_discover_collects_synthetic_specs(tmp_path: Path) -> None:
 def test_evaluate_default_and_master_override(tmp_path: Path) -> None:
     root = _write_minimal_project(tmp_path / "proj", stem=80.0, black_master=True)
     with open_project(root) as session:
-        d0 = session.evaluate("syn.arch")
-        d_black = session.evaluate("syn.arch", master="Black")
+        d0 = session.evaluate("syn.arch").drawing
+        d_black = session.evaluate("syn.arch", master="Black").drawing
         assert d0.contours[0].segments[0].points[1].x == pytest.approx(100.0 + 8.0)
         xs = [p.x for seg in d_black.contours[0].segments for p in seg.points]
         assert max(xs) == pytest.approx(200.0)
@@ -190,8 +190,8 @@ def test_evaluate_default_and_master_override(tmp_path: Path) -> None:
 def test_evaluate_applies_slots_when_configured(tmp_path: Path) -> None:
     root = _write_minimal_project(tmp_path / "proj", corners=True)
     with open_project(root) as session:
-        before = session.evaluate("syn.arch", slots=False)
-        after = session.evaluate("syn.arch", slots=True)
+        before = session.evaluate("syn.arch", slots=False).drawing
+        after = session.evaluate("syn.arch", slots=True).drawing
         assert any(s.tag == "ne" for s in before.slots)
         assert all(s.tag != "ne" for s in after.slots)
         assert len(after.contours[0].segments) > len(before.contours[0].segments)

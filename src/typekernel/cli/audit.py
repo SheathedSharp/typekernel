@@ -225,7 +225,7 @@ def audit_project(
 
         for name in names:
             raw = raw_drawing(session, name)
-            final = session.evaluate(name)
+            final = session.evaluate(name).drawing
             resolved = {name: _kinds_for(name, stem_kinds)}
             ctx = CheckContext(
                 name=name,

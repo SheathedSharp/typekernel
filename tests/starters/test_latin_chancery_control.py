@@ -52,7 +52,7 @@ def test_discover_evaluate_control_set() -> None:
     with open_project(STARTER) as session:
         assert {"n", "o", "H", "O", "h", "i"} <= set(session.specs())
         for name in ("n", "o", "H", "O", "h", "i"):
-            drawing = session.evaluate(name)
+            drawing = session.evaluate(name).drawing
             assert len(drawing.contours) >= 1
             assert drawing.roles[0] == "ink"
 
@@ -61,11 +61,11 @@ def test_discover_evaluate_control_set() -> None:
 def test_pen_dot_is_solid_not_a_ring() -> None:
     """A stroked closed circle would be ink+counter; a period must be one ink."""
     with open_project(STARTER) as session:
-        period = session.evaluate("period")
+        period = session.evaluate("period").drawing
         assert len(period.contours) == 1
         assert period.roles == ("ink",)
 
-        tittle = session.evaluate("i")
+        tittle = session.evaluate("i").drawing
         assert "counter" not in tittle.roles
 
 

@@ -46,15 +46,15 @@ def test_discover_evaluate_control_set() -> None:
     with open_project(STARTER) as session:
         assert {"n", "o", "H", "O"} <= set(session.specs())
         for name in ("n", "o", "H", "O"):
-            drawing = session.evaluate(name)
+            drawing = session.evaluate(name).drawing
             assert len(drawing.contours) >= 1
             assert drawing.roles[0] == "ink"
             glyph = session.glyph(name)
             assert glyph.unicodes == (ord(name),)
             assert glyph.advance > 0
-        o = session.evaluate("o")
+        o = session.evaluate("o").drawing
         assert "counter" in o.roles
-        O = session.evaluate("O")
+        O = session.evaluate("O").drawing
         assert "counter" in O.roles
 
 
@@ -92,7 +92,7 @@ def test_proof_control_png(tmp_path: Path) -> None:
 def test_n_group_glyphs_evaluate() -> None:
     with open_project(STARTER) as session:
         for name in ("h", "m", "u", "i", "l"):
-            drawing = session.evaluate(name)
+            drawing = session.evaluate(name).drawing
             assert len(drawing.contours) >= 1
             assert drawing.roles[0] == "ink"
             assert session.glyph(name).advance > 0
@@ -101,7 +101,7 @@ def test_n_group_glyphs_evaluate() -> None:
 def test_o_group_glyphs_evaluate() -> None:
     with open_project(STARTER) as session:
         for name in ("a", "b", "d", "e", "p", "q"):
-            drawing = session.evaluate(name)
+            drawing = session.evaluate(name).drawing
             assert len(drawing.contours) >= 2  # stem ink + bowl (+counter)
             assert "ink" in drawing.roles
             assert session.glyph(name).advance > 0
@@ -121,9 +121,9 @@ def test_masters_signature_compatible() -> None:
         names = sorted(session.specs())
         for name in names:
             sigs = [
-                session.evaluate(name).signature(),
-                session.evaluate(name, master="Light").signature(),
-                session.evaluate(name, master="Bold").signature(),
+                session.evaluate(name).drawing.signature(),
+                session.evaluate(name, master="Light").drawing.signature(),
+                session.evaluate(name, master="Bold").drawing.signature(),
             ]
             assert sigs[0] == sigs[1] == sigs[2], name
 

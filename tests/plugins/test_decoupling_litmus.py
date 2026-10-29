@@ -172,7 +172,7 @@ def test_three_corner_configs_leave_glyph_sources_unchanged(tmp_path: Path) -> N
         with open_project(root) as session:
             results[label] = {
                 name: tuple(
-                    type(s).__name__ for s in session.evaluate(name).contours[0].segments
+                    type(s).__name__ for s in session.evaluate(name).drawing.contours[0].segments
                 )
                 for name in names
             }

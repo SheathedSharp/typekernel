@@ -17,7 +17,7 @@ from typekernel.project.manifest import (
     ProofConfig,
     ReviewPolicy,
 )
-from typekernel.project.registry import GlyphSpec, Master, glyph
+from typekernel.project.registry import GlyphDraft, GlyphSpec, Master, glyph
 from typekernel.project.session import ProjectSession, open_project
 
 __all__ = [
@@ -28,6 +28,7 @@ __all__ = [
     "Expect",
     "FamilyInfo",
     "GlyphBuildError",
+    "GlyphDraft",
     "GlyphSpec",
     "Master",
     "MasterSpec",
