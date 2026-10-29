@@ -67,6 +67,20 @@ most reviews:
 
 `tests/architecture/test_boundaries.py` enforces the first rule in CI.
 
+
+## 当前阶段（冻结令）
+
+Until the **P2 exit** (see maintainer roadmap / target architecture — eyes &
+judgment: `tk see` / `explain` / `status` / `review` and diagnosis v2), do **not**
+add:
+
+- new starters
+- new style plugins (corners / ends / passes / construct families beyond fixes)
+- new CLI subcommands (except P2’s own `see` / `explain` / `status` / `review`)
+
+Bug fixes, docs honesty, and the P0–P2 tasks themselves are allowed. Remove this
+section when P2 exits.
+
 ## Human review gates
 
 Some changes (public API surfaces, optical corrections, visual voice) are
