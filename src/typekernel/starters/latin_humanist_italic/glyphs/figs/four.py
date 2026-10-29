@@ -1,4 +1,4 @@
-"""Figure 4 — open triangle + stem (skeleton+pen)."""
+"""Figure 4 — open triangle: diagonal + crossbar + stem (P5-2; closes A-14)."""
 
 from __future__ import annotations
 
@@ -14,11 +14,17 @@ def four(system: System):
     width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0))
     h = float(system.zones.cap) * 0.72
-    x_stem = lsb + width * 0.68
+    x_stem = lsb + width * 0.72
+    y_bar = h * 0.38
     stem = stroke(system, [(x_stem, 0.0), (x_stem, h)], thickness=st)
-    arm = stroke(
+    cross = stroke(
         system,
-        [(lsb + width * 0.12, h * 0.42), (x_stem + st * 0.2, h * 0.42), (lsb + width * 0.35, h)],
+        [(lsb + width * 0.08, y_bar), (x_stem + st * 0.35, y_bar)],
         thickness=st,
     )
-    return stem + arm
+    diag = stroke(
+        system,
+        [(lsb + width * 0.12, h), (x_stem, y_bar)],
+        thickness=st,
+    )
+    return stem + cross + diag

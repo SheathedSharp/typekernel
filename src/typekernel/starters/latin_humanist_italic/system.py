@@ -94,16 +94,37 @@ BRIEF = Brief(
 INTENT = BRIEF.intent  # alias for agents / EXTRA tooling
 
 
-def _weight_system(base: System, stem_scale: float) -> System:
-    """Scale stem thicknesses; skeleton topology must stay master-compatible."""
+def _designed_master(
+    base: System,
+    *,
+    stem_scale: float,
+    width_scale: float,
+    aperture_delta: float = 0.0,
+) -> System:
+    """Designed weight master — stem + control widths (P5-2 / P3-9 style)."""
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
-    return base.tuned(stem=stem)
+    tokens = dict(base.tokens)
+    for key in ("n_width", "m_width", "o_width", "H_width", "O_width", "fig_width"):
+        if key in tokens:
+            tokens[key] = float(tokens[key]) * width_scale
+    # Keep pen angle stable; slight contrast nudge with weight.
+    contrast = float(tokens.get("pen_contrast", 0.52))
+    tokens["pen_contrast"] = max(0.35, min(0.75, contrast + (stem_scale - 1.0) * 0.04))
+    if "bowl_aperture" in tokens:
+        tokens["bowl_aperture"] = float(tokens["bowl_aperture"]) + aperture_delta
+    return base.tuned(stem=stem, tokens=tokens)
 
 
 # Project evaluation masters (Regular is the default ``system``).
 masters: tuple[Master, ...] = (
-    Master("Light", _weight_system(system, 0.62)),
-    Master("Bold", _weight_system(system, 1.38)),
+    Master(
+        "Light",
+        _designed_master(system, stem_scale=0.62, width_scale=1.04, aperture_delta=0.03),
+    ),
+    Master(
+        "Bold",
+        _designed_master(system, stem_scale=1.38, width_scale=0.96, aperture_delta=-0.03),
+    ),
 )
 
 # Designspace locations for ``tk build --variable`` (wght user coords).
