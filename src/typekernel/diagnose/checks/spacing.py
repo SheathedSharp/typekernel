@@ -21,6 +21,11 @@ class SpacingCheck:
         out: list[Finding] = []
         if ctx.name is None or ctx.final is None:
             return out
+        spec = ctx.session.specs().get(ctx.name)
+        traits = set(spec.traits) if spec is not None else set()
+        # Combining marks are zero-advance; ink around the attachment point is expected.
+        if "mark" in traits:
+            return out
         g = ctx.session.glyph(ctx.name, master=ctx.master)
         try:
             bx0, _by0, bx1, _by1 = bounds(g.outline)

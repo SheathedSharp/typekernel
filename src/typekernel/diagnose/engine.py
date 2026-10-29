@@ -150,6 +150,7 @@ def _builtin_v2(
     check_gray: bool = True,
     check_interpolation: bool = True,
 ) -> list[Check]:
+    from typekernel.diagnose.checks.anchors import AnchorsCheck
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
     from typekernel.diagnose.checks.spacing import (
@@ -185,7 +186,8 @@ def _builtin_v2(
         out.append(GrayCheck())
     if check_interpolation:
         out.append(InterpolationCheck())
-    # Tag grammar is always on (info); cheap and letter-free.
+    # Anchors (A-class) + tag grammar always on; letter-free / data-driven.
+    out.append(AnchorsCheck())
     out.append(TagsGrammarCheck())
     return out
 

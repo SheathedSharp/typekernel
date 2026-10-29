@@ -1,4 +1,3 @@
-\
 """ProjectSession — isolated project loading (target-architecture §3.5)."""
 
 from __future__ import annotations
@@ -186,7 +185,13 @@ class ProjectSession:
                 anchors = dict(result.anchors)
                 components = tuple(result.components)
                 note = result.note
-            if slots and (project.corners is not None or project.ends is not None):
+            # Combining marks sit on anchors; corner/end fillers are for base letters.
+            skip_slots = "mark" in spec.traits or "spacing-mark" in spec.traits
+            if (
+                slots
+                and not skip_slots
+                and (project.corners is not None or project.ends is not None)
+            ):
                 try:
                     drawing = apply_slots(
                         drawing,
@@ -216,7 +221,10 @@ class ProjectSession:
         """Evaluate then wrap as ``font.Glyph`` (anchors/components/unicodes)."""
         draft = self.evaluate(name, master=master, slots=True)
         spec = self._specs[name]
-        advance = self._resolve_advance(draft.drawing, name=name)
+        if "mark" in spec.traits and "spacing-mark" not in spec.traits:
+            advance = 0.0
+        else:
+            advance = self._resolve_advance(draft.drawing, name=name)
         if spec.unicodes is None:
             unicodes = unicodes_for_glyph_name(name)
         else:
@@ -269,20 +277,29 @@ class ProjectSession:
                 changed_bares.add(bare)
                 self._fingerprints[bare] = fp
 
-        # Glyph file changes.
-        _gp = Path(self.project.glyphs)
-        glyphs_root = (_gp if _gp.is_absolute() else self.root / _gp).resolve()
+        # Glyph / mark file changes.
         changed_glyph_rels: set[str] = set()
-        for path in sorted(glyphs_root.rglob("*.py")):
-            if "__pycache__" in path.parts:
-                continue
-            rel = path.relative_to(glyphs_root).as_posix()
-            key = f"glyphs:{rel}"
-            fp = _fingerprint(path)
-            prev = self._fingerprints.get(key)
-            if prev is None or fp != prev:
-                changed_glyph_rels.add(rel)
-                self._fingerprints[key] = fp
+
+        def _scan_changes(label: str, path_value: str | Path | None) -> None:
+            if path_value is None:
+                return
+            _p = Path(path_value)
+            tree = (_p if _p.is_absolute() else self.root / _p).resolve()
+            if not tree.is_dir():
+                return
+            for path in sorted(tree.rglob("*.py")):
+                if "__pycache__" in path.parts:
+                    continue
+                rel = path.relative_to(tree).as_posix()
+                key = f"{label}:{rel}"
+                fp = _fingerprint(path)
+                prev = self._fingerprints.get(key)
+                if prev is None or fp != prev:
+                    changed_glyph_rels.add(f"{label}:{rel}")
+                    self._fingerprints[key] = fp
+
+        _scan_changes("glyphs", self.project.glyphs)
+        _scan_changes("marks", self.project.marks)
 
         if not changed_bares and not changed_glyph_rels:
             return set()
@@ -492,29 +509,53 @@ class ProjectSession:
 
     def _discover_glyphs(self) -> None:
         project = self.project
-        glyphs_path = Path(project.glyphs)
-        root = glyphs_path if glyphs_path.is_absolute() else (self.root / glyphs_path)
-        root = root.resolve()
-        if not root.is_dir():
-            raise FileNotFoundError(f"glyphs path is not a directory: {root}")
         collected: dict[str, GlyphSpec] = {}
         with registration_target(collected):
-            for path in sorted(root.rglob("*.py")):
-                if "__pycache__" in path.parts:
-                    continue
-                rel = path.relative_to(root)
-                self._load_glyph_module(root, path, rel)
-                key = f"glyphs:{rel.as_posix()}"
-                self._fingerprints[key] = _fingerprint(path)
+            self._scan_glyph_tree(
+                collected, label="glyphs", path_value=project.glyphs, required=True
+            )
+            if project.marks is not None:
+                self._scan_glyph_tree(
+                    collected, label="marks", path_value=project.marks, required=False
+                )
         self._specs = collected
 
-    def _load_glyph_module(self, root: Path, path: Path, rel: Path) -> ModuleType:
+    def _scan_glyph_tree(
+        self,
+        collected: dict[str, GlyphSpec],
+        *,
+        label: str,
+        path_value: str | Path,
+        required: bool,
+    ) -> None:
+        path = Path(path_value)
+        root = path if path.is_absolute() else (self.root / path)
+        root = root.resolve()
+        if not root.is_dir():
+            if required:
+                raise FileNotFoundError(f"{label} path is not a directory: {root}")
+            return
+        # Drop prior fingerprints for this tree so removed files do not linger.
+        prefix = f"{label}:"
+        for key in [k for k in self._fingerprints if k.startswith(prefix)]:
+            del self._fingerprints[key]
+        for path in sorted(root.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            rel = path.relative_to(root)
+            self._load_glyph_module(root, path, rel, ns_leaf=label)
+            key = f"{label}:{rel.as_posix()}"
+            self._fingerprints[key] = _fingerprint(path)
+
+    def _load_glyph_module(
+        self, root: Path, path: Path, rel: Path, *, ns_leaf: str = "glyphs"
+    ) -> ModuleType:
         if path.name == "__init__.py":
             parts = rel.parent.parts
             suffix = ".".join(parts) if parts else "_root"
         else:
             suffix = ".".join(rel.with_suffix("").parts)
-        qualname = f"{self._ns}.glyphs.{suffix}"
+        qualname = f"{self._ns}.{ns_leaf}.{suffix}"
         _ensure_parent_packages(qualname)
         source = path.read_text(encoding="utf-8")
         code = compile(source, str(path), "exec")
