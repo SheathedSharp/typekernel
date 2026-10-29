@@ -15,6 +15,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, Literal
 
+from typekernel.axes.spec import Axis, Instance
 from typekernel.font.font import Font
 from typekernel.font.masters import AXIS_NAMES, Master, axis_ranges, check_masters
 
@@ -254,6 +255,8 @@ class VariableFontBuild:
 
     ``warnings`` lists fontTools interpolation findings that do not stop a
     build (kinks, under/overweight midpoints) for a designer to review.
+    ``static_instances`` holds binaries cut via ``varLib.instancer`` when
+    ``instances`` were supplied to the build.
     """
 
     designspace: Path
@@ -261,6 +264,7 @@ class VariableFontBuild:
     binaries: dict[str, Path]
     manifests: dict[str, BuildManifest]
     warnings: tuple[str, ...] = ()
+    static_instances: tuple[Path, ...] = ()
 
 
 STRUCTURAL_PROBLEMS = frozenset(
@@ -304,16 +308,24 @@ def deep_check_masters(
 
 
 def write_masters_designspace(
-    masters: Sequence[Master], out_dir: str | Path, *, file_stem: str | None = None
+    masters: Sequence[Master],
+    out_dir: str | Path,
+    *,
+    file_stem: str | None = None,
+    axes: Sequence[Axis] | None = None,
+    instances: Sequence[Instance] | None = None,
 ) -> tuple[Path, tuple[Path, ...]]:
     """Write each master as a UFO plus a ``.designspace`` tying them together.
 
-    Axes span the masters' locations with the first master as the default.
-    Every master also becomes a named instance (``fvar``). Raises
-    ``ValueError`` if :func:`~typekernel.font.check_masters` reports problems.
+    When ``axes`` is omitted, ranges span the masters' locations with the first
+    master as the default. When provided, axis min/default/max, maps, and STAT
+    labels come from :class:`~typekernel.axes.spec.Axis`. Named instances come
+    from ``instances`` when given, otherwise each master becomes an instance.
+    Raises ``ValueError`` if :func:`~typekernel.font.check_masters` reports problems.
     """
     from fontTools.designspaceLib import (
         AxisDescriptor,
+        AxisLabelDescriptor,
         DesignSpaceDocument,
         InstanceDescriptor,
         SourceDescriptor,
@@ -329,13 +341,39 @@ def write_masters_designspace(
     family = masters[0].font
     stem = file_stem or _file_stem(family).rsplit("-", 1)[0]
     doc = DesignSpaceDocument()
-    names = {tag: AXIS_NAMES.get(tag, tag) for tag in masters[0].location}
-    for tag, (lo, default, hi) in axis_ranges(masters).items():
-        axis = AxisDescriptor()
-        axis.tag, axis.name = tag, names[tag]
-        axis.minimum, axis.default, axis.maximum = lo, default, hi
-        axis.labelNames = {"en": names[tag]}
-        doc.addAxis(axis)
+    master_tags = list(masters[0].location)
+    names = {tag: AXIS_NAMES.get(tag, tag) for tag in master_tags}
+    if axes:
+        for ax in axes:
+            names[ax.tag] = ax.name
+            axis = AxisDescriptor()
+            axis.tag, axis.name = ax.tag, ax.name
+            axis.minimum, axis.default, axis.maximum = (
+                float(ax.minimum),
+                float(ax.default),
+                float(ax.maximum),
+            )
+            axis.labelNames = {"en": ax.name}
+            if ax.map:
+                axis.map = [(float(u), float(d)) for u, d in ax.map]
+            if ax.labels:
+                axis.axisLabels = [
+                    AxisLabelDescriptor(
+                        name=label,
+                        userValue=float(coord),
+                        elidable=float(coord) == float(ax.default),
+                        labelNames={"en": label},
+                    )
+                    for coord, label in sorted(ax.labels.items(), key=lambda kv: kv[0])
+                ]
+            doc.addAxis(axis)
+    else:
+        for tag, (lo, default, hi) in axis_ranges(masters).items():
+            axis = AxisDescriptor()
+            axis.tag, axis.name = tag, names[tag]
+            axis.minimum, axis.default, axis.maximum = lo, default, hi
+            axis.labelNames = {"en": names[tag]}
+            doc.addAxis(axis)
 
     ufo_paths: list[Path] = []
     for m in masters:
@@ -350,13 +388,27 @@ def write_masters_designspace(
         source.location = {names[tag]: v for tag, v in m.location.items()}
         doc.addSource(source)
 
-    tags = list(masters[0].location)
-    for m in sorted(masters, key=lambda m: [m.location[t] for t in tags]):
-        instance = InstanceDescriptor()
-        instance.familyName = family.info.family_name
-        instance.styleName = m.style_name
-        instance.location = {names[tag]: v for tag, v in m.location.items()}
-        doc.addInstance(instance)
+    if instances:
+        for inst in instances:
+            instance = InstanceDescriptor()
+            instance.familyName = family.info.family_name
+            instance.styleName = inst.name
+            instance.location = {
+                names.get(tag, AXIS_NAMES.get(tag, tag)): float(val)
+                for tag, val in inst.location.items()
+            }
+            if inst.style_map is not None:
+                instance.styleMapFamilyName = inst.style_map[0]
+                instance.styleMapStyleName = inst.style_map[1]
+            doc.addInstance(instance)
+    else:
+        tags = list(masters[0].location)
+        for m in sorted(masters, key=lambda m: [m.location[t] for t in tags]):
+            instance = InstanceDescriptor()
+            instance.familyName = family.info.family_name
+            instance.styleName = m.style_name
+            instance.location = {names[tag]: v for tag, v in m.location.items()}
+            doc.addInstance(instance)
 
     path = out / f"{stem}.designspace"
     out.mkdir(parents=True, exist_ok=True)
@@ -370,6 +422,8 @@ def build_variable_font(
     *,
     formats: Sequence[OutputFormat] = ("ttf",),
     file_stem: str | None = None,
+    axes: Sequence[Axis] | None = None,
+    instances: Sequence[Instance] | None = None,
 ) -> VariableFontBuild:
     """Check, write UFO masters + designspace, then compile a variable font.
 
@@ -389,7 +443,9 @@ def build_variable_font(
     from fontTools.designspaceLib import DesignSpaceDocument
 
     out = Path(out_dir)
-    ds_path, ufo_paths = write_masters_designspace(masters, out, file_stem=file_stem)
+    ds_path, ufo_paths = write_masters_designspace(
+        masters, out, file_stem=file_stem, axes=axes, instances=instances
+    )
     errors, warnings = deep_check_masters(ufo_paths, [m.style_name for m in masters])
     if errors:
         raise ValueError("masters do not interpolate:\n  " + "\n  ".join(errors))
@@ -429,4 +485,18 @@ def build_variable_font(
         manifest.write_json(out / f"{stem}-VF.{fmt}.manifest.json")
         binaries[fmt] = binary
         manifests[fmt] = manifest
-    return VariableFontBuild(ds_path, ufo_paths, binaries, manifests, tuple(warnings))
+    static_paths: list[Path] = []
+    if instances:
+        from typekernel.axes.instantiate import instance_statics
+
+        vf_binary = binaries.get("ttf") or binaries.get("otf")
+        if vf_binary is not None:
+            static_paths = instance_statics(
+                vf_binary,
+                instances,
+                out / "instances",
+                family_stem=stem,
+            )
+    return VariableFontBuild(
+        ds_path, ufo_paths, binaries, manifests, tuple(warnings), tuple(static_paths)
+    )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typekernel.axes import Axis, Instance
 from typekernel.project import Master
 from typekernel.system import Overshoot, System, Zones
 
@@ -95,6 +96,31 @@ MASTER_LOCATIONS: dict[str, dict[str, float]] = {
     "Regular": {"wght": 400.0},
     "Bold": {"wght": 700.0},
 }
+
+
+WEIGHT_AXIS = Axis(
+    tag="wght",
+    name="Weight",
+    minimum=100.0,
+    default=400.0,
+    maximum=900.0,
+    labels={
+        100.0: "Thin",
+        200.0: "ExtraLight",
+        300.0: "Light",
+        400.0: "Regular",
+        500.0: "Medium",
+        600.0: "SemiBold",
+        700.0: "Bold",
+        800.0: "ExtraBold",
+        900.0: "Black",
+    },
+)
+
+INSTANCES: tuple[Instance, ...] = tuple(
+    Instance(label, {"wght": coord})
+    for coord, label in sorted(WEIGHT_AXIS.labels.items())
+)
 
 FAMILY_NAME = "Latin Sans"
 STYLE_NAME = "Regular"

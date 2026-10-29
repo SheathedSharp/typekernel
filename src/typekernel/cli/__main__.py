@@ -40,6 +40,8 @@ def _cmd_build(args: argparse.Namespace) -> int:
             print(f"ufo: {path}")
         if vf.warnings:
             print(f"warnings: {len(vf.warnings)}")
+        for path in getattr(vf, "static_instances", ()) or ():
+            print(f"instance: {path}")
         return 0
     font, built = build_project(
         root,

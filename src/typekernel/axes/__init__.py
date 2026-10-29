@@ -11,6 +11,7 @@ pen-radius API here, and there never should be.
 from __future__ import annotations
 
 from typekernel.axes.designspace_export import write_weight_designspace
+from typekernel.axes.instantiate import instance_static, instance_statics
 from typekernel.axes.interpolatable import (
     check_drawing_interpolatable,
     check_interpolatable,
@@ -29,5 +30,7 @@ __all__ = [
     "WeightDelta",
     "check_drawing_interpolatable",
     "check_interpolatable",
+    "instance_static",
+    "instance_statics",
     "write_weight_designspace",
 ]

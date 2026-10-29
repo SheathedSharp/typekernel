@@ -72,5 +72,13 @@ def build_variable_project(
             font_masters.append(FontMaster(location=location, font=font, name=style_name))
 
     dest = Path(out_dir) if out_dir is not None else root_path / "build"
-    result = build_variable_font(font_masters, dest, formats=formats)
+    axes = tuple(project.axes) if project.axes else None
+    instances = tuple(project.instances) if project.instances else None
+    result = build_variable_font(
+        font_masters,
+        dest,
+        formats=formats,
+        axes=axes,
+        instances=instances,
+    )
     return font_masters, result

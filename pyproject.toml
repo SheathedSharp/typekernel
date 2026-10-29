@@ -52,6 +52,7 @@ compile = [
   "ufoLib2>=0.16",
   "fontmake>=3.9",
   "ufo2ft>=2.33",
+  "munkres>=1.1",
 ]
 specimen = [
   # pillow is a hard dependency since the live renderer (perceive);
