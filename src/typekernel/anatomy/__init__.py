@@ -20,6 +20,7 @@ from typekernel.anatomy.tags import (
     is_valid_tag,
     parse_tag,
 )
+from typekernel.anatomy.terminals import ear, hook, spur, tail
 
 __all__ = [
     "ENDPOINTS",
@@ -38,9 +39,13 @@ __all__ = [
     "diagonal_pair",
     "dot",
     "drop",
+    "ear",
+    "hook",
     "is_valid_tag",
     "open_bowl",
     "parse_tag",
     "spine",
+    "spur",
     "stem",
+    "tail",
 ]

@@ -16,7 +16,7 @@
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
 | 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；不合规清单见 P3-1 测试 |
-| `anatomy` 直线/曲线构件 | **已落地** | stem/crossbar/dot/drop + arch/bowl/open_bowl/spine；斜笔/钩尾推进中 |
+| `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 仍属 P5 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
@@ -654,3 +654,4 @@ class Project:
 | 解剖构件（直线） | `stem` `crossbar` `dot` `drop` |
 | 解剖构件（曲线） | `arch` `bowl` `bowl_join` `open_bowl`/`BarSpec` `spine` |
 | 解剖构件（斜笔） | `diagonal_pair` `crossing` |
+| 解剖构件（钩尾） | `hook` `tail` `ear` `spur` |
