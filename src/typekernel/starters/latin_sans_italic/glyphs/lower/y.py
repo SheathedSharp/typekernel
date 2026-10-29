@@ -1,4 +1,4 @@
-"""y — v-join with descender."""
+"""y — shallow cup + mid descender (G-class; v-join SI under slant)."""
 
 from __future__ import annotations
 
@@ -15,10 +15,11 @@ def y(system: System):
     desc = float(system.zones.desc)
     width = float(system.tokens.get("y_width", 420.0))
     lsb = float(system.tokens["lsb_lc"])
-    x0 = lsb + st * 0.3
-    x1 = lsb + width - st * 0.3
-    mid = (x0 + x1) / 2.0
+    x0 = lsb + st * 0.35
+    x1 = lsb + width - st * 0.35
+    mid = lsb + width / 2.0
+    cup_y = xh * 0.35
     return fuse(
-        stroke(system, [(x0, xh), (mid, xh * 0.15)], thickness=st)
-        + stroke(system, [(x1, xh), (mid, xh * 0.15), (mid - st * 0.4, desc)], thickness=st)
+        stroke(system, [(x0, xh), (x0, cup_y), (x1, cup_y), (x1, xh)], thickness=st)
+        + stroke(system, [(mid, cup_y), (mid, desc)], thickness=st)
     )

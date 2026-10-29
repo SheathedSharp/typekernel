@@ -60,3 +60,26 @@ def test_n_group_and_uc_straight_expand() -> None:
             g = session.glyph(name)
             assert g.outline.contours, name
             assert g.advance > 0, name
+
+
+def test_full_uc_alphabet() -> None:
+    """P5-3: A–Z present and evaluate."""
+    import string
+
+    with open_project(STARTER) as session:
+        for name in string.ascii_uppercase:
+            assert name in session.specs(), name
+            g = session.glyph(name)
+            assert g.outline.contours, name
+            assert g.advance > 0, name
+
+
+def test_masters_signature_compatible_controls() -> None:
+    with open_project(STARTER) as session:
+        for name in sorted(session.specs()):
+            sigs = [
+                session.evaluate(name).drawing.signature(),
+                session.evaluate(name, master="Light").drawing.signature(),
+                session.evaluate(name, master="Bold").drawing.signature(),
+            ]
+            assert sigs[0] == sigs[1] == sigs[2], name

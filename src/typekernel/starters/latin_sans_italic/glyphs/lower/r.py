@@ -1,4 +1,4 @@
-"""n-group glyph r — stem + short arch stub."""
+"""n-group glyph r — continuous stem + shoulder stub (G-class)."""
 
 from __future__ import annotations
 
@@ -14,17 +14,16 @@ def r(system: System):
     xh = float(system.zones.x)
     width = float(system.tokens.get("r_width", 300.0))
     lsb = float(system.tokens["lsb_lc"])
+    rise = float(system.tokens.get("arch_rise", 0.12)) * xh
     x0 = lsb + st * 0.5
-    x1 = lsb + width - st * 0.25
-    stem = stroke(system, [(x0, 0.0), (x0, xh)], thickness=st)
-    arch = stroke(
+    x1 = lsb + width - st * 0.2
+    return stroke(
         system,
         [
-            (x0, xh * 0.55),
-            (x0, xh),
-            ((x0 + x1) / 2.0, xh + st * 0.1),
-            (x1, xh * 0.85),
+            (x0, 0.0),
+            (x0, xh - rise),
+            (x0 + (x1 - x0) * 0.25, xh),
+            (x1, xh - rise * 0.35),
         ],
-        thickness=st * 0.95,
+        thickness=st,
     )
-    return stem + arch

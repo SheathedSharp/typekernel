@@ -1,8 +1,8 @@
-"""UC F — stem + top/mid bars."""
+"""UC F — continuous top+stem rail + mid bar (G-class)."""
 
 from __future__ import annotations
 
-from elements import stroke, uc_stem
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -16,7 +16,6 @@ def F(system: System):
     width = float(system.tokens.get("F_width", 480.0))
     lsb = float(system.tokens["lsb_uc"])
     x = lsb + st * 0.5
-    stem = uc_stem(system, x, thickness=st)
-    top = stroke(system, [(x, cap), (lsb + width, cap)], thickness=thin)
+    rail = stroke(system, [(lsb + width, cap), (x, cap), (x, 0.0)], thickness=st)
     mid = stroke(system, [(x, cap * 0.5), (lsb + width * 0.8, cap * 0.5)], thickness=thin)
-    return stem + top + mid
+    return rail + mid

@@ -1,8 +1,8 @@
-"""Control H — two stems + bar."""
+"""Control H — two stems + bar (fused for G-class)."""
 
 from __future__ import annotations
 
-from elements import stroke, uc_stem
+from elements import fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -17,7 +17,8 @@ def H(system: System):
     cap = float(system.zones.cap)
     x0 = lsb + st * 0.5
     x1 = lsb + width - st * 0.5
-    left = uc_stem(system, x0, thickness=st)
-    right = uc_stem(system, x1, thickness=st)
-    bar = stroke(system, [(x0, cap * 0.48), (x1, cap * 0.48)], thickness=thin)
-    return left + right + bar
+    return fuse(
+        uc_stem(system, x0, thickness=st)
+        + uc_stem(system, x1, thickness=st)
+        + stroke(system, [(x0, cap * 0.48), (x1, cap * 0.48)], thickness=thin)
+    )

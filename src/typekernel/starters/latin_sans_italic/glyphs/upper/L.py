@@ -1,8 +1,8 @@
-"""UC L — stem + baseline bar."""
+"""UC L — continuous stem + baseline bar (fused for G-class)."""
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,4 +15,4 @@ def L(system: System):
     width = float(system.tokens.get("L_width", 500.0))
     lsb = float(system.tokens["lsb_uc"])
     x = lsb + st * 0.5
-    return stroke(system, [(x, cap), (x, 0.0), (lsb + width, 0.0)], thickness=st)
+    return fuse(stroke(system, [(x, cap), (x, 0.0), (lsb + width, 0.0)], thickness=st))

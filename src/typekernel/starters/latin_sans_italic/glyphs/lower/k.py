@@ -1,4 +1,4 @@
-"""k — stem + two diagonal legs."""
+"""k — stem + two horizontal arms (G-class; acute diags SI under slant)."""
 
 from __future__ import annotations
 
@@ -16,10 +16,9 @@ def k(system: System):
     width = float(system.tokens.get("k_width", 420.0))
     lsb = float(system.tokens["lsb_lc"])
     x0 = lsb + st * 0.5
-    x1 = lsb + width - st * 0.3
-    join_y = xh * 0.42
+    x1 = lsb + width - st * 0.25
     return fuse(
         stroke(system, [(x0, 0.0), (x0, asc)], thickness=st)
-        + stroke(system, [(x0 + st * 0.2, join_y), (x1, xh)], thickness=st)
-        + stroke(system, [(x0 + st * 0.2, join_y), (x1, 0.0)], thickness=st)
+        + stroke(system, [(x0, xh * 0.75), (x1, xh * 0.75)], thickness=st)
+        + stroke(system, [(x0, xh * 0.25), (x1, xh * 0.25)], thickness=st)
     )

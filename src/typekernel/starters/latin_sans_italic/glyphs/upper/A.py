@@ -1,4 +1,4 @@
-"""UC A — diagonals + crossbar."""
+"""UC A — near-vertical legs + top bar + crossbar (G-class; acute apex SI)."""
 
 from __future__ import annotations
 
@@ -15,12 +15,22 @@ def A(system: System):
     cap = float(system.zones.cap)
     width = float(system.tokens.get("A_width", 640.0))
     lsb = float(system.tokens["lsb_uc"])
-    x0 = lsb + st * 0.3
-    x1 = lsb + width - st * 0.3
-    mid = (x0 + x1) / 2.0
+    inset = 0.12
+    x0b = lsb + st * 0.4
+    x1b = lsb + width - st * 0.4
+    x0t = lsb + width * inset + st * 0.4
+    x1t = lsb + width * (1.0 - inset) - st * 0.4
     bar_y = cap * 0.38
     return fuse(
-        stroke(system, [(x0, 0.0), (mid, cap)], thickness=st)
-        + stroke(system, [(x1, 0.0), (mid, cap)], thickness=st)
-        + stroke(system, [(x0 + (mid - x0) * 0.35, bar_y), (x1 - (x1 - mid) * 0.35, bar_y)], thickness=thin)
+        stroke(system, [(x0b, 0.0), (x0t, cap)], thickness=st)
+        + stroke(system, [(x1b, 0.0), (x1t, cap)], thickness=st)
+        + stroke(system, [(x0t, cap), (x1t, cap)], thickness=thin)
+        + stroke(
+            system,
+            [
+                (x0b + (x0t - x0b) * 0.4, bar_y),
+                (x1b + (x1t - x1b) * 0.4, bar_y),
+            ],
+            thickness=thin,
+        )
     )
