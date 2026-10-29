@@ -270,6 +270,22 @@ def _cmd_kern(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_check(args: argparse.Namespace) -> int:
+    from typekernel.cli.check_cmd import check_release_project
+
+    if not getattr(args, "release", False):
+        print("error: only --release is supported for now (H-class + FontBakery)", file=sys.stderr)
+        return 2
+    code, _manifest = check_release_project(
+        args.path,
+        binary=args.binary,
+        out_dir=args.out,
+        fontbakery=not args.no_fontbakery,
+    )
+    return int(code)
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="tk",
@@ -533,6 +549,23 @@ def main(argv: list[str] | None = None) -> int:
         help="optical gap target in design units (default: 24)",
     )
     p_ks.set_defaults(func=_cmd_kern)
+
+
+    p_check = sub.add_parser("check", help="release / shipping checks")
+    p_check.add_argument("path", nargs="?", default=".")
+    p_check.add_argument(
+        "--release",
+        action="store_true",
+        help="H-class name/OS/2/metrics/STAT/glyph-names + optional FontBakery",
+    )
+    p_check.add_argument("--binary", default=None, help="font binary to check (default: build/*)")
+    p_check.add_argument("--out", default=None, help="build dir when binary is missing")
+    p_check.add_argument(
+        "--no-fontbakery",
+        action="store_true",
+        help="skip FontBakery even if installed",
+    )
+    p_check.set_defaults(func=_cmd_check)
 
     p_status = sub.add_parser("status", help="designer task board")
     p_status.add_argument("path", nargs="?", default=".")
