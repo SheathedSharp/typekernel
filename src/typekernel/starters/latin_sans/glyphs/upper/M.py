@@ -1,12 +1,10 @@
-"""Rest glyph M — outer stems + inner diagonals."""
+"""Diagonal glyph M — anatomy stems + inner diagonal_pair (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke, stem_rect
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import diagonal_pair, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -17,11 +15,14 @@ def glyph_M(system: System):
     cap = float(system.zones.cap)
     width = float(WIDTHS["M"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
-    left = stem_rect(lsb, lsb + st, 0.0, cap, prefix="stem.l")
-    right = stem_rect(lsb + width - st, lsb + width, 0.0, cap, prefix="stem.r")
+    left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
+    right = stem(lsb + width - st, lsb + width, 0.0, cap, name="stem.r")
     cx = lsb + width / 2.0
-    ang = math.degrees(math.atan2(width * 0.35, cap))
-    wt = compensated_weight(st, ang)
-    d1 = diagonal_stroke((lsb + st * 0.5, cap), (cx, 0.0), weight=wt, tag_prefix="M.l")
-    d2 = diagonal_stroke((lsb + width - st * 0.5, cap), (cx, 0.0), weight=wt, tag_prefix="M.r")
-    return left + right + d1 + d2
+    inner = diagonal_pair(
+        (cx, 0.0),
+        (lsb + st * 0.5, cap),
+        (lsb + width - st * 0.5, cap),
+        weight=st,
+        name="diag",
+    )
+    return left + right + inner

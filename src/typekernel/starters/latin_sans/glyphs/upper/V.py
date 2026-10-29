@@ -1,12 +1,10 @@
-"""Diagonal glyph V — two capital diagonals."""
+"""Diagonal glyph V — anatomy diagonal_pair (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import diagonal_pair
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -17,8 +15,11 @@ def glyph_V(system: System):
     cap = float(system.zones.cap)
     width = float(WIDTHS["V"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
-    dx = width / 2.0 - st * 0.2
-    ang = math.degrees(math.atan2(dx, cap))
-    w = compensated_weight(st, ang)
     cx = lsb + width / 2.0
-    return diagonal_stroke((lsb + st * 0.3, cap), (cx, 0.0), weight=w, tag_prefix="V.l") +         diagonal_stroke((lsb + width - st * 0.3, cap), (cx, 0.0), weight=w, tag_prefix="V.r")
+    return diagonal_pair(
+        (cx, 0.0),
+        (lsb + st * 0.3, cap),
+        (lsb + width - st * 0.3, cap),
+        weight=st,
+        name="diag",
+    )

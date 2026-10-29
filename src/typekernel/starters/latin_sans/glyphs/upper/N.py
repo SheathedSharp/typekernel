@@ -1,12 +1,11 @@
-"""Rest glyph N — two stems + diagonal."""
+"""Diagonal glyph N — anatomy stems + diagonal band (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke, stem_rect
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import stem
+from typekernel.draw import Writer, diagonal_band
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -17,14 +16,26 @@ def glyph_N(system: System):
     cap = float(system.zones.cap)
     width = float(WIDTHS["N"])
     lsb = float(system.tokens.get("lsb_uc", 50.0))
-    left = stem_rect(lsb, lsb + st, 0.0, cap, prefix="stem.l")
-    right = stem_rect(lsb + width - st, lsb + width, 0.0, cap, prefix="stem.r")
-    ang = math.degrees(math.atan2(width - 2 * st, cap))
-    wt = compensated_weight(st, ang)
-    diag = diagonal_stroke(
+    left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
+    right = stem(lsb + width - st, lsb + width, 0.0, cap, name="stem.r")
+    band_l, band_r = diagonal_band(
         (lsb + st * 0.5, cap),
         (lsb + width - st * 0.5, 0.0),
-        weight=wt,
-        tag_prefix="N.diag",
+        weight=st,
+        compensate=True,
+    )
+    diag = (
+        Writer()
+        .start(band_l.start)
+        .corner("diag.top.l")
+        .fragment(band_l)
+        .corner("diag.foot.l")
+        .line(band_r.start)
+        .corner("diag.foot.r")
+        .fragment(band_r)
+        .corner("diag.top.r")
+        .line(band_l.start)
+        .close()
+        .build()
     )
     return left + right + diag

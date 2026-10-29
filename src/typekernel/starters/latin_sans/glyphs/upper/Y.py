@@ -1,12 +1,10 @@
-"""Diagonal glyph Y — upper V + vertical stem."""
+"""Diagonal glyph Y — anatomy diagonal_pair + stem (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke, stem_rect
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import diagonal_pair, stem
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -19,12 +17,12 @@ def glyph_Y(system: System):
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     join_y = cap * 0.45
     cx = lsb + width / 2.0
-    dx = width / 2.0 - st * 0.25
-    ang = math.degrees(math.atan2(dx, cap - join_y))
-    wt = compensated_weight(st, ang)
-    left = diagonal_stroke((lsb + st * 0.3, cap), (cx, join_y), weight=wt, tag_prefix="Y.l")
-    right = diagonal_stroke(
-        (lsb + width - st * 0.3, cap), (cx, join_y), weight=wt, tag_prefix="Y.r"
+    arms = diagonal_pair(
+        (cx, join_y),
+        (lsb + st * 0.3, cap),
+        (lsb + width - st * 0.3, cap),
+        weight=st,
+        name="diag",
     )
-    stem = stem_rect(cx - st / 2.0, cx + st / 2.0, 0.0, join_y + st * 0.35, prefix="stem")
-    return left + right + stem
+    body = stem(cx - st / 2.0, cx + st / 2.0, 0.0, join_y + st * 0.35, name="stem")
+    return arms + body

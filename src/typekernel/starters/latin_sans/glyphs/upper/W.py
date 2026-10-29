@@ -1,12 +1,10 @@
-"""Diagonal glyph W — four capital diagonals."""
+"""Diagonal glyph W — two anatomy diagonal_pairs (P3-7)."""
 
 from __future__ import annotations
 
-import math
+from elements import WIDTHS
 
-from elements import WIDTHS, diagonal_stroke
-
-from typekernel.plugins.passes.diagonal_comp import compensated_weight
+from typekernel.anatomy import diagonal_pair
 from typekernel.project import glyph
 from typekernel.system import System
 
@@ -23,11 +21,6 @@ def glyph_W(system: System):
     t3 = lsb + width - st * 0.25
     b0 = lsb + width * 0.28
     b1 = lsb + width * 0.72
-    ang = math.degrees(math.atan2(abs(t1 - b0), cap))
-    wt = compensated_weight(st, ang)
-    return (
-        diagonal_stroke((t0, cap), (b0, 0.0), weight=wt, tag_prefix="W.0")
-        + diagonal_stroke((t1, cap), (b0, 0.0), weight=wt, tag_prefix="W.1")
-        + diagonal_stroke((t2, cap), (b1, 0.0), weight=wt, tag_prefix="W.2")
-        + diagonal_stroke((t3, cap), (b1, 0.0), weight=wt, tag_prefix="W.3")
-    )
+    left = diagonal_pair((b0, 0.0), (t0, cap), (t1, cap), weight=st, name="diag.l")
+    right = diagonal_pair((b1, 0.0), (t2, cap), (t3, cap), weight=st, name="diag.r")
+    return left + right
