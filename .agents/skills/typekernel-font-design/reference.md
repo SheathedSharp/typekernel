@@ -29,7 +29,8 @@ system = System(
     stem={"lc": 84, "lc_h": 70, "uc": 92, "uc_h": 76},
     slant=0.0,  # first-class italic lean (Δx/Δy); NOT tokens["slant"]
     tokens={
-        "n_width": 430, "lsb_lc": 40, "n_advance": 510, ...,
+        "n_width": 430, "o_width": 470, "H_width": 620, "O_width": 700,  # control widths only
+        "lsb_lc": 40, ...,  # per-glyph widths → elements.WIDTHS; advances → Project.metrics
         "space_stem_mul": 2.5, "space_lsb_mul": 0.5,  # or "space_advance": 280
     },
 )
@@ -59,7 +60,7 @@ Kernel default is **named nodes only** — omitted glyphs get no optical stem
 kinds. Starters ship a full `AUDIT_STEMS` map; copy and edit it. Declaring
 `("diagonal",)` turns oriented probes into warnings (not info).
 
-No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations go in project `elements.py`.
+No `aperture` / `roundness` mega-knobs（见 ARCHITECTURE.md「System」）. Derived relations and per-glyph widths go in project `elements.py` (`WIDTHS`); `tk audit` warns on `<glyph>_(width|advance)` tokens outside the four controls.
 
 
 ## Intent / Brief (prose → System)
