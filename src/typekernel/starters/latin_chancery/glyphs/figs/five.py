@@ -1,24 +1,24 @@
-"""Figure 5 — flag + open bowl."""
+"""Figure 5 — top bar + spine + baseline (G-class)."""
+
 from __future__ import annotations
 
-from elements import open_bowl, stroke
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
+
+_GAP = 80.0
 
 
 @glyph("five", group="figs")
 def five(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 420.0))
+    width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     h = float(system.zones.cap) * 0.72
-    top = stroke(
-        system, [(lsb + width * 0.85, h), (lsb + st * 0.4, h), (lsb + st * 0.4, h * 0.55)],
-        thickness=st,
+    gap = _GAP
+    return (
+        stroke(system, [(lsb + width * 0.2, h), (lsb + width * 0.85, h)], thickness=st)
+        + stroke(system, [(lsb + width * 0.28, h - gap), (lsb + width * 0.28, h * 0.5)], thickness=st)
+        + stroke(system, [(lsb + width * 0.2, 0.0), (lsb + width * 0.85, 0.0)], thickness=st)
     )
-    bowl = open_bowl(
-        system, cx=lsb + width * 0.5, cy=h * 0.32, rx=width * 0.4, ry=h * 0.3,
-        thickness=st, open_side="left", aperture_deg=95.0,
-    )
-    return top + bowl

@@ -1,7 +1,8 @@
-"""Lowercase w — double v."""
+"""w — twin open cups with mid gap (G-class; continuous double-v SI)."""
+
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,15 +12,12 @@ from typekernel.system import System
 def w(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens.get("w_width", 560.0))
+    width = float(system.tokens.get("w_width", 620.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
-    x0 = lsb + st * 0.15
-    x3 = lsb + width - st * 0.15
-    x1 = x0 + (x3 - x0) / 3.0
-    x2 = x0 + 2.0 * (x3 - x0) / 3.0
-    return (
-        stroke(system, [(x0, xh), (x1, 0.0)], thickness=st)
-        + stroke(system, [(x1, 0.0), ((x1 + x2) / 2.0, xh * 0.55)], thickness=st)
-        + stroke(system, [((x1 + x2) / 2.0, xh * 0.55), (x2, 0.0)], thickness=st)
-        + stroke(system, [(x2, 0.0), (x3, xh)], thickness=st)
-    )
+    x0 = lsb + st * 0.4
+    x1 = lsb + width * 0.35
+    x2 = lsb + width * 0.65
+    x3 = lsb + width - st * 0.4
+    left = fuse(stroke(system, [(x0, xh), (x0, 0.0), (x1, 0.0), (x1, xh * 0.55)], thickness=st))
+    right = fuse(stroke(system, [(x2, xh * 0.55), (x2, 0.0), (x3, 0.0), (x3, xh)], thickness=st))
+    return left + right

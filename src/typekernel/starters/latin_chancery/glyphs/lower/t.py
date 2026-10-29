@@ -1,7 +1,8 @@
-"""Lowercase t — short stem + crossbar."""
+"""t — short stem + crossbar (G-class)."""
+
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,14 +12,10 @@ from typekernel.system import System
 def t(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
+    width = float(system.tokens.get("t_width", 280.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
-    x = lsb + st * 0.9
-    top = xh + float(system.overshoot.round) * 0.6
-    stem = stroke(system, [(x, 0.0), (x, top)], thickness=st)
+    x = lsb + width * 0.45
+    stem = stroke(system, [(x, 0.0), (x, xh + st * 0.55)], thickness=st)
     bar_y = xh * 0.78
-    bar = stroke(
-        system,
-        [(x - st * 1.3, bar_y), (x + st * 1.4, bar_y)],
-        thickness=float(system.stem["lc_h"]),
-    )
-    return stem + bar
+    bar = stroke(system, [(lsb, bar_y), (lsb + width, bar_y)], thickness=st * 0.85)
+    return fuse(stem + bar)

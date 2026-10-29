@@ -1,7 +1,8 @@
-"""Uppercase R — P + leg."""
+"""R — stem + bars + gapped leg (G-class)."""
+
 from __future__ import annotations
 
-from elements import nest_bowl, stroke
+from elements import fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,14 +12,13 @@ from typekernel.system import System
 def R(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("R_width", 540.0))
+    width = float(system.tokens.get("R_width", 600.0))
     lsb = float(system.tokens.get("lsb_uc", 40.0))
     x0 = lsb + uc * 0.5
-    x1 = lsb + width - uc * 0.2
-    stem = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    bowl = nest_bowl(
-        system, stem_x=x0, side="right", width=width * 0.9, xh=cap * 0.55,
-        lsb=lsb, thickness=uc, cy=cap * 0.68, rx=width * 0.3, ry=cap * 0.28, pull=0.72,
+    return fuse(
+        uc_stem(system, x0, thickness=uc)
+        + stroke(system, [(x0, cap), (lsb + width, cap)], thickness=uc)
+        + stroke(system, [(x0, cap * 0.5), (lsb + width * 0.85, cap * 0.5)], thickness=uc)
+    ) + stroke(
+        system, [(lsb + width * 0.55, cap * 0.35), (lsb + width - uc * 0.2, 0.0)], thickness=uc
     )
-    leg = stroke(system, [(x0 + uc * 0.3, cap * 0.42), (x1, 0.0)], thickness=uc)
-    return stem + bowl + leg

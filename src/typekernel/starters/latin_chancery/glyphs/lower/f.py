@@ -1,7 +1,8 @@
-"""Lowercase f — tall stem + crossbar + entry flourish."""
+"""f — continuous ascender flag + right-only crossbar (G-class)."""
+
 from __future__ import annotations
 
-from elements import flourish_entry, stroke, stroke_fragment
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,14 +13,10 @@ def f(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     asc = float(system.zones.asc)
+    width = float(system.tokens.get("f_width", 260.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
-    x = lsb + st * 1.1
-    stem = stroke(system, [(x, 0.0), (x, asc - 55.0)], thickness=st)
-    bar_y = xh * 0.92
-    bar = stroke(
-        system,
-        [(x - st * 1.2, bar_y), (x + st * 1.6, bar_y)],
-        thickness=float(system.stem["lc_h"]),
-    )
-    frag = flourish_entry(system, (x - 70.0, asc - 40.0), (x, asc - 55.0))
-    return stem + bar + stroke_fragment(system, frag, thickness=float(system.stem["lc_h"]))
+    x = lsb + st * 0.55
+    stem = stroke(system, [(x, 0.0), (x, asc - st * 0.25), (x + width * 0.55, asc)], thickness=st)
+    by = xh * 0.55
+    bar = stroke(system, [(x + st * 1.2, by), (lsb + width, by)], thickness=st * 0.85)
+    return stem + bar

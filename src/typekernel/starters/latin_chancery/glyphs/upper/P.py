@@ -1,7 +1,8 @@
-"""Uppercase P — stem + upper bowl."""
+"""P — stem + top/mid bars (G-class; nest bowl SI)."""
+
 from __future__ import annotations
 
-from elements import nest_bowl, stroke
+from elements import fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,12 +12,11 @@ from typekernel.system import System
 def P(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("P_width", 500.0))
+    width = float(system.tokens.get("P_width", 540.0))
     lsb = float(system.tokens.get("lsb_uc", 40.0))
     x0 = lsb + uc * 0.5
-    stem = stroke(system, [(x0, 0.0), (x0, cap)], thickness=uc)
-    bowl = nest_bowl(
-        system, stem_x=x0, side="right", width=width, xh=cap * 0.55,
-        lsb=lsb, thickness=uc, cy=cap * 0.68, rx=width * 0.32, ry=cap * 0.28, pull=0.72,
+    return fuse(
+        uc_stem(system, x0, thickness=uc)
+        + stroke(system, [(x0, cap), (lsb + width, cap)], thickness=uc)
+        + stroke(system, [(x0, cap * 0.5), (lsb + width * 0.85, cap * 0.5)], thickness=uc)
     )
-    return stem + bowl

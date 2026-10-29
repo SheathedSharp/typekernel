@@ -15,6 +15,7 @@ from typekernel.anatomy.pen import (
     expand_slanted_centerline,
     flourish_entry,
     flourish_exit,
+    fuse,
     open_arc_points,
     oval_points,
     pen_dot,
@@ -33,6 +34,7 @@ __all__ = [
     "flourish_entry",
     "flourish_exit",
     "fragment_polyline",
+    "fuse",
     "n_arch_points",
     "nest_bowl",
     "open_arc_points",
@@ -46,6 +48,7 @@ __all__ = [
     "stroke",
     "stroke_fragment",
     "u_arch_points",
+    "uc_stem",
 ]
 
 
@@ -67,6 +70,19 @@ def stroke(
 ) -> Drawing:
     cl = slanted_centerline(points, system, closed=closed)
     return expand_slanted_centerline(system, cl, thickness=thickness)
+
+
+def uc_stem(
+    system: System,
+    x: float,
+    *,
+    y0: float = 0.0,
+    y1: float | None = None,
+    thickness: float | None = None,
+) -> Drawing:
+    cap = float(system.zones.cap) if y1 is None else float(y1)
+    st = float(system.stem["uc"]) if thickness is None else float(thickness)
+    return stroke(system, [(x, y0), (x, cap)], thickness=st)
 
 
 def bowl(

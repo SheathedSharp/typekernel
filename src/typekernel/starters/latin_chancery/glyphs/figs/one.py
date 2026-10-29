@@ -1,7 +1,8 @@
-"""Figure 1 — stem + flag."""
+"""Figure 1 — stem with top flag (G-class)."""
+
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -10,14 +11,11 @@ from typekernel.system import System
 @glyph("one", group="figs")
 def one(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 420.0)) * 0.55
+    width = float(system.tokens.get("fig_width", 460.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     h = float(system.zones.cap) * 0.72
     x = lsb + width * 0.55
-    stem = stroke(system, [(x, 0.0), (x, h)], thickness=st)
-    flag = stroke(system, [(x - st * 1.4, h * 0.78), (x, h)], thickness=st * 0.85)
-    base = stroke(
-        system, [(x - st * 1.2, 0.0), (x + st * 1.2, 0.0)],
-        thickness=float(system.stem["lc_h"]),
+    return fuse(
+        stroke(system, [(x, 0.0), (x, h)], thickness=st)
+        + stroke(system, [(x - width * 0.28, h * 0.78), (x, h)], thickness=st)
     )
-    return stem + flag + base

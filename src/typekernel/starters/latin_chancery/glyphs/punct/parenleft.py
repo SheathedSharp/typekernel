@@ -1,7 +1,8 @@
-"""parenleft — open arc."""
+"""parenleft — vertical stem (G-class; curved arc SI)."""
+
 from __future__ import annotations
 
-from elements import open_arc_points, stroke
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -13,7 +14,5 @@ def parenleft(system: System):
     asc = float(system.zones.asc)
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 32.0))
-    h = asc - desc
-    cy = (asc + desc) / 2.0
-    pts = open_arc_points(lsb + 80.0, cy, 70.0, h * 0.48, start_deg=70, end_deg=290, n=28)
-    return stroke(system, pts, thickness=st)
+    x = lsb + st * 1.2
+    return stroke(system, [(x, desc + st), (x, asc - st)], thickness=st * 0.85)

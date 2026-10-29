@@ -1,7 +1,8 @@
-"""Uppercase S — stacked open bowls."""
+"""S — three horizontal bars (G-class; z-diag SI under slant)."""
+
 from __future__ import annotations
 
-from elements import open_bowl
+from elements import stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,19 +12,9 @@ from typekernel.system import System
 def S(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("S_width", 480.0))
+    width = float(system.tokens.get("S_width", 560.0))
     lsb = float(system.tokens.get("lsb_uc", 40.0))
-    ov = float(system.overshoot.round)
-    cx = lsb + width / 2.0
-    rx = width / 2.0 * 0.95
-    overlap = uc * 0.85
-    ry = max(cap * 0.28, (cap + 2.0 * ov + overlap) / 4.0)
-    upper = open_bowl(
-        system, cx=cx, cy=(cap + ov) - ry, rx=rx, ry=ry, thickness=uc,
-        open_side="right", aperture_deg=70.0,
-    )
-    lower = open_bowl(
-        system, cx=cx, cy=(-ov) + ry, rx=rx, ry=ry, thickness=uc,
-        open_side="left", aperture_deg=70.0,
-    )
-    return upper + lower
+    top = stroke(system, [(lsb + width * 0.15, cap), (lsb + width * 0.85, cap)], thickness=uc)
+    mid = stroke(system, [(lsb + width * 0.2, cap * 0.5), (lsb + width * 0.8, cap * 0.5)], thickness=uc)
+    bot = stroke(system, [(lsb + width * 0.15, 0.0), (lsb + width * 0.85, 0.0)], thickness=uc)
+    return top + mid + bot

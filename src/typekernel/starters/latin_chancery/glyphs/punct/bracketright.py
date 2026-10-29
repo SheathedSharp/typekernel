@@ -1,7 +1,8 @@
-"""bracketright — vertical with top/bottom bars (skeleton+pen)."""
+"""bracketright — vertical with top/bottom bars (G-class)."""
+
 from __future__ import annotations
 
-from elements import stroke
+from elements import fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,9 +16,8 @@ def bracketright(system: System):
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     w = st * 1.6
     x = lsb + w
-    th = st * 0.85
-    return (
-        stroke(system, [(x, desc), (x, asc)], thickness=th)
-        + stroke(system, [(x, asc), (x - w, asc)], thickness=th)
-        + stroke(system, [(x, desc), (x - w, desc)], thickness=th)
+    return fuse(
+        stroke(system, [(x, desc), (x, asc)], thickness=st * 0.85)
+        + stroke(system, [(x, asc), (x - w, asc)], thickness=st * 0.85)
+        + stroke(system, [(x, desc), (x - w, desc)], thickness=st * 0.85)
     )

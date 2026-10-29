@@ -1,22 +1,29 @@
-"""Lowercase b — ascender stem + nestled bowl."""
+"""b — asc stem + gapped oval (G-class; gap ≥90)."""
+
 from __future__ import annotations
 
-from elements import flourish_exit, nest_bowl, stroke, stroke_fragment
+from elements import oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
 
+_OVAL_N = 48
+_GAP = 100.0
 
-@glyph("b", group="lc.bowl")
+
+@glyph("b", group="lc.round")
 def b(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     asc = float(system.zones.asc)
-    width = float(system.tokens.get("o_width", 400.0))
+    width = float(system.tokens.get("o_width", 420.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
-    x_stem = lsb + st * 0.5
-    stem_d = stroke(system, [(x_stem, 0.0), (x_stem, asc - 40.0)], thickness=st)
-    bowl = nest_bowl(system, stem_x=x_stem, side="right", width=width, xh=xh, lsb=lsb)
-    tip = (x_stem - 70.0, asc + 20.0)
-    frag = flourish_exit(system, x_stem, asc - 40.0, tip)
-    return stem_d + bowl + stroke_fragment(system, frag, thickness=float(system.stem["lc_h"]))
+    ov = float(system.overshoot.round)
+    x = lsb + st * 0.5
+    stem = stroke(system, [(x, 0.0), (x, asc)], thickness=st)
+    rx = width * 0.32
+    cx = x + _GAP + rx
+    bowl = stroke(
+        system, oval_points(cx, xh / 2.0, rx, xh / 2.0 + ov * 0.35, n=_OVAL_N), closed=True, thickness=st
+    )
+    return stem + bowl
