@@ -400,7 +400,9 @@ starter 的期望表和 traits 默认值都是数据（例如 latin-sans 的 `ex
 
 ---
 
-## 6. 感知 `typekernel.perceive`（新，吸收 `qa.proof` / `qa.specimen_png`）
+## 6. 感知
+> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+ `typekernel.perceive`（新，吸收 `qa.proof` / `qa.specimen_png`）
 
 ### 6.1 两条渲染路径
 
@@ -436,7 +438,9 @@ def explain(session: ProjectSession, glyph: str, *, master: str | None = None) -
 
 ---
 
-## 7. 诊断 `typekernel.diagnose`（新，吸收 `cli/audit.py` 的逻辑）
+## 7. 诊断
+> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+ `typekernel.diagnose`（新，吸收 `cli/audit.py` 的逻辑）
 
 ### 7.1 协议 v2
 
@@ -504,7 +508,9 @@ class Expect:
 
 ---
 
-## 8. 评审 `typekernel.review`（新，吸收 `qa.gates`）
+## 8. 评审
+> **P2 已落地**：实现以 `typekernel.perceive` / `diagnose` / `review` 与 `ARCHITECTURE.md`「P2 落地摘要」为准；本节保留为契约原文，待下轮精简并入 ARCHITECTURE 后删除。
+ `typekernel.review`（新，吸收 `qa.gates`）
 
 ### 8.1 评审记录
 

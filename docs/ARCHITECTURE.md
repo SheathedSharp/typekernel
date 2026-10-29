@@ -604,3 +604,18 @@ class Project:
 - 不用数值门禁冒充美学判断；美学由视觉审阅决定。
 - 不做 `style_consistency` / `originality` 一类美学 AI 分；`Intent` 只做 brief→System 的显式映射与越界告警。
 - 不为兼容旧 API 长期维持双轨：旧路径直接删除，git 历史即存档。
+
+
+## P2 落地摘要（眼睛与判断）
+
+已实现（细节以源码与 `tk --help` 为准；目标契约见 `docs/design/target-architecture.md`，落地后迁入本节）：
+
+| 能力 | 入口 |
+| --- | --- |
+| live 渲染 / 编辑视图 | `typekernel.perceive` · `tk see` |
+| 测量报告 | `tk explain --json` |
+| 诊断 v2（拓扑 / 区线 / 间距 / 灰度 / 插值） | `tk audit --json/--masters/--strict` |
+| 评审与任务板 | `tk review` · `tk status` |
+| shipped 样张 | `tk proof`（`perceive.specimen`；`qa.proof` 为兼容 shim） |
+
+冻结令（P0-5）在 P2 出口后解除：可新增 starter / 风格插件。

@@ -1,17 +1,24 @@
 # Anti-patterns
 
-| Don’t | Do instead |
-| --- | --- |
-| Hunting for a letter builder inside `typekernel.*` | Use `System` + project glyphs (`tk new --starter latin-sans`) |
-| Add heal / blend / seal after boolean mess | Change the fragment / overlap construction |
-| Call `self_union` / boolean to hide a bad join in glyph code | Fix the fragment; use `tk build --resolve-overlaps` only for static ship |
-| `tk build --resolve-overlaps` with `--variable` | Keep VF masters overlapping; resolve static instances only |
-| Stroke-expand to fake weight | Scale `system.stem` (and masters via `tuned`) |
-| Letter builders inside `typekernel.*` kernel packages | Keep letters in the project starter only |
-| Bbox-only advances forever | `Project.metrics` / `spacing.py` `METRICS` keys + `apply_metrics` |
-| Silent mega-knobs (`aperture`, `roundness`) | Explicit tokens + element functions |
-| Treating `tk audit` warnings as pass/fail cosmetics gate | Treat direction/compat as hard fail; stem/zone as fix list |
-| Ignoring `--overlap` cavities then shipping even-odd proofs | Inspect with `tk proof --glyph`; fix fragments or accept VF overlap + nonzero ship fill |
-| Reimplementing `hook` / `tensioned_arc` / oriented stem math | Use `draw.construct` + `optics.stem` (see reference.md) |
-| Inventing a letter-specific API to put in the kernel | Follow the ARCHITECTURE.md 标准工作流 |
-| Writing private PIL phrase/crop scripts for proofs | `tk proof --text` / `--glyph` / `ladder` |
+## 用基本形拼字
+
+Do not assemble letters from bare rectangles + rings (θ-shaped `e`, figure-8 `three`,
+crossed-arc parentheses). Use anatomy constructors / tensioned arcs / open bowls once
+P3 ships; until then, prefer starter fragments and fix joins in project code — never
+heal/blend/seal.
+
+Appendix A counterexamples (unmodified latin-sans): `e` (2 counters), `three` (≥2),
+`parenleft`/`parenright` density outliers — `tk explain` / `tk audit` report these.
+
+## 改期望表过检查
+
+Never edit `expect.py` (or relax baselines) solely to make `tk audit` green.
+Expect encodes *correct* topology/reach. If a glyph is wrong, change the glyph.
+If expect itself must change, record the reason in `tk review record … --note`.
+
+## Other
+
+- heal / blend / seal on the default path
+- letter-name tables in the kernel
+- agent writing `approved: true` into `approvals/`
+- inventing private PIL croppers instead of `tk see` / `tk proof`
