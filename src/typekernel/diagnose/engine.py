@@ -150,6 +150,7 @@ def _builtin_v2(
     check_gray: bool = True,
 ) -> list[Check]:
     from typekernel.diagnose.checks.gray import GrayCheck
+    from typekernel.diagnose.checks.interpolation import InterpolationCheck
     from typekernel.diagnose.checks.spacing import (
         PairCollisionCheck,
         RefConsistencyCheck,
@@ -180,6 +181,7 @@ def _builtin_v2(
         out.append(RefConsistencyCheck())
     if check_gray:
         out.append(GrayCheck())
+    out.append(InterpolationCheck())
     return out
 
 
