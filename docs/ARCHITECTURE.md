@@ -29,9 +29,9 @@
 | S0 止血 | **已落地** | evidence 门 / agent-pass unverified / contour warn / charset·doctor·STAT / kern-GPOS warn |
 | S1 轮廓 | **已落地** | cubic κ-ellipse bowl + curve-aware expand；compile-time `geo.tidy`（≠ heal/blend/seal）；控制 o ≤2 轮廓且 ≤16 段；polyline expand 仅内部 |
 | S2 字形身份 | **已落地** | `typekernel.knowledge` 纯数据先验（Unicode→counters/islands/asc/desc/dot）；`tk read [--text]` 轻量分类 top-3 + confuse-pair hard warn；`letter_shape_distance`；守卫允许字母名 **仅** 在 knowledge |
-| S3 连笔 | **已落地** | GlyphDraft `entry`/`exit`（x,y,angle,width）；`Metrics.join` 对齐 exit→entry 派生 advance；`diagnose.join` Δy/tangent/width/gap；`curs`/`calt`；`tk audit --text` 节奏 CV |
+| S3 连笔 | **已落地** | GlyphDraft `entry`/`exit`；`Metrics.join`；`diagnose.join`；**`curs` 进 OTF GPOS**；`calt` 为 positional 字形脚手架（无 `.init/.medi/.fina` 时不发射）；`tk audit --text` 节奏 CV |
 | S4 脚本笔 | **已落地** | Intent `tool`/`connection`/`genre`；`Stroke.through` + width/pressure；`entry`/`exit`/`loop`/`overstroke`；`tk see --skeleton`；starter `script-roundhand`；chancery 笔从 Intent |
-| S5 评审闭环 | **已落地（agent 路径）** | `tk critique --text` 客观自评分表（S0 evidence / S1 contour / S2 read / S3 join·gap / S5 expect.changes）；`review.expect_changes` + `expect.changes` audit warn；trials **B4**（`zayju forever young` / flowing letter-hand）。**人工 SCORE / 视觉批准仍开** |
+| S5 评审闭环 | **已落地（agent 路径）** | `tk critique --text`；`verdict=pass` 默认要求 proof 哈希 **+** `reads_as`；`expect.changes`；trials **B4**。script-roundhand 对 `zayju forever young`：critique identity/join 程序侧已绿。**人工 SCORE / 视觉批准 / 冷启动空目录复跑仍开** |
 | P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；产物本地/gitignore，**非**仓库内公开终验。产品级完成仍需人工 approvals + 可追踪试验归档 |
 
 ---

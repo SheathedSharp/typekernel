@@ -96,15 +96,23 @@ Keep PNGs / audit JSON under the project (or a local artifacts folder).
 - On failure: stop and report the command + full stderr; do not guess or patch the library.
 - Do not open typekernel sources for glyph answers.
 
-## Pass bar 
+## Pass bar
 
-- `tk build` / `tk proof` / `tk audit` succeed (**0 audit errors**) for all four briefs.
-- B4: `tk critique --text "zayju forever young"` runs and is cited in self-critique (objective rows only; human SCORE still blank).
-- Every `expect.py` change has a written reason.
-- Control string is visibly different from the stock starter for that brief.
-- No heal/blend/seal; no reading typekernel sources for answers.
-- After human scoring: **readable** and **complete** averages ≥ 3.5 and above the
-  recorded baseline for the same briefs.
+Program-side (agents must meet these; cite `tk critique` in ACCEPTANCE):
+
+1. **Readable**: `tk critique --text "…"` `read.identity` level `ok` (0 hard warns) on the brief sample string.
+2. **Joined** (B4 / script): critique `join.dy` ok (max Δy &lt; 20) and `join.rhythm_cv` ok on that string.
+3. **Clean contours**: critique `contour.quality` not `fail`; no flood of contour warns on the sample glyphs.
+4. `tk build` / `tk proof` / `tk audit` succeed (**0 audit errors**). Audit-green alone is **not** enough.
+5. Every `expect.py` change has `--expect-change` / `expect_changes` rationale.
+6. B4: critique for `zayju forever young` is cited; **human SCORE columns stay blank**.
+7. No heal/blend/seal; do not open typekernel sources for glyph answers.
+8. Control string visibly different from the stock starter for that brief.
+
+Human-side (not claimed by agents):
+
+- After human scoring: **readable** and **complete** averages ≥ 3.5 and above the recorded baseline.
+- Vision approve remains human-only.
 
 ## Related
 
