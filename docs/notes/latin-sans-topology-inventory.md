@@ -1,8 +1,6 @@
 # latin-sans topology inventory (agent-actionable)
 
-> Snapshot 2026-10-29 (post C3 read + topology fixes). Letter-class priors live in
-> `typekernel.knowledge`; mismatches are **starter glyph debts**, not reasons to
-> special-case strings. No `approved: true`.
+> Snapshot 2026-10-29 (g rewrite + UC edge/mid_right cues). No `approved: true`.
 
 ## `tk read` metrics
 
@@ -10,27 +8,34 @@
 | --- | --- | --- | --- |
 | `hamburgefonstiv` | 15/15 | 0 | 0 |
 | `a–z` | 26/26 | 0 | 0 |
-| `A–Z` | 23/26 | 0 | (near-ties possible on N/O family) |
+| `A–Z` | 26/26 | 0 | 0 |
 | cold trial lc string | 17/17 | 0 | 0 |
 
-Hard-warn policy: topology mismatch (or confuse-pair counters) only.
+## Design choice: `g` double-storey
 
-## Closed this batch
+Chose **double-storey** (upper bowl + right stem + lower bowl), matching the
+binocular construction language already used for latin-sans. Topology target:
+**2 counters, 1 island**. `expect.py` 3→2 with review rationale.
+Knowledge prior: primary `counters=2`, `counters_alt=(1,)` so single-storey
+script faces stay valid (platform storey-variant, not a string hack).
 
-| Glyph | Was | Fix |
-| --- | --- | --- |
-| `k` | stem to x-height only (missing asc) | stem → `zones.asc` |
-| `B` | counters 3 | bowls meet at waist → 2; `expect.py` 3→2 with review rationale |
-| `w` / `W` | islands 2 | overlapping diagonal_pairs → 1 island; A/W kern nudged |
-| `G` | islands 2, open class | tighter aperture + spur into bowl → 1 island; prior counters=0 (open G) |
+## Closed
 
-## Still open
+| Glyph | Fix |
+| --- | --- |
+| `k` | stem → ascender |
+| `B` | bowls meet at waist; expect 3→2 |
+| `G` | aperture + spur; open-G prior counters=0 |
+| `w`/`W` | overlapping diagonal_pairs |
+| `g` | double-storey rewrite; expect 3→2 |
 
-| Glyph | Measured vs prior | Notes |
-| --- | --- | --- |
-| `g` | counters 3 vs prior 1 | binocular bowls + ear; `expect.py` still documents 3 as starter baseline until a clean 1–2 counter rewrite |
+## Platform cue additions (C3)
 
-## Not holes
+- `edge_mass` — outer-column ink (N/H vs Z/X/bowls)
+- `mid_right` — mid-band right half (G spur vs C)
+- `counters_alt` — alternate counter counts for storey variants
 
-- UC near-ties among same-topology peers — improve cues later; no string special-cases.
-- script-roundhand shape rank noise with matching topology — info only by design.
+## Still open (structural, non-blocking)
+
+- None known for Basic Latin topology vs letter-class priors on latin-sans.
+- Aesthetics / SCORE / VISION remain human.

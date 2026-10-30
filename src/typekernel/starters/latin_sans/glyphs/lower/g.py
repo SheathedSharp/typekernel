@@ -1,4 +1,9 @@
-"""Mixed glyph g — binocular bowls + ear stem ."""
+"""Mixed glyph g — double-storey: upper bowl + right stem + lower bowl.
+
+Letter-class topology: 2 counters, 1 island (binocular sans g). The stem
+seals the upper ring like ``a`` and links into the descender loop so a third
+cavity does not form between the bowls.
+"""
 
 from __future__ import annotations
 
@@ -20,41 +25,40 @@ def g(system: System):
     ov = float(system.overshoot.round)
     exp = float(system.tokens.get("bowl_exponent", 2.15))
 
-    upper_rx = (width - st * 0.35) / 2.0
-    upper_cx = lsb + upper_rx
+    # Shared vertical like ``a``: stem from near-descender up through x-height.
+    right = stem(
+        lsb + width - st,
+        lsb + width,
+        desc * 0.15,
+        xh,
+        name="stem.r",
+        foot="none",
+        top="none",
+    )
+
+    bowl_w = width - st * 0.55
+    cx = lsb + bowl_w / 2.0
     upper = bowl(
-        (upper_cx, xh / 2.0),
-        upper_rx,
-        xh / 2.0,
+        (cx, xh * 0.48),
+        bowl_w / 2.0,
+        xh * 0.48,
         thick=st,
         thin=thin,
         exponent=exp,
-        overshoot=ov,
+        overshoot=ov * 0.5,
         name="bowl.t",
     )
 
     lower_cy = desc / 2.0
     lower_ry = abs(desc) / 2.0
-    lower_rx = width / 2.0 * 0.88
-    lower_cx = lsb + width / 2.0 - st * 0.1
     lower = bowl(
-        (lower_cx, lower_cy),
-        lower_rx,
+        (cx, lower_cy),
+        bowl_w / 2.0 * 0.92,
         lower_ry,
-        thick=st * 0.95,
-        thin=thin * 0.95,
+        thick=st * 0.9,
+        thin=thin * 0.9,
         exponent=exp,
-        overshoot=ov * 0.35,
+        overshoot=ov * 0.3,
         name="bowl.b",
     )
-
-    ear = stem(
-        lsb + width - st,
-        lsb + width,
-        lower_cy - lower_ry * 0.2,
-        xh * 0.78,
-        name="stem.r",
-        foot="none",
-        top="none",
-    )
-    return zone_anchors(upper + ear + lower, system, top='x')
+    return zone_anchors(upper + right + lower, system, top="x")

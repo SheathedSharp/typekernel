@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [
+    "g: counters 3\u21922 \u2014 chose double-storey (upper bowl + stem + lower bowl); previous 3 encoded a third cavity between bowls+ear. Knowledge prior primary=2 with counters_alt=(1,) for single-storey faces."
+  ],
+  "glyphs": {
+    "a": "e3413fa9811eff7c7a5c5f12b57e5bd261c5b169a9a0bbc7b88335738123edbd",
+    "s": "9261fc160de07fc0696f72fe5a6b289d12c2feea478618607df7593ad0fc2c3f",
+    "g": "b93e650ef0d74cade42c036e441a76b69cb25335c153800f93207502948d6735",
+    "f": "e916534eb4ea09147efd688ad71b57b9db6254821f4694048afc7f68d8b56e77",
+    "t": "0180ae30eaa3efa37e548f764ae9851bd263e74e67fc22883fa0d6a06cd3f087",
+    "k": "f951b955b403ba0f69ee76aa635c1c8a78dc28ae6260ecc11b821c02256d02f8"
+  },
+  "group": "lc.mixed",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "g rewritten a-style upper + sealed stem + lower loop; topology 2/1. No approved:true.",
+  "proofs": [],
+  "reads_as": {
+    "g": "g"
+  },
+  "reviewer": "agent:course-correct-c3",
+  "round": 2,
+  "verdict": "pass"
+}

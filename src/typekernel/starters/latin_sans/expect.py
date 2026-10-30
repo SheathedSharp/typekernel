@@ -16,7 +16,7 @@ EXPECT: dict[str, Expect] = {
     "b": Expect(counters=1, islands=1),
     "d": Expect(counters=1, islands=1),
     "e": Expect(counters=1, islands=1, apertures=1),  # one counter, one aperture
-    "g": Expect(counters=3, islands=1),  # overlap join yields third cavity
+    "g": Expect(counters=2, islands=1),  # double-storey: upper + lower bowls, sealed stem
     "o": Expect(counters=1, islands=1),
     "p": Expect(counters=1, islands=1),
     "q": Expect(counters=1, islands=1),
