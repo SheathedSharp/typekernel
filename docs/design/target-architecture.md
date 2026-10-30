@@ -7,7 +7,7 @@
 > **仍属目标草案（未并或未实现）**：`plugins.spacing`/Tracy 工作流（`glyphs_italic/` 加载已实现）、
 > 部分轴/特性细节以 ARCHITECTURE 的现状表为准。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
-> **冷启动复盘计划**：S0–S5 agent 路径已落地；`calt` 仍为 positional 脚手架；pass 默认要 `reads_as`；RH 对 cold 串 critique 程序侧已绿。人工 SCORE / 视觉 / 空目录冷跑仍开。
+> **冷启动复盘计划**：S0–S5 agent 路径已落地；`calt` 仍为 positional 脚手架；pass 默认要 `reads_as`；RH 对 cold 串 critique **本机程序侧**已绿（非 VISION / 非公开终验）。人工 SCORE / 视觉 / 空目录冷跑公开归档仍开。
 > **P6 终验**：公开零上下文试验记录未入库；现行出口是本地 smoke + ARCHITECTURE 诚实表（人审 approvals 仍 false）。
 > **不变的前提**：第一性原理仍是「人类字体设计师怎么做，agent 就怎么做」；内核不出现字母名；
 > 不事后修缝；编译全部复用 fontTools；Oblique ≠ Italic；字重是 designed deltas。
