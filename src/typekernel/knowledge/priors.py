@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 __all__ = [
     "LATIN_BASIC",
+    "LATIN_EXT",
     "TopologyPrior",
     "prior_for",
     "priors_for_text",
@@ -155,9 +156,69 @@ LATIN_BASIC: Mapping[int, TopologyPrior] = {
 }
 
 
+# Latin-1 / Ext-A digraphs — coarse letter-class bins (wide aspect; not
+# calibrated to one starter). AE ≈ A+E (1 counter); OE/ae/oe ≈ two bowls.
+LATIN_EXT: Mapping[int, TopologyPrior] = {
+    0x00C6: _p(  # AE — wide A+E; right-heavy bars; mid crossbar
+        0x00C6,
+        "AE",
+        counters=1,
+        islands=1,
+        ascender=True,
+        aspect=0.80,
+        top_mass=0.45,
+        right_mass=0.60,
+        diag_mass=0.48,
+        mid_band=0.15,
+        edge_mass=0.45,
+        mid_right=0.18,
+    ),
+    0x00E6: _p(  # ae
+        0x00E6,
+        "ae",
+        counters=2,
+        islands=1,
+        aspect=0.80,
+        top_mass=0.48,
+        right_mass=0.50,
+        diag_mass=0.40,
+        mid_band=0.18,
+    ),
+    0x0152: _p(  # OE
+        0x0152,
+        "OE",
+        counters=2,
+        islands=1,
+        ascender=True,
+        aspect=0.80,
+        top_mass=0.55,
+        right_mass=0.52,
+        diag_mass=0.38,
+        mid_band=0.22,
+        edge_mass=0.65,
+        mid_right=0.16,
+    ),
+    0x0153: _p(  # oe
+        0x0153,
+        "oe",
+        counters=2,
+        islands=1,
+        aspect=0.80,
+        top_mass=0.55,
+        right_mass=0.50,
+        diag_mass=0.38,
+        mid_band=0.18,
+    ),
+}
+
+
 def prior_for(codepoint: int) -> TopologyPrior | None:
     """Return the prior for ``codepoint``, or ``None`` if unknown."""
-    return LATIN_BASIC.get(int(codepoint))
+    cp = int(codepoint)
+    hit = LATIN_BASIC.get(cp)
+    if hit is not None:
+        return hit
+    return LATIN_EXT.get(cp)
 
 
 def priors_for_text(text: str) -> list[TopologyPrior]:

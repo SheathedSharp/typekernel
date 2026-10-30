@@ -11,6 +11,7 @@ from __future__ import annotations
 from typekernel.knowledge.confuse import CONFUSE_PAIRS, confuse_partners
 from typekernel.knowledge.priors import (
     LATIN_BASIC,
+    LATIN_EXT,
     TopologyPrior,
     prior_for,
     priors_for_text,
@@ -19,6 +20,7 @@ from typekernel.knowledge.priors import (
 __all__ = [
     "CONFUSE_PAIRS",
     "LATIN_BASIC",
+    "LATIN_EXT",
     "TopologyPrior",
     "confuse_partners",
     "prior_for",

@@ -23,3 +23,13 @@ def test_confuse_pairs_are_symmetric_entries() -> None:
     assert CONFUSE_PAIRS
     assert all(isinstance(a, int) and isinstance(b, int) for a, b in CONFUSE_PAIRS)
     assert len(LATIN_BASIC) >= 26
+
+
+def test_latin_ext_digraph_priors() -> None:
+    ae = prior_for(0x00C6)
+    assert ae is not None
+    assert ae.name == "AE"
+    assert ae.counters == 1
+    assert prior_for(0x00E6) is not None
+    assert prior_for(0x0152) is not None
+    assert prior_for(0x0153) is not None

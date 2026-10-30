@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-30",
+  "expect_changes": [
+    "AE: rebuild as A-triangle + E bars for letter-class Æ; topology expect remains counters=1 islands=1 (stable Light/Bold); LATIN_EXT priors added for digraph read (platform, not expect table)"
+  ],
+  "glyphs": {},
+  "group": "latin_ext+punct",
+  "masters": ["Light", "Bold"],
+  "notes": "AE letter-class structural; no approved:true. Expect keys unchanged (still 1/1).",
+  "proofs": [],
+  "reads_as": {"AE": "AE", "ae": "ae", "OE": "OE", "oe": "oe"},
+  "reviewer": "agent:t43u-exta-tracy",
+  "round": 2,
+  "verdict": "pass"
+}

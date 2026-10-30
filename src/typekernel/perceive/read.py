@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from typekernel.geo.outline import Outline
 from typekernel.knowledge import TopologyPrior, confuse_partners, prior_for
-from typekernel.knowledge.priors import LATIN_BASIC
+from typekernel.knowledge.priors import LATIN_BASIC, LATIN_EXT
 from typekernel.perceive.topology import measure_topology
 from typekernel.project.session import ProjectSession
 from typekernel.system import System
@@ -216,7 +216,7 @@ def _distance_to_prior(feats: Sequence[float], prior: TopologyPrior) -> float:
 
 
 def _latin_rank_pool(*, case: str | None = None) -> dict[int, TopologyPrior]:
-    """Basic Latin letters/digits for ranking; optional lower/upper case filter."""
+    """Basic Latin + Ext digraph priors; optional lower/upper case filter."""
     out: dict[int, TopologyPrior] = {}
     for cp, pr in LATIN_BASIC.items():
         if 0x30 <= cp <= 0x39:
@@ -227,6 +227,13 @@ def _latin_rank_pool(*, case: str | None = None) -> dict[int, TopologyPrior]:
         if case == "lower" and not (0x61 <= cp <= 0x7A):
             continue
         if case == "upper" and not (0x41 <= cp <= 0x5A):
+            continue
+        out[cp] = pr
+    for cp, pr in LATIN_EXT.items():
+        ch = chr(cp)
+        if case == "lower" and not ch.islower():
+            continue
+        if case == "upper" and not ch.isupper():
             continue
         out[cp] = pr
     return out
