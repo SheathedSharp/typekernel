@@ -6,8 +6,9 @@ or :class:`~typekernel.draw.Fragment`) and expands with curve-aware offset
 (:func:`~typekernel.plugins.construct.expand_skeleton_cubic`).
 
 Polyline point lists are **not** accepted by :func:`stroke`. Project shims may
-still fit points to a cubic (or call :func:`expand_slanted_centerline` for a
-hash-stable polyline expand during migration).
+fit points with :func:`slanted_cubic_from_points`. :func:`expand_slanted_centerline`
+remains an internal polyline expand used only as a fallback; both paths run
+compile-time :func:`~typekernel.geo.tidy.tidy_drawing` (not heal/blend/seal).
 """
 
 from __future__ import annotations
@@ -191,7 +192,9 @@ def stroke(
         "bevel" if cubic.closed else "round"
     )
     drawing, _report = expand_skeleton_cubic(cubic, pen, join=join, cap="round")
-    return drawing
+    from typekernel.geo.tidy import tidy_drawing
+
+    return tidy_drawing(drawing)  # type: ignore[return-value]
 
 
 def oval_points(
@@ -241,9 +244,24 @@ def oval_cubic(
     cy: float,
     rx: float,
     ry: float,
-    n: int = 64,
+    n: int = 4,
 ) -> CubicCenterline:
-    """Closed oval as a slanted cubic skeleton."""
+    """Closed oval as a slanted cubic skeleton (κ ellipse, 4 cubics).
+
+    ``n`` is accepted for API compatibility; values other than 4 fall back to
+    sampled :func:`oval_points` + fit. Prefer the default four-cubic ellipse.
+    """
+    if int(n) == 4:
+        from typekernel.geo.path_helpers import ellipse_cubics
+
+        segs: list[CubicBezier] = []
+        for p0, p1, p2, p3 in ellipse_cubics(cx, cy, rx, ry):
+
+            def _m(pt: object) -> tuple[float, float]:
+                return system.map_xy(float(pt.x), float(pt.y))  # type: ignore[attr-defined]
+
+            segs.append(CubicBezier(_m(p0), _m(p1), _m(p2), _m(p3)))
+        return CubicCenterline(tuple(segs), closed=True)
     return slanted_cubic_from_points(oval_points(cx, cy, rx, ry, n=n), system, closed=True)
 
 
@@ -274,9 +292,9 @@ def bowl(
     rx: float,
     ry: float,
     thickness: float | None = None,
-    n: int = 64,
+    n: int = 4,
 ) -> Drawing:
-    """Closed oval ring via cubic skeleton + curve-aware expand."""
+    """Closed oval ring via cubic skeleton + curve-aware expand + tidy."""
     return stroke(system, oval_cubic(system, cx=cx, cy=cy, rx=rx, ry=ry, n=n), thickness=thickness)
 
 
@@ -426,8 +444,7 @@ def fuse(drawing: Drawing) -> Drawing:
 
     simplified = simplify_outline(drawing.outline())
     fused = drawing_from_contours(simplified.contours)
-    # Preserve slots/measures from the pre-fuse drawing when present.
-    if drawing.slots or drawing.measures:
+    if (drawing.slots or drawing.measures) and len(fused.contours) == len(drawing.contours):
         return Drawing(
             fused.contours,
             fused.roles,
