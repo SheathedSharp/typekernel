@@ -28,7 +28,8 @@
 | 次要 starter 默认 audit | **已落地（0/0）** | latin-sans-italic / humanist-italic / chancery：`tk audit` 0 error / 0 warn（`topology.slits` 等 info 可留）；per-glyph 宽在 `elements.WIDTHS` |
 | S0 止血 | **已落地** | evidence 门 / agent-pass unverified / contour warn / charset·doctor·STAT / kern-GPOS warn |
 | S1 轮廓 | **已落地** | cubic κ-ellipse bowl + curve-aware expand；compile-time `geo.tidy`（≠ heal/blend/seal）；控制 o ≤2 轮廓且 ≤16 段；polyline expand 仅内部 |
-| S2 字形身份 | **已落地** | `typekernel.knowledge` 纯数据先验（Unicode→counters/islands/asc/desc/dot）；`tk read [--text]` 轻量分类 top-3 + confuse-pair hard warn；`letter_shape_distance`；守卫允许字母名 **仅** 在 knowledge。S3–S5 未做 |
+| S2 字形身份 | **已落地** | `typekernel.knowledge` 纯数据先验（Unicode→counters/islands/asc/desc/dot）；`tk read [--text]` 轻量分类 top-3 + confuse-pair hard warn；`letter_shape_distance`；守卫允许字母名 **仅** 在 knowledge |
+| S3 连笔 | **已落地** | GlyphDraft `entry`/`exit`（x,y,angle,width）；`Metrics.join` 对齐 exit→entry 派生 advance；`diagnose.join` Δy/tangent/width/gap；`curs`/`calt`；`tk audit --text` 节奏 CV。S4–S5 未做 |
 | P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；产物本地/gitignore，**非**仓库内公开终验。产品级完成仍需人工 approvals + 可追踪试验归档 |
 
 ---

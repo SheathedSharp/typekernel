@@ -7,7 +7,7 @@
 > **仍属目标草案（未并或未实现）**：`plugins.spacing`/Tracy 工作流（`glyphs_italic/` 加载已实现）、
 > 部分轴/特性细节以 ARCHITECTURE 的现状表为准。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
-> **冷启动复盘计划**：S0 止血 + S1 轮廓 + **S2 字形身份**（`knowledge` + `tk read` + confuse warn + `letter_shape_distance`）已落地；S3 连笔 → S4 脚本笔 → S5 评审闭环 待做。
+> **冷启动复盘计划**：S0–S2 + **S3 连笔**（entry/exit、`Metrics.join`、`diagnose.join`、`curs`/`calt`、`tk audit --text`）已落地；S4 脚本笔 → S5 评审闭环 待做。
 > **P6 终验**：公开零上下文试验记录未入库；现行出口是本地 smoke + ARCHITECTURE 诚实表（人审 approvals 仍 false）。
 > **不变的前提**：第一性原理仍是「人类字体设计师怎么做，agent 就怎么做」；内核不出现字母名；
 > 不事后修缝；编译全部复用 fontTools；Oblique ≠ Italic；字重是 designed deltas。
@@ -564,7 +564,7 @@ class Instance:
 | `anatomy` | `stem` `arch` `bowl` `bowl_join` `open_bowl` `BarSpec` `crossbar` `diagonal_pair` `crossing` `spine` `hook` `tail` `ear` `spur` `dot` `drop`；`anatomy.pen.*` |
 | `system` | `Zones.extra`；trait 词表常量 `TRAITS` |
 | `project` | `Project`（清单形态）`FamilyInfo` `Charset` `Composite` `compose` `GlyphDraft` `ComponentRef` `open_project` `ProjectSession` `GlyphBuildError` |
-| `metrics` | `Abs` `Stem` `Token` `Ref` `Mirror` `Optical` `Metrics` `Kerning` `resolve` `pack` |
+| `metrics` | `Abs` `Stem` `Token` `Ref` `Mirror` `Optical` `Metrics` `Kerning` `Join` `resolve` `pack`；`metrics.join` |
 | `axes` | `Axis` `MasterSpec` `Instance` `Family` `Member` |
 | `features` | `Features` `generate_features` |
 | `perceive` | `render_live` `edit_view` `context_view` `overlay_view` `diff_view` `explain` `GlyphReport`；`read_*` / `letter_shape_distance`；文本样张函数（迁自 `qa.proof`） |
