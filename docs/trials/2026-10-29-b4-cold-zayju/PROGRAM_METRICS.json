@@ -1,0 +1,55 @@
+{
+  "tip": "da0adee",
+  "text": "zayju forever young",
+  "starter": "script-roundhand",
+  "critique": [
+    {
+      "signal": "evidence.review",
+      "level": "info",
+      "score": null,
+      "detail": "no pass reviews yet (S0 evidence gate idle)"
+    },
+    {
+      "signal": "expect.changes",
+      "level": "ok",
+      "score": 1.0,
+      "detail": "expect keys=0; reviews=0; with expect_changes=0"
+    },
+    {
+      "signal": "contour.quality",
+      "level": "ok",
+      "score": 1.0,
+      "detail": "0 contour warn(s), 2 info across 12 glyphs"
+    },
+    {
+      "signal": "read.identity",
+      "level": "ok",
+      "score": 1.0,
+      "detail": "17/17 glyphs read; 0 hard warn(s)"
+    },
+    {
+      "signal": "join.dy",
+      "level": "ok",
+      "score": 1.0,
+      "detail": "max \u0394y=0.0 (threshold 20.0); 16 joined pairs"
+    },
+    {
+      "signal": "join.rhythm_cv",
+      "level": "ok",
+      "score": 1.0,
+      "detail": "gap CV=0.000 (threshold 0.35)"
+    },
+    {
+      "signal": "join.gap_dist",
+      "level": "info",
+      "score": null,
+      "detail": "gaps n=16 mean=0.00 stdev=0.00 min=0.00 max=0.00"
+    }
+  ],
+  "critique_warns": 0,
+  "critique_fails": 0,
+  "audit_errors": 0,
+  "audit_warns": 0,
+  "read_hard_warns": 0,
+  "read_top1": "4/17"
+}

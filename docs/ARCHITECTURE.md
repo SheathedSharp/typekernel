@@ -31,8 +31,8 @@
 | S2 字形身份 | **已落地** | `typekernel.knowledge` 纯数据先验（Unicode→counters/islands/asc/desc/dot + 粗粒度 shape bins）；`tk read` top-k + confuse-pair hard warn；hard-warn 以拓扑失配为准，同拓扑 shape 近邻为 info；默认排名按 intended 大小写过滤 Basic Latin；`letter_shape_distance`；字母名 **仅** 在 knowledge |
 | S3 连笔 | **已落地** | GlyphDraft `entry`/`exit`；`Metrics.join`；`diagnose.join`；**`curs` 进 OTF GPOS**；`calt` 为 positional 字形脚手架（无 `.init/.medi/.fina` 时不发射）；`tk audit --text` 节奏 CV |
 | S4 脚本笔 | **已落地** | Intent `tool`/`connection`/`genre`；`Stroke.through` + width/pressure；`entry`/`exit`/`loop`/`overstroke`；`tk see --skeleton`；starter `script-roundhand`；chancery 笔从 Intent |
-| S5 评审闭环 | **已落地（agent 路径）** | `tk critique --text`；`verdict=pass` 默认要求 proof 哈希 **+** `reads_as`；`expect.changes`；trials **B4**。script-roundhand 对 cold 串：critique identity/join **本机程序侧**已绿（非 VISION、非公开终验）。**人工 SCORE / 视觉批准 / 空目录冷跑公开归档仍开** |
-| P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；B4 本机 cold smoke（critique identity/join 程序侧绿）已跑；**公开 archival + 人工 SCORE/VISION 批准仍开**；产物多在 gitignore。勿把本地 smoke 写成产品完成 |
+| S5 评审闭环 | **已落地（agent 路径）** | `tk critique --text`；`verdict=pass` 默认要求 proof 哈希 **+** `reads_as`；`expect.changes`；trials **B4**。B4 程序侧归档：`docs/trials/2026-10-29-b4-cold-zayju/`。**人工 SCORE / VISION / `approved: true` 仍开** |
+| P6 零上下文终验 | **程序侧已归档；人审仍开** | 协议在 skill `trials.md`；B4 cold smoke + 再验见 `docs/trials/2026-10-29-b4-cold-zayju/`（ACCEPTANCE + PROGRAM_METRICS；human SCORE 空白）。**VISION / 人工 SCORE / `approved: true` 仍开** — 勿写成产品完成 |
 
 ---
 

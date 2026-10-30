@@ -145,8 +145,8 @@ Human columns stay blank until a person scores.
 
 Protocol above is tracked. Program-side cold runs may drop SCORE_TABLE/RECORD under `transplants/trials/<date>-*/` (those summaries are tracked; PNGs stay gitignored). **Human 1–5 scores** and vision approve remain required for the P6-2 pass bar — agents leave those cells blank. See `transplants/trials/README.md`.
 
-### Honesty (2026-10-29)
+### Honesty (2026-10-29 / updated)
 
-- **Local B4 cold smoke** (script-roundhand + `zayju forever young`, critique identity/join program-green) has been run on a maintainer machine.
-- That is **not** public archival, **not** VISION approve, and **not** a filled human SCORE table.
+- **B4 program archival (tracked):** `docs/trials/2026-10-29-b4-cold-zayju/` — ACCEPTANCE excerpt, PROGRAM_METRICS, SCORE_TABLE with human cells blank.
+- That is **not** VISION approve and **not** a filled human SCORE table.
 - Agents must still leave human SCORE blank and must not write `approved: true`.
