@@ -150,8 +150,9 @@ def _require_pass_evidence(
         )
     if require_reads_as and not reads_as:
         raise EvidenceRequired(
-            "verdict=pass requires per-glyph reads_as evidence when --require-reads-as "
-            "is set (or when reads_as is expected). Provide --reads-as JSON."
+            "verdict=pass requires per-glyph reads_as (glyph→label from tk read vs "
+            "intended). Proof hash alone is not enough. Provide --reads-as JSON "
+            'e.g. {"n":"n","o":"o"}.'
         )
 
 
@@ -194,14 +195,14 @@ def record_review(
     proofs: Sequence[str] | None = None,
     proof_paths: Sequence[str | Path] | None = None,
     reads_as: Mapping[str, str] | None = None,
-    require_reads_as: bool = False,
+    require_reads_as: bool = True,
     expect_changes: Sequence[str] | None = None,
 ) -> ReviewRecord:
     """Write a pass/fail review with current outline hashes.
 
-    ``verdict=pass`` requires non-empty proof hashes (file SHA-256 or hex).
-    Per-glyph ``reads_as`` is optional unless ``require_reads_as=True`` (S2+).
-    ``expect_changes`` documents why ``expect.py`` was edited (S5).
+    ``verdict=pass`` requires proof hashes **and** per-glyph ``reads_as``
+    (tk read vs intended). Pass ``require_reads_as=False`` only for legacy
+    fixtures. ``expect_changes`` documents why ``expect.py`` was edited (S5).
     """
     if verdict not in ("pass", "fail", "pending"):
         raise ValueError(f"invalid verdict {verdict!r}")

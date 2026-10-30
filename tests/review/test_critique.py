@@ -66,6 +66,7 @@ def test_critique_expect_ok_with_rationale(tmp_path: Path) -> None:
         note="documented",
         reviewer="agent:test",
         proof_paths=[img],
+        reads_as={"n": "n"},
         expect_changes=["agent kept stock topology expects"],
     )
     again = critique_project(root, "nnonoo")

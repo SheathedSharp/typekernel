@@ -48,6 +48,7 @@ def test_expect_quiet_when_rationale_recorded(tmp_path: Path) -> None:
         verdict="pass",
         reviewer="agent:test",
         proof_paths=[img],
+        reads_as={"n": "n"},
         expect_changes=["kept starter topology expects for control glyphs"],
     )
     report = audit_project(root)

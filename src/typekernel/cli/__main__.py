@@ -282,7 +282,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
                 proofs=getattr(args, "proof_hash", None) or None,
                 proof_paths=getattr(args, "proof", None) or None,
                 reads_as=parse_reads_as(getattr(args, "reads_as", None)),
-                require_reads_as=bool(getattr(args, "require_reads_as", False)),
+                require_reads_as=not bool(getattr(args, "allow_no_reads_as", False)),
                 expect_changes=parse_expect_changes(getattr(args, "expect_change", None)),
             )
         except EvidenceRequired as exc:
@@ -673,7 +673,13 @@ def main(argv: list[str] | None = None) -> int:
         "--require-reads-as",
         action="store_true",
         dest="require_reads_as",
-        help="refuse pass when --reads-as is missing (S2+)",
+        help="(default) refuse pass when --reads-as is missing",
+    )
+    p_rec.add_argument(
+        "--allow-no-reads-as",
+        action="store_true",
+        dest="allow_no_reads_as",
+        help="legacy escape: allow pass with proof hashes only (not recommended)",
     )
     p_rec.add_argument(
         "--expect-change",

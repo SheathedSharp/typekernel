@@ -1,4 +1,4 @@
-"""S0 evidence gate: pass requires proof hashes; agent-pass unverified in status."""
+"""Evidence gate: pass requires proof hashes + reads_as (E lock)."""
 
 from __future__ import annotations
 
@@ -27,14 +27,37 @@ def test_pass_without_proof_refused() -> None:
         shutil.rmtree(td)
 
 
-def test_pass_with_proof_hash_records_and_status_unverified() -> None:
+def test_pass_with_proof_only_refused_without_reads_as() -> None:
+    td = Path(tempfile.mkdtemp())
+    try:
+        root = create_project("ev_reads", parent=td, starter="latin-sans")
+        proof = root / "proofs"
+        proof.mkdir(exist_ok=True)
+        img = proof / "n.png"
+        img.write_bytes(b"\x89PNG\r\n\x1afake-proof")
+        with open_project(root) as session, pytest.raises(EvidenceRequired, match="reads_as"):
+            record_review(
+                session,
+                "n",
+                verdict="pass",
+                note="ok",
+                reviewer="agent:test",
+                proof_paths=[img],
+            )
+    finally:
+        import shutil
+
+        shutil.rmtree(td)
+
+
+def test_pass_with_proof_and_reads_as_records_and_status_unverified() -> None:
     td = Path(tempfile.mkdtemp())
     try:
         root = create_project("ev2", parent=td, starter="latin-sans")
         proof = root / "proofs"
         proof.mkdir(exist_ok=True)
         img = proof / "n.png"
-        img.write_bytes(b"\x89PNG\r\n\x1a\nfake-proof")
+        img.write_bytes(b"\x89PNG\r\n\x1afake-proof")
         with open_project(root) as session:
             rec = record_review(
                 session,
@@ -43,8 +66,10 @@ def test_pass_with_proof_hash_records_and_status_unverified() -> None:
                 note="ok",
                 reviewer="agent:test",
                 proof_paths=[img],
+                reads_as={"n": "n"},
             )
             assert rec.has_proof_evidence
+            assert rec.reads_as == {"n": "n"}
             assert len(rec.proofs) == 1
             assert rec.proofs[0] == proof_file_hash(img)
         text = status_project(root)

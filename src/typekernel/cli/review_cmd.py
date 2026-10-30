@@ -38,7 +38,7 @@ def review_record(
     proofs: Sequence[str] | None = None,
     proof_paths: Sequence[str | Path] | None = None,
     reads_as: Mapping[str, str] | None = None,
-    require_reads_as: bool = False,
+    require_reads_as: bool = True,
     expect_changes: Sequence[str] | None = None,
 ) -> Path:
     with open_project(path) as session:

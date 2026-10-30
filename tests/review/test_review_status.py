@@ -39,6 +39,7 @@ def test_stale_only_touched_group() -> None:
                 note="ok",
                 reviewer="agent:test",
                 proof_paths=[proof],
+                reads_as={"n": "n"},
             )
             stale, _changed = is_stale(session, "n")
             assert stale is False
