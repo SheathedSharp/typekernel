@@ -742,7 +742,7 @@ def main(argv: list[str] | None = None) -> int:
     p_ss.add_argument(
         "--plugin",
         default="bbox_rhythm",
-        choices=("bbox_rhythm", "optical_air", "tracy_bands"),
+        choices=("bbox_rhythm", "optical_air", "tracy_bands", "tracy_ink"),
         help="spacing plugin id (default: bbox_rhythm)",
     )
     p_ss.add_argument(
@@ -774,7 +774,7 @@ def main(argv: list[str] | None = None) -> int:
     p_sa.add_argument(
         "--plugin",
         default="bbox_rhythm",
-        choices=("bbox_rhythm", "optical_air", "tracy_bands"),
+        choices=("bbox_rhythm", "optical_air", "tracy_bands", "tracy_ink"),
         help="spacing plugin id (default: bbox_rhythm)",
     )
     p_sa.add_argument(

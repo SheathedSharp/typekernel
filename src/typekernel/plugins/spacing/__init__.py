@@ -1,8 +1,8 @@
 """Spacing plugins — opt-in suggestions; Project.metrics remains the source of truth.
 
-Protocol + heuristics (bbox rhythm, optical air, multi-band Tracy silhouette).
+Protocol + heuristics (bbox rhythm, optical air, TracyBand, TracyInk).
 Apply path writes Abs into spacing.py only with explicit ``--write``.
-Full Tracy gray-value optical spacing workflow is **not** claimed complete.
+Partial Tracy: multi-band silhouette + scanline ink-density columns; full bitmap/stem-band Tracy workflow is **not** claimed complete.
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from typekernel.plugins.spacing.run import (
     write_spacing_suggestions,
 )
 from typekernel.plugins.spacing.tracy_bands import TracyBandPlugin
+from typekernel.plugins.spacing.tracy_ink import TracyInkPlugin
 
 __all__ = [
     "ApplyPlan",
@@ -46,6 +47,7 @@ __all__ = [
     "SpacingPlugin",
     "SpacingSuggestions",
     "TracyBandPlugin",
+    "TracyInkPlugin",
     "build_apply_plan",
     "default_spacing_plugin",
     "metrics_after_plan",

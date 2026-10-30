@@ -23,12 +23,14 @@ __all__ = [
     "OpticalSpacingResult",
     "fit_kern_pair",
     "ink_intervals_at_y",
+    "measure_side_ink_density",
     "measure_side_whitespace",
     "pair_gap_bbox",
     "pair_gap_optical",
     "silhouette_edge",
     "space_font",
     "space_word_optical",
+    "suggest_sidebearings_ink_density",
     "suggest_sidebearings_optical",
     "suggest_sidebearings_tracy_bands",
     "with_sidebearings",
@@ -239,6 +241,93 @@ def suggest_sidebearings_tracy_bands(
     ratio = float(getattr(ctx, "sidebearing_ratio", 0.2) or 0.2)
     air = float(target_air) if target_air is not None else ratio * xh
     return (max(0.0, air - left_inset), max(0.0, air - right_inset))
+
+
+
+def measure_side_ink_density(
+    outline: Outline | list[Outline],
+    side: str,
+    *,
+    y0: float,
+    y1: float,
+    column: float,
+    samples: int = 17,
+) -> float:
+    """Mean ink fraction in a side column (0..1).
+
+    For each scanline, measures how much of the strip from the ink bbox edge
+    inward by ``column`` is covered by ink intervals. This is a **scanline
+    ink-fraction** cue (partial Tracy gray), not a bitmap gray render.
+    """
+    outlines = [outline] if isinstance(outline, Outline) else list(outline)
+    try:
+        min_x, _, max_x, _ = union_bounds(outlines)
+    except ValueError:
+        return 0.0
+    depth = max(float(column), 1e-6)
+    dens: list[float] = []
+    for y in _y_samples(y0, y1, samples):
+        intervals = ink_intervals_at_y(outlines, y)
+        if side == "left":
+            a0, a1 = min_x, min_x + depth
+        elif side == "right":
+            a0, a1 = max_x - depth, max_x
+        else:
+            raise ValueError("side must be 'left' or 'right'")
+        covered = 0.0
+        for lo, hi in intervals:
+            covered += max(0.0, min(hi, a1) - max(lo, a0))
+        dens.append(min(1.0, covered / depth))
+    if not dens:
+        return 0.0
+    return sum(dens) / len(dens)
+
+
+def suggest_sidebearings_ink_density(
+    outline: Outline | list[Outline] | Glyph,
+    ctx: OpticalContext,
+    *,
+    samples: int = 17,
+    target_air: float | None = None,
+    column_frac: float = 0.12,
+) -> tuple[float, float]:
+    """Sidebearings from side-column ink density (partial Tracy gray).
+
+    Denser outer columns need more sidebearing so average side gray stays
+    closer to a target air budget. Uses scanline ink fractions from
+    :func:`ink_intervals_at_y` — **not** a raster gray-value model.
+
+    ``column_frac`` is the side-column width as a fraction of x-height.
+    """
+    if isinstance(outline, Glyph):
+        outlines: list[Outline] = _ink_outlines(outline)
+    elif isinstance(outline, Outline):
+        outlines = [outline]
+    else:
+        outlines = list(outline)
+    xh = float(ctx.x_height)
+    y0, y1 = 0.0, xh
+    column = max(1.0, float(column_frac) * xh)
+    left_d = measure_side_ink_density(
+        outlines, "left", y0=y0, y1=y1, column=column, samples=samples
+    )
+    right_d = measure_side_ink_density(
+        outlines, "right", y0=y0, y1=y1, column=column, samples=samples
+    )
+    # Also fold silhouette inset so hollow sides still get air.
+    depth = DEFAULT_DEPTH * xh
+    left_inset = measure_side_whitespace(
+        outlines, "left", y0=y0, y1=y1, samples=samples, depth=depth
+    )
+    right_inset = measure_side_whitespace(
+        outlines, "right", y0=y0, y1=y1, samples=samples, depth=depth
+    )
+    ratio = float(getattr(ctx, "sidebearing_ratio", 0.2) or 0.2)
+    air = float(target_air) if target_air is not None else ratio * xh
+    # Density adds to needed air; inset reduces it (already open).
+    lsb = max(0.0, air * (0.55 + 0.90 * left_d) - left_inset)
+    rsb = max(0.0, air * (0.55 + 0.90 * right_d) - right_inset)
+    return (lsb, rsb)
 
 
 def pair_gap_optical(

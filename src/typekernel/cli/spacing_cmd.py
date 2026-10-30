@@ -10,6 +10,7 @@ from typekernel.plugins.spacing import (
     OpticalAirPlugin,
     SpacingPlugin,
     TracyBandPlugin,
+    TracyInkPlugin,
     run_apply,
     run_spacing_plugin,
     write_spacing_suggestions,
@@ -22,6 +23,7 @@ _PLUGINS: dict[str, Callable[[], SpacingPlugin]] = {
     "bbox_rhythm": BBoxRhythmPlugin,
     "optical_air": OpticalAirPlugin,
     "tracy_bands": TracyBandPlugin,
+    "tracy_ink": TracyInkPlugin,
 }
 
 

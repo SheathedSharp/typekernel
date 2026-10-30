@@ -12,12 +12,12 @@
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
 | `glyphs_italic/` 约定 | **已落地（加载）** | `Project.glyphs_italic` + session 在 `system.is_italic` 母版上优先用该目录；starter 仍可独立 italic 项目。同项目 roman+italic 双目录可共元素 |
-| `plugins.spacing` | **最小 Protocol + apply 已落地** | `SpacingPlugin` + `BBoxRhythmPlugin` / `OpticalAirPlugin` / `TracyBandPlugin`；`tk spacing suggest` 写 JSON；`tk spacing apply` 默认 dry-run，`--write` 才把 Abs 写入 `spacing.py`。**不**静默改轮廓；默认 audit 不挂载。**partial Tracy**（多带 silhouette）已有；完整灰度 Tracy 工作流仍开 |
+| `plugins.spacing` | **最小 Protocol + apply 已落地** | `SpacingPlugin` + bbox/optical/`TracyBand`/`TracyInk`；`tk spacing suggest|apply`（apply 默认 dry-run，`--write`→Abs）。**不**静默改轮廓；默认 audit 不挂载。**partial Tracy**；完整位图/stem-band Tracy 仍开 |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
 | 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；三 starter 0 不合规（见 `docs/design/tag-noncompliance.md`） |
 | `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
-| Tracy / 光学间距插件 | **部分：多带 silhouette 建议** | `suggest_sidebearings_tracy_bands` + `TracyBandPlugin`（加权水平带 whitespace，**非**灰度/stem-band Tracy）。`tk spacing apply --write` 可写 Abs。完整 Tracy 灰度工作流仍开 |
+| Tracy / 光学间距插件 | **部分：silhouette 带 + 扫描线墨量列** | `TracyBandPlugin`（多带 whitespace）+ `TracyInkPlugin`（侧栏 scanline ink-fraction，**非**位图灰度 / 完整 stem-band Tracy）。`tk spacing apply --write` 可写 Abs。完整 Tracy 工作流仍开 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠 `Project.audit.stems` |
 | Starter 字形质量 | **未视觉批准** | 四套 starter 程序侧 `tk audit` 0/0；样张尚未通过人工视觉评审（approvals 仍 false） |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
