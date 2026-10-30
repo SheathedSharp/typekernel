@@ -143,7 +143,7 @@ def n(s):                                   # s: 当前母版的 System
 ### 槽位插件：风格维度和字母解耦
 
 ```python
-# myfont/font.py
+# myfont/project.py
 from typekernel.project import Project
 from typekernel.plugins.corners import slab, plain
 from typekernel.plugins.ends import angled
