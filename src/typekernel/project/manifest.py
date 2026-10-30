@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal
 
 from typekernel.axes.spec import Axis, Instance, MasterSpec
 from typekernel.draw import CornerFiller, EndFiller
@@ -36,6 +36,7 @@ class FamilyInfo:
     license: str = ""
     license_url: str = ""
     copyright: str = ""
+    italic: bool = False  # S0: auto STAT ital + italicAngle/fsSelection on build
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +67,20 @@ class Charset:
             self.codepoints | other.codepoints,
             self.extra_names | other.extra_names,
         )
+
+    @classmethod
+    def from_string(cls, text: str) -> Charset:
+        """Build a charset from a literal string (unique codepoints, skip space)."""
+        cps = {ord(ch) for ch in text if not ch.isspace()}
+        return cls(frozenset(cps))
+
+    def contains_name(self, name: str, *, unicodes: Sequence[int] | None = None) -> bool:
+        """True if glyph ``name`` / its unicodes are in this charset."""
+        if name in self.extra_names:
+            return True
+        if unicodes:
+            return any(cp in self.codepoints for cp in unicodes)
+        return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +168,7 @@ class Project:
     masters: Sequence[MasterSpec] = ()
     instances: Sequence[Instance] = ()
     charset: Charset | None = None
+    charset_mode: Literal["all", "minimal"] = "all"
     composites: Mapping[str, Composite] = field(default_factory=dict)
     corners: Mapping[str, CornerFiller] | None = None
     ends: Mapping[str, EndFiller] | None = None

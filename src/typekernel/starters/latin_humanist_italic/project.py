@@ -119,7 +119,7 @@ _AUDIT_STEMS = {
 }
 
 PROJECT = Project(
-    info=FamilyInfo(family="Latin Humanist Italic"),
+    info=FamilyInfo(family="Latin Humanist Italic", italic=True),
     system=system,
     glyphs="glyphs",
     masters=tuple(

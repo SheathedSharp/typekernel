@@ -69,7 +69,8 @@ def test_tk_new_humanist_italic_builds_otf(tmp_path: Path) -> None:
     assert (root / "elements.py").is_file()
     assert (root / "glyphs" / "lower" / "n.py").is_file()
     project_text = (root / "project.py").read_text(encoding="utf-8")
-    assert 'FamilyInfo(family="Demo Hi")' in project_text
+    assert 'FamilyInfo(family="Demo Hi"' in project_text
+    assert "italic=True" in project_text
     font, result = build_project(root, out_dir=root / "build", formats=("otf",))
     names = {g.name for g in font}
     assert {"n", "o", "H", "O", ".notdef", "space"} <= names

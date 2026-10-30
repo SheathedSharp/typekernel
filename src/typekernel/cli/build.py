@@ -19,6 +19,27 @@ from typekernel.project import open_project
 __all__ = ["build_font_from_project", "build_project", "build_variable_project"]
 
 
+
+
+def apply_italic_face_metadata(binary: Path, *, family: str, style_name: str) -> None:
+    """Write STAT ital + italicAngle/fsSelection for ``FamilyInfo.italic`` faces."""
+    from fontTools.ttLib import TTFont
+
+    from typekernel.axes.family import (
+        FamilyMember,
+        FamilySpec,
+        apply_family_names,
+        apply_family_stat,
+    )
+
+    tt = TTFont(binary)
+    member = FamilyMember(style_name=style_name or "Italic", italic=True)
+    spec = FamilySpec(name=family, members=(member,))
+    apply_family_names(tt, spec, member)
+    apply_family_stat(tt, spec, member)
+    tt.save(binary)
+
+
 def build_project(
     root: str | Path,
     *,
@@ -27,11 +48,22 @@ def build_project(
     resolve_overlaps: bool = False,
 ) -> tuple[Font, FontBuild]:
     """Load ``root``, assemble glyphs, write binaries under ``out_dir``."""
+    from typekernel.cli.doctor import require_compile_extras
+
+    require_compile_extras(context="tk build")
     root_path = Path(root).resolve()
     with open_project(root_path) as session:
         font = build_font_from_session(session)
+        info = session.project.info
+        style = session.project.style_name
     dest = Path(out_dir) if out_dir is not None else root_path / "build"
     result = build_font(font, dest, formats=formats, resolve_overlaps=resolve_overlaps)
+    if info.italic:
+        for path in result.binaries.values():
+            if path.suffix.lower() in {".otf", ".ttf"}:
+                apply_italic_face_metadata(
+                    Path(path), family=info.family, style_name=style
+                )
     return font, result
 
 

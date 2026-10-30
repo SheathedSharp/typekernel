@@ -6,6 +6,8 @@ import re
 import shutil
 from pathlib import Path
 
+from typekernel.cli.charset_scope import apply_minimal_charset
+
 __all__ = ["STARTERS", "create_project"]
 
 STARTERS: dict[str, str] = {
@@ -87,6 +89,7 @@ One ``.py`` file per glyph. Example::
 '''
 
 
+
 def _starters_root() -> Path:
     return Path(__file__).resolve().parents[1] / "starters"
 
@@ -96,12 +99,16 @@ def create_project(
     *,
     parent: str | Path = ".",
     starter: str | None = None,
+    charset: str | None = None,
+    text: str | None = None,
 ) -> Path:
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
     ``latin-sans``, ``latin-sans-italic``, ``latin-humanist-italic``, or ``latin-chancery`` to copy
     the matching starter (system, elements, glyph set, project.py).
+
+    ``charset="minimal"`` with ``text`` scopes audit/proof to those letters.
     """
     if not name or "/" in name or "\\" in name or name in (".", ".."):
         raise ValueError(f"invalid project name: {name!r}")
@@ -128,33 +135,36 @@ def create_project(
             encoding="utf-8",
         )
         (glyphs / "README.md").write_text(_GLYPH_README, encoding="utf-8")
-        return root
-
-    src = _starters_root() / STARTERS[starter_key]
-    if not src.is_dir():
-        raise FileNotFoundError(f"starter template missing: {src}")
-    shutil.copytree(
-        src,
-        root,
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
-    )
-    family = name.replace("_", " ").title()
-    project_py = root / "project.py"
-    if project_py.is_file():
-        text = project_py.read_text(encoding="utf-8")
-        text, n = re.subn(
-            r"FamilyInfo\(family=FAMILY_NAME\)",
-            f'FamilyInfo(family="{family}")',
-            text,
-            count=1,
+    else:
+        src = _starters_root() / STARTERS[starter_key]
+        if not src.is_dir():
+            raise FileNotFoundError(f"starter template missing: {src}")
+        shutil.copytree(
+            src,
+            root,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
         )
-        if not n:
-            text, n = re.subn(
-                r'FamilyInfo\(family="[^"]*"\)',
+        family = name.replace("_", " ").title()
+        project_py = root / "project.py"
+        if project_py.is_file():
+            proj_text = project_py.read_text(encoding="utf-8")
+            proj_text, n = re.subn(
+                r"FamilyInfo\(family=FAMILY_NAME\)",
                 f'FamilyInfo(family="{family}")',
-                text,
+                proj_text,
                 count=1,
             )
-        if n:
-            project_py.write_text(text, encoding="utf-8")
+            if not n:
+                # Preserve kwargs after family= (e.g. italic=True for S0 STAT).
+                proj_text, n = re.subn(
+                    r'FamilyInfo\(family="[^"]*"(?P<rest>[^)]*)\)',
+                    lambda m: f'FamilyInfo(family="{family}"{m.group("rest")})',
+                    proj_text,
+                    count=1,
+                )
+            if n:
+                project_py.write_text(proj_text, encoding="utf-8")
+
+    if charset == "minimal" or (text and charset != "full"):
+        apply_minimal_charset(root, text or "")
     return root

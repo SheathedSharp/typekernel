@@ -36,7 +36,7 @@ _MASTER_LOCATIONS: dict[str, dict[str, float]] = {
 }
 
 PROJECT = Project(
-    info=FamilyInfo(family="Latin Sans"),
+    info=FamilyInfo(family="Latin Sans", italic=True),
     system=system,
     glyphs="glyphs",
     masters=tuple(

@@ -52,7 +52,9 @@ def build_font_from_session(
     family = family_name or project.info.family
     style = style_name or project.style_name
     font = Font.from_system(system, family, style)
-    for name in session.specs():
+    from typekernel.project.scope import scoped_glyph_names
+
+    for name in scoped_glyph_names(session):
         font.add_glyph(session.glyph(name, master=master), replace=True)
     if apply_spacing:
         apply_project_spacing(font, project, session.root)

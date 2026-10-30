@@ -114,7 +114,7 @@ _AUDIT_STEMS = {
 }
 
 PROJECT = Project(
-    info=FamilyInfo(family="LatinChancery"),
+    info=FamilyInfo(family="LatinChancery", italic=True),
     system=system,
     glyphs="glyphs",
     masters=tuple(MasterSpec(m.name, {}, m.system) for m in masters),
