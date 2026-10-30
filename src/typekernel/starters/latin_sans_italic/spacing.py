@@ -89,6 +89,7 @@ METRICS = Metrics(
         "emdash": (Stem("lc", 0.45), Stem("lc", 0.45)),
     },
     space=Stem("lc", 2.8),
+    pack="bbox",
 )
 
 KERNING = Kerning()

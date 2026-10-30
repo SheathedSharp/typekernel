@@ -1,7 +1,7 @@
 """Figure 0 — elliptical bowl."""
 from __future__ import annotations
 
-from elements import bowl
+from elements import WIDTHS, bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -10,7 +10,7 @@ from typekernel.system import System
 @glyph("zero", group="figs")
 def zero(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 420.0))
+    width = float(WIDTHS.get("fig", 420.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     h = float(system.zones.cap) * 0.72
     ov = float(system.overshoot.round)

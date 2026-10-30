@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def F(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("F_width", 460.0))
+    width = float(WIDTHS.get("F", 460.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     x = lsb + uc * 0.5
     rail = stroke(

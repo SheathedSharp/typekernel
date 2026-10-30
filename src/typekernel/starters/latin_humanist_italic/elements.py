@@ -24,6 +24,7 @@ from typekernel.geo.stroke import Centerline
 from typekernel.system import System
 
 __all__ = [
+    "WIDTHS",
     "assemble",
     "bowl",
     "diagonal_stroke",
@@ -39,6 +40,49 @@ __all__ = [
     "stroke",
     "uc_stem",
 ]
+
+# Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
+WIDTHS: dict[str, float] = {
+    "A": 620,
+    "B": 560,
+    "D": 600,
+    "E": 500,
+    "F": 460,
+    "G": 640,
+    "J": 460,
+    "K": 580,
+    "L": 480,
+    "M": 760,
+    "N": 600,
+    "P": 520,
+    "R": 580,
+    "S": 540,
+    "T": 560,
+    "U": 600,
+    "V": 620,
+    "W": 900,
+    "X": 600,
+    "Y": 600,
+    "Z": 560,
+    "emdash": 800,
+    "endash": 400,
+    "f": 260,
+    "fig": 460,
+    "g": 420,
+    "hyphen": 200,
+    "k": 400,
+    "m": 640,
+    "question": 300,
+    "r": 280,
+    "s": 360,
+    "slash": 280,
+    "t": 280,
+    "v": 400,
+    "w": 620,
+    "x": 400,
+    "y": 400,
+    "z": 400,
+}
 
 
 def slanted_polyline(

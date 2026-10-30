@@ -19,12 +19,14 @@
 | `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠 `Project.audit.stems` |
-| Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
+| Starter 字形质量 | **未视觉批准** | 四套 starter 程序侧 `tk audit` 0/0；样张尚未通过人工视觉评审（approvals 仍 false） |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
 | LihuiT 移植 Hausdorff 指标 | **程序侧已达标** | `transplants/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `transplants/lihuit/BACKLOG.md`） |
 | Stem `Project.audit.stems` 策略 | **已落地** | `AuditConfig.stems`；map 之外的字形不跑 stem 门禁（Ext-A/符号安静）；空元组=无光学探针 |
 | `project.py` → `PROJECT` | **已落地** | 旧 `system.py` 模块级 `FAMILY_NAME`/`AUDIT_STEMS`/`BRIEF`/`MASTER_LOCATIONS` 等已删；loader 遇残留报 `MigrationError` |
 | `perceive.voice_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2 距离；**不是**美学 originality。主观的 distinctive 由人审另行记录 |
+| 次要 starter 默认 audit | **已落地（0/0）** | latin-sans-italic / humanist-italic / chancery：`tk audit` 0 error / 0 warn（`topology.slits` 等 info 可留）；per-glyph 宽在 `elements.WIDTHS` |
+| P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；产物本地/gitignore，**非**仓库内公开终验。产品级完成仍需人工 approvals + 可追踪试验归档 |
 
 ---
 
@@ -33,8 +35,8 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  字体项目（用户 / agent 拥有）   tk new myfont                   │
-│  brief.md  system.py  elements.py  glyphs/*.py  spacing.py      │
-│  masters.py  font.py  proofs/                                    │
+│  brief.md  project.py  system.py  elements.py  glyphs/*.py       │
+│  spacing.py  expect.py  marks/  reviews/  approvals/  proofs/  │
 │  ← starter 模板“拷贝进来”（shadcn 模式），之后完全归 agent 改     │
 └───────────────────────────────▲─────────────────────────────────┘
                                 │ 只调用公开 API
@@ -155,7 +157,7 @@ project = Project(
 ```
 
 - 衬线插件只看到一个 `CornerSite`（角点位置、进出边方向、所在 stem 宽、标签），返回替换该角点的片段。
-- 无衬线 → 衬线：**改 `font.py` 一行，0 个字形文件改动。**
+- 无衬线 → 衬线：**改 `project.py` 一行，0 个字形文件改动。**
 - 某个字要例外（`r` 只要左脚衬线），在该字形里换标签或声明 `corner(..., fill="plain")`，不改插件。
 
 ### 构造方式也是插件，不是唯一真相
@@ -208,7 +210,7 @@ tk new myfont --starter latin-sans      # 拷入 system/elements/控制字模板
 3. 画控制字 n o H O              → tk proof control   → 看图，改，重复
 4. 写 / 改 elements.py（肩、碗、弧）→ 扩字组           → tk proof lc.n / lc.o / diag
 5. tk audit                         → 读 stem/zone 偏差，逐字修
-6. 选衬线 / 端点插件（font.py）      → tk proof all
+6. 选衬线 / 端点插件（project.py）   → tk proof all
 7. spacing.py                       → tk proof spacing / kern
 8. 母版、斜体                        → tk audit --compat；tk proof ladder
 9. tk build                         → OTF / TTF / VF

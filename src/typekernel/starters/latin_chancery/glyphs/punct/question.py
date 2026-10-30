@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import open_arc_points, oval_points, stroke
+from elements import WIDTHS, open_arc_points, oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,7 @@ _DOT_N = 16
 def question(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens.get("question_width", 300.0))
+    width = float(WIDTHS.get("question", 300.0))
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     cx = lsb + width / 2.0
     hook_pts = list(

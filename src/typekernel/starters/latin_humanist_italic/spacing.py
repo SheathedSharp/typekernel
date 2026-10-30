@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typekernel.font.kerning import KernPair
 from typekernel.metrics import Kerning, Metrics, Ref, Stem, Token
 
 __all__ = ["KERNING", "METRICS"]
@@ -91,56 +90,8 @@ METRICS = Metrics(
         'backslash': (Stem('lc', 0.3), Stem('lc', 0.3)),
     },
     space=Token("space_advance"),
-    pack=None,
+    pack="bbox",
     italic_pack_ys=(),
 )
 
-KERNING = Kerning(
-    pairs=(
-        KernPair('A', 'V', -56.0),
-        KernPair('A', 'W', -44.0),
-        KernPair('A', 'Y', -48.0),
-        KernPair('A', 'T', -28.0),
-        KernPair('V', 'A', -56.0),
-        KernPair('W', 'A', -44.0),
-        KernPair('Y', 'A', -48.0),
-        KernPair('T', 'A', -28.0),
-        KernPair('T', 'a', -40.0),
-        KernPair('T', 'o', -44.0),
-        KernPair('T', 'e', -40.0),
-        KernPair('T', 'y', -32.0),
-        KernPair('F', 'a', -32.0),
-        KernPair('F', 'o', -28.0),
-        KernPair('F', 'comma', -52.0),
-        KernPair('F', 'period', -52.0),
-        KernPair('P', 'a', -28.0),
-        KernPair('P', 'o', -24.0),
-        KernPair('P', 'period', -60.0),
-        KernPair('P', 'comma', -60.0),
-        KernPair('R', 'A', -20.0),
-        KernPair('R', 'a', -12.0),
-        KernPair('R', 'o', -10.0),
-        KernPair('L', 'T', -56.0),
-        KernPair('L', 'V', -48.0),
-        KernPair('L', 'Y', -52.0),
-        KernPair('L', 'W', -40.0),
-        KernPair('Y', 'o', -36.0),
-        KernPair('Y', 'a', -32.0),
-        KernPair('Y', 'e', -28.0),
-        KernPair('V', 'o', -32.0),
-        KernPair('V', 'a', -28.0),
-        KernPair('V', 'e', -24.0),
-        KernPair('W', 'o', -24.0),
-        KernPair('W', 'a', -20.0),
-        KernPair('K', 'o', -16.0),
-        KernPair('K', 'a', -12.0),
-        KernPair('r', 'a', -8.0),
-        KernPair('r', 'o', -6.0),
-        KernPair('f', 'a', -6.0),
-        KernPair('f', 'o', -4.0),
-        KernPair('f', 'period', -20.0),
-        KernPair('f', 'comma', -20.0),
-        KernPair('quotedbl', 'A', -12.0),
-        KernPair('quotesingle', 'A', -12.0),
-    ),
-)
+KERNING = Kerning()

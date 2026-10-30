@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import open_arc_points, stroke, uc_stem
+from elements import WIDTHS, open_arc_points, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def P(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("P_width", 520.0))
+    width = float(WIDTHS.get("P", 520.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5

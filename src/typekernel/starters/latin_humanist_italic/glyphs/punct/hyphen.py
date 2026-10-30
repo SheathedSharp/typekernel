@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def hyphen(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
-    width = float(system.tokens.get("hyphen_width", 200.0))
+    width = float(WIDTHS.get("hyphen", 200.0))
     lsb = float(system.tokens.get("lsb_lc", 36.0)) * 0.6
     y = xh * 0.42
     return stroke(system, [(lsb, y), (lsb + width, y)], thickness=st * 0.85)

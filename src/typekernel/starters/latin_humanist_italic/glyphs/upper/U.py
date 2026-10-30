@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,7 @@ from typekernel.system import System
 def U(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("U_width", 600.0))
+    width = float(WIDTHS.get("U", 600.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     x0 = lsb + st * 0.5
     x1 = lsb + width - st * 0.5

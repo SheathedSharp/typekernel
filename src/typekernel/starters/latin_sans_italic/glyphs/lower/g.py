@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import open_arc_points, oval_points, stroke
+from elements import WIDTHS, open_arc_points, oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,7 +15,7 @@ def g(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
     desc = float(system.zones.desc)
-    width = float(system.tokens.get("g_width", 420.0))
+    width = float(WIDTHS.get("g", 420.0))
     lsb = float(system.tokens["lsb_lc"])
     ov = float(system.overshoot.round)
 
@@ -29,7 +29,7 @@ def g(system: System):
     )
 
     lower_cy = desc / 2.0
-    lower_ry = max(abs(desc) / 2.0 - st * 0.2, st * 1.2)
+    lower_ry = max(abs(desc) / 2.0 - st * 0.65, st * 1.05)  # keep ink within desc-tol
     lower_rx = width / 2.0 * 0.78
     lower_cx = lsb + width / 2.0 - st * 0.05
     ear_x = lower_cx + lower_rx * 0.92

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,7 @@ from typekernel.system import System
 def J(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("J_width", 480.0))
+    width = float(WIDTHS.get("J", 480.0))
     lsb = float(system.tokens["lsb_uc"])
     x = lsb + width - uc * 0.5
     # Straight stem; shallow hook as separate stroke with gap (deep hooks self-intersection).

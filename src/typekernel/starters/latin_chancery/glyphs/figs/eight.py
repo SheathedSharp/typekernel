@@ -1,7 +1,7 @@
 """Figure 8 — two stacked bowls."""
 from __future__ import annotations
 
-from elements import bowl
+from elements import WIDTHS, bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -10,7 +10,7 @@ from typekernel.system import System
 @glyph("eight", group="figs")
 def eight(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 420.0)) * 0.9
+    width = float(WIDTHS.get("fig", 420.0)) * 0.9
     lsb = float(system.tokens.get("lsb_lc", 32.0))
     h = float(system.zones.cap) * 0.72
     cx = lsb + width / 2.0

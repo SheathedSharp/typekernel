@@ -7,7 +7,7 @@ from typekernel.project import glyph
 from typekernel.system import System
 
 
-@glyph("slash", group="punct")
+@glyph("slash", group="punct", traits=("punct", "no-stem"))
 def slash(system: System):
     st = float(system.stem["lc"])
     asc = float(system.zones.asc)

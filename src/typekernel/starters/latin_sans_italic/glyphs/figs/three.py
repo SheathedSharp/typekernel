@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -13,7 +13,7 @@ _GAP = 55.0
 @glyph("three", group="figs")
 def three(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 460.0))
+    width = float(WIDTHS.get("fig", 460.0))
     lsb = float(system.tokens["lsb_lc"])
     h = float(system.zones.cap) * 0.72
     gap = _GAP

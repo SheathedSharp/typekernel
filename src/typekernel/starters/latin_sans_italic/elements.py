@@ -17,7 +17,53 @@ from typekernel.anatomy.pen import (
 from typekernel.draw import Drawing
 from typekernel.system import System
 
-__all__ = ["fuse", "open_arc_points", "open_bowl", "oval_points", "stroke", "uc_stem"]
+__all__ = [
+    "WIDTHS","fuse", "open_arc_points", "open_bowl", "oval_points", "stroke", "uc_stem"]
+
+# Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
+WIDTHS: dict[str, float] = {
+    "A": 640,
+    "B": 580,
+    "D": 620,
+    "E": 520,
+    "F": 480,
+    "G": 660,
+    "I": 220,
+    "J": 480,
+    "K": 600,
+    "L": 500,
+    "M": 780,
+    "N": 620,
+    "P": 540,
+    "R": 600,
+    "S": 560,
+    "T": 560,
+    "U": 620,
+    "V": 640,
+    "W": 920,
+    "X": 620,
+    "Y": 620,
+    "Z": 580,
+    "emdash": 800,
+    "endash": 400,
+    "f": 260,
+    "fig": 460,
+    "g": 420,
+    "hyphen": 200,
+    "k": 420,
+    "l": 220,
+    "m": 680,
+    "question": 300,
+    "r": 300,
+    "s": 380,
+    "slash": 280,
+    "t": 280,
+    "v": 420,
+    "w": 640,
+    "x": 420,
+    "y": 420,
+    "z": 420,
+}
 
 
 def stroke(

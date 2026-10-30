@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import fuse, stroke, uc_stem
+from elements import WIDTHS, fuse, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def K(system: System):
     st = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("K_width", 600.0))
+    width = float(WIDTHS.get("K", 600.0))
     lsb = float(system.tokens["lsb_uc"])
     x0 = lsb + st * 0.5
     x1 = lsb + width - st * 0.3

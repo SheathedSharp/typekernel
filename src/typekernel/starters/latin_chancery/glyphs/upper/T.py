@@ -1,7 +1,7 @@
 """Uppercase T — crossbar + stem."""
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,7 +11,7 @@ from typekernel.system import System
 def T(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("T_width", 520.0))
+    width = float(WIDTHS.get("T", 520.0))
     lsb = float(system.tokens.get("lsb_uc", 40.0))
     x0 = lsb + uc * 0.15
     x1 = lsb + width - uc * 0.15

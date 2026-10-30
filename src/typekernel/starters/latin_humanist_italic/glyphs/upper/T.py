@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import fuse, stroke
+from elements import WIDTHS, fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def T(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("T_width", 560.0))
+    width = float(WIDTHS.get("T", 560.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     mid = lsb + width / 2.0
     # Left bar → stem is one rail; right bar meets at mid/cap.

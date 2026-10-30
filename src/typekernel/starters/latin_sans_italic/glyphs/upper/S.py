@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -14,7 +14,7 @@ _GAP = 70.0
 def S(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("S_width", 560.0))
+    width = float(WIDTHS.get("S", 560.0))
     lsb = float(system.tokens["lsb_uc"])
     gap = _GAP
     top = stroke(system, [(lsb + width * 0.15, cap), (lsb + width * 0.85, cap)], thickness=uc)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import oval_points, stroke, uc_stem
+from elements import WIDTHS, oval_points, stroke, uc_stem
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,7 +15,7 @@ _GAP = 120.0
 def B(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("B_width", 580.0))
+    width = float(WIDTHS.get("B", 580.0))
     lsb = float(system.tokens["lsb_uc"])
     x0 = lsb + uc * 0.5
     stem = uc_stem(system, x0, thickness=uc)

@@ -22,7 +22,6 @@ system = System(
         "pen_contrast": 0.52,
         "pen_angle_deg": 28.0,
         "n_width": 400.0,
-        "m_width": 640.0,
         "o_width": 420.0,
         "H_width": 560.0,
         "O_width": 620.0,
@@ -33,44 +32,6 @@ system = System(
         "space_lsb_mul": 0.5,
         "arch_rise": 0.12,
         # Remaining ASCII widths (skeleton extents before spacing pack).
-        "f_width": 260.0,
-        "t_width": 280.0,
-        "r_width": 280.0,
-        "k_width": 400.0,
-        "v_width": 400.0,
-        "w_width": 620.0,
-        "x_width": 400.0,
-        "y_width": 400.0,
-        "z_width": 400.0,
-        "s_width": 360.0,
-        "g_width": 420.0,
-        "L_width": 480.0,
-        "E_width": 500.0,
-        "F_width": 460.0,
-        "T_width": 560.0,
-        "N_width": 600.0,
-        "M_width": 760.0,
-        "U_width": 600.0,
-        "A_width": 620.0,
-        "V_width": 620.0,
-        "W_width": 900.0,
-        "X_width": 600.0,
-        "Y_width": 600.0,
-        "Z_width": 560.0,
-        "K_width": 580.0,
-        "G_width": 640.0,
-        "D_width": 600.0,
-        "B_width": 560.0,
-        "P_width": 520.0,
-        "R_width": 580.0,
-        "J_width": 460.0,
-        "S_width": 540.0,
-        "fig_width": 460.0,
-        "question_width": 300.0,
-        "hyphen_width": 200.0,
-        "endash_width": 400.0,
-        "emdash_width": 800.0,
-        "slash_width": 280.0,
     },
 )
 
@@ -87,7 +48,7 @@ def _designed_master(
     """Designed weight master — stem + control widths (designed-master style)."""
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
     tokens = dict(base.tokens)
-    for key in ("n_width", "m_width", "o_width", "H_width", "O_width", "fig_width"):
+    for key in ("n_width", "o_width", "H_width", "O_width"):
         if key in tokens:
             tokens[key] = float(tokens[key]) * width_scale
     # Keep pen angle stable; slight contrast nudge with weight.

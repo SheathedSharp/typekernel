@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import fuse, stroke
+from elements import WIDTHS, fuse, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -11,7 +11,7 @@ from typekernel.system import System
 @glyph("one", group="figs")
 def one(system: System):
     st = float(system.stem["lc"])
-    width = float(system.tokens.get("fig_width", 460.0))
+    width = float(WIDTHS.get("fig", 460.0))
     lsb = float(system.tokens["lsb_lc"])
     h = float(system.zones.cap) * 0.72
     x = lsb + width * 0.55

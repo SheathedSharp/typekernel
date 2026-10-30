@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import oval_points, stroke
+from elements import WIDTHS, oval_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -15,7 +15,7 @@ _GAP = 70.0
 def D(system: System):
     uc = float(system.stem["uc"])
     cap = float(system.zones.cap)
-    width = float(system.tokens.get("D_width", 600.0))
+    width = float(WIDTHS.get("D", 600.0))
     lsb = float(system.tokens.get("lsb_uc", 44.0))
     ov = float(system.overshoot.round)
     x0 = lsb + uc * 0.5

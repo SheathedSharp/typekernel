@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import stroke
+from elements import WIDTHS, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -12,7 +12,7 @@ from typekernel.system import System
 def l(system: System):
     st = float(system.stem["lc"])
     asc = float(system.zones.asc)
-    width = float(system.tokens.get("l_width", 220.0))
+    width = float(WIDTHS.get("l", 220.0))
     lsb = float(system.tokens["lsb_lc"])
     x = lsb + width / 2.0
     return stroke(system, [(x, 0.0), (x, asc)], thickness=st)
