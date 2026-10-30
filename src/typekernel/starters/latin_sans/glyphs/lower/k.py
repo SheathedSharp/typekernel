@@ -32,9 +32,11 @@ def _arm(p_top, p_bottom, *, weight: float, name: str):
 def k(system: System):
     st = float(system.stem["lc"])
     xh = float(system.zones.x)
+    asc = float(system.zones.asc)
     width = float(WIDTHS["k"])
     lsb = float(system.tokens.get("lsb_lc", 40.0))
-    body = stem(lsb, lsb + st, 0.0, xh, name="stem.l")
+    # Letter-class k is an ascender; stem must clear the ascender gate for tk read.
+    body = stem(lsb, lsb + st, 0.0, asc, name="stem.l")
     join_y = xh * 0.48
     join_x = lsb + st * 0.65
     tip_x = lsb + width - st * 0.25
