@@ -26,6 +26,7 @@
 | `project.py` → `PROJECT` | **已落地** | 旧 `system.py` 模块级 `FAMILY_NAME`/`AUDIT_STEMS`/`BRIEF`/`MASTER_LOCATIONS` 等已删；loader 遇残留报 `MigrationError` |
 | `perceive.voice_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2 距离；**不是**美学 originality。主观的 distinctive 由人审另行记录 |
 | 次要 starter 默认 audit | **已落地（0/0）** | latin-sans-italic / humanist-italic / chancery：`tk audit` 0 error / 0 warn（`topology.slits` 等 info 可留）；per-glyph 宽在 `elements.WIDTHS` |
+| S0 止血（证据门 / 轮廓 warn / doctor·charset·STAT） | **已落地** | `tk review record --verdict pass` 无 proof 哈希拒绝；status 显示 `agent-pass (unverified)`；`contour.*` 可见缺陷升 warn；`FamilyInfo(italic=True)` 写 STAT ital；`tk new --charset minimal --text`；`tk doctor`；`tk check` 零 kern/GPOS warn。S1–S5（tidy/read/join/DSL/critique）未做 |
 | P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；产物本地/gitignore，**非**仓库内公开终验。产品级完成仍需人工 approvals + 可追踪试验归档 |
 
 ---
