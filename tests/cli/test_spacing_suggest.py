@@ -19,9 +19,7 @@ def test_tk_spacing_suggest_writes_json(tmp_path: Path) -> None:
     assert "sidebearings" in payload
     assert len(payload["sidebearings"]) == 2
     with open_project(root) as session:
-        before = session.project.metrics
-    # re-open after suggest — metrics object identity not required; keys unchanged
-    with open_project(root) as session:
         assert session.project.metrics is not None
-        # suggest must not have rewritten on-disk spacing / project files
-        assert (root / "project.py").exists()
+    # suggest must not have rewritten on-disk spacing / project files
+    assert (root / "project.py").exists()
+    assert (root / "spacing.py").exists()

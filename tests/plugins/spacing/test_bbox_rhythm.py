@@ -8,7 +8,6 @@ from typekernel.draw import Writer
 from typekernel.optics.context import OpticalContext
 from typekernel.plugins.spacing import (
     BBoxRhythmPlugin,
-    SpacingContext,
     optical_context_from_system,
     run_spacing_plugin,
     write_spacing_suggestions,
@@ -31,10 +30,6 @@ def _box_outline(*, width: float, height: float = 500.0):
 
 def test_bbox_rhythm_narrow_gets_more_air_than_wide() -> None:
     ctx = OpticalContext(units_per_em=1000.0, x_height=500.0, cap_height=700.0)
-    plug = BBoxRhythmPlugin()
-    # Use a fake session-less path: call suggest_sidebearings indirectly via
-    # plugin needs session — exercise optics equality through plugin method
-    # by building minimal suggestions on outlines through public optics first.
     from typekernel.optics.sidebearing import suggest_sidebearings
 
     narrow = suggest_sidebearings(_box_outline(width=80.0).outline(), ctx)

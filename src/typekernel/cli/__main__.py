@@ -319,17 +319,31 @@ def _cmd_critique(args: argparse.Namespace) -> int:
 
 
 def _cmd_spacing(args: argparse.Namespace) -> int:
-    from typekernel.cli.spacing_cmd import spacing_suggest
+    from typekernel.cli.spacing_cmd import spacing_apply, spacing_suggest
 
+    names = args.names.split(",") if getattr(args, "names", None) else None
     if args.spacing_command == "suggest":
         path = spacing_suggest(
             args.path,
             out=args.out,
             master=args.master,
             plugin=args.plugin,
-            names=args.names.split(",") if args.names else None,
+            names=names,
+            include_pairs=bool(getattr(args, "pairs", False)),
         )
         print(path)
+        return 0
+    if args.spacing_command == "apply":
+        path = spacing_apply(
+            args.path,
+            out=args.out,
+            master=args.master,
+            plugin=args.plugin,
+            names=names,
+            write=bool(args.write),
+        )
+        mode = "wrote Abs into spacing.py" if args.write else "dry-run plan only"
+        print(f"{path} ({mode})")
         return 0
     print(f"error: unknown spacing command {args.spacing_command!r}", file=sys.stderr)
     return 2
@@ -728,7 +742,7 @@ def main(argv: list[str] | None = None) -> int:
     p_ss.add_argument(
         "--plugin",
         default="bbox_rhythm",
-        choices=("bbox_rhythm", "optical_air"),
+        choices=("bbox_rhythm", "optical_air", "tracy_bands"),
         help="spacing plugin id (default: bbox_rhythm)",
     )
     p_ss.add_argument(
@@ -736,7 +750,44 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="comma-separated glyph names (default: all specs)",
     )
+    p_ss.add_argument(
+        "--pairs",
+        action="store_true",
+        help="with tracy_bands: also include kern_suggest pair proposals",
+    )
     p_ss.set_defaults(func=_cmd_spacing)
+
+    p_sa = spacing_sub.add_parser(
+        "apply",
+        help=(
+            "Abs sidebearing plan via Metrics API; dry-run default; "
+            "--write rewrites spacing.py only (never contours)"
+        ),
+    )
+    p_sa.add_argument("path", nargs="?", default=".", help="project root")
+    p_sa.add_argument(
+        "--out",
+        default=None,
+        help="plan JSON path (default: <project>/spacing-apply-plan.json)",
+    )
+    p_sa.add_argument("--master", default=None, help="master name (optional)")
+    p_sa.add_argument(
+        "--plugin",
+        default="bbox_rhythm",
+        choices=("bbox_rhythm", "optical_air", "tracy_bands"),
+        help="spacing plugin id (default: bbox_rhythm)",
+    )
+    p_sa.add_argument(
+        "--names",
+        default=None,
+        help="comma-separated glyph names (default: all specs)",
+    )
+    p_sa.add_argument(
+        "--write",
+        action="store_true",
+        help="explicitly rewrite Abs(...) into project spacing.py (opt-in)",
+    )
+    p_sa.set_defaults(func=_cmd_spacing)
 
     p_kern = sub.add_parser("kern", help="kerning tools (suggest pairs; never auto-apply)")
     kern_sub = p_kern.add_subparsers(dest="kern_command", required=True)
