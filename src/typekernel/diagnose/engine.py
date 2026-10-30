@@ -113,6 +113,7 @@ def _builtin_v2(
 ) -> list[Check]:
     from typekernel.diagnose.checks.anchors import AnchorsCheck
     from typekernel.diagnose.checks.contour import ContourQualityCheck
+    from typekernel.diagnose.checks.expect_review import ExpectChangesCheck
     from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
@@ -154,6 +155,7 @@ def _builtin_v2(
     # Anchors + tag grammar always on; letter-free / data-driven.
     out.append(AnchorsCheck())
     out.append(JoinCheck())
+    out.append(ExpectChangesCheck())
     out.append(FeaturesSyntaxCheck())
     out.append(TagsGrammarCheck())
     return out

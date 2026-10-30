@@ -195,11 +195,13 @@ def record_review(
     proof_paths: Sequence[str | Path] | None = None,
     reads_as: Mapping[str, str] | None = None,
     require_reads_as: bool = False,
+    expect_changes: Sequence[str] | None = None,
 ) -> ReviewRecord:
     """Write a pass/fail review with current outline hashes.
 
     ``verdict=pass`` requires non-empty proof hashes (file SHA-256 or hex).
     Per-glyph ``reads_as`` is optional unless ``require_reads_as=True`` (S2+).
+    ``expect_changes`` documents why ``expect.py`` was edited (S5).
     """
     if verdict not in ("pass", "fail", "pending"):
         raise ValueError(f"invalid verdict {verdict!r}")
@@ -233,6 +235,7 @@ def record_review(
         glyphs=_current_hashes(session, names),
         proofs=proof_hashes,
         reads_as={str(k): str(v) for k, v in dict(reads_as or {}).items()},
+        expect_changes=[str(x) for x in (expect_changes or ()) if str(x).strip()],
         notes=note,
     )
     path = reviews_dir / f"{group}-r{rnd}.json"

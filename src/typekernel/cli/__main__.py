@@ -269,7 +269,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
         print(path)
         return 0
     if args.review_command == "record":
-        from typekernel.cli.review_cmd import parse_reads_as
+        from typekernel.cli.review_cmd import parse_expect_changes, parse_reads_as
         from typekernel.review.records import EvidenceRequired
 
         try:
@@ -283,6 +283,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
                 proof_paths=getattr(args, "proof", None) or None,
                 reads_as=parse_reads_as(getattr(args, "reads_as", None)),
                 require_reads_as=bool(getattr(args, "require_reads_as", False)),
+                expect_changes=parse_expect_changes(getattr(args, "expect_change", None)),
             )
         except EvidenceRequired as exc:
             print(f"error: {exc}", file=sys.stderr)
@@ -297,6 +298,22 @@ def _cmd_status(args: argparse.Namespace) -> int:
     from typekernel.cli.review_cmd import status_project
 
     print(status_project(args.path))
+    return 0
+
+
+def _cmd_critique(args: argparse.Namespace) -> int:
+    from typekernel.cli.review_cmd import critique_text
+
+    path = getattr(args, "path", None) or "."
+    print(
+        critique_text(
+            path,
+            args.text,
+            master=getattr(args, "master", None),
+            as_json=bool(getattr(args, "as_json", False)),
+        ),
+        end="",
+    )
     return 0
 
 
@@ -658,6 +675,14 @@ def main(argv: list[str] | None = None) -> int:
         dest="require_reads_as",
         help="refuse pass when --reads-as is missing (S2+)",
     )
+    p_rec.add_argument(
+        "--expect-change",
+        action="append",
+        default=None,
+        dest="expect_change",
+        metavar="WHY",
+        help="rationale for an expect.py edit (repeatable; S5)",
+    )
     p_rec.set_defaults(func=_cmd_review)
 
 
@@ -703,6 +728,25 @@ def main(argv: list[str] | None = None) -> int:
     p_status = sub.add_parser("status", help="designer task board")
     p_status.add_argument("path", nargs="?", default=".")
     p_status.set_defaults(func=_cmd_status)
+
+    p_critique = sub.add_parser(
+        "critique",
+        help="S5 objective self-score table (read/join/contour/gap) for a text",
+    )
+    p_critique.add_argument(
+        "--text",
+        required=True,
+        help='sample text, e.g. "zayju forever young"',
+    )
+    p_critique.add_argument("--master", default=None, help="master name (default: project default)")
+    p_critique.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="emit JSON instead of a table",
+    )
+    p_critique.add_argument("path", nargs="?", default=".")
+    p_critique.set_defaults(func=_cmd_critique)
 
     args = parser.parse_args(argv)
     if args.command == "build" and not args.format:
