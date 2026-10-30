@@ -4,7 +4,7 @@
 > 已实现章节并入 ARCHITECTURE 后，本文只保留目标与指针，避免同一内容出现两份不同描述。
 > **已并入 / 以 ARCHITECTURE 为准**：感知与诊断、解剖标签与轮廓构件、
 > `Measure`、metrics pack（含 `absolute`）、整族/特性/VF 程序侧。
-> **仍属目标草案（未并或未实现）**：`plugins.spacing`/Tracy 工作流（`glyphs_italic/` 加载已实现）、
+> **仍属目标草案（未并或未实现）**：完整 Tracy 灰度工作流（`plugins.spacing` 最小 Protocol + `tk spacing suggest` 已落地；`glyphs_italic/` 加载已实现）、
 > 部分轴/特性细节以 ARCHITECTURE 的现状表为准。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
 > **冷启动复盘计划**：S0–S5 agent 路径已落地；`calt` 仍为 positional 脚手架；pass 默认要 `reads_as`；B4 程序侧归档见 `docs/trials/2026-10-29-b4-cold-zayju/`。人工 SCORE / VISION / `approved: true` 仍开。

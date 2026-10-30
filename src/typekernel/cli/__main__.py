@@ -318,6 +318,23 @@ def _cmd_critique(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_spacing(args: argparse.Namespace) -> int:
+    from typekernel.cli.spacing_cmd import spacing_suggest
+
+    if args.spacing_command == "suggest":
+        path = spacing_suggest(
+            args.path,
+            out=args.out,
+            master=args.master,
+            plugin=args.plugin,
+            names=args.names.split(",") if args.names else None,
+        )
+        print(path)
+        return 0
+    print(f"error: unknown spacing command {args.spacing_command!r}", file=sys.stderr)
+    return 2
+
+
 def _cmd_kern(args: argparse.Namespace) -> int:
     from typekernel.cli.kern_cmd import kern_suggest
 
@@ -691,6 +708,35 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_rec.set_defaults(func=_cmd_review)
 
+
+    p_spacing = sub.add_parser(
+        "spacing",
+        help="opt-in spacing suggestions via plugins.spacing (never auto-apply)",
+    )
+    spacing_sub = p_spacing.add_subparsers(dest="spacing_command", required=True)
+    p_ss = spacing_sub.add_parser(
+        "suggest",
+        help="write spacing-suggestions.json (sidebearings; Metrics Abs hint)",
+    )
+    p_ss.add_argument("path", nargs="?", default=".", help="project root")
+    p_ss.add_argument(
+        "--out",
+        default=None,
+        help="output JSON path (default: <project>/spacing-suggestions.json)",
+    )
+    p_ss.add_argument("--master", default=None, help="master name (optional)")
+    p_ss.add_argument(
+        "--plugin",
+        default="bbox_rhythm",
+        choices=("bbox_rhythm", "optical_air"),
+        help="spacing plugin id (default: bbox_rhythm)",
+    )
+    p_ss.add_argument(
+        "--names",
+        default=None,
+        help="comma-separated glyph names (default: all specs)",
+    )
+    p_ss.set_defaults(func=_cmd_spacing)
 
     p_kern = sub.add_parser("kern", help="kerning tools (suggest pairs; never auto-apply)")
     kern_sub = p_kern.add_subparsers(dest="kern_command", required=True)

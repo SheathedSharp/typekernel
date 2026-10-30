@@ -12,12 +12,12 @@
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
 | `glyphs_italic/` 约定 | **已落地（加载）** | `Project.glyphs_italic` + session 在 `system.is_italic` 母版上优先用该目录；starter 仍可独立 italic 项目。同项目 roman+italic 双目录可共元素 |
-| `plugins.spacing` | **空包** | 仅占位；现行间距是 `Project.metrics` + `typekernel.metrics`（数据仍可放在项目 `spacing.py`） |
+| `plugins.spacing` | **最小 Protocol 已落地** | `SpacingPlugin` + `BBoxRhythmPlugin` / `OpticalAirPlugin`；`tk spacing suggest` 写 JSON 建议（Abs 提示）。**不**静默改轮廓 / Metrics；默认 audit 不挂载。完整 Tracy 灰度工作流仍开 |
 | System token lint (`*_width`/`*_advance`) | **已落地** | 控制字 `n/o/H/O_width` 保留；其余迁到项目 `elements.WIDTHS` |
 | `Drawing.measures` / `Measure` | **已落地** | `+` 合并、`tagged` 前缀、`mirrored_x` 保标签；不进 `signature()` |
 | 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；三 starter 0 不合规（见 `docs/design/tag-noncompliance.md`） |
 | `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
-| Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
+| Tracy / 光学间距插件 | **部分：建议路径** | `optics` 原语 + `plugins.spacing` 建议 JSON（`tk spacing suggest`）。**未**取代 `Project.metrics`；未挂默认 audit；完整 Tracy 仍开 |
 | 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠 `Project.audit.stems` |
 | Starter 字形质量 | **未视觉批准** | 四套 starter 程序侧 `tk audit` 0/0；样张尚未通过人工视觉评审（approvals 仍 false） |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
@@ -202,7 +202,7 @@ def b(s):
 
 - `metrics keys`（`Abs`/`Stem`/`Token`/`Ref`/`Mirror`；`Optical` 签名预留）：声明在 `Project.metrics`，引擎在 `typekernel.metrics`。
 - `Metrics.pack`：`bbox` / `slant-mid-x` / `absolute`（绝对轮廓信任 x 原点，用于 OFL 移植）。
-- Tracy 法、光学测量做成插件，可选。（**尚未接入工作流**——见上表；`plugins.spacing` 仍为空包。）
+- Tracy 法、光学测量做成插件，可选。（见上表：最小 `plugins.spacing` Protocol + `tk spacing suggest` 已落地；完整 Tracy 工作流仍开；现行生效路径仍是 `Project.metrics`。）
 - 项目 `spacing.py` 只放 `METRICS` / `KERNING` 数据，agent 可以手调。
 
 ---
