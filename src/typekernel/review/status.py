@@ -136,6 +136,14 @@ def status_board(session: ProjectSession) -> StatusBoard:
         elif stale:
             review = f"stale ({','.join(changed[:4])})"
             unreviewed += 1
+        elif passed.verdict == "pass" and (
+            not str(passed.reviewer).startswith("human:")
+            or not passed.has_proof_evidence
+        ):
+            # S0: agent self-pass (even with proof hashes) is visible but
+            # does not clear the exit gate — only human approvals do.
+            review = f"agent-pass (unverified) r{passed.round}"
+            unreviewed += 1
         else:
             review = f"{passed.verdict} r{passed.round}"
         group_rows.append(

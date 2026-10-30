@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from typekernel.project import open_project
@@ -25,10 +27,22 @@ def review_record(
     verdict: str,
     note: str = "",
     reviewer: str = "agent:unknown",
+    proofs: Sequence[str] | None = None,
+    proof_paths: Sequence[str | Path] | None = None,
+    reads_as: Mapping[str, str] | None = None,
+    require_reads_as: bool = False,
 ) -> Path:
     with open_project(path) as session:
         rec = record_review(
-            session, group, verdict=verdict, note=note, reviewer=reviewer  # type: ignore[arg-type]
+            session,
+            group,
+            verdict=verdict,  # type: ignore[arg-type]
+            note=note,
+            reviewer=reviewer,
+            proofs=proofs,
+            proof_paths=proof_paths,
+            reads_as=reads_as,
+            require_reads_as=require_reads_as,
         )
         return Path(session.root) / "reviews" / f"{group}-r{rec.round}.json"
 
@@ -36,3 +50,13 @@ def review_record(
 def status_project(path: str | Path) -> str:
     with open_project(path) as session:
         return format_status(status_board(session))
+
+
+def parse_reads_as(raw: str | None) -> dict[str, str] | None:
+    """Parse ``--reads-as`` JSON object ``{"z": "z", ...}``."""
+    if raw is None or not str(raw).strip():
+        return None
+    data = json.loads(raw)
+    if not isinstance(data, dict):
+        raise TypeError("--reads-as must be a JSON object of glyph→label")
+    return {str(k): str(v) for k, v in data.items()}

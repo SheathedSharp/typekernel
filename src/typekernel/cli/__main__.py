@@ -10,9 +10,23 @@ from pathlib import Path
 def _cmd_new(args: argparse.Namespace) -> int:
     from typekernel.cli.new import create_project
 
-    root = create_project(args.name, parent=args.parent, starter=args.starter)
+    root = create_project(
+        args.name,
+        parent=args.parent,
+        starter=args.starter,
+        charset=getattr(args, "charset", None),
+        text=getattr(args, "text", None),
+    )
     print(f"created {root}")
     return 0
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    from typekernel.cli.doctor import check_environment, format_doctor_report
+
+    report = check_environment()
+    print(format_doctor_report(report), end="")
+    return 0 if report.ok else 1
 
 
 def _cmd_build(args: argparse.Namespace) -> int:
@@ -232,13 +246,24 @@ def _cmd_review(args: argparse.Namespace) -> int:
         print(path)
         return 0
     if args.review_command == "record":
-        path = review_record(
-            args.path,
-            args.group,
-            verdict=args.verdict,
-            note=args.note or "",
-            reviewer=args.reviewer,
-        )
+        from typekernel.cli.review_cmd import parse_reads_as
+        from typekernel.review.records import EvidenceRequired
+
+        try:
+            path = review_record(
+                args.path,
+                args.group,
+                verdict=args.verdict,
+                note=args.note or "",
+                reviewer=args.reviewer,
+                proofs=getattr(args, "proof_hash", None) or None,
+                proof_paths=getattr(args, "proof", None) or None,
+                reads_as=parse_reads_as(getattr(args, "reads_as", None)),
+                require_reads_as=bool(getattr(args, "require_reads_as", False)),
+            )
+        except EvidenceRequired as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
         print(path)
         return 0
     print("error: tk review needs open|record", file=sys.stderr)
@@ -305,7 +330,21 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="starter template: omit/empty, or latin-sans | latin-sans-italic | latin-humanist-italic | latin-chancery",
     )
+    p_new.add_argument(
+        "--charset",
+        default=None,
+        choices=("minimal", "full"),
+        help="minimal: scope audit/proof to --text letters; full: keep starter charset",
+    )
+    p_new.add_argument(
+        "--text",
+        default=None,
+        help="with --charset minimal, letters that stay in scope (e.g. 'forever young')",
+    )
     p_new.set_defaults(func=_cmd_new)
+
+    p_doctor = sub.add_parser("doctor", help="check compile/specimen extras")
+    p_doctor.set_defaults(func=_cmd_doctor)
 
     p_build = sub.add_parser("build", help="compile project glyphs to UFO/OTF/TTF")
     p_build.add_argument(
@@ -519,12 +558,40 @@ def main(argv: list[str] | None = None) -> int:
     p_open.add_argument("path", nargs="?", default=".")
     p_open.add_argument("--reviewer", default="agent:unknown")
     p_open.set_defaults(func=_cmd_review)
-    p_rec = rev_sub.add_parser("record", help="record pass/fail with outline hashes")
+    p_rec = rev_sub.add_parser(
+        "record",
+        help="record pass/fail with outline hashes (pass requires proof evidence)",
+    )
     p_rec.add_argument("group")
     p_rec.add_argument("path", nargs="?", default=".")
     p_rec.add_argument("--verdict", required=True, choices=("pass", "fail", "pending"))
     p_rec.add_argument("--note", default="")
     p_rec.add_argument("--reviewer", default="agent:unknown")
+    p_rec.add_argument(
+        "--proof",
+        action="append",
+        default=[],
+        help="proof image path (SHA-256 hashed into evidence); repeatable",
+    )
+    p_rec.add_argument(
+        "--proof-hash",
+        action="append",
+        default=[],
+        dest="proof_hash",
+        help="explicit proof content hash (hex); repeatable",
+    )
+    p_rec.add_argument(
+        "--reads-as",
+        default=None,
+        dest="reads_as",
+        help='JSON object of glyph→label, e.g. {"z":"z"} (optional until tk read)',
+    )
+    p_rec.add_argument(
+        "--require-reads-as",
+        action="store_true",
+        dest="require_reads_as",
+        help="refuse pass when --reads-as is missing (S2+)",
+    )
     p_rec.set_defaults(func=_cmd_review)
 
 
@@ -576,7 +643,7 @@ def main(argv: list[str] | None = None) -> int:
         args.format = ["otf"]
     try:
         return int(args.func(args))
-    except (FileNotFoundError, FileExistsError, ValueError, AttributeError, TypeError) as exc:
+    except (FileNotFoundError, FileExistsError, ValueError, AttributeError, TypeError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except ImportError as exc:

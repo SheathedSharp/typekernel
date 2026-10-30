@@ -30,7 +30,16 @@ def test_stale_only_touched_group() -> None:
     try:
         root = create_project("rv", parent=td, starter="latin-sans")
         with open_project(root) as session:
-            record_review(session, "n", verdict="pass", note="ok", reviewer="agent:test")
+            proof = root / "n-proof.png"
+            proof.write_bytes(b"png-bytes")
+            record_review(
+                session,
+                "n",
+                verdict="pass",
+                note="ok",
+                reviewer="agent:test",
+                proof_paths=[proof],
+            )
             stale, _changed = is_stale(session, "n")
             assert stale is False
         # Change geometry via system token so outline hash moves.
