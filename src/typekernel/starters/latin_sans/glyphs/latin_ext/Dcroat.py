@@ -28,5 +28,13 @@ def dcroat(system: System):
     right = stem(lsb + width - st, lsb + width, 0.0, asc * 0.95, name="stem.r")
     cx = lsb + (width - st) * 0.5
     ring = bowl((cx, xh * 0.48), (width - st) * 0.55, xh * 0.48, thick=st, thin=thin, exponent=exp, overshoot=ov * 0.5, name="bowl")
-    stroke = crossbar(lsb + width - st * 1.8, lsb + width + st * 0.35, asc * 0.7, thick=thin * 0.85, name="bar.1", ends="none")
+    # Ascender-only stroke (classic đ); keep clear of the bowl under Bold.
+    stroke = crossbar(
+        lsb + width - st * 1.55,
+        lsb + width + st * 0.35,
+        asc * 0.82,
+        thick=thin * 0.85,
+        name="bar.1",
+        ends="none",
+    )
     return zone_anchors(ring + right + stroke, system, top="x")

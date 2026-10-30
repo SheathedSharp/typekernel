@@ -48,7 +48,17 @@ EXPECT: dict[str, Expect] = {
     "oe": Expect(counters=2, islands=1),
     "parenleft": Expect(counters=0, islands=1),
     "parenright": Expect(counters=0, islands=1),
+    "Eth": Expect(counters=1, islands=1),
+    "eth": Expect(counters=1, islands=1),
+    "Dcroat": Expect(counters=1, islands=1),
+    "dcroat": Expect(counters=1, islands=1),
+    "Thorn": Expect(counters=1, islands=1),
+    "thorn": Expect(counters=1, islands=1),
+    "IJ": Expect(counters=0, islands=2),
+    "ij": Expect(counters=0, islands=4),
+    "hbar": Expect(counters=0, islands=1),
 }
+
 
 
 STARTER_EXPECT = EXPECT

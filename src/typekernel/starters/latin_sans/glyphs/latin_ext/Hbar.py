@@ -27,5 +27,13 @@ def hbar(system: System):
     left = stem(lsb, lsb + st, 0.0, asc * 0.95, name="stem.l")
     right = stem(lsb + width - st, lsb + width, 0.0, xh, name="stem.r")
     shoulder = arch(lsb + st, lsb + width - st, height=xh, thick=st, thin=thin, join_depth=st * 0.55, tension=0.55, name="arch")
-    stroke = crossbar(lsb - st * 0.3, lsb + st * 1.6, asc * 0.7, thick=thin * 0.85, name="bar.1", ends="none")
+    # High ascender stroke — avoid kissing the arch (Bold slit counters).
+    stroke = crossbar(
+        lsb - st * 0.25,
+        lsb + st * 1.45,
+        asc * 0.84,
+        thick=thin * 0.85,
+        name="bar.1",
+        ends="none",
+    )
     return zone_anchors(left + right + shoulder + stroke, system, top="x")

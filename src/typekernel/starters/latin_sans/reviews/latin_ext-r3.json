@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-30",
+  "expect_changes": [
+    "Eth: bowl+stem stroke → counters=1 like D (was open bowl_join c=0)",
+    "dcroat: ascender-only stroke so Bold stays c=1 (was Bold c=2)",
+    "hbar: higher stroke clears Bold slit counter",
+    "IJ: join J hook to stem → islands=2 (was 3)",
+    "ij: islands=4 (2 bodies + 2 dots); hook joined",
+    "expect: Eth/eth/Dcroat/dcroat/Thorn/thorn/IJ/ij/hbar topology rows",
+    "germandbls: deferred (wght counter flip; letter-class 1 vs 2 ambiguous) — no expect row"
+  ],
+  "glyphs": {},
+  "group": "latin_ext+punct",
+  "masters": ["Light", "Bold"],
+  "notes": "Clear structural Ext-A only. germandbls/Oslash/&/@ deferred. No approved:true.",
+  "proofs": [],
+  "reads_as": {"Eth": "Eth", "IJ": "IJ", "AE": "AE", "dcroat": "dcroat"},
+  "reviewer": "agent:t43u-exta-drift",
+  "round": 3,
+  "verdict": "pass"
+}
