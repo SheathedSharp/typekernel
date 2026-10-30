@@ -24,10 +24,11 @@
 | LihuiT 移植 Hausdorff 指标 | **程序侧已达标** | `transplants/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `transplants/lihuit/BACKLOG.md`） |
 | Stem `Project.audit.stems` 策略 | **已落地** | `AuditConfig.stems`；map 之外的字形不跑 stem 门禁（Ext-A/符号安静）；空元组=无光学探针 |
 | `project.py` → `PROJECT` | **已落地** | 旧 `system.py` 模块级 `FAMILY_NAME`/`AUDIT_STEMS`/`BRIEF`/`MASTER_LOCATIONS` 等已删；loader 遇残留报 `MigrationError` |
-| `perceive.voice_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2 距离；**不是**美学 originality。主观的 distinctive 由人审另行记录 |
+| `perceive.voice_distance` / `letter_shape_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2；同字母对参照面的 `letter_shape_distance`；**不是**美学 originality |
 | 次要 starter 默认 audit | **已落地（0/0）** | latin-sans-italic / humanist-italic / chancery：`tk audit` 0 error / 0 warn（`topology.slits` 等 info 可留）；per-glyph 宽在 `elements.WIDTHS` |
 | S0 止血 | **已落地** | evidence 门 / agent-pass unverified / contour warn / charset·doctor·STAT / kern-GPOS warn |
-| S1 轮廓 | **已落地** | cubic κ-ellipse bowl + curve-aware expand；compile-time `geo.tidy`（≠ heal/blend/seal）；控制 o ≤2 轮廓且 ≤16 段；polyline expand 仅内部。S2–S5 未做 |
+| S1 轮廓 | **已落地** | cubic κ-ellipse bowl + curve-aware expand；compile-time `geo.tidy`（≠ heal/blend/seal）；控制 o ≤2 轮廓且 ≤16 段；polyline expand 仅内部 |
+| S2 字形身份 | **已落地** | `typekernel.knowledge` 纯数据先验（Unicode→counters/islands/asc/desc/dot）；`tk read [--text]` 轻量分类 top-3 + confuse-pair hard warn；`letter_shape_distance`；守卫允许字母名 **仅** 在 knowledge。S3–S5 未做 |
 | P6 零上下文终验 | **仅本地 smoke** | 协议在 skill `trials.md`；产物本地/gitignore，**非**仓库内公开终验。产品级完成仍需人工 approvals + 可追踪试验归档 |
 
 ---
@@ -590,7 +591,8 @@ class Project:
 4. `plugins/<x>/` 不得 import `plugins/<y>/`；任何新包不得 import 其他模块的 `_` 私有名。
 5. 内核测试（`tests/draw`、`tests/system`、`tests/project`）里不得出现字母字形名字符串（用一个小正则：单字母 glyph 名或 `uniXXXX`）；需要形状时用合成夹具。
 6. **构件不组字**：`anatomy` 公开函数只返回 `Drawing` 或构件 dataclass；函数名不得含字形名，也不得以 `glyph_` / `build_` 开头。
-7. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由 `Project.audit.stems` 声明，内核不再按字母名猜测。
+7. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins` / `perceive` / `diagnose` / `review`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由 `Project.audit.stems` 声明，内核不再按字母名猜测。
+8. **S2 例外 — `typekernel.knowledge`**：该包是纯数据先验（Unicode→拓扑期望 / confuse pairs），**允许**出现字母 / AGL 名作为数据字段。禁止把 knowledge 当作构造入口；构造器与其它内核包仍适用第 7 条。
 
 用 `ast` 扫描实现，不额外引入依赖。
 
@@ -625,7 +627,7 @@ class Project:
 
 每条 PR 都对照这几条；任何一条被违反，说明在往回走：
 
-1. **内核与插件里不出现字母名。** 没有 `build_H` / `*_from_n` / `n_yoke` 这类函数，也没有对某个风格值的 `if` 分支。字母几何只存在于项目（starter）里。
+1. **内核与插件里不出现字母名（S2 knowledge 例外除外）。** 没有 `build_H` / `*_from_n` / `n_yoke` 这类函数，也没有对某个风格值的 `if` 分支。字母几何只存在于项目（starter）里；字母 **名** 作为数据只允许出现在 `typekernel.knowledge`。
 2. **不允许事后修缝。** 连接难看就改画这个连接的片段或元素，不加 seal / soften / relieve / blend 这类补丁。
 3. **一个字形的几何不由另一个字形的函数隐式推出。** 复用靠显式 import 元素，不靠 `x_from_y(...)` 里藏几百行。
 4. **新加的参数要对任何合规项目都有意义**，不能只对库自带的那副字有意义。

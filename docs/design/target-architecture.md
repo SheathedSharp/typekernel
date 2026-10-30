@@ -7,7 +7,7 @@
 > **仍属目标草案（未并或未实现）**：`plugins.spacing`/Tracy 工作流（`glyphs_italic/` 加载已实现）、
 > 部分轴/特性细节以 ARCHITECTURE 的现状表为准。
 > **依据**：2026-10-29 审查——实测三个 starter 的样张、`font.py` 切 slab、通读内核代码。
-> **冷启动复盘计划**：S0 止血 + S1 轮廓（cubic bowl/stroke + compile-time tidy）已落地；S2 字形身份 → S3 连笔 → S4 脚本笔 → S5 评审闭环 待做。
+> **冷启动复盘计划**：S0 止血 + S1 轮廓 + **S2 字形身份**（`knowledge` + `tk read` + confuse warn + `letter_shape_distance`）已落地；S3 连笔 → S4 脚本笔 → S5 评审闭环 待做。
 > **P6 终验**：公开零上下文试验记录未入库；现行出口是本地 smoke + ARCHITECTURE 诚实表（人审 approvals 仍 false）。
 > **不变的前提**：第一性原理仍是「人类字体设计师怎么做，agent 就怎么做」；内核不出现字母名；
 > 不事后修缝；编译全部复用 fontTools；Oblique ≠ Italic；字重是 designed deltas。
@@ -546,6 +546,7 @@ class Instance:
 
 1. **字形名字面量**：内核包（`geo draw anatomy system project metrics axes features font perceive diagnose review compile cli plugins`）
    的字符串字面量里，不得出现单字母或 AGL 字形名，也不得出现由它们组成的集合（测试夹具除外）。
+   **例外**：`typekernel.knowledge`（S2 纯数据先验）允许字母 / AGL 名作数据字段；不得当作构造入口。
 2. **分层 DAG**：按 §2 的依赖规则检查 import 方向。
 3. **构件不组字**：`anatomy` 里的公开函数只能返回 `Drawing` 或构件 dataclass；函数名不得包含字形名，也不得以 `glyph_` / `build_` 开头。
 4. **文档如实**：被 git 跟踪的 Markdown（含 skills）里引用的仓库路径必须存在且没有被 gitignore；
@@ -566,10 +567,11 @@ class Instance:
 | `metrics` | `Abs` `Stem` `Token` `Ref` `Mirror` `Optical` `Metrics` `Kerning` `resolve` `pack` |
 | `axes` | `Axis` `MasterSpec` `Instance` `Family` `Member` |
 | `features` | `Features` `generate_features` |
-| `perceive` | `render_live` `edit_view` `context_view` `overlay_view` `diff_view` `explain` `GlyphReport`；文本样张函数（迁自 `qa.proof`） |
+| `perceive` | `render_live` `edit_view` `context_view` `overlay_view` `diff_view` `explain` `GlyphReport`；`read_*` / `letter_shape_distance`；文本样张函数（迁自 `qa.proof`） |
+| `knowledge` | `TopologyPrior` `LATIN_BASIC` `CONFUSE_PAIRS` `prior_for` `confuse_partners`（S2；字母名仅此包） |
 | `diagnose` | `Check` `CheckContext` `Finding` `Expect` `AuditConfig` `run_audit` `Baseline` |
 | `review` | `ReviewRecord` `ReviewPolicy` `open_review` `record_review` `status` |
-| `cli` | `tk see` `tk explain` `tk status` `tk review` `tk check`；`tk audit --json/--masters/--strict` |
+| `cli` | `tk see` `tk explain` `tk status` `tk review` `tk check` `tk read`；`tk audit --json/--masters/--strict` |
 
 ## 16. 删除清单（落地时直接删，不留双轨）
 
