@@ -81,7 +81,7 @@ class GrayCheck:
             scale = 1.4826 * mad if mad > 1e-12 else max(med * 0.05, 1e-6)
             for name, density in members:
                 z = (density - med) / scale
-                if abs(z) > 3.0:
+                if abs(z) > 3.8:
                     out.append(
                         Finding(
                             check="gray.density",

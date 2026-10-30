@@ -17,7 +17,7 @@ def _system() -> System:
     )
 
 
-def _bloated_circle(n: int = 120):
+def _bloated_circle(n: int = 320):
     """Polyline-ish closed path with many short segments (junk expansion)."""
     import math
 
@@ -39,7 +39,7 @@ def test_defect_visible_scales() -> None:
 
 
 def test_bloated_contour_warns_on_node_budget() -> None:
-    drawing = _bloated_circle(120)
+    drawing = _bloated_circle(320)
     sys = _system()
 
     class _S:

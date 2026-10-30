@@ -1,8 +1,4 @@
-"""Chancery project helpers — thin shim over :mod:`typekernel.anatomy.pen`.
-
-Polyline bowls/stroke keep hash-stable expand; flourishes use cubic
-:func:`~typekernel.anatomy.pen.stroke_fragment`.
-"""
+"""Chancery helpers — cubic bowls + internal polyline stroke (S1)."""
 
 from __future__ import annotations
 
@@ -11,6 +7,9 @@ from collections.abc import Sequence
 
 from fontTools.misc.bezierTools import cubicPointAtT
 
+from typekernel.anatomy.pen import (
+    bowl as pen_bowl,
+)
 from typekernel.anatomy.pen import (
     expand_slanted_centerline,
     flourish_entry,
@@ -22,7 +21,14 @@ from typekernel.anatomy.pen import (
     pen_for_optical_stem,
     project_pen,
     slanted_centerline,
+    slanted_cubic_from_points,
     slanted_vertical_optical_ratio,
+)
+from typekernel.anatomy.pen import (
+    stroke as pen_stroke,
+)
+from typekernel.anatomy.pen import (
+    stroke_fragment as pen_stroke_fragment,
 )
 from typekernel.draw import Drawing, Fragment
 from typekernel.geo.segment import CubicSegment, LineSegment
@@ -52,49 +58,13 @@ __all__ = [
     "uc_stem",
 ]
 
-# Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
 WIDTHS: dict[str, float] = {
-    "A": 560,
-    "B": 520,
-    "D": 560,
-    "E": 480,
-    "F": 460,
-    "G": 660,
-    "J": 360,
-    "K": 520,
-    "L": 460,
-    "M": 700,
-    "N": 560,
-    "P": 500,
-    "R": 540,
-    "S": 480,
-    "T": 520,
-    "U": 560,
-    "V": 560,
-    "W": 780,
-    "X": 540,
-    "Y": 540,
-    "Z": 520,
-    "e": 400,
-    "emdash": 800,
-    "endash": 400,
-    "f": 260,
-    "fig": 420,
-    "g": 420,
-    "h": 380,
-    "hyphen": 220,
-    "k": 360,
-    "m": 620,
-    "question": 300,
-    "r": 240,
-    "s": 340,
-    "slash": 280,
-    "t": 280,
-    "v": 360,
-    "w": 560,
-    "x": 360,
-    "y": 360,
-    "z": 340,
+    "A": 560, "B": 520, "D": 560, "E": 480, "F": 460, "G": 660, "J": 360,
+    "K": 520, "L": 460, "M": 700, "N": 560, "P": 500, "R": 540, "S": 480,
+    "T": 520, "U": 560, "V": 560, "W": 780, "X": 540, "Y": 540, "Z": 520,
+    "e": 400, "emdash": 800, "endash": 400, "g": 420, "hyphen": 200, "k": 420,
+    "l": 220, "m": 680, "question": 300, "r": 300, "s": 380, "slash": 280,
+    "t": 280, "v": 420, "w": 640, "x": 420, "y": 420, "z": 420,
 }
 
 
@@ -114,8 +84,13 @@ def stroke(
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
-    cl = slanted_centerline(points, system, closed=closed)
-    return expand_slanted_centerline(system, cl, thickness=thickness)
+    if closed:
+        return pen_stroke(
+            system, slanted_cubic_from_points(points, system, closed=True), thickness=thickness
+        )
+    return expand_slanted_centerline(
+        system, slanted_centerline(points, system, closed=False), thickness=thickness
+    )
 
 
 def uc_stem(
@@ -140,8 +115,7 @@ def bowl(
     ry: float,
     thickness: float | None = None,
 ) -> Drawing:
-    st = float(system.stem["lc"]) if thickness is None else float(thickness)
-    return stroke(system, oval_points(cx, cy, rx, ry, n=48), closed=True, thickness=st)
+    return pen_bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=thickness)
 
 
 def open_bowl(
@@ -185,6 +159,7 @@ def nest_bowl(
     ry: float | None = None,
     pull: float = 0.78,
 ) -> Drawing:
+    del lsb
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
     ov = float(system.overshoot.round)
     rx_v = width * 0.36 if rx is None else float(rx)
@@ -197,6 +172,15 @@ def nest_bowl(
     else:
         raise ValueError(f"side must be left/right, got {side!r}")
     return bowl(system, cx=cx, cy=cy_v, rx=rx_v, ry=ry_v, thickness=st)
+
+
+def stroke_fragment(
+    system: System,
+    fragment: Fragment,
+    *,
+    thickness: float | None = None,
+) -> Drawing:
+    return pen_stroke_fragment(system, fragment, thickness=thickness)
 
 
 def fragment_polyline(fragment: Fragment, *, samples_per_cubic: int = 8) -> list[tuple[float, float]]:
@@ -219,19 +203,6 @@ def fragment_polyline(fragment: Fragment, *, samples_per_cubic: int = 8) -> list
         if not cleaned or math.hypot(p[0] - cleaned[-1][0], p[1] - cleaned[-1][1]) > 0.5:
             cleaned.append(p)
     return cleaned
-
-
-def stroke_fragment(
-    system: System,
-    fragment: Fragment,
-    *,
-    thickness: float | None = None,
-) -> Drawing:
-    """Expand a flourish Fragment via sampled polyline (hash-stable)."""
-    pts = fragment_polyline(fragment)
-    if len(pts) < 2:
-        raise ValueError("flourish fragment too short to stroke")
-    return stroke(system, pts, thickness=thickness)
 
 
 def n_arch_points(

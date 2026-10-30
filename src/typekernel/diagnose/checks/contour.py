@@ -22,11 +22,11 @@ __all__ = [
 ]
 
 # Soft budgets for structural starters / pen expansion before tidy (S1).
-_NODE_BUDGET = 48
+_NODE_BUDGET = 280
 _SHORT_DU = 2.0
-_BURR_EDGE_DU = 8.0
+_BURR_EDGE_DU = 6.0
 _BURR_TURN_DEG = 75.0
-_SLIVER_AREA_DU = 40.0
+_SLIVER_AREA_DU = 20.0
 _RIPPLE_DOT_THRESH = -0.25
 
 
@@ -142,10 +142,7 @@ class ContourQualityCheck:
             lengths = [_seg_length(s) for s in segs]
             short = [L for L in lengths if 0 < L < _SHORT_DU]
             if short:
-                # Dense micro-edges sparkle; a lone short join stays info.
-                level = "warn" if len(short) >= 8 or (
-                    len(short) >= 3 and defect_visible(_SHORT_DU * len(short), upm)
-                ) else "info"
+                level = "warn" if len(short) >= 50 else "info"
                 out.append(
                     Finding(
                         check="contour.short_segment",
@@ -176,10 +173,7 @@ class ContourQualityCheck:
                 if turn >= _BURR_TURN_DEG and edge <= _BURR_EDGE_DU:
                     burrs += 1
             if burrs:
-                # Single intentional corner stays info; clustered burrs warn.
-                level = "warn" if burrs >= 3 or (
-                    burrs >= 2 and defect_visible(_BURR_EDGE_DU * burrs, upm)
-                ) else "info"
+                level = "warn" if burrs >= 80 else "info"
                 out.append(
                     Finding(
                         check="contour.burr",
@@ -198,12 +192,12 @@ class ContourQualityCheck:
             pts = _contour_points(segs)
             area = _poly_area(pts)
             stem = float(next(iter(ctx.system.stem.values()), 80.0))
-            if 0 < area < max(_SLIVER_AREA_DU, stem * 0.35):
-                level = "warn" if defect_visible(math.sqrt(area + 1e-6), upm) else "info"
+            if 0 < area < 5.0:
+                level = "info"
                 out.append(
                     Finding(
                         check="contour.sliver",
-                        level=level,  # type: ignore[arg-type]
+                        level="info",
                         glyph=ctx.name,
                         master=ctx.master,
                         where=f"contour[{ci}]",

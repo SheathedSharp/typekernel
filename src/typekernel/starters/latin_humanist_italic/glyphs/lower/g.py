@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from elements import WIDTHS, open_arc_points, oval_points, stroke
+from elements import WIDTHS, bowl, open_arc_points, stroke
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -19,10 +19,12 @@ def g(system: System):
 
     upper_rx = (width - st * 0.35) / 2.0
     upper_cx = lsb + upper_rx
-    upper = stroke(
+    upper = bowl(
         system,
-        oval_points(upper_cx, xh / 2.0, upper_rx, xh / 2.0 + ov * 0.35),
-        closed=True,
+        cx=upper_cx,
+        cy=xh / 2.0,
+        rx=upper_rx,
+        ry=xh / 2.0 + ov * 0.35,
         thickness=st,
     )
 

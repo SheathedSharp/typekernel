@@ -1,7 +1,7 @@
-"""Humanist-italic project helpers — thin shim over :mod:`typekernel.anatomy.pen`.
+"""Humanist-italic helpers — anatomy.pen shim (S1 cubic bowls + tidy).
 
-Glyph polyline ``stroke`` / bowls keep the hash-stable expand path. Kernel
-:func:`~typekernel.anatomy.pen.stroke` accepts cubics only.
+Open ``stroke`` uses polyline expand as an *internal* implementation detail,
+then compile-time tidy. Closed bowls use κ-ellipse cubics + curve-aware expand.
 """
 
 from __future__ import annotations
@@ -17,7 +17,17 @@ from typekernel.anatomy.pen import (
     pen_for_optical_stem,
     project_pen,
     slanted_centerline,
+    slanted_cubic_from_points,
     slanted_vertical_optical_ratio,
+)
+from typekernel.anatomy.pen import (
+    bowl as pen_bowl,
+)
+from typekernel.anatomy.pen import (
+    open_bowl as pen_open_bowl,
+)
+from typekernel.anatomy.pen import (
+    stroke as pen_stroke,
 )
 from typekernel.draw import Drawing
 from typekernel.geo.stroke import Centerline
@@ -41,47 +51,13 @@ __all__ = [
     "uc_stem",
 ]
 
-# Per-glyph widths (not System control tokens). Control words n/o/H/O stay on System.tokens.
 WIDTHS: dict[str, float] = {
-    "A": 620,
-    "B": 560,
-    "D": 600,
-    "E": 500,
-    "F": 460,
-    "G": 640,
-    "J": 460,
-    "K": 580,
-    "L": 480,
-    "M": 760,
-    "N": 600,
-    "P": 520,
-    "R": 580,
-    "S": 540,
-    "T": 560,
-    "U": 600,
-    "V": 620,
-    "W": 900,
-    "X": 600,
-    "Y": 600,
-    "Z": 560,
-    "emdash": 800,
-    "endash": 400,
-    "f": 260,
-    "fig": 460,
-    "g": 420,
-    "hyphen": 200,
-    "k": 400,
-    "m": 640,
-    "question": 300,
-    "r": 280,
-    "s": 360,
-    "slash": 280,
-    "t": 280,
-    "v": 400,
-    "w": 620,
-    "x": 400,
-    "y": 400,
-    "z": 400,
+    "A": 620, "B": 560, "D": 600, "E": 500, "F": 460, "G": 640, "J": 460,
+    "K": 580, "L": 480, "M": 760, "N": 600, "P": 520, "R": 580, "S": 540,
+    "T": 560, "U": 600, "V": 620, "W": 900, "X": 600, "Y": 600, "Z": 560,
+    "emdash": 800, "endash": 400, "f": 260, "fig": 460, "g": 420, "hyphen": 200,
+    "k": 400, "m": 640, "question": 300, "r": 280, "s": 360, "slash": 280,
+    "t": 280, "v": 400, "w": 620, "x": 400, "y": 400, "z": 400,
 }
 
 
@@ -91,7 +67,6 @@ def slanted_polyline(
     *,
     closed: bool = False,
 ) -> Centerline:
-    """Legacy signature ``(points, slant)`` — prefer :func:`slanted_centerline`."""
     slanted = [(float(x) + float(slant) * float(y), float(y)) for x, y in points]
     return Centerline.from_points(slanted, closed=closed)
 
@@ -103,9 +78,14 @@ def stroke(
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
-    """Expand upright polyline points (hash-stable polyline expand)."""
-    cl = slanted_centerline(points, system, closed=closed)
-    return expand_slanted_centerline(system, cl, thickness=thickness)
+    """Open: internal polyline expand + tidy. Closed: cubic fit + curve expand."""
+    if closed:
+        return pen_stroke(
+            system, slanted_cubic_from_points(points, system, closed=True), thickness=thickness
+        )
+    return expand_slanted_centerline(
+        system, slanted_centerline(points, system, closed=False), thickness=thickness
+    )
 
 
 def bowl(
@@ -117,8 +97,7 @@ def bowl(
     ry: float,
     thickness: float | None = None,
 ) -> Drawing:
-    st = float(system.stem["lc"]) if thickness is None else float(thickness)
-    return stroke(system, oval_points(cx, cy, rx, ry), closed=True, thickness=st)
+    return pen_bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=thickness)
 
 
 def open_bowl(
@@ -131,20 +110,18 @@ def open_bowl(
     thickness: float | None = None,
     open_side: str = "right",
     aperture_deg: float = 80.0,
-    n: int = 48,
+    n: int = 24,
 ) -> Drawing:
-    if open_side not in ("right", "left"):
-        raise ValueError(f"open_side must be 'right' or 'left', got {open_side!r}")
-    st = float(system.stem["lc"]) if thickness is None else float(thickness)
-    half = float(aperture_deg) / 2.0
-    if open_side == "right":
-        start_deg, end_deg = half, 360.0 - half
-    else:
-        start_deg, end_deg = 180.0 + half, 180.0 - half + 360.0
-    return stroke(
+    return pen_open_bowl(
         system,
-        open_arc_points(cx, cy, rx, ry, start_deg=start_deg, end_deg=end_deg, n=n),
-        thickness=st,
+        cx=cx,
+        cy=cy,
+        rx=rx,
+        ry=ry,
+        thickness=thickness,
+        open_side=open_side,
+        aperture_deg=aperture_deg,
+        n=n,
     )
 
 
@@ -162,6 +139,7 @@ def nest_bowl(
     ry: float | None = None,
     pull: float = 0.78,
 ) -> Drawing:
+    del lsb
     st = float(system.stem["lc"]) if thickness is None else float(thickness)
     ov = float(system.overshoot.round)
     rx_v = width * 0.36 if rx is None else float(rx)
@@ -194,11 +172,9 @@ def diagonal_stroke(
         y = min(ys) + 0.62 * (max(ys) - min(ys))
     try:
         spans = list_vertical_stems(probe.outline(), y=y)
-    except Exception:  # noqa: BLE001
+    except (ValueError, TypeError, KeyError):
         spans = []
-    near = [
-        s for s in spans if s.width > 0 and abs(s.width - optical) / optical <= 0.45
-    ]
+    near = [s for s in spans if s.width > 0 and abs(s.width - optical) / optical <= 0.45]
     if not near:
         return probe
     avg = sum(s.width for s in near) / len(near)

@@ -1,10 +1,8 @@
-"""Control o — closed oval via polyline expand."""
+"""Control o — closed oval via cubic bowl + tidy (S1)."""
 
 from __future__ import annotations
 
-import math
-
-from elements import stroke
+from elements import bowl
 
 from typekernel.project import glyph
 from typekernel.system import System
@@ -21,9 +19,4 @@ def o(system: System):
     cy = xh / 2.0
     rx = width / 2.0 - st * 0.15
     ry = xh / 2.0 + ov * 0.5 - st * 0.15
-    n = 64
-    pts = [
-        (cx + rx * math.cos(2 * math.pi * i / n), cy + ry * math.sin(2 * math.pi * i / n))
-        for i in range(n)
-    ]
-    return stroke(system, pts, closed=True, thickness=st)
+    return bowl(system, cx=cx, cy=cy, rx=rx, ry=ry, thickness=st)
