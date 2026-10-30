@@ -115,7 +115,7 @@ LATIN_BASIC: Mapping[int, TopologyPrior] = {
     0x44: _p(0x44, "D", counters=1, islands=1, ascender=True, aspect=1.05, top_mass=0.55, diag_mass=0.35, mid_band=0.20),
     0x45: _p(0x45, "E", counters=0, islands=1, ascender=True, aspect=1.30, right_mass=0.40, mid_band=0.25),
     0x46: _p(0x46, "F", counters=0, islands=1, ascender=True, aspect=1.35, top_mass=0.70, right_mass=0.35, mid_band=0.25),
-    0x47: _p(0x47, "G", counters=1, islands=1, ascender=True, aspect=1.05, top_mass=0.50, right_mass=0.60, mid_band=0.15),
+    0x47: _p(0x47, "G", counters=0, islands=1, ascender=True, aspect=1.05, top_mass=0.50, right_mass=0.60, mid_band=0.15),
     0x48: _p(0x48, "H", counters=0, islands=1, ascender=True, aspect=1.15, mid_band=0.25),
     0x49: _p(0x49, "I", counters=0, islands=1, ascender=True, aspect=6.0, mid_band=0.15),
     0x4A: _p(0x4A, "J", counters=0, islands=1, ascender=True, aspect=1.40, top_mass=0.25, right_mass=0.60, mid_band=0.05),

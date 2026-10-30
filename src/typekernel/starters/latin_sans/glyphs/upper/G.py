@@ -18,7 +18,7 @@ def glyph_G(system: System):
     lsb = float(system.tokens.get("lsb_uc", 50.0))
     ov = float(system.overshoot.round)
     exp = float(system.tokens.get("bowl_exponent", 2.15))
-    aperture = float(system.tokens.get("bowl_aperture", 0.42))
+    aperture = float(system.tokens.get("bowl_aperture", 0.42)) * 0.65
     tension = float(system.tokens.get("shoulder_tension", 0.55))
     bar_t = float(system.tokens.get("bar_thickness", thin))
     cx = lsb + width / 2.0
@@ -36,7 +36,7 @@ def glyph_G(system: System):
         tension=tension,
     )
     spur = crossbar(
-        cx,
+        cx - st * 0.35,
         lsb + width - st * 0.15,
         cap * 0.42,
         thick=bar_t,

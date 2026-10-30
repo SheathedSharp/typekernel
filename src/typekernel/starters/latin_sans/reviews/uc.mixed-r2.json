@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-29",
+  "expect_changes": [
+    "B: counters 3\u21922 \u2014 letter-class B has two bowls; previous expect encoded the third-cavity construction defect"
+  ],
+  "glyphs": {
+    "B": "f2fb8e2b649b2b51e20b7d4f86deee62bfdb74ab152608550aa33b734733eac8",
+    "P": "24597e5186890478d5fa1a8d93817a0fae5e8caffe0dcf043329f063d322b230",
+    "R": "26ffe759f1d757ba2269f54fdcd23d3b8c328f7d96b5ccb0f1c028674a77cccb",
+    "S": "e77dec4b6f0884849e535ba6fbea1cc8b7e5b9b037b64ed50f94f212057e34f4",
+    "J": "b28c9d22da0007ce8c8717a5b56a5882f48e5fc5874da7d74d300519f864be58",
+    "U": "c7f80ac57fc677988e1171aa364a0a83eea1b2a05e70d49d44f5f222bb7e67b5",
+    "K": "151e374ee2b4852716550c9e54bba7e483d268364eb820a6ce794129107c4810"
+  },
+  "group": "uc.mixed",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "B bowls meet at waist (2 counters). G tighter aperture + spur (1 island; open-G prior counters=0). W overlap join (1 island) + A/W kern. g third cavity still open / expect=3.",
+  "proofs": [],
+  "reads_as": {
+    "B": "B",
+    "G": "G",
+    "W": "W"
+  },
+  "reviewer": "agent:course-correct-c3",
+  "round": 2,
+  "verdict": "pass"
+}

@@ -224,7 +224,7 @@ KERNING = Kerning(
         ClassKernPair('left_F', 'right_round_lc', 10.0),
         ClassKernPair('left_P', 'right_round_lc', 10.0),
         KernPair('A', 'V', -4.0),
-        KernPair('A', 'W', 2.0),
+        KernPair('A', 'W', 10.0),
         KernPair('A', 'Y', -10.0),
         KernPair('V', 'A', 5.0),
         KernPair('W', 'A', -1.0),

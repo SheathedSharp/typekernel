@@ -19,11 +19,12 @@ def glyph_B(system: System):
     ov = float(system.overshoot.round) * 0.4
     exp = float(system.tokens.get("bowl_exponent", 2.15))
     left = stem(lsb, lsb + st, 0.0, cap, name="stem.l")
-    cx = lsb + st + (width - st) * 0.48
+    # Pull bowls into the stem and let them meet at the waist (2 counters).
+    cx = lsb + st + (width - st) * 0.40
     top = bowl(
-        (cx, cap * 0.72),
-        (width - st) * 0.48,
-        cap * 0.28,
+        (cx, cap * 0.70),
+        (width - st) * 0.52,
+        cap * 0.27,
         thick=st,
         thin=thin,
         exponent=exp,
@@ -31,9 +32,9 @@ def glyph_B(system: System):
         name="bowl.t",
     )
     bot = bowl(
-        (cx + st * 0.05, cap * 0.30),
-        (width - st) * 0.52,
-        cap * 0.30,
+        (cx + st * 0.05, cap * 0.32),
+        (width - st) * 0.56,
+        cap * 0.29,
         thick=st,
         thin=thin,
         exponent=exp,

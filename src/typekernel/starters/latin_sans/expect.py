@@ -21,7 +21,7 @@ EXPECT: dict[str, Expect] = {
     "p": Expect(counters=1, islands=1),
     "q": Expect(counters=1, islands=1),
     "A": Expect(counters=1, islands=1),
-    "B": Expect(counters=3, islands=1),  # overlap join yields third cavity
+    "B": Expect(counters=2, islands=1),  # letter-class B; bowls meet at waist
     "D": Expect(counters=1, islands=1),
     "O": Expect(counters=1, islands=1),
     "P": Expect(counters=1, islands=1),
