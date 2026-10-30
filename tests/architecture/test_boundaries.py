@@ -336,6 +336,9 @@ def test_no_heal_blend_seal_on_default_path(default_path_files: list[Path]) -> N
 # (rule 5 still covers tests/draw|system|project).
 # ---------------------------------------------------------------------------
 
+# ``knowledge`` is intentionally omitted: S2 allows letter/glyph *names* only
+# inside that pure-data package (priors / confuse pairs). Constructors and
+# other kernel packages remain forbidden from glyph-name literals.
 _GLYPH_LITERAL_PACKAGES = (
     "geo",
     "draw",
@@ -511,3 +514,13 @@ def test_anatomy_functions_do_not_assemble_letters() -> None:
             elif LETTER_FN.match(name):
                 violations.append(f"{_rel(path)}:{node.lineno}: {name}")
     assert not violations, "anatomy letter-assembly names:\n" + "\n".join(violations)
+
+
+def test_knowledge_may_contain_letter_names() -> None:
+    """S2 exception: knowledge priors are allowed to store glyph names as data."""
+    from typekernel.knowledge import LATIN_BASIC
+
+    names = {p.name for p in LATIN_BASIC.values()}
+    assert "z" in names and "e" in names
+    # Guard: knowledge must not be listed in the constructor literal ban.
+    assert "knowledge" not in _GLYPH_LITERAL_PACKAGES

@@ -238,6 +238,27 @@ def _cmd_explain(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_read(args: argparse.Namespace) -> int:
+    from typekernel.cli.read_cmd import read_project
+
+    path = getattr(args, "path", None) or "."
+    text = getattr(args, "text", None)
+    glyph = getattr(args, "glyph", None)
+    try:
+        code, body = read_project(
+            path,
+            text=text,
+            glyph=glyph,
+            intended=getattr(args, "intended", None),
+            as_json=bool(getattr(args, "json", False)),
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(body, end="")
+    return code
+
+
 def _cmd_review(args: argparse.Namespace) -> int:
     from typekernel.cli.review_cmd import review_open, review_record
 
@@ -549,6 +570,39 @@ def main(argv: list[str] | None = None) -> int:
     p_explain.add_argument("--master", default=None)
     p_explain.add_argument("--json", action="store_true", help="emit GlyphReport JSON")
     p_explain.set_defaults(func=_cmd_explain)
+
+    p_read = sub.add_parser(
+        "read",
+        help="identify glyphs (topology + lightweight features; S2)",
+    )
+    p_read.add_argument(
+        "--text",
+        default=None,
+        help="string to read character-by-character against project glyphs",
+    )
+    p_read.add_argument(
+        "--glyph",
+        default=None,
+        help="single glyph name to read (use with --intended)",
+    )
+    p_read.add_argument(
+        "--intended",
+        default=None,
+        help="intended character or codepoint when using --glyph",
+    )
+    p_read.add_argument(
+        "--json",
+        action="store_true",
+        help="emit JSON instead of text",
+    )
+    p_read.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="project root (default: .)",
+    )
+    p_read.set_defaults(func=_cmd_read)
+
 
 
     p_review = sub.add_parser("review", help="open/record glyph-group reviews")

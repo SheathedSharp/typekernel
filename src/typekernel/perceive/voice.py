@@ -19,6 +19,7 @@ __all__ = [
     "CONTROL_GLYPHS",
     "VoiceFeatures",
     "extract_voice",
+    "letter_shape_distance",
     "voice_distance",
 ]
 
@@ -103,3 +104,25 @@ def voice_distance(a: VoiceFeatures, b: VoiceFeatures) -> float:
             d = float(x) - float(y)
             total += d * d
     return float(total**0.5)
+
+
+def letter_shape_distance(
+    session: ProjectSession,
+    reference: ProjectSession,
+    codepoint: int,
+    *,
+    master: str | None = None,
+    ref_master: str | None = None,
+) -> float:
+    """L2 distance between the same encoded letter in two sessions.
+
+    Resolves the glyph via ``glyph_name_for_char``; missing on either side →
+    ``inf``. This is structural shape distance (topology / density / aspect /
+    advance), not aesthetic originality.
+    """
+    from typekernel.font.glyph import glyph_name_for_char
+
+    name = glyph_name_for_char(chr(int(codepoint)))
+    a = extract_voice(session, glyphs=(name,), master=master)
+    b = extract_voice(reference, glyphs=(name,), master=ref_master)
+    return voice_distance(a, b)

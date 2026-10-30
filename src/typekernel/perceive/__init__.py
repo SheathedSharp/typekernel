@@ -17,6 +17,7 @@ from typekernel.perceive.voice import (
     CONTROL_GLYPHS,
     VoiceFeatures,
     extract_voice,
+    letter_shape_distance,
     voice_distance,
 )
 
@@ -32,6 +33,7 @@ __all__ = [
     "edit_view",
     "explain",
     "extract_voice",
+    "letter_shape_distance",
     "measure_topology",
     "overlay_view",
     "reference_view",
