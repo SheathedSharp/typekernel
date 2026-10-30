@@ -68,8 +68,8 @@ def test_tk_new_humanist_italic_builds_otf(tmp_path: Path) -> None:
     root = create_project("demo_hi", parent=tmp_path, starter="latin-humanist-italic")
     assert (root / "elements.py").is_file()
     assert (root / "glyphs" / "lower" / "n.py").is_file()
-    system_text = (root / "system.py").read_text(encoding="utf-8")
-    assert 'FAMILY_NAME = "Demo Hi"' in system_text
+    project_text = (root / "project.py").read_text(encoding="utf-8")
+    assert 'FamilyInfo(family="Demo Hi")' in project_text
     font, result = build_project(root, out_dir=root / "build", formats=("otf",))
     names = {g.name for g in font}
     assert {"n", "o", "H", "O", ".notdef", "space"} <= names
@@ -114,14 +114,14 @@ def test_o_group_glyphs_evaluate() -> None:
 
 def test_masters_signature_compatible() -> None:
     """Light / Regular / Bold drawings share signatures for every glyph."""
-    from typekernel.starters.latin_humanist_italic.system import (
-        MASTER_LOCATIONS,
-        masters,
-    )
+    from typekernel.starters.latin_humanist_italic.system import masters
 
     assert len(masters) == 2
-    assert set(MASTER_LOCATIONS) >= {"Light", "Regular", "Bold"}
     with open_project(STARTER) as session:
+        master_names = {m.name for m in session.project.masters}
+        assert {"Light", "Bold"} <= master_names
+        # Regular is the default system; designed masters cover Light/Bold.
+        assert master_names | {"Regular"} >= {"Light", "Regular", "Bold"}
         names = sorted(session.specs())
         for name in names:
             sigs = [

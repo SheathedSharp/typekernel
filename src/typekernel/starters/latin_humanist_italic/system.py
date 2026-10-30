@@ -9,7 +9,7 @@ cubics so ``Drawing.signature()`` stays thickness-stable for VF.
 from __future__ import annotations
 
 from typekernel.project import Master
-from typekernel.system import Brief, Intent, Overshoot, System, Zones
+from typekernel.system import Overshoot, System, Zones
 
 system = System(
     upm=1000,
@@ -74,25 +74,8 @@ system = System(
     },
 )
 
-
 # Typed intent (checked by ``tk audit``). Prose twin: brief.md.
 # Mapping tables: typekernel.system.intent — not an aesthetics score.
-BRIEF = Brief(
-    prose=(
-        "Humanist true italic: broad nib at ~28°, medium calligraphic contrast, "
-        "normal counters, Regular weight. Construction is skeleton + pen; "
-        "no heal/blend/seal."
-    ),
-    intent=Intent(
-        contrast="medium",
-        slant="italic",
-        openness="normal",
-        weight="regular",
-        pen_angle_deg=28.0,
-    ),
-)
-INTENT = BRIEF.intent  # alias for agents / EXTRA tooling
-
 
 def _designed_master(
     base: System,
@@ -114,7 +97,6 @@ def _designed_master(
         tokens["bowl_aperture"] = float(tokens["bowl_aperture"]) + aperture_delta
     return base.tuned(stem=stem, tokens=tokens)
 
-
 # Project evaluation masters (Regular is the default ``system``).
 masters: tuple[Master, ...] = (
     Master(
@@ -128,97 +110,4 @@ masters: tuple[Master, ...] = (
 )
 
 # Designspace locations for ``tk build --variable`` (wght user coords).
-MASTER_LOCATIONS: dict[str, dict[str, float]] = {
-    "Light": {"wght": 300.0},
-    "Regular": {"wght": 400.0},
-    "Bold": {"wght": 700.0},
-}
 
-FAMILY_NAME = "Latin Humanist Italic"
-STYLE_NAME = "Italic"
-
-# Optical stem kinds for tk audit. Kernel default is named-nodes-only;
-# this map is the project opt-in (replaces removed letter tables).
-# Empty tuple = no optical probe. Diagonal letters stay quiet here
-# (previously auto-info); declare ("diagonal",) to opt into warnings.
-AUDIT_STEMS = {
-    "A": (),
-    "a": (),
-    "B": ('vertical',),
-    "b": ('vertical',),
-    "backslash": (),
-    "bracketleft": (),
-    "bracketright": (),
-    "C": (),
-    "c": (),
-    "colon": (),
-    "comma": (),
-    "D": ('vertical',),
-    "d": ('vertical',),
-    "E": ('vertical',),
-    "e": (),
-    "eight": (),
-    "emdash": (),
-    "endash": (),
-    "exclam": (),
-    "F": ('vertical',),
-    "f": ('vertical',),
-    "five": (),
-    "four": (),
-    "G": (),
-    "g": ('vertical',),
-    "H": ('vertical',),
-    "h": ('vertical',),
-    "hyphen": (),
-    "I": ('vertical',),
-    "i": ('vertical',),
-    "J": ('vertical',),
-    "j": ('vertical',),
-    "K": ('vertical',),
-    "k": ('vertical',),
-    "L": ('vertical',),
-    "l": ('vertical',),
-    "M": ('vertical',),
-    "m": ('vertical',),
-    "N": ('vertical',),
-    "n": ('vertical',),
-    "nine": (),
-    "O": (),
-    "o": (),
-    "one": (),
-    "P": ('vertical',),
-    "p": ('vertical',),
-    "parenleft": (),
-    "parenright": (),
-    "period": (),
-    "Q": (),
-    "q": ('vertical',),
-    "question": (),
-    "quotedbl": (),
-    "quotesingle": (),
-    "R": ('vertical',),
-    "r": ('vertical',),
-    "S": (),
-    "s": (),
-    "semicolon": (),
-    "seven": (),
-    "six": (),
-    "slash": (),
-    "T": ('vertical',),
-    "t": ('vertical',),
-    "three": (),
-    "two": (),
-    "U": ('vertical',),
-    "u": ('vertical',),
-    "V": (),
-    "v": (),
-    "W": (),
-    "w": (),
-    "X": (),
-    "x": (),
-    "Y": (),
-    "y": (),
-    "Z": (),
-    "z": (),
-    "zero": (),
-}

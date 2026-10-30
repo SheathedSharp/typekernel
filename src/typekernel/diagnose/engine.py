@@ -52,80 +52,41 @@ class AuditReport:
         }
 
 
-def _load_system_module(root: Path) -> Any:
-    import importlib.util
-    import sys
-
-    system_py = root / "system.py"
-    if not system_py.is_file():
-        return None
-    root_s = str(root.resolve())
-    if root_s not in sys.path:
-        sys.path.insert(0, root_s)
-    mod_name = f"_typekernel_user_system_audit_{abs(hash(root_s)) & 0xFFFFFFFF:x}"
-    spec = importlib.util.spec_from_file_location(mod_name, system_py)
-    if spec is None or spec.loader is None:
-        return None
-    module = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(module)
-    except Exception:  # noqa: BLE001
-        return None
-    return module
 
 
 def load_audit_stems(root: Path) -> Mapping[str, Sequence[str]]:
-    """Load optional ``AUDIT_STEMS`` from the project's ``system.py``."""
-    return _load_stems_from_system(root)
+    """Load stem kinds from ``Project.audit.stems``."""
+    from typekernel.project import open_project
+
+    with open_project(root) as session:
+        return {str(k): tuple(v) for k, v in session.project.audit.stems.items()}
 
 
 def load_extra_checks(root: Path) -> tuple[Any, ...]:
-    module = _load_system_module(root)
-    if module is None:
+    """Load ``Project.audit.extra_checks``."""
+    from typekernel.project import open_project
+
+    try:
+        with open_project(root) as session:
+            return tuple(session.project.audit.extra_checks)
+    except Exception:  # noqa: BLE001
         return ()
-    raw = getattr(module, "EXTRA_CHECKS", None) or getattr(module, "CHECKS", None)
-    if raw is None:
-        return ()
-    if callable(raw):
-        return (raw,)
-    return tuple(raw)
 
 
 def load_intent(root: Path) -> Intent | None:
+    """Load intent from ``Project.brief``."""
+    from typekernel.project import open_project
     from typekernel.system.intent import coerce_intent
 
-    module = _load_system_module(root)
-    if module is None:
+    try:
+        with open_project(root) as session:
+            brief = session.project.brief
+            if brief is not None:
+                return coerce_intent(brief)
+    except Exception:  # noqa: BLE001 — empty scaffold / pre-migration
         return None
-    raw = getattr(module, "BRIEF", None)
-    if raw is None:
-        raw = getattr(module, "INTENT", None)
-    return coerce_intent(raw)
+    return None
 
-
-def _normalize_kinds(value: Any) -> tuple[str, ...]:
-    if value is None or value == "none" or value == ():
-        return ()
-    if isinstance(value, str):
-        if value in {"vertical", "diagonal"}:
-            return (value,)
-        if value == "auto":
-            return ("auto",)
-        return ()
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        kinds = [str(item) for item in value if str(item) in {"vertical", "diagonal"}]
-        return tuple(kinds)
-    return ()
-
-
-def _load_stems_from_system(root: Path) -> dict[str, tuple[str, ...]]:
-    module = _load_system_module(root)
-    if module is None:
-        return {}
-    raw = getattr(module, "AUDIT_STEMS", None)
-    if raw is None or not isinstance(raw, Mapping):
-        return {}
-    return {str(k): _normalize_kinds(v) for k, v in raw.items()}
 
 
 def kinds_for(name: str, declared: Mapping[str, Sequence[str]]) -> tuple[str, ...]:
@@ -237,14 +198,10 @@ def audit_project(
 
         report = AuditReport(glyphs=len(names), masters=tuple(master_list))
         stem_kinds = {str(k): tuple(v) for k, v in project.audit.stems.items()}
-        if not stem_kinds:
-            stem_kinds = _load_stems_from_system(root_path)
 
         intent = None
         if project.brief is not None:
             intent = project.brief.intent
-        if intent is None:
-            intent = load_intent(root_path)
         if intent is not None:
             from typekernel.system.intent import check_intent
 

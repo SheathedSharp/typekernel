@@ -4,7 +4,7 @@ Maps a small closed vocabulary onto documented ``System`` / token defaults.
 Does **not** score style consistency, originality, or beauty — those stay
 visual (``tk proof``). Agents still own glyph geometry.
 
-Cold-start agents: declare ``BRIEF`` (or ``INTENT``) in ``system.py``, write
+Cold-start agents: set ``Project.brief`` (a ``Brief`` / intent) in ``project.py``, write
 matching prose in ``brief.md``, then let ``tk audit`` flag contradictions.
 """
 

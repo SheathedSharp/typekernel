@@ -110,6 +110,10 @@ myfont/
 `AUDIT_STEMS`、`EXTRA_CHECKS`、`BRIEF`、`spacing.apply_spacing`、`font.get_project`）全部删除，
 加载器遇到时报迁移错误，不做兼容双轨。
 
+**落地（starter）**：四套 starter 的上述名字已迁入 `project.py` → `PROJECT` 字段；`system.py` 只留
+`System` / masters / 轴数据。`open_project` 在已有 `PROJECT` 时若仍看见 `system.py` 残留约定，会
+`MigrationError`。
+
 ```python
 @dataclass(frozen=True, slots=True)
 class FamilyInfo:

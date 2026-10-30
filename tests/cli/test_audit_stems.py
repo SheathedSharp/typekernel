@@ -29,10 +29,18 @@ def test_latin_sans_default_audit_quiet(tmp_path: Path) -> None:
 
 def test_audit_stems_none_skips_optical(tmp_path: Path) -> None:
     root = create_project("kinds", parent=tmp_path, starter="latin-sans")
-    sys_py = root / "system.py"
-    text = sys_py.read_text(encoding="utf-8")
-    text += "\n\nAUDIT_STEMS = {\"n\": \"none\", \"v\": (\"diagonal\",)}\n"
-    sys_py.write_text(text, encoding="utf-8")
+    proj = root / "project.py"
+    text = proj.read_text(encoding="utf-8")
+    # Override Project.audit.stems via local map (system.py must stay legacy-free).
+    needle = "audit=AuditConfig(stems=_AUDIT_STEMS),"
+    if needle not in text:
+        raise AssertionError("starter project.py missing AuditConfig(stems=_AUDIT_STEMS)")
+    text = text.replace(
+        needle,
+        'audit=AuditConfig(stems={"n": (), "v": ("diagonal",)}),',
+        1,
+    )
+    proj.write_text(text, encoding="utf-8")
     kinds = load_audit_stems(root)
     assert kinds["n"] == ()
     assert kinds["v"] == ("diagonal",)

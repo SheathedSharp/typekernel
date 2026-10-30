@@ -1,4 +1,4 @@
-"""plugins.checks are callable and EXTRA_CHECKS hooks into tk audit."""
+"""plugins.checks are callable; Project.audit.extra_checks hooks into tk audit."""
 
 from __future__ import annotations
 
@@ -20,22 +20,28 @@ def test_builtin_checks_flags() -> None:
     assert len(builtin_checks(check_overlap=True)) == len(builtin_checks()) + 1
 
 
-def test_extra_checks_from_system(tmp_path: Path) -> None:
+def test_extra_checks_from_project_audit(tmp_path: Path) -> None:
     root = create_project("extracheck", parent=tmp_path, starter="latin-sans")
-    sys_py = root / "system.py"
-    sys_py.write_text(
-        sys_py.read_text(encoding="utf-8")
-        + """
-
-def _mark_n(ctx):
-    if ctx.name == "n":
-        from typekernel.plugins.checks.protocol import Finding
-        ctx.findings.append(Finding("custom", "warn", "n", "extra-check-fired"))
-
-EXTRA_CHECKS = (_mark_n,)
-""",
-        encoding="utf-8",
+    proj = root / "project.py"
+    text = proj.read_text(encoding="utf-8")
+    hook = (
+        "def _mark_n(ctx):\n"
+        "    if ctx.name == \"n\":\n"
+        "        from typekernel.plugins.checks.protocol import Finding\n"
+        "        ctx.findings.append(\n"
+        "            Finding(\"custom\", \"warn\", \"n\", \"extra-check-fired\")\n"
+        "        )\n\n"
     )
+    if "def _mark_n" not in text:
+        text = text.replace("PROJECT = Project(", hook + "PROJECT = Project(", 1)
+    needle = "audit=AuditConfig(stems=_AUDIT_STEMS),"
+    assert needle in text, "starter project.py missing AuditConfig(stems=_AUDIT_STEMS)"
+    text = text.replace(
+        needle,
+        "audit=AuditConfig(stems=_AUDIT_STEMS, extra_checks=(_mark_n,)),",
+        1,
+    )
+    proj.write_text(text, encoding="utf-8")
     report = audit_project(root, glyphs=["n"])
     assert any(f.message == "extra-check-fired" for f in report.findings)
 

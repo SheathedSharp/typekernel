@@ -6,7 +6,7 @@ Zones and stems match latin-sans Regular; slant + pen tokens author the italic.
 from __future__ import annotations
 
 from typekernel.project import Master
-from typekernel.system import Brief, Intent, Overshoot, System, Zones
+from typekernel.system import Overshoot, System, Zones
 
 system = System(
     upm=1000,
@@ -70,22 +70,6 @@ system = System(
     },
 )
 
-BRIEF = Brief(
-    prose=(
-        "Latin Sans true italic partner: same proportions as latin-sans, "
-        "mild italic slant, low-contrast pen for a sans-adjacent italic."
-    ),
-    intent=Intent(
-        contrast="low",
-        slant="italic",
-        openness="normal",
-        weight="regular",
-        pen_angle_deg=12.0,
-    ),
-)
-INTENT = BRIEF.intent
-
-
 def _designed_master(base: System, *, stem_scale: float, width_scale: float) -> System:
     stem = {k: max(36.0, float(v) * stem_scale) for k, v in dict(base.stem).items()}
     tokens = dict(base.tokens)
@@ -94,17 +78,8 @@ def _designed_master(base: System, *, stem_scale: float, width_scale: float) -> 
             tokens[key] = float(tokens[key]) * width_scale
     return base.tuned(stem=stem, tokens=tokens)
 
-
 masters: tuple[Master, ...] = (
     Master("Light", _designed_master(system, stem_scale=0.62, width_scale=1.04)),
     Master("Bold", _designed_master(system, stem_scale=1.38, width_scale=0.96)),
 )
 
-MASTER_LOCATIONS: dict[str, dict[str, float]] = {
-    "Light": {"wght": 300.0},
-    "Regular": {"wght": 400.0},
-    "Bold": {"wght": 700.0},
-}
-
-FAMILY_NAME = "Latin Sans"
-STYLE_NAME = "Italic"

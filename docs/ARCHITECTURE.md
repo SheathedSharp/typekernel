@@ -18,11 +18,12 @@
 | 标签语法 / `anatomy.tags` | **已落地** | §6.3.1；`tags.grammar` info 检查；三 starter 0 不合规（见 `docs/design/tag-noncompliance.md`） |
 | `anatomy` 轮廓构件 | **已落地** | straight/curve/diagonal/terminals（§4.3 清单）；`anatomy.pen` 已补齐 |
 | Tracy / 光学间距插件 | **未接入工作流** | `optics` 有原语；Tracy 法与光学侧距插件未挂进 `tk audit` / 默认 spacing 路径 |
-| 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠项目 `AUDIT_STEMS` |
+| 内核字母名 | **已清** | `cli/audit` / `checks.zone` / `checks.stem` 字母表已删；守卫扫 AGL / 单字母字面量；光学 stem 靠 `Project.audit.stems` |
 | Starter 字形质量 | **未视觉批准** | 三套 starter 是结构示例，`tk audit` 可过，样张尚未通过人工视觉评审 |
 | 槽位曲线邻边 | **已修** | `CornerSite.point_in/out`、`EndSite.point_a/b` 按弧长；角点填充器改用它们；`requires={"line-line"}` 时曲线邻边跳过；`Project.evaluate` 报 `glyph 'X' slot 'tag': …` |
 | LihuiT 移植 Hausdorff 指标 | **程序侧已达标** | `transplants/lihuit` 经 `ref_outlines` 移植 a–z+figs；`compare_hausdorff` Regular+Bold median/p95=0（≤8/≤20）。样张人工批准仍缺。`Metrics.pack="absolute"` 保留移植轮廓的 LSB。Bold≠Regular 拓扑 → 单 Regular 母版（见 `transplants/lihuit/BACKLOG.md`） |
-| Stem `AUDIT_STEMS` 策略 | **已落地** | 项目声明 map 之外的字形不跑 stem 门禁（Ext-A/符号安静）；空元组=无光学探针 |
+| Stem `Project.audit.stems` 策略 | **已落地** | `AuditConfig.stems`；map 之外的字形不跑 stem 门禁（Ext-A/符号安静）；空元组=无光学探针 |
+| `project.py` → `PROJECT` | **已落地** | 旧 `system.py` 模块级 `FAMILY_NAME`/`AUDIT_STEMS`/`BRIEF`/`MASTER_LOCATIONS` 等已删；loader 遇残留报 `MigrationError` |
 | `perceive.voice_distance` | **已落地（结构）** | 控制字拓扑/灰度/长宽比/advance 的 L2 距离；**不是**美学 originality。主观的 distinctive 由人审另行记录 |
 
 ---
@@ -585,7 +586,7 @@ class Project:
 4. `plugins/<x>/` 不得 import `plugins/<y>/`；任何新包不得 import 其他模块的 `_` 私有名。
 5. 内核测试（`tests/draw`、`tests/system`、`tests/project`）里不得出现字母字形名字符串（用一个小正则：单字母 glyph 名或 `uniXXXX`）；需要形状时用合成夹具。
 6. **构件不组字**：`anatomy` 公开函数只返回 `Drawing` 或构件 dataclass；函数名不得含字形名，也不得以 `glyph_` / `build_` 开头。
-7. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由项目 `AUDIT_STEMS` 声明，内核不再按字母名猜测。
+7. **字形名字面量**：`geo` / `draw` / `system` / `project` / `font` / `compile` / `cli` / `plugins`（及目标架构中的后续包）的字符串字面量不得是单字母或 AGL 字形名（f-string 片段与 TypeVar 名除外）。光学 stem 种类由 `Project.audit.stems` 声明，内核不再按字母名猜测。
 
 用 `ast` 扫描实现，不额外引入依赖。
 

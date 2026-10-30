@@ -157,16 +157,4 @@ def create_project(
             )
         if n:
             project_py.write_text(text, encoding="utf-8")
-    system_py = root / "system.py"
-    if system_py.is_file():
-        stext = system_py.read_text(encoding="utf-8")
-        stext, sn = re.subn(
-            r'^FAMILY_NAME\s*=\s*"[^"]*"',
-            f'FAMILY_NAME = "{family}"',
-            stext,
-            count=1,
-            flags=re.MULTILINE,
-        )
-        if sn:
-            system_py.write_text(stext, encoding="utf-8")
     return root

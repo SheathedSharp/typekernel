@@ -41,7 +41,7 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
     name = ctx.name
     drawing = ctx.raw
     system = ctx.system
-    # When the project declares AUDIT_STEMS, undeclared glyphs stay quiet
+    # When the project declares Project.audit.stems, undeclared glyphs stay quiet
     # (Ext-A / symbols / composites inherit stem.* nodes from bases).
     if ctx.declared_stems and name not in ctx.declared_stems:
         return
@@ -155,11 +155,11 @@ def check(ctx: CheckContext, *, tol_ratio: float = 0.08) -> None:
         if err > tol_ratio:
             # Auto diagonal probes are informative, not a gate: the simple
             # vertical-equivalent model is not pen-specific. A project that
-            # declares AUDIT_STEMS[glyph] = ("diagonal",) opts into warnings.
+            # declares Project.audit.stems[glyph] = ("diagonal",) opts into warnings.
             auto_diagonal = label.startswith("optical.diag") and name not in ctx.declared_stems
             level = "info" if auto_diagonal else "warn"
             suffix = (
-                " (auto diagonal probe; declare AUDIT_STEMS to make this a warning)"
+                " (auto diagonal probe; declare Project.audit.stems to make this a warning)"
                 if auto_diagonal
                 else ""
             )

@@ -455,6 +455,29 @@ class ProjectSession:
                 project = mod.PROJECT
                 if not isinstance(project, Project):
                     raise TypeError(f"PROJECT must be Project, got {type(project)!r}")
+                # system.py must not keep legacy loader names.
+                if "system" in self._loaded:
+                    sys_mod = sys.modules[self._loaded["system"]]
+                    leftover = [
+                        name
+                        for name in (
+                            "FAMILY_NAME",
+                            "STYLE_NAME",
+                            "MASTER_LOCATIONS",
+                            "AUDIT_STEMS",
+                            "EXTRA_CHECKS",
+                            "CHECKS",
+                            "BRIEF",
+                        )
+                        if hasattr(sys_mod, name)
+                    ]
+                    if leftover:
+                        raise MigrationError(
+                            f"{self.root / 'system.py'} still exports legacy "
+                            f"names {', '.join(leftover)}. Move them into "
+                            f"project.py → PROJECT fields:\n{map_lines}",
+                            mapping=mapping,
+                        )
                 return project
             raise MigrationError(
                 f"{self.root / 'project.py'} must export PROJECT = Project(...). "

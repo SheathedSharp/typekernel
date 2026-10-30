@@ -61,7 +61,6 @@ def _designed_master(
         tokens["bar_thickness"] = max(40.0, float(tokens["bar_thickness"]) * bar_scale)
     return base.tuned(stem=stem, tokens=tokens)
 
-
 # Project evaluation masters (Regular is the default ``system``).
 # Light: lighter stems, slightly wider counters, opener aperture, softer join.
 # Bold: heavier stems, slightly narrower counters, tighter aperture, firmer join.
@@ -91,13 +90,6 @@ masters = (
 )
 
 # Designspace locations for ``tk build --variable`` (wght user coords).
-MASTER_LOCATIONS: dict[str, dict[str, float]] = {
-    "Light": {"wght": 300.0},
-    "Regular": {"wght": 400.0},
-    "Bold": {"wght": 700.0},
-}
-
-
 WEIGHT_AXIS = Axis(
     tag="wght",
     name="Weight",
@@ -122,89 +114,3 @@ INSTANCES: tuple[Instance, ...] = tuple(
     for coord, label in sorted(WEIGHT_AXIS.labels.items())
 )
 
-FAMILY_NAME = "Latin Sans"
-STYLE_NAME = "Regular"
-
-# Optical stem kinds for tk audit. Kernel default is named-nodes-only;
-# this map is the project opt-in (replaces removed letter tables).
-# Empty tuple = no optical probe. Diagonal letters stay quiet here
-# (previously auto-info); declare ("diagonal",) to opt into warnings.
-AUDIT_STEMS = {
-    "A": (),
-    "a": (),
-    "B": ('vertical',),
-    "b": ('vertical',),
-    "backslash": (),
-    "bracketleft": (),
-    "bracketright": (),
-    "C": (),
-    "c": (),
-    "colon": (),
-    "comma": (),
-    "D": ('vertical',),
-    "d": ('vertical',),
-    "E": ('vertical',),
-    "e": (),
-    "eight": (),
-    "emdash": (),
-    "endash": (),
-    "exclam": (),
-    "F": ('vertical',),
-    "f": ('vertical',),
-    "five": (),
-    "four": (),
-    "G": (),
-    "g": ('vertical',),
-    "H": ('vertical',),
-    "h": ('vertical',),
-    "hyphen": (),
-    "I": ('vertical',),
-    "i": ('vertical',),
-    "J": ('vertical',),
-    "j": ('vertical',),
-    "K": ('vertical',),
-    "k": ('vertical',),
-    "L": ('vertical',),
-    "l": ('vertical',),
-    "M": ('vertical',),
-    "m": ('vertical',),
-    "N": ('vertical',),
-    "n": ('vertical',),
-    "nine": (),
-    "O": (),
-    "o": (),
-    "one": (),
-    "P": ('vertical',),
-    "p": ('vertical',),
-    "parenleft": (),
-    "parenright": (),
-    "period": (),
-    "Q": (),
-    "q": ('vertical',),
-    "question": (),
-    "R": ('vertical',),
-    "r": ('vertical',),
-    "S": (),
-    "s": (),
-    "semicolon": (),
-    "seven": (),
-    "six": (),
-    "slash": (),
-    "T": ('vertical',),
-    "t": ('vertical',),
-    "three": (),
-    "two": (),
-    "U": ('vertical',),
-    "u": ('vertical',),
-    "V": (),
-    "v": (),
-    "W": (),
-    "w": (),
-    "X": (),
-    "x": (),
-    "Y": (),
-    "y": (),
-    "Z": (),
-    "z": (),
-    "zero": (),
-}

@@ -18,7 +18,6 @@ def _write_minimal(root: Path) -> None:
     (root / "system.py").write_text(
         "from typekernel.system import Overshoot, System, Zones\n"
         "from typekernel.project import Master\n"
-        "from typekernel.axes import MasterSpec\n"
         "\n"
         "roman = System(\n"
         "    upm=1000,\n"
@@ -32,21 +31,21 @@ def _write_minimal(root: Path) -> None:
         "masters = (\n"
         "    Master('Roman', roman),\n"
         "    Master('Italic', italic),\n"
-        ")\n"
-        "MASTER_LOCATIONS = {'Roman': {'wght': 400}, 'Italic': {'wght': 400, 'ital': 1}}\n",
+        ")\n",
         encoding="utf-8",
     )
     (root / "project.py").write_text(
-        "from system import MASTER_LOCATIONS, masters, system\n"
+        "from system import masters, system\n"
         "from typekernel.axes import MasterSpec\n"
         "from typekernel.project import FamilyInfo, Project\n"
+        "_MASTER_LOCATIONS = {'Roman': {'wght': 400}, 'Italic': {'wght': 400, 'ital': 1}}\n"
         "PROJECT = Project(\n"
         "    info=FamilyInfo(family='ItalicDirTrial'),\n"
         "    system=system,\n"
         "    glyphs='glyphs',\n"
         "    glyphs_italic='glyphs_italic',\n"
         "    masters=tuple(\n"
-        "        MasterSpec(m.name, MASTER_LOCATIONS[m.name], m.system) for m in masters\n"
+        "        MasterSpec(m.name, _MASTER_LOCATIONS[m.name], m.system) for m in masters\n"
         "    ),\n"
         ")\n",
         encoding="utf-8",
