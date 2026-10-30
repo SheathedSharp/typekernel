@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from typekernel.geo.outline import Outline
 from typekernel.knowledge import TopologyPrior, confuse_partners, prior_for
-from typekernel.knowledge.priors import LATIN_BASIC, LATIN_EXT
+from typekernel.knowledge.priors import LATIN_BASIC
 from typekernel.perceive.topology import measure_topology
 from typekernel.project.session import ProjectSession
 from typekernel.system import System
@@ -216,7 +216,12 @@ def _distance_to_prior(feats: Sequence[float], prior: TopologyPrior) -> float:
 
 
 def _latin_rank_pool(*, case: str | None = None) -> dict[int, TopologyPrior]:
-    """Basic Latin + Ext digraph priors; optional lower/upper case filter."""
+    """Basic Latin letters/digits for ranking; optional lower/upper case filter.
+
+    Ext-A / Latin-1 priors live in ``LATIN_EXT`` and are **injected** when
+    ``read_glyph(..., intended_cp=...)`` names them — they must not displace
+    Basic Latin top-1 ranks (e.g. Eth vs D).
+    """
     out: dict[int, TopologyPrior] = {}
     for cp, pr in LATIN_BASIC.items():
         if 0x30 <= cp <= 0x39:
@@ -227,13 +232,6 @@ def _latin_rank_pool(*, case: str | None = None) -> dict[int, TopologyPrior]:
         if case == "lower" and not (0x61 <= cp <= 0x7A):
             continue
         if case == "upper" and not (0x41 <= cp <= 0x5A):
-            continue
-        out[cp] = pr
-    for cp, pr in LATIN_EXT.items():
-        ch = chr(cp)
-        if case == "lower" and not ch.islower():
-            continue
-        if case == "upper" and not ch.isupper():
             continue
         out[cp] = pr
     return out
@@ -292,14 +290,27 @@ def read_glyph(
             system = by[master].system
     stem = float(next(iter(system.stem.values()), 80.0))
     case = None
+    candidates = None
     if intended_cp is not None:
         ch = chr(int(intended_cp))
         if ch.islower():
             case = "lower"
         elif ch.isupper():
             case = "upper"
+        # Inject LATIN_EXT (or any non-basic) intended into the rank pool so
+        # digraphs/barred letters can top themselves without polluting A–Z.
+        intended_prior = prior_for(int(intended_cp))
+        if intended_prior is not None and int(intended_cp) not in _latin_rank_pool(case=case):
+            pool = _latin_rank_pool(case=case)
+            pool[int(intended_cp)] = intended_prior
+            candidates = pool
     top, feats = read_outline(
-        draft.drawing.outline(), system, stem=stem, top_k=top_k, case=case
+        draft.drawing.outline(),
+        system,
+        stem=stem,
+        top_k=top_k,
+        case=case,
+        candidates=candidates,
     )
     warnings: list[ReadWarning] = []
     if intended_cp is not None:

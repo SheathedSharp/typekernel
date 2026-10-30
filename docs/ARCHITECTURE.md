@@ -34,6 +34,13 @@
 | S5 评审闭环 | **已落地（agent 路径）** | `tk critique --text`；`verdict=pass` 默认要求 proof 哈希 **+** `reads_as`；`expect.changes`；trials **B4**。B4 程序侧归档：`docs/trials/2026-10-29-b4-cold-zayju/`。**人工 SCORE / VISION / `approved: true` 仍开** |
 | P6 零上下文终验 | **程序侧已归档；人审仍开** | 协议在 skill `trials.md`；B4 cold smoke + 再验见 `docs/trials/2026-10-29-b4-cold-zayju/`（ACCEPTANCE + PROGRAM_METRICS；human SCORE 空白）。**VISION / 人工 SCORE / `approved: true` 仍开** — 勿写成产品完成 |
 
+### Drift check (2026-10-30)
+
+- Still **fonts-as-code**: Metrics/spacing plugins suggest or explicit `--write` Abs only; contours never silent-edited by spacing.
+- No phrase/RH/zayju string special cases in `plugins.spacing` / `optics.space` / `perceive.read` / `knowledge.priors` (priors are Unicode-keyed letter-class bins).
+- Tracy/spacing honesty: **partial** (silhouette bands + scanline ink-fraction); full bitmap/stem-band Tracy **not** claimed.
+
+
 ---
 
 ## 1. 三层分离

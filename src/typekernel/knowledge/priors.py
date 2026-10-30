@@ -209,6 +209,16 @@ LATIN_EXT: Mapping[int, TopologyPrior] = {
         diag_mass=0.38,
         mid_band=0.18,
     ),
+    # Barred / thorn / eth — letter-class ≈ base letter + stroke (coarse bins).
+    0x00D0: _p(0x00D0, "Eth", counters=1, islands=1, ascender=True, aspect=1.05, top_mass=0.55, right_mass=0.48, diag_mass=0.35, mid_band=0.22, edge_mass=0.65),
+    0x00F0: _p(0x00F0, "eth", counters=1, islands=1, ascender=True, aspect=1.35, top_mass=0.45, right_mass=0.55, diag_mass=0.35, mid_band=0.18),
+    0x00DE: _p(0x00DE, "Thorn", counters=1, islands=1, ascender=True, aspect=1.20, top_mass=0.55, mid_band=0.25, edge_mass=0.75),
+    0x00FE: _p(0x00FE, "thorn", counters=1, islands=1, ascender=True, descender=True, aspect=1.55, top_mass=0.45, mid_band=0.22),
+    0x0110: _p(0x0110, "Dcroat", counters=1, islands=1, ascender=True, aspect=1.05, top_mass=0.55, right_mass=0.48, diag_mass=0.35, mid_band=0.20, edge_mass=0.65),
+    0x0111: _p(0x0111, "dcroat", counters=1, islands=1, ascender=True, aspect=1.55, top_mass=0.45, right_mass=0.55, mid_band=0.18),
+    0x0132: _p(0x0132, "IJ", counters=0, islands=2, ascender=True, aspect=0.70, top_mass=0.45, mid_band=0.08, edge_mass=0.80),
+    0x0133: _p(0x0133, "ij", counters=0, islands=4, has_dot=True, aspect=0.85, top_mass=0.55, mid_band=0.05),
+    0x00DF: _p(0x00DF, "germandbls", counters=1, islands=1, ascender=True, counters_alt=(2,), aspect=1.35, top_mass=0.55, mid_band=0.22),
 }
 
 
