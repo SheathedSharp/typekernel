@@ -5,8 +5,8 @@
 **Starter:** `script-roundhand`  
 **Cold project (outside repo):** `/Users/sheathedsharp/code/tk-b4-cold-zayju/hand`  
 **Tracked archival:** `docs/trials/2026-10-29-b4-cold-zayju/`  
-**Installed tip (cold wheel):** `5e12903` (see ACCEPTANCE.md)  
-**Re-verified tip (this archival):** `da0adee` → `PROGRAM_METRICS.json`
+**Installed tip (cold wheel):** `28ad6e3` (see ACCEPTANCE.md)  
+**Re-verified tip (this archival):** `9f4d883` → `PROGRAM_METRICS.json`
 
 ## Program-side (agents)
 
@@ -20,7 +20,7 @@
 | heal/blend/seal | none |
 | `approved: true` | **not** set |
 
-See `ACCEPTANCE.md` (cold session excerpt) and `PROGRAM_METRICS.json` (re-check on tip `da0adee`).
+See `ACCEPTANCE.md` (cold session excerpt) and `PROGRAM_METRICS.json` (re-check on tip `9f4d883`).
 
 Small proof PNG: `proof-text.png` (from cold `hand/proofs/text.png`).
 

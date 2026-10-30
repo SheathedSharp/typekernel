@@ -1,7 +1,7 @@
 # B4 cold trial ACCEPTANCE — zayju forever young
 
 **Date:** 2026-10-29 (America/Los_Angeles)  
-**Tip installed:** typekernel @ `5e12903` (non-editable wheel into `~/code/tk-b4-cold-zayju/.venv`)  
+**Tip installed:** typekernel @ `28ad6e3` (non-editable wheel into `~/code/tk-b4-cold-zayju/.venv`)  
 **Project:** `hand/` via `tk new hand --starter script-roundhand --charset minimal --text "zayju forever young"`  
 **Cold mode:** no reads of typekernel/src; public CLI + installed package only.
 
@@ -25,7 +25,7 @@ Editable: False
 7. `tk critique --text "zayju forever young" .` → see table
 8. `tk proof --text "zayju forever young" .`
 
-No glyph source edits were required; stock `script-roundhand` already met agent metrics after tip `5e12903`.
+No glyph source edits were required; stock `script-roundhand` already met agent metrics after tip `28ad6e3`.
 
 ## `tk critique --text "zayju forever young"` (cited)
 
