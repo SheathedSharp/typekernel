@@ -159,6 +159,7 @@ def _cmd_audit(args: argparse.Namespace) -> int:
         check_overlap=bool(getattr(args, "overlap", False)),
         masters=masters,
         baseline=getattr(args, "baseline", None),
+        text=getattr(args, "text", None),
     )
     print(format_report(report, as_json=bool(getattr(args, "json", False))))
     if report.errors:
@@ -476,6 +477,11 @@ def main(argv: list[str] | None = None) -> int:
         "--baseline",
         default=None,
         help="audit-baseline.json (default: <project>/audit-baseline.json if present)",
+    )
+    p_audit.add_argument(
+        "--text",
+        default=None,
+        help="S3: string-level join / spacing / rhythm CV over adjacent pairs",
     )
     p_audit.set_defaults(func=_cmd_audit)
 

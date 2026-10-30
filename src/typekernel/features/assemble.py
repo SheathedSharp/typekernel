@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import io
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
-from typekernel.features.generate import generate_features
+from typekernel.features.generate import generate_cursive_features, generate_features
 
 __all__ = [
     "FeatureSyntaxError",
@@ -70,9 +72,17 @@ def assemble_features(
     fea_dir: str | Path | None = "features",
     root: str | Path | None = None,
     extra: list[str] | tuple[str, ...] = (),
+    glyph_anchors: Mapping[str, Sequence[Any]] | None = None,
 ) -> str:
-    """Auto features + hand .fea (with ``# tk:replace``) + extras."""
+    """Auto features + hand .fea (with ``# tk:replace``) + extras.
+
+    ``glyph_anchors`` (optional) adds S3 ``curs`` from entry/exit anchors.
+    """
     auto = generate_features(set(glyph_names))
+    if glyph_anchors:
+        curs = generate_cursive_features(glyph_anchors)
+        if curs.strip():
+            auto = auto.rstrip() + "\n\n" + curs
     hand, replaced = load_hand_fea(fea_dir, root=root)
     auto = _strip_auto_features(auto, replaced)
     chunks = [auto]

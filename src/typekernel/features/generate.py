@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-__all__ = ["generate_features", "parse_suffix"]
+__all__ = ["generate_cursive_features", "generate_features", "parse_suffix"]
 
 _SS = re.compile(r"^(.+)\.ss(\d{2})$")
 _CV = re.compile(r"^(.+)\.cv(\d{2})$")
@@ -17,6 +19,10 @@ _OSF = re.compile(r"^(.+)\.osf$")
 _TOSF = re.compile(r"^(.+)\.tosf$")
 _ALT = re.compile(r"^(.+)\.alt(\d*)$")
 _DLIG = re.compile(r"\.dlig$")
+_INIT = re.compile(r"^(.+)\.init$")
+_MEDI = re.compile(r"^(.+)\.medi$")
+_FINA = re.compile(r"^(.+)\.fina$")
+_ISOL = re.compile(r"^(.+)\.isol$")
 
 
 def parse_suffix(name: str) -> tuple[str, str, str] | None:
@@ -45,6 +51,18 @@ def parse_suffix(name: str) -> tuple[str, str, str] | None:
     m = _ALT.match(name)
     if m:
         return ("sub", "salt", m.group(1))
+    m = _INIT.match(name)
+    if m:
+        return ("pos", "calt", m.group(1))
+    m = _MEDI.match(name)
+    if m:
+        return ("pos", "calt", m.group(1))
+    m = _FINA.match(name)
+    if m:
+        return ("pos", "calt", m.group(1))
+    m = _ISOL.match(name)
+    if m:
+        return ("pos", "calt", m.group(1))
     if "_" in name and not name.startswith("_"):
         core = _DLIG.sub("", name)
         parts = core.split("_")
@@ -60,12 +78,18 @@ def generate_features(glyph_names: set[str] | frozenset[str] | list[str]) -> str
     by_feat: dict[str, list[tuple[str, str]]] = defaultdict(list)
     ligas: dict[str, list[tuple[str, list[str]]]] = defaultdict(list)
     aalt_pairs: list[tuple[str, str]] = []
+    positional: dict[str, dict[str, str]] = defaultdict(dict)
 
     for name in sorted(names):
         parsed = parse_suffix(name)
         if parsed is None:
             continue
         kind, tag, base = parsed
+        if kind == "pos":
+            form = name.rsplit(".", 1)[-1]
+            if base in names:
+                positional[base][form] = name
+            continue
         if kind == "liga":
             core = _DLIG.sub("", name)
             parts = core.split("_")
@@ -113,4 +137,46 @@ def generate_features(glyph_names: set[str] | frozenset[str] | list[str]) -> str
         chunks.append("} aalt;")
         chunks.append("")
 
+    if positional:
+        # Practical calt: expose positional swaps; engines pick by context later.
+        chunks.append("feature calt {")
+        chunks.append("  # S3 positional forms (.init / .medi / .fina / .isol)")
+        for base in sorted(positional):
+            forms = positional[base]
+            for form in ("isol", "init", "medi", "fina"):
+                alt_name = forms.get(form)
+                if alt_name is not None:
+                    chunks.append(f"  sub {base} by {alt_name};")
+        chunks.append("} calt;")
+        chunks.append("")
+
     return "\n".join(chunks).rstrip() + "\n"
+
+
+def generate_cursive_features(
+    glyph_anchors: Mapping[str, Sequence[Any]],
+) -> str:
+    """Emit ``curs`` GPOS cursive attachment from entry/exit anchors."""
+    rows: list[str] = []
+    for gname in sorted(glyph_anchors):
+        by: dict[str | None, Any] = {getattr(a, "name", None): a for a in glyph_anchors[gname]}
+        entry = by.get("entry")
+        exit_a = by.get("exit")
+        if entry is None or exit_a is None:
+            continue
+        rows.append(
+            f"  pos cursive {gname} "
+            f"<anchor {float(exit_a.x):g} {float(exit_a.y):g}> "
+            f"<anchor {float(entry.x):g} {float(entry.y):g}>;"
+        )
+    if not rows:
+        return ""
+    return "\n".join(
+        [
+            "# S3 cursive attachment (exit then entry)",
+            "feature curs {",
+            *rows,
+            "} curs;",
+            "",
+        ]
+    )

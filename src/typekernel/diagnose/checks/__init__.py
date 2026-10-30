@@ -6,6 +6,7 @@ from typekernel.diagnose.checks.anchors import AnchorsCheck
 from typekernel.diagnose.checks.contour import ContourQualityCheck
 from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
 from typekernel.diagnose.checks.gray import GrayCheck
+from typekernel.diagnose.checks.join import JoinCheck
 from typekernel.diagnose.checks.spacing import (
     PairCollisionCheck,
     RefConsistencyCheck,
@@ -20,6 +21,7 @@ __all__ = [
     "ContourQualityCheck",
     "FeaturesSyntaxCheck",
     "GrayCheck",
+    "JoinCheck",
     "PairCollisionCheck",
     "RefConsistencyCheck",
     "SpacingCheck",

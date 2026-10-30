@@ -12,9 +12,11 @@ from types import MappingProxyType
 from typing import Literal
 
 from typekernel.font.kerning import ClassKernPair, KernClass, KernPair
+from typekernel.metrics.join import Join
 
 __all__ = [
     "Abs",
+    "Join",
     "Kerning",
     "Metrics",
     "Mirror",
@@ -78,6 +80,8 @@ class Metrics:
     pack: Literal["bbox", "slant-mid-x", "absolute"] | None = None
     # Fractions of x-height for italic silhouette packing (chancery-style).
     italic_pack_ys: tuple[float, ...] = ()
+    join: Join | None = None
+    """S3: when set, pair advances may align exit→entry (see metrics.join)."""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "keys", MappingProxyType(dict(self.keys)))

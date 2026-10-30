@@ -382,6 +382,11 @@ _GLYPH_LITERAL_ALLOW = frozenset(
         "desc",
         "x-height",
         "x",  # Zones.x field / zone token (not a glyph ref)
+        "y",  # Point / anchor coordinate field (not a glyph ref)
+        "angle",  # S3 join-anchor tangent field (not a glyph ref)
+        "width",  # S3 join-anchor stroke field / metrics (not a glyph ref)
+        "entry",  # S3 join anchor name (not a letter glyph builder)
+        "exit",  # S3 join anchor name
         "space",  # metrics space glyph key is universal; still not a letter glyph
         "second",  # ClassKernPair attribute name
         "E",  # status column header

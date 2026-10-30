@@ -288,11 +288,13 @@ class ProjectSession:
         from typekernel.features import assemble_features
 
         glyph_names = {g.name for g in font} | set(self._specs) | set(project.composites)
+        glyph_anchors = {g.name: g.anchors for g in font if g.anchors}
         font.features = assemble_features(
             glyph_names,
             fea_dir=project.features.fea_dir,
             root=self.root,
             extra=tuple(project.features.extra),
+            glyph_anchors=glyph_anchors,
         )
         return font
 

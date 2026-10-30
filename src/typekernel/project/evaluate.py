@@ -40,16 +40,51 @@ def unicodes_for_glyph_name(name: str) -> tuple[int, ...]:
     return ()
 
 
-def _as_xy(value: object) -> tuple[float, float]:
+def _as_anchor_fields(value: object) -> tuple[float, float, float | None, float | None]:
+    """Parse draft anchor value → ``(x, y, angle, width)``.
+
+    Accepted forms: ``Point``, ``(x, y)``, ``(x, y, angle)``,
+    ``(x, y, angle, width)``, or an object with ``.x/.y`` and optional
+    ``.angle`` / ``.width``.
+    """
     if isinstance(value, Point):
-        return (float(value.x), float(value.y))
-    if isinstance(value, tuple) and len(value) == 2:
-        return (float(value[0]), float(value[1]))
-    raise TypeError(f"anchor value must be Point or a two-float pair, got {type(value)!r}")
+        return (float(value.x), float(value.y), None, None)
+    if isinstance(value, tuple):
+        if len(value) == 2:
+            return (float(value[0]), float(value[1]), None, None)
+        if len(value) == 3:
+            return (float(value[0]), float(value[1]), float(value[2]), None)
+        if len(value) == 4:
+            return (
+                float(value[0]),
+                float(value[1]),
+                float(value[2]),
+                float(value[3]),
+            )
+    # Duck-typed JoinAnchor / similar.
+    x = getattr(value, "x", None)
+    y = getattr(value, "y", None)
+    if x is not None and y is not None:
+        ang = getattr(value, "angle", None)
+        wid = getattr(value, "width", None)
+        return (
+            float(x),
+            float(y),
+            float(ang) if ang is not None else None,
+            float(wid) if wid is not None else None,
+        )
+    raise TypeError(
+        "anchor value must be Point, (x, y[, angle[, width]]), "
+        f"or an object with x/y, got {type(value)!r}"
+    )
 
 
 def anchors_from_draft(anchors: Mapping[str, object]) -> tuple[Anchor, ...]:
-    return tuple(Anchor(name=k, x=xy[0], y=xy[1]) for k, xy in ((n, _as_xy(v)) for n, v in anchors.items()))
+    out: list[Anchor] = []
+    for name, value in anchors.items():
+        x, y, angle, width = _as_anchor_fields(value)
+        out.append(Anchor(name=name, x=x, y=y, angle=angle, width=width))
+    return tuple(out)
 
 
 def components_from_draft(refs: tuple[ComponentRef, ...] | list[ComponentRef]) -> tuple[Component, ...]:

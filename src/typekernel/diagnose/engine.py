@@ -116,6 +116,7 @@ def _builtin_v2(
     from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
+    from typekernel.diagnose.checks.join import JoinCheck
     from typekernel.diagnose.checks.spacing import (
         PairCollisionCheck,
         RefConsistencyCheck,
@@ -152,6 +153,7 @@ def _builtin_v2(
         out.append(InterpolationCheck())
     # Anchors + tag grammar always on; letter-free / data-driven.
     out.append(AnchorsCheck())
+    out.append(JoinCheck())
     out.append(FeaturesSyntaxCheck())
     out.append(TagsGrammarCheck())
     return out
@@ -174,6 +176,7 @@ def audit_project(
     masters: Sequence[str] | None = None,
     baseline: Path | str | Baseline | None = None,
     extra_checks: Sequence[Check] | None = None,
+    text: str | None = None,
 ) -> AuditReport:
     """Run diagnose v2 over a project; return structured findings."""
     root_path = Path(root).resolve()
@@ -304,6 +307,24 @@ def audit_project(
                     elif check.scope in {"font", "family"} and name == names[0]:
                         # Run once per master for font-scope.
                         report.findings.extend(list(check.run(ctx)))
+
+        if text:
+            from typekernel.diagnose.checks.join import run_text_join_audit
+            from typekernel.metrics.join import Join
+
+            for master in master_list:
+                policy = Join()
+                if project.metrics is not None and project.metrics.join is not None:
+                    policy = project.metrics.join
+                report.findings.extend(
+                    run_text_join_audit(
+                        session,
+                        text,
+                        master=master,
+                        policy=policy,
+                        use_join_advance=True,
+                    )
+                )
 
         if baseline_obj is not None:
             report.findings = baseline_obj.filter(report.findings, hashes=hashes)

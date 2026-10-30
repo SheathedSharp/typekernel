@@ -12,12 +12,17 @@ from typekernel.features.assemble import (
     load_hand_fea,
     validate_fea,
 )
-from typekernel.features.generate import generate_features, parse_suffix
+from typekernel.features.generate import (
+    generate_cursive_features,
+    generate_features,
+    parse_suffix,
+)
 
 __all__ = [
     "FeatureSyntaxError",
     "Features",
     "assemble_features",
+    "generate_cursive_features",
     "generate_features",
     "load_hand_fea",
     "parse_suffix",

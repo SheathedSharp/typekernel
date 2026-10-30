@@ -39,11 +39,17 @@ IDENTITY: Transform = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
 @dataclass(frozen=True, slots=True)
 class Anchor:
-    """Named attachment point. ``top`` on a base pairs with ``_top`` on a mark."""
+    """Named attachment point. ``top`` on a base pairs with ``_top`` on a mark.
+
+    Optional ``angle`` (degrees) and ``width`` (stroke) support S3 join
+    anchors (``entry`` / ``exit``). UFO / GPOS export uses ``name,x,y`` only.
+    """
 
     name: str
     x: float
     y: float
+    angle: float | None = None
+    width: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
