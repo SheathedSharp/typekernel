@@ -1,8 +1,9 @@
-"""Metrics for script-roundhand — data only."""
+"""Metrics for script-roundhand — join-enabled (S3)."""
 
 from __future__ import annotations
 
 from typekernel.metrics import Kerning, Metrics, Ref, Stem
+from typekernel.metrics.join import Join
 
 __all__ = ["KERNING", "METRICS"]
 
@@ -21,7 +22,10 @@ METRICS = Metrics(
         "v": (Stem("lc", 0.2), Stem("lc", 0.2)),
         "y": (Stem("lc", 0.2), Stem("lc", 0.2)),
         "z": (Stem("lc", 0.35), Stem("lc", 0.35)),
+        "j": (Ref("i", "lsb"), Ref("i", "rsb")),
+        "g": (Ref("o", "lsb"), Ref("o", "rsb")),
     },
     pack="bbox",
+    join=Join(),
 )
 KERNING = Kerning()
