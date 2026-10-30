@@ -75,8 +75,7 @@ tests/docs/test_development_plan_section8.py
 !.agents/skills/
 !.agents/skills/**
 
-# Local acceptance protocol: kept on this machine, never distributed
-.agents/skills/typekernel-font-design/trials.md
+# trials.md is tracked (S5 B4 cold protocol). AGENT_TRIALS.md stays gitignored.
 
 # Local build / proof / specimen dumps: never tracked, never distributed
 artifacts/

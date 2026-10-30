@@ -3,7 +3,7 @@ name: typekernel-font-design
 description: >-
   Design fonts with typekernel via Project / System / draw / plugins (ARCHITECTURE.md「标准工作流」).
   Use when scaffolding with tk new, editing starters/latin_sans, writing glyphs with @glyph,
-  running tk see / tk explain / tk proof / tk audit / tk review / tk build, or when the user
+  running tk see / tk explain / tk proof / tk audit / tk review / tk critique / tk build, or when the user
   mentions typekernel font-as-code.
 ---
 
@@ -40,7 +40,9 @@ tk new myfont --starter latin-sans
      edit glyph / elements / system
      tk audit
      tk see <glyph> --diff
-     tk review record <group> --verdict pass|fail --note "…"
+     tk review record <group> --verdict pass|fail --note "…" \
+         [--expect-change "why"]     # required when expect.py was edited (S5)
+     tk critique --text "…"          # S5 objective self-score (cite in ACCEPTANCE)
 4. tk status                         # task board; groups start unreviewed
 5. corners / ends → tk proof all
 6. spacing → tk proof spacing / kern
@@ -59,7 +61,8 @@ Do **not** skip `tk see` / `tk explain` and guess from compile errors alone.
 | Before/after | `tk see n --diff` |
 | Structured measures | `tk explain n --json` |
 | Task board | `tk status` |
-| Group review | `tk review open lc.n` / `tk review record lc.n --verdict pass --note "…"` |
+| Group review | `tk review open lc.n` / `tk review record lc.n --verdict pass --note "…"` `[--expect-change]` |
+| Objective self-score | `tk critique --text "zayju forever young"` (S5; not human SCORE) |
 | Arbitrary string | `tk proof --text "…"` |
 | Zoom one character | `tk proof --glyph n` |
 | Small-px waterfall / gray | included in `tk proof all` |
@@ -74,7 +77,8 @@ Do **not** skip `tk see` / `tk explain` and guess from compile errors alone.
 - Prefer **overlap construction** over boolean unions for interpolatable masters.
 - Name nodes so `tk audit` / `tk explain` can measure them.
 - Advances via `METRICS` keys — not bbox-only advances or `<glyph>_advance` tokens.
-- **Do not** edit `expect.py` just to silence findings; justify every expect change in the review note.
+- **Do not** edit `expect.py` just to silence findings; justify every expect change via `--expect-change` / `expect_changes` on the review record (`expect.changes` audit warns otherwise).
+- Cold-start / B4 protocol: see [`trials.md`](trials.md) (sample text `zayju forever young`; human SCORE columns stay blank for agents).
 - **Do not** write `approved: true` as an agent; human approvals use `approver: human:…`.
 - Conventional commits; local review after each commit.
 
