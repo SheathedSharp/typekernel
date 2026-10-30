@@ -1,4 +1,4 @@
-"""parenright — arch_span cup (signature-stable)."""
+"""parenright — mirror of parenleft (one island; stock self-crossed)."""
 
 from __future__ import annotations
 
@@ -16,14 +16,14 @@ def parenright(system: System):
     desc = float(system.zones.desc)
     lsb = float(system.tokens.get("lsb_lc", 40.0)) * 0.5
     tension = float(system.tokens.get("shoulder_tension", 0.55))
-    width = st * 2.2
-    x_outer = lsb + st * 0.4
-    x_inner = lsb + st * 1.45
-    outer = arch_span(x_outer, asc, x_outer, desc + st, lsb + width + 4, tension=tension)
+    # Same cup as parenleft, then mirror across the stem center so opening faces left.
+    x_outer = lsb + st * 1.6
+    x_inner = lsb + st * 0.55
+    outer = arch_span(x_outer, asc, x_outer, desc + st, lsb - 4, tension=tension)
     inner = arch_span(
-        x_inner, desc + st * 1.2, x_inner, asc - st * 0.2, lsb + width - st * 0.5, tension=tension
+        x_inner, desc + st * 1.2, x_inner, asc - st * 0.2, lsb + st * 0.9, tension=tension
     )
-    return (
+    left_cup = (
         Writer()
         .start(outer.start)
         .corner("arch.t.o")
@@ -37,3 +37,5 @@ def parenright(system: System):
         .close()
         .build()
     )
+    axis = (x_outer + x_inner) / 2.0
+    return left_cup.mirrored_x(axis)

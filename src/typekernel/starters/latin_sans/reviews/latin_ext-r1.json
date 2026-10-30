@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-30",
+  "expect_changes": [
+    "AE/ae/OE/oe/parenleft/parenright: add expect topology after letter-class structural fixes (see docs/notes/latin-sans-exta-inventory.md)"
+  ],
+  "glyphs": {},
+  "group": "latin_ext+punct",
+  "masters": [
+    "Light",
+    "Bold"
+  ],
+  "notes": "parenright mirrored; digraph bowls master-stable; AE lerp-stable 1/1. No approved:true.",
+  "proofs": [],
+  "reads_as": {
+    "ae": "ae",
+    "oe": "oe",
+    "AE": "AE",
+    "OE": "OE",
+    "parenright": "parenright"
+  },
+  "reviewer": "agent:course-correct-c3",
+  "round": 1,
+  "verdict": "pass"
+}

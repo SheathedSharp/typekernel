@@ -42,6 +42,13 @@ EXPECT: dict[str, Expect] = {
     "exclam": Expect(counters=0, islands=2),
     "question": Expect(counters=0, islands=3, reach=("base",)),  # body+dot+hook island; x-height bowl
     "J": Expect(reach=("cap",)),  # hook clears desc zone optically, not to desc line
+    "AE": Expect(counters=1, islands=1),
+    "ae": Expect(counters=2, islands=1),
+    "OE": Expect(counters=2, islands=1),
+    "oe": Expect(counters=2, islands=1),
+    "parenleft": Expect(counters=0, islands=1),
+    "parenright": Expect(counters=0, islands=1),
 }
+
 
 STARTER_EXPECT = EXPECT
