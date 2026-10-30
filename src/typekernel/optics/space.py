@@ -30,6 +30,7 @@ __all__ = [
     "space_font",
     "space_word_optical",
     "suggest_sidebearings_optical",
+    "suggest_sidebearings_tracy_bands",
     "with_sidebearings",
 ]
 
@@ -178,6 +179,66 @@ def suggest_sidebearings_optical(
     lsb = max(floor, air - left_inset)
     rsb = max(floor, air - right_inset)
     return (lsb, rsb)
+
+
+
+def suggest_sidebearings_tracy_bands(
+    outline: Outline | list[Outline] | Glyph,
+    ctx: OpticalContext,
+    *,
+    samples_per_band: int = 7,
+    target_air: float | None = None,
+    band_weights: Sequence[tuple[float, float, float]] | None = None,
+) -> tuple[float, float]:
+    """Multi-band silhouette sidebearings (partial Tracy-style).
+
+    Measures mean whitespace inset in horizontal bands between baseline and
+    ``x_height`` (default thirds with mid-band weighted higher). This is **not**
+    a gray-value / stem-band Tracy implementation — only silhouette scanlines
+    already provided by :func:`measure_side_whitespace`.
+
+    ``band_weights`` entries are ``(y0_frac, y1_frac, weight)`` of x-height.
+    """
+    if isinstance(outline, Glyph):
+        outlines: list[Outline] = _ink_outlines(outline)
+    elif isinstance(outline, Outline):
+        outlines = [outline]
+    else:
+        outlines = list(outline)
+    xh = float(ctx.x_height)
+    depth = DEFAULT_DEPTH * xh
+    weights = band_weights
+    if weights is None:
+        # Lower / mid / upper thirds; mid weighted like classic rhythm focus.
+        weights = (
+            (0.05, 0.35, 0.25),
+            (0.35, 0.70, 0.50),
+            (0.70, 0.95, 0.25),
+        )
+    left_acc = 0.0
+    right_acc = 0.0
+    w_sum = 0.0
+    for y0f, y1f, w in weights:
+        y0 = xh * float(y0f)
+        y1 = xh * float(y1f)
+        if y1 <= y0:
+            continue
+        li = measure_side_whitespace(
+            outlines, "left", y0=y0, y1=y1, samples=samples_per_band, depth=depth
+        )
+        ri = measure_side_whitespace(
+            outlines, "right", y0=y0, y1=y1, samples=samples_per_band, depth=depth
+        )
+        left_acc += li * float(w)
+        right_acc += ri * float(w)
+        w_sum += float(w)
+    if w_sum <= 0:
+        return suggest_sidebearings_optical(outlines, ctx, target_air=target_air)
+    left_inset = left_acc / w_sum
+    right_inset = right_acc / w_sum
+    ratio = float(getattr(ctx, "sidebearing_ratio", 0.2) or 0.2)
+    air = float(target_air) if target_air is not None else ratio * xh
+    return (max(0.0, air - left_inset), max(0.0, air - right_inset))
 
 
 def pair_gap_optical(

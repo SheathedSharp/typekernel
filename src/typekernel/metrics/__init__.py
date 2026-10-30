@@ -29,6 +29,7 @@ __all__ = [
     "apply_metrics",
     "pack",
     "resolve",
+    "with_abs_sidebearings",
 ]
 
 
@@ -94,6 +95,7 @@ class Kerning:
     pairs: Sequence[KernPair | ClassKernPair] = ()
     exceptions: Sequence[KernPair] = ()
 
+from typekernel.metrics.abs_merge import with_abs_sidebearings
 from typekernel.metrics.applying import apply_kerning, apply_metrics
 from typekernel.metrics.packing import pack
 from typekernel.metrics.resolving import resolve
