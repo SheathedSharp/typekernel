@@ -109,10 +109,16 @@ def _extent_flags(outline: Outline, system: System) -> tuple[bool, bool, bool]:
     return ascender, descender, False
 
 
-def _mass_cues(grid: Sequence[float], *, grid_n: int = 4) -> tuple[float, float, float, float]:
-    """Derive ``(top_mass, right_mass, diag_mass, mid_band)`` in ``[0, 1]``."""
+def _mass_cues(
+    grid: Sequence[float], *, grid_n: int = 4
+) -> tuple[float, float, float, float, float, float]:
+    """Derive shape masses in ``[0, 1]``.
+
+    Returns
+    ``(top_mass, right_mass, diag_mass, mid_band, edge_mass, mid_right)``.
+    """
     if len(grid) != grid_n * grid_n:
-        return (0.5, 0.5, 0.0, 0.0)
+        return (0.5, 0.5, 0.0, 0.0, 0.5, 0.0)
     cols = [sum(grid[r * grid_n + c] for r in range(grid_n)) for c in range(grid_n)]
     rows = [sum(grid[r * grid_n + c] for c in range(grid_n)) for r in range(grid_n)]
     left = sum(cols[: grid_n // 2]) + 1e-6
@@ -127,7 +133,15 @@ def _mass_cues(grid: Sequence[float], *, grid_n: int = 4) -> tuple[float, float,
     mid = grid_n // 2
     mid_row = rows[mid] if mid < len(rows) else 0.0
     mid_band = mid_row / (sum(rows) + 1e-6)
-    return (top_mass, right_mass, diag_mass, mid_band)
+    total = sum(grid) + 1e-6
+    # Outer columns: dual stems (N/H) vs open/bowl forms.
+    edge_mass = (cols[0] + cols[grid_n - 1]) / total
+    # Mid-band on the right half: spur / open-right bar (G vs C).
+    mid_rows = range(max(0, mid - 1), min(grid_n, mid + 1))
+    mid_right = sum(
+        grid[r * grid_n + c] for r in mid_rows for c in range(grid_n // 2, grid_n)
+    )
+    return (top_mass, right_mass, diag_mass, mid_band, edge_mass, mid_right)
 
 
 def _feature_vector(
@@ -159,7 +173,8 @@ def _feature_vector(
 _I_COUNTERS, _I_ISLANDS, _I_ASC, _I_DESC, _I_DOT = 0, 1, 2, 3, 4
 _I_ASPECT = 5
 _I_TOP, _I_RIGHT, _I_DIAG, _I_MID = 6, 7, 8, 9
-_I_GRID0 = 10
+_I_EDGE, _I_MID_RIGHT = 10, 11
+_I_GRID0 = 12
 
 
 def _distance_to_prior(feats: Sequence[float], prior: TopologyPrior) -> float:
@@ -170,7 +185,10 @@ def _distance_to_prior(feats: Sequence[float], prior: TopologyPrior) -> float:
         nonlocal acc
         acc += (d * w) * (d * w)
 
-    add(float(feats[_I_COUNTERS]) - float(prior.counters), 3.0)
+    # Prefer primary counters; allow counters_alt (storey variants) without penalty.
+    meas_c = float(feats[_I_COUNTERS])
+    c_opts = (float(prior.counters), *(float(c) for c in prior.counters_alt))
+    add(min(abs(meas_c - c) for c in c_opts), 3.0)
     add(float(feats[_I_ISLANDS]) - float(prior.islands), 2.0)
     add(float(feats[_I_ASC]) - (1.0 if prior.ascender else 0.0), 2.0)
     add(float(feats[_I_DESC]) - (1.0 if prior.descender else 0.0), 2.0)
@@ -187,6 +205,10 @@ def _distance_to_prior(feats: Sequence[float], prior: TopologyPrior) -> float:
         add(float(feats[_I_DIAG]) - float(prior.diag_mass), 2.0)
     if prior.mid_band is not None:
         add(float(feats[_I_MID]) - float(prior.mid_band), 1.6)
+    if prior.edge_mass is not None:
+        add(float(feats[_I_EDGE]) - float(prior.edge_mass), 2.0)
+    if prior.mid_right is not None:
+        add(float(feats[_I_MID_RIGHT]) - float(prior.mid_right), 2.4)
     # Soft grid residual (measurement-only; no prior grid).
     for i in range(16):
         add(float(feats[_I_GRID0 + i]), 0.05)
@@ -288,8 +310,11 @@ def read_glyph(
         margin = 0.12
         topo_ok = False
         if intended is not None:
+            c_opts = (float(intended.counters), *(float(c) for c in intended.counters_alt))
+            meas_c = float(feats[_I_COUNTERS])
+            counters_ok = min(abs(meas_c - c) for c in c_opts) < 0.15
             topo_ok = (
-                abs(float(feats[_I_COUNTERS]) - float(intended.counters)) < 0.15
+                counters_ok
                 and abs(float(feats[_I_ISLANDS]) - float(intended.islands)) < 0.15
                 and abs(float(feats[_I_ASC]) - (1.0 if intended.ascender else 0.0)) < 0.15
                 and abs(float(feats[_I_DESC]) - (1.0 if intended.descender else 0.0)) < 0.15
@@ -326,8 +351,12 @@ def read_glyph(
                 partner = prior_for(partner_cp)
                 if partner is None:
                     continue
-                meas_c = feats[_I_COUNTERS]
-                if abs(meas_c - partner.counters) + 0.1 < abs(meas_c - intended.counters):
+                meas_c = float(feats[_I_COUNTERS])
+                intended_c_dist = min(
+                    abs(meas_c - float(intended.counters)),
+                    *(abs(meas_c - float(c)) for c in intended.counters_alt),
+                ) if intended.counters_alt else abs(meas_c - float(intended.counters))
+                if abs(meas_c - float(partner.counters)) + 0.1 < intended_c_dist:
                     warnings.append(
                         ReadWarning(
                             level="warn",
