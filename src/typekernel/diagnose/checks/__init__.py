@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typekernel.diagnose.checks.anchors import AnchorsCheck
+from typekernel.diagnose.checks.contour import ContourQualityCheck
 from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
 from typekernel.diagnose.checks.gray import GrayCheck
 from typekernel.diagnose.checks.spacing import (
@@ -16,6 +17,7 @@ from typekernel.diagnose.checks.vertical import VerticalCheck
 
 __all__ = [
     "AnchorsCheck",
+    "ContourQualityCheck",
     "FeaturesSyntaxCheck",
     "GrayCheck",
     "PairCollisionCheck",

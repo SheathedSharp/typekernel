@@ -112,6 +112,7 @@ def _builtin_v2(
     check_interpolation: bool = True,
 ) -> list[Check]:
     from typekernel.diagnose.checks.anchors import AnchorsCheck
+    from typekernel.diagnose.checks.contour import ContourQualityCheck
     from typekernel.diagnose.checks.features import FeaturesSyntaxCheck
     from typekernel.diagnose.checks.gray import GrayCheck
     from typekernel.diagnose.checks.interpolation import InterpolationCheck
@@ -138,6 +139,7 @@ def _builtin_v2(
         out.append(wrap_check_fn(overlap.check, check_id="overlap"))
     if check_topology:
         out.append(TopologyCheck())
+        out.append(ContourQualityCheck())
     if check_vertical:
         out.append(VerticalCheck())
     if check_spacing:
@@ -187,7 +189,8 @@ def audit_project(
 
     with open_project(root_path) as session:
         project = session.project
-        names = glyphs if glyphs is not None else sorted(session.specs())
+        from typekernel.project.scope import scoped_glyph_names
+        names = glyphs if glyphs is not None else scoped_glyph_names(session)
         master_list: list[str | None]
         if masters is None:
             master_list = [None]
@@ -322,4 +325,4 @@ def format_report(report: AuditReport, *, as_json: bool = False) -> str:
         lines.append(f"  [{f.level}] {f.check} {g}{master}: {f.message}")
     if not report.findings:
         lines.append("  (no findings)")
-    return "\n".join(lines)
+    return '\n'.join(lines)
