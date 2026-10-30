@@ -12,21 +12,28 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from typekernel.geo.stroke import Pen
 
 from typekernel.system.table import Overshoot, System, Zones
 
 __all__ = [
     "Brief",
+    "ConnectionFeel",
     "ContrastFeel",
+    "GenreFeel",
     "Intent",
     "IntentMismatch",
     "OpennessFeel",
     "SlantFeel",
+    "ToolFeel",
     "WeightFeel",
     "apply_intent",
     "check_intent",
     "pen_defaults_for",
+    "pen_for_intent",
     "system_from_intent",
 ]
 
@@ -34,6 +41,9 @@ ContrastFeel = Literal["low", "medium", "high"]
 SlantFeel = Literal["upright", "italic", "steep"]
 OpennessFeel = Literal["tight", "normal", "open"]
 WeightFeel = Literal["light", "regular", "bold"]
+ToolFeel = Literal["broad", "pointed", "monoline", "brush"]
+ConnectionFeel = Literal["none", "partial", "full"]
+GenreFeel = Literal["roundhand", "copperplate", "chancery"]
 
 # --- Published mapping tables (feel → numeric). Agents may fine-tune inside bands. ---
 
@@ -42,6 +52,23 @@ CONTRAST_TO_PEN: Mapping[ContrastFeel, float] = {
     "low": 0.82,  # near-circular
     "medium": 0.52,  # humanist starter
     "high": 0.28,  # chancery-like
+}
+
+# Tool → (contrast override or None to keep contrast feel, angle bias).
+# ``None`` contrast means use CONTRAST_TO_PEN[intent.contrast].
+TOOL_CONTRAST: Mapping[ToolFeel, float | None] = {
+    "broad": None,  # calligraphic ellipse from contrast feel
+    "pointed": 1.0,  # near-circular; pressure via Stroke width curve
+    "monoline": 1.0,
+    "brush": 0.62,
+}
+
+# Genre suggests tool/connection when those fields stay at defaults — documented only;
+# agents should set tool/connection explicitly for honesty.
+GENRE_DEFAULTS: Mapping[GenreFeel, tuple[ToolFeel, ConnectionFeel, SlantFeel]] = {
+    "roundhand": ("pointed", "full", "italic"),
+    "copperplate": ("pointed", "partial", "steep"),
+    "chancery": ("broad", "partial", "italic"),
 }
 
 # Acceptance bands for ``check_intent`` (inclusive).
@@ -108,6 +135,7 @@ class Intent:
 
     Forbidden: treating this as an aesthetics score or a glyph factory.
     Allowed: seeding / checking ``System.slant``, ``stem``, and pen/width tokens.
+    S4 adds ``tool`` / ``connection`` / ``genre`` for script construction.
     """
 
     contrast: ContrastFeel = "medium"
@@ -115,6 +143,10 @@ class Intent:
     openness: OpennessFeel = "normal"
     weight: WeightFeel = "regular"
     pen_angle_deg: float | None = None
+    tool: ToolFeel | None = None
+    """None = legacy contrast→pen mapping; set explicitly for S4 script pens."""
+    connection: ConnectionFeel = "none"
+    genre: GenreFeel | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,13 +167,34 @@ class IntentMismatch:
 
 
 def pen_defaults_for(intent: Intent) -> tuple[float, float]:
-    """Return ``(pen_contrast, pen_angle_deg)`` for *intent*."""
-    contrast = float(CONTRAST_TO_PEN[intent.contrast])
+    """Return ``(pen_contrast, pen_angle_deg)`` for *intent* (tool-aware)."""
+    if intent.tool is None:
+        contrast = float(CONTRAST_TO_PEN[intent.contrast])
+    else:
+        tool_c = TOOL_CONTRAST[intent.tool]
+        contrast = float(CONTRAST_TO_PEN[intent.contrast] if tool_c is None else tool_c)
     if intent.pen_angle_deg is not None:
         angle = float(intent.pen_angle_deg)
+    elif intent.tool == "monoline":
+        angle = 0.0
     else:
         angle = float(SLANT_TO_PEN_ANGLE[intent.slant])
     return contrast, angle
+
+
+def pen_for_intent(intent: Intent, thickness: float) -> Pen:
+    """Build a :class:`~typekernel.geo.stroke.Pen` from Intent + thickness (S4)."""
+    from typekernel.geo.stroke import Pen
+    from typekernel.plugins.construct import broad_nib, pointed_pen
+
+    contrast, angle = pen_defaults_for(intent)
+    th = float(thickness)
+    tool = intent.tool or "broad"
+    if tool in {"broad", "brush"}:
+        return broad_nib(th, contrast=contrast, angle_deg=angle)
+    if tool in {"pointed", "monoline"}:
+        return pointed_pen(th, contrast=contrast, angle_deg=angle)
+    return Pen(thickness=th, contrast=contrast, angle_deg=angle)
 
 
 def _stem_for_weight(weight: WeightFeel) -> dict[str, float]:
@@ -227,9 +280,12 @@ def check_intent(
     out: list[IntentMismatch] = []
     tokens = dict(system.tokens)
 
-    # contrast → pen_contrast
+    # contrast → pen_contrast (skipped when tool forces a contrast override)
+    tool_forces = intent.tool is not None and TOOL_CONTRAST.get(intent.tool) is not None
     lo, hi = CONTRAST_BAND[intent.contrast]
-    if "pen_contrast" not in tokens:
+    if tool_forces:
+        pass  # tool owns pen_contrast; checked under "tool" below
+    elif "pen_contrast" not in tokens:
         if require_pen_tokens:
             out.append(
                 IntentMismatch(
@@ -346,6 +402,42 @@ def check_intent(
                 )
             )
 
+
+    # tool → pen contrast expectation
+    if intent.tool is not None:
+        tool_c = TOOL_CONTRAST[intent.tool]
+        if tool_c is not None and "pen_contrast" in tokens:
+            pc = float(tokens["pen_contrast"])
+            if abs(pc - float(tool_c)) > 0.12:
+                out.append(
+                    IntentMismatch(
+                        "tool",
+                        "warn",
+                        f"tokens['pen_contrast']={pc} disagrees with intent.tool={intent.tool!r} "
+                        f"(expected ~{tool_c})",
+                    )
+                )
+    if intent.genre is not None:
+        sug_tool, sug_conn, _sug_slant = GENRE_DEFAULTS[intent.genre]
+        if intent.tool is not None and intent.tool != sug_tool:
+            out.append(
+                IntentMismatch(
+                    "genre",
+                    "info",
+                    f"intent.genre={intent.genre!r} usually pairs with tool={sug_tool!r} "
+                    f"(declared tool={intent.tool!r})",
+                )
+            )
+        if intent.connection != sug_conn:
+            out.append(
+                IntentMismatch(
+                    "genre",
+                    "info",
+                    f"intent.genre={intent.genre!r} usually pairs with connection={sug_conn!r} "
+                    f"(declared connection={intent.connection!r})",
+                )
+            )
+
     return out
 
 
@@ -358,7 +450,10 @@ def coerce_intent(value: Any) -> Intent | None:
     if isinstance(value, Intent):
         return value
     if isinstance(value, Mapping):
-        keys = ("contrast", "slant", "openness", "weight", "pen_angle_deg")
+        keys = (
+            "contrast", "slant", "openness", "weight", "pen_angle_deg",
+            "tool", "connection", "genre",
+        )
         kwargs = {k: value[k] for k in keys if k in value}
         return Intent(**kwargs)
     return None

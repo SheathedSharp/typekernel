@@ -20,7 +20,7 @@ BRIEF = Brief(
     prose=(
         "Chancery italic: broad nib at ~38°, high calligraphic contrast, normal "
         "counters, Regular weight, 0.22 lean. Construction is skeleton + pen; "
-        "no heal/blend/seal."
+        "no heal/blend/seal. Intent.tool=broad (not hardcoded in elements)."
     ),
     intent=Intent(
         contrast="high",
@@ -28,6 +28,9 @@ BRIEF = Brief(
         openness="normal",
         weight="regular",
         pen_angle_deg=38.0,
+        tool="broad",
+        connection="partial",
+        genre="chancery",
     ),
 )
 

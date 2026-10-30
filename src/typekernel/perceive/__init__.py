@@ -12,6 +12,7 @@ from typekernel.perceive.views import (
     edit_view,
     overlay_view,
     reference_view,
+    skeleton_view,
 )
 from typekernel.perceive.voice import (
     CONTROL_GLYPHS,
@@ -38,5 +39,6 @@ __all__ = [
     "overlay_view",
     "reference_view",
     "render_live",
+    "skeleton_view",
     "voice_distance",
 ]

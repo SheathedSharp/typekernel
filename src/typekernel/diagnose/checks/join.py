@@ -53,6 +53,9 @@ class JoinCheck:
     scope: Scope = "font"
 
     def run(self, ctx: CheckContext) -> Iterable[Finding]:
+        # Opt-in: only when Metrics.join is configured (avoid flooding non-script faces).
+        if ctx.project.metrics is None or ctx.project.metrics.join is None:
+            return []
         policy = _policy(ctx)
         joined = _glyphs_with_join(ctx.session, ctx.master)
         if len(joined) < 2:

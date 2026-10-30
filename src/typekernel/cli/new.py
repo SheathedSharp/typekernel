@@ -14,6 +14,7 @@ STARTERS: dict[str, str] = {
     "latin-sans": "latin_sans",
     "latin-humanist-italic": "latin_humanist_italic",
     "latin-chancery": "latin_chancery",
+    "script-roundhand": "script_roundhand",
     "latin-sans-italic": "latin_sans_italic",
 }
 
@@ -105,7 +106,7 @@ def create_project(
     """Create project directory ``parent/name``.
 
     Omit ``starter`` (or pass ``empty``) for the empty scaffold. Pass
-    ``latin-sans``, ``latin-sans-italic``, ``latin-humanist-italic``, or ``latin-chancery`` to copy
+    ``latin-sans``, ``latin-sans-italic``, ``latin-humanist-italic``, ``latin-chancery``, or ``script-roundhand`` to copy
     the matching starter (system, elements, glyph set, project.py).
 
     ``charset="minimal"`` with ``text`` scopes audit/proof to those letters.

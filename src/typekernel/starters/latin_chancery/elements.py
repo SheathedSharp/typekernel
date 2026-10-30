@@ -11,7 +11,6 @@ from typekernel.anatomy.pen import (
     bowl as pen_bowl,
 )
 from typekernel.anatomy.pen import (
-    expand_slanted_centerline,
     flourish_entry,
     flourish_exit,
     fuse,
@@ -19,7 +18,6 @@ from typekernel.anatomy.pen import (
     oval_points,
     pen_dot,
     pen_for_optical_stem,
-    project_pen,
     slanted_centerline,
     slanted_cubic_from_points,
     slanted_vertical_optical_ratio,
@@ -33,7 +31,8 @@ from typekernel.anatomy.pen import (
 from typekernel.draw import Drawing, Fragment
 from typekernel.geo.segment import CubicSegment, LineSegment
 from typekernel.geo.stroke import Centerline
-from typekernel.system import System
+from typekernel.system import Intent, System
+from typekernel.system.intent import pen_for_intent
 
 __all__ = [
     "WIDTHS",
@@ -68,6 +67,36 @@ WIDTHS: dict[str, float] = {
 }
 
 
+def _project_intent() -> Intent:
+    """Read Project.brief.intent — pen choice lives on Intent, not hardcoded nib."""
+    try:
+        from project import BRIEF
+
+        return BRIEF.intent
+    except Exception:  # noqa: BLE001
+        return Intent(
+            contrast="high",
+            slant="italic",
+            weight="regular",
+            pen_angle_deg=38.0,
+            tool="broad",
+            connection="partial",
+            genre="chancery",
+        )
+
+
+def project_pen(system: System, thickness: float | None = None):
+    """Pen from Intent.tool (broad/pointed/monoline/brush), sized to optical stem."""
+    optical = float(system.stem["lc"] if thickness is None else thickness)
+    # Match prior optical vertical width under slant for broad nibs.
+    from typekernel.anatomy.pen import slanted_vertical_optical_ratio
+
+    intent = _project_intent()
+    ratio = slanted_vertical_optical_ratio(system) if intent.tool == "broad" else 1.0
+    th = float(optical) / ratio if ratio > 0 else float(optical)
+    return pen_for_intent(intent, th)
+
+
 def slanted_polyline(
     points: Sequence[tuple[float, float]],
     system: System,
@@ -84,13 +113,17 @@ def stroke(
     closed: bool = False,
     thickness: float | None = None,
 ) -> Drawing:
+    """Stroke via expand using :func:`project_pen` (Intent.tool — not hardcoded nib)."""
+    from typekernel.plugins.construct import expand_skeleton
+
     if closed:
         return pen_stroke(
             system, slanted_cubic_from_points(points, system, closed=True), thickness=thickness
         )
-    return expand_slanted_centerline(
-        system, slanted_centerline(points, system, closed=False), thickness=thickness
-    )
+    optical = float(system.stem["lc"] if thickness is None else thickness)
+    pen = project_pen(system, optical)
+    cl = slanted_centerline(points, system, closed=False)
+    return expand_skeleton(cl, pen, join="round", cap="round")
 
 
 def uc_stem(

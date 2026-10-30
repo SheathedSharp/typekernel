@@ -188,6 +188,7 @@ class ProjectSession:
         note = ""
         anchors: dict[str, object] = {}
         components: tuple[ComponentRef, ...] = ()
+        skeleton: object | None = None
         try:
             result = build(system)
             if isinstance(result, Drawing):
@@ -197,6 +198,7 @@ class ProjectSession:
                 anchors = dict(result.anchors)
                 components = tuple(result.components)
                 note = result.note
+                skeleton = getattr(result, "skeleton", None)
             # Combining marks sit on anchors; corner/end fillers are for base letters.
             skip_slots = "mark" in spec.traits or "spacing-mark" in spec.traits
             if (
@@ -225,6 +227,7 @@ class ProjectSession:
             anchors=anchors,
             components=components,
             note=note,
+            skeleton=skeleton,
         )
         self._eval_cache[cache_key] = draft
         return draft

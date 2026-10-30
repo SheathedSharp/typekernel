@@ -25,6 +25,7 @@ __all__ = [
     "edit_view",
     "overlay_view",
     "reference_view",
+    "skeleton_view",
 ]
 
 
@@ -588,3 +589,146 @@ def reference_view(
     }
     side = write_sidecar(out_path, meta)
     return SeeResult(png=out_path, sidecar=side, meta=meta)
+
+
+def skeleton_view(
+    session: ProjectSession,
+    glyph: str,
+    *,
+    master: str | None = None,
+    size: int = 512,
+    out: Path | str | None = None,
+) -> SeeResult:
+    """S4 skeleton view: midline (when present), node indices, curvature comb."""
+    import math
+
+    from PIL import Image, ImageDraw, ImageFont
+
+    draft = session.evaluate(glyph, master=master, slots=True)
+    g = session.glyph(glyph, master=master)
+    drawing = draft.drawing
+    system = _system_for(session, master)
+
+    try:
+        ob = bounds(g.outline)
+    except ValueError:
+        ob = (0.0, 0.0, float(g.advance), system.zones.x)
+
+    min_x, max_y, scale, ox, oy = _frame(ob, system, size=size)
+
+    def px(x: float, y: float) -> tuple[float, float]:
+        return _to_px(x, y, min_x=min_x, max_y=max_y, scale=scale, offset_x=ox, offset_y=oy)
+
+    img = Image.new("RGBA", (size, size), (252, 252, 250, 255))
+    draw = ImageDraw.Draw(img)
+    try:
+        font_sm = ImageFont.load_default(size=9)
+    except TypeError:
+        font_sm = ImageFont.load_default()
+
+    # Faint outline.
+    chord = max(0.25, 0.5 / max(scale, 1e-9))
+    try:
+        simp = simplify_outline(g.outline)
+    except (ValueError, RuntimeError, TypeError):
+        simp = g.outline
+    for poly in flatten_outline(simp, chord_budget=chord):
+        if len(poly) >= 2:
+            draw.line([px(x, y) for x, y in poly], fill=(200, 200, 205, 220), width=1)
+
+    # Midline from GlyphDraft.skeleton when feasible.
+    skeleton = getattr(draft, "skeleton", None)
+    mid_pts: list[tuple[float, float]] = []
+    if skeleton is not None:
+        segs = getattr(skeleton, "segments", None)
+        if segs is not None:
+            from typekernel.geo.stroke import CubicCenterline, flatten_cubic_centerline
+
+            flat, _rep = flatten_cubic_centerline(
+                CubicCenterline(tuple(segs), closed=bool(getattr(skeleton, "closed", False))),
+                chord_budget=1.0,
+            )
+            mid_pts = [(float(x), float(y)) for x, y in flat.points]
+        else:
+            pts = getattr(skeleton, "points", None)
+            if pts is not None:
+                mid_pts = [(float(x), float(y)) for x, y in pts]
+    if len(mid_pts) >= 2:
+        draw.line([px(x, y) for x, y in mid_pts], fill=(220, 60, 80, 255), width=2)
+
+    # Node indices + curvature comb on outline cubics.
+    node_i = 0
+    for contour in drawing.contours:
+        for segment in contour.segments:
+            if isinstance(segment, LineSegment):
+                p0 = px(segment.p0.x, segment.p0.y)
+                draw.ellipse([p0[0] - 2, p0[1] - 2, p0[0] + 2, p0[1] + 2], fill=(40, 40, 50, 255))
+                draw.text((p0[0] + 3, p0[1] - 8), str(node_i), fill=(40, 40, 50, 200), font=font_sm)
+                node_i += 1
+                continue
+            assert isinstance(segment, CubicSegment)
+            # Curvature comb: sample κ ≈ |x'y'' - y'x''| / (x'²+y'²)^(3/2)
+            for t in (0.2, 0.4, 0.6, 0.8):
+                mt = 1.0 - t
+                # Position
+                x = (
+                    mt**3 * segment.p0.x
+                    + 3 * mt**2 * t * segment.p1.x
+                    + 3 * mt * t**2 * segment.p2.x
+                    + t**3 * segment.p3.x
+                )
+                y = (
+                    mt**3 * segment.p0.y
+                    + 3 * mt**2 * t * segment.p1.y
+                    + 3 * mt * t**2 * segment.p2.y
+                    + t**3 * segment.p3.y
+                )
+                # First derivative
+                dx = (
+                    3 * mt**2 * (segment.p1.x - segment.p0.x)
+                    + 6 * mt * t * (segment.p2.x - segment.p1.x)
+                    + 3 * t**2 * (segment.p3.x - segment.p2.x)
+                )
+                dy = (
+                    3 * mt**2 * (segment.p1.y - segment.p0.y)
+                    + 6 * mt * t * (segment.p2.y - segment.p1.y)
+                    + 3 * t**2 * (segment.p3.y - segment.p2.y)
+                )
+                # Second derivative
+                ddx = (
+                    6 * mt * (segment.p2.x - 2 * segment.p1.x + segment.p0.x)
+                    + 6 * t * (segment.p3.x - 2 * segment.p2.x + segment.p1.x)
+                )
+                ddy = (
+                    6 * mt * (segment.p2.y - 2 * segment.p1.y + segment.p0.y)
+                    + 6 * t * (segment.p3.y - 2 * segment.p2.y + segment.p1.y)
+                )
+                speed2 = dx * dx + dy * dy
+                if speed2 < 1e-8:
+                    continue
+                kappa = abs(dx * ddy - dy * ddx) / (speed2**1.5)
+                ln = math.hypot(dx, dy)
+                nx, ny = -dy / ln, dx / ln
+                comb = min(40.0, kappa * 4000.0)
+                a = px(x, y)
+                b = px(x + nx * comb, y + ny * comb)
+                draw.line([a, b], fill=(80, 140, 200, 200), width=1)
+            p0 = px(segment.p0.x, segment.p0.y)
+            draw.ellipse([p0[0] - 2, p0[1] - 2, p0[0] + 2, p0[1] + 2], fill=(40, 40, 50, 255))
+            draw.text((p0[0] + 3, p0[1] - 8), str(node_i), fill=(40, 40, 50, 200), font=font_sm)
+            node_i += 1
+
+    out_path = Path(out) if out else Path(f"see-{glyph}-skeleton.png")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out_path)
+    side = write_sidecar(
+        out_path,
+        {
+            "view": "skeleton",
+            "glyph": glyph,
+            "master": master,
+            "has_midline": bool(len(mid_pts) >= 2),
+            "outline_hash": outline_hash(g.outline),
+        },
+    )
+    return SeeResult(png=out_path, sidecar=side, meta={"has_midline": len(mid_pts) >= 2})

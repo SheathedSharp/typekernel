@@ -222,6 +222,7 @@ def _cmd_see(args: argparse.Namespace) -> int:
         overlay=bool(args.overlay),
         diff=None if args.diff is None else (args.diff if args.diff != "" else ""),
         reference=args.reference,
+        skeleton=bool(getattr(args, "skeleton", False)),
         size=args.size,
         watch=bool(args.watch),
     )
@@ -558,6 +559,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_see.add_argument("--reference", default=None, help="reference OTF/TTF for side-by-side")
     p_see.add_argument("--size", type=int, default=512, help="PNG size (default: 512)")
+    p_see.add_argument(
+        "--skeleton",
+        action="store_true",
+        help="S4: also render midline / node indices / curvature comb",
+    )
     p_see.add_argument(
         "--watch",
         action="store_true",

@@ -12,6 +12,7 @@ from typekernel.perceive.views import (
     edit_view,
     overlay_view,
     reference_view,
+    skeleton_view,
 )
 from typekernel.project import open_project
 
@@ -31,6 +32,7 @@ def see_project(
     reference: str | Path | None = None,
     size: int = 512,
     watch: bool = False,
+    skeleton: bool = False,
 ) -> list[Path]:
     """Render requested views for ``glyph``; return PNG paths.
 
@@ -54,6 +56,16 @@ def see_project(
                     out=out / f"see-{glyph}.png",
                 )
             )
+            if skeleton:
+                results.append(
+                    skeleton_view(
+                        session,
+                        glyph,
+                        master=master,
+                        size=size,
+                        out=out / f"see-{glyph}-skeleton.png",
+                    )
+                )
             if context:
                 results.append(
                     context_view(

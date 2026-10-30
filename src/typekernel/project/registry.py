@@ -26,12 +26,16 @@ PointLike = tuple[float, float] | Any  # Point or (x, y)
 
 @dataclass(frozen=True, slots=True)
 class GlyphDraft:
-    """Builder return value: drawing plus optional anchors / components / note."""
+    """Builder return value: drawing plus optional anchors / components / note.
+
+    ``skeleton`` (S4) holds a cubic/polyline midline for ``tk see --skeleton``.
+    """
 
     drawing: Drawing
     anchors: Mapping[str, PointLike] = field(default_factory=dict)
     components: Sequence[ComponentRef] = ()
     note: str = ""
+    skeleton: object | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "anchors", MappingProxyType(dict(self.anchors)))
