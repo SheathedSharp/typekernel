@@ -25,7 +25,7 @@ def AE(system: System):
     right = stem(lsb + width - st, lsb + width, 0.0, cap, name="stem.r")
     # Join legs to stem with a single high bar (no mid pocket under lerp).
     top = crossbar(lsb + width * 0.18, lsb + width, cap - thin / 2, thick=thin, name="bar.t", ends="none")
-    join = crossbar(lsb + width * 0.30, lsb + width - st * 0.1, cap * 0.42, thick=thin, name="bar.join", ends="none")
+    join = crossbar(lsb + width * 0.30, lsb + width - st * 0.1, cap * 0.42, thick=thin, name="bar.0", ends="none")
     return zone_anchors(legs + right + top + join, system, top="cap")
 
 @glyph("ae", unicodes=(0x00E6,), group="lc.mixed")
